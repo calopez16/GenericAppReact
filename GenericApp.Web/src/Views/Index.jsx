@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import Layout from '@layout/Layout'; 
 import LoginPage from '@views/Auth/Login'
 import HomePage from '@views/Home'

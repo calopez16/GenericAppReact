@@ -8,6 +8,7 @@ export const AppContextProvider = ({ children }) => {
     const [userName, setUserName] = useState(() => localStorage.getItem("userName"));
     const [accessToken, setAccessToken] = useState(() => AuthHelper.getAccessToken());
     const [userRole, setUserRole] = useState(() => localStorage.getItem("userRole"));
+    const [themeMode, setThemeMode] = useState(() => localStorage.getItem("themeMode") || "light");
 
     // useEffect para guardar userName y userRole. El token ya se maneja con el helper.
     useEffect(() => {
@@ -30,6 +31,10 @@ export const AppContextProvider = ({ children }) => {
         };
     }, []);
 
+    useEffect(() => {
+        localStorage.setItem("themeMode", themeMode);
+    }, [themeMode]);
+
     const contextValue = {
         userName,
         setUserName,
@@ -42,7 +47,9 @@ export const AppContextProvider = ({ children }) => {
         userRole,
         setUserRole,
         // Agregamos una funci�n de logout al contexto.
-        logout: AuthHelper.logout
+        logout: AuthHelper.logout,
+        themeMode,
+        setThemeMode
     };
 
     return (

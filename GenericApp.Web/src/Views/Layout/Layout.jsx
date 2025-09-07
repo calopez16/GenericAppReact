@@ -1,23 +1,45 @@
-﻿import {React ,useContext } from 'react';
+﻿import React, { useContext, useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { AppContext } from '@helpers/AppContext';
+import NavbarComponent from './NavbarComponent';
+import SidebarComponent from './SidebarComponent';
+import FooterComponent from './FooterComponent';
 
-const Layout = ({ children }) => {
-    const { userName, setUserName, accessToken } = useContext(AppContext);
+const Layout = () => {
+    const { accessToken, themeMode } = useContext(AppContext);
+    const [showSidebar, setShowSidebar] = useState(false);
+
     if (!accessToken) {
-        // Si no hay token, redirige a la p�gina de login
         return <Navigate to="/login" replace />;
     }
 
-    // Si el usuario est� autenticado, renderiza el Outlet.
-    // Aqu� tambi�n podr�as poner un layout com�n (Navbar, Sidebar, etc.)
+    const toggleSidebar = () => setShowSidebar(!showSidebar);
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 992) {
+                setShowSidebar(false);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const handleLogout = () => {
+        // Lógica para cerrar sesión
+    };
+
     return (
-        <div>
-            {/* <Navbar /> */}
-            <main>
-                <Outlet />
-            </main>
-            {/* <Footer /> */}
+        <div className={`d-flex flex-column min-vh-100 ${themeMode}`}>
+            <NavbarComponent handleLogout={handleLogout} toggleSidebar={toggleSidebar} />
+            <div className="d-flex flex-grow-1">
+                <SidebarComponent showSidebar={showSidebar} toggleSidebar={toggleSidebar} />
+                {showSidebar && <div className="overlay d-lg-none" onClick={toggleSidebar}></div>}
+                <main className={`p-4 flex-grow-1 main-content ${showSidebar ? 'sidebar-open' : ''}`}>
+                    <Outlet />
+                </main>
+            </div>
+            <FooterComponent />
         </div>
     );
 };

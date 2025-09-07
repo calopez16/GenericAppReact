@@ -13,7 +13,8 @@ export default defineConfig({
             '@views' : path.resolve(__dirname, './src/Views'),
             '@helpers' : path.resolve(__dirname, './src/Helpers'),
             '@data' : path.resolve(__dirname, './src/Data'),
-            '@config' : path.resolve(__dirname, './src/config.jsx')
+            '@config' : path.resolve(__dirname, './src/config.jsx'),
+            '@images' : path.resolve(__dirname, './src/assets/img')
         }
     },
     server: {
