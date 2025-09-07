@@ -1,14 +1,14 @@
-import { React, useContext } from 'react';
+ï»¿import { React, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '@helpers/AppContext';
 
 function LoginPage() {
-    // 2. Obtén las funciones que necesitas del contexto
+    // 2. Obtï¿½n las funciones que necesitas del contexto
     const { userName, setUserName, accessToken, setAccessToken, setUserRole } = useContext(AppContext);
     const navigate = useNavigate(); // Hook para redirigir al usuario
 
     const handleLogin = () => {
-        // 3. Simula la obtención de datos de un inicio de sesión
+        // 3. Simula la obtenciï¿½n de datos de un inicio de sesiï¿½n
         const fakeToken = 'secret-jwt-token-12345';
         const userRole = 'admin';
 
@@ -16,16 +16,16 @@ function LoginPage() {
         setAccessToken(fakeToken);
         setUserRole(userRole);
 
-        // 5. Redirige al usuario a la página principal
+        // 5. Redirige al usuario a la pï¿½gina principal
         navigate('/');
     };
 
     return (
         <div>
-            <h1>Página de Login</h1>
-            <p>Presiona el botón para simular un inicio de sesión.</p>
+            <h1>PÃ¡gina de Login</h1>
+            <p>Presiona el botï¿½n para simular un inicio de sesiï¿½n.</p>
             <button onClick={handleLogin}>
-                Iniciar Sesión
+                Iniciar SesiÃ³nÃ¡Ã³ÃºcÃ­
             </button>
         </div>
     );

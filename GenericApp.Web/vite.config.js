@@ -11,7 +11,9 @@ export default defineConfig({
             '@styles' : path.resolve(__dirname, './src/assets/css'),
             '@layout' : path.resolve(__dirname, './src/Views/Layout'),
             '@views' : path.resolve(__dirname, './src/Views'),
-            '@helpers' : path.resolve(__dirname, './src/Helpers')
+            '@helpers' : path.resolve(__dirname, './src/Helpers'),
+            '@data' : path.resolve(__dirname, './src/Data'),
+            '@config' : path.resolve(__dirname, './src/config.jsx')
         }
     },
     server: {

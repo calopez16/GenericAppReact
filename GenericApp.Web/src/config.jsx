@@ -1,0 +1,8 @@
+// Este archivo centraliza todas las variables de configuración de la aplicación.
+
+// Leemos la variable de entorno y la exportamos.
+// Usamos el operador || para tener una URL por defecto en caso de que la variable no esté definida.
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+// Puedes agregar otras variables globales aquí en el futuro.
+// export const ANOTHER_GLOBAL_VAR = 'some_value';

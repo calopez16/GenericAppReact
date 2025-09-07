@@ -1,16 +1,16 @@
-import {React ,useContext } from 'react';
+ï»¿import {React ,useContext } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { AppContext } from '@helpers/AppContext';
 
 const Layout = ({ children }) => {
     const { userName, setUserName, accessToken } = useContext(AppContext);
     if (!accessToken) {
-        // Si no hay token, redirige a la página de login
+        // Si no hay token, redirige a la pï¿½gina de login
         return <Navigate to="/login" replace />;
     }
 
-    // Si el usuario está autenticado, renderiza el Outlet.
-    // Aquí también podrías poner un layout común (Navbar, Sidebar, etc.)
+    // Si el usuario estï¿½ autenticado, renderiza el Outlet.
+    // Aquï¿½ tambiï¿½n podrï¿½as poner un layout comï¿½n (Navbar, Sidebar, etc.)
     return (
         <div>
             {/* <Navbar /> */}
