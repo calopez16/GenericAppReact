@@ -14,12 +14,13 @@ export const AuthHelper = {
         window.dispatchEvent(new Event('storage'));
     },
 
-    logout: () => {
+    logout: (redirectToLogin = true) => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('userName');
         localStorage.removeItem('userRole');
         window.dispatchEvent(new Event('storage'));
-        // Redirecci�n forzada al login.
-        window.location.href = '/login';
+        if (redirectToLogin)
+            // Redirecci�n forzada al login.
+            window.location.href = '/login';
     }
 };

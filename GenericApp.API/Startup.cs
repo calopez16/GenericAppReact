@@ -83,7 +83,7 @@ namespace GenericApp
             {
                 options.AddDefaultPolicy(builder =>
                 {
-                    builder.WithOrigins("").AllowAnyMethod().AllowAnyHeader();
+                    builder.WithOrigins("http://localhost:60688").AllowAnyMethod().AllowAnyHeader();
                 });
             });
 

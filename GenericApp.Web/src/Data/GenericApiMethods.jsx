@@ -1,4 +1,4 @@
-import { GET, POST, PUT, DELETE } from '@data/Data/GenericApiCalls';
+import { GET, POST, PUT, DELETE } from '@data/GenericApiCalls';
 
 const createApiMethodsService = (moduleSource, rowMapper) => ({
     addData: (data, isReturnData = false) => POST(moduleSource, data, isReturnData),

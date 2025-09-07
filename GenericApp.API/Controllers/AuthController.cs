@@ -68,7 +68,12 @@ namespace GenericApp.Controllers
             }
             await _repository.Add<RefreshTokenAspNetUser>(new RefreshTokenAspNetUser { IdUser = user.Id, RefreshToken = refreshToken, IsActive = true });
 
-            return Ok(accessToken);
+            return Ok(new LoginResponseDTO
+            {
+                Token = accessToken,
+                UserName = user.UserName,
+                FullName = user.UserName
+            });
         }
 
         [HttpGet("refresh-token")]
@@ -96,7 +101,12 @@ namespace GenericApp.Controllers
                 if (tokenValidated.IsValid)
                 {
                     var newAccessToken = await GenerateToken(new LoginDTO { Email = user.UserName });
-                    return Ok(newAccessToken);
+                    return Ok(new LoginResponseDTO
+                    {
+                        Token = newAccessToken,
+                        UserName = user.UserName,
+                        FullName = user.UserName
+                    });
                 }
             }
             return Unauthorized();

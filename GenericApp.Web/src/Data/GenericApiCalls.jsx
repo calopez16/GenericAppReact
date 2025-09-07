@@ -1,5 +1,5 @@
 import { AuthHelper } from '@helpers/AuthHelper'; // Asegúrate de que la ruta sea correcta
-import { API_BASE_URL } from '@config'; 
+import { API_BASE_URL } from '@config';
 
 // --- Lógica para manejar el Refresh Token ---
 let isRefreshing = false;
@@ -27,7 +27,12 @@ const handleResponse = async (response, isReturnData) => {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
     }
-    return isReturnData ? await response.json() : response.ok;
+    var data = isReturnData ? await response.json() : response.ok;
+
+    return {
+        success: response.ok,
+        data: data
+    };
 };
 
 const sendRequest = async (endPoint, method, data = null, isReturnData = false) => {
@@ -57,6 +62,9 @@ const sendRequest = async (endPoint, method, data = null, isReturnData = false) 
             if (endPoint.includes('Auth/refresh-token')) {
                 AuthHelper.logout();
                 return Promise.reject(new Error("Refresh token failed"));
+            } else if (endPoint.includes('Auth/login')) {
+                AuthHelper.logout(false);
+                return false;
             }
 
             if (isRefreshing) {
