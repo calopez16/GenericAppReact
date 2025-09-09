@@ -1,6 +1,6 @@
-// src/helpers/AlertContext.js
-
 import React, { createContext, useState, useContext } from 'react';
+import { Box, Alert, IconButton, Collapse } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 // 1. Crear el Contexto
 export const AlertContext = createContext();
@@ -33,27 +33,38 @@ export const AlertProvider = ({ children }) => {
         <AlertContext.Provider value={{ addAlert, removeAlert }}>
             {children}
             {/* Aquí se renderizarán las alertas */}
-            <div
-                style={{
+            <Box
+                sx={{
                     position: 'fixed',
                     top: '1rem',
                     right: '1rem',
                     zIndex: 1050,
                     maxWidth: '300px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1, // Espacio entre alertas
                 }}
             >
                 {alerts.map((alert) => (
-                    <div key={alert.id} className={`alert alert-${alert.variant} alert-dismissible fade show`} role="alert">
-                        {alert.message}
-                        <button
-                            type="button"
-                            className="btn-close"
-                            aria-label="Close"
-                            onClick={() => removeAlert(alert.id)}
-                        ></button>
-                    </div>
+                    <Collapse key={alert.id} in={true}>
+                        <Alert
+                            severity={alert.variant}
+                            action={
+                                <IconButton
+                                    aria-label="close"
+                                    color="inherit"
+                                    size="small"
+                                    onClick={() => removeAlert(alert.id)}
+                                >
+                                    <CloseIcon fontSize="inherit" />
+                                </IconButton>
+                            }
+                        >
+                            {alert.message}
+                        </Alert>
+                    </Collapse>
                 ))}
-            </div>
+            </Box>
         </AlertContext.Provider>
     );
 };

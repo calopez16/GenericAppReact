@@ -1,5 +1,5 @@
 ﻿import { createContext, useState, useEffect } from "react";
-import { AuthHelper } from '@helpers/AuthHelper'; // Aseg�rate de que la ruta sea correcta
+import { AuthHelper } from '@helpers/AuthHelper'; 
 
 export const AppContext = createContext(null);
 
@@ -43,11 +43,11 @@ export const AppContextProvider = ({ children }) => {
         // setAccessToken ahora usa el helper para que el cambio sea global.
         setAccessToken: (token) => {
             AuthHelper.setAccessToken(token);
-            setAccessToken(token); // Actualiza tambi�n el estado local del contexto.
+            setAccessToken(token); // Actualiza también el estado local del contexto.
         },
         userRole,
         setUserRole,
-        // Agregamos una funci�n de logout al contexto.
+        // Agregamos una función de logout al contexto.
         logout: AuthHelper.logout,
         themeMode,
         setThemeMode,

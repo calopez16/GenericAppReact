@@ -1,14 +1,22 @@
-// src/components/LoaderComponent.js
+// src/components/LoaderComponent.jsx
 import React from 'react';
-import { Spinner } from 'react-bootstrap';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
 const LoaderComponent = () => {
     return (
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-            <Spinner animation="border" role="status" variant="primary">
-                <span className="visually-hidden">Cargando...</span>
-            </Spinner>
-        </div>
+        <Box
+            sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '100vh',
+                flexDirection: 'column',
+                marginLeft: '0px'
+            }}
+        >
+            <CircularProgress color="primary" sx={{ mb: 2 }} />
+            <Typography variant="srOnly">Cargando...</Typography>
+        </Box>
     );
 };
 

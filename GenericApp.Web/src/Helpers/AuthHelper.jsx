@@ -1,5 +1,5 @@
 ﻿// Este helper centraliza el acceso al token en localStorage.
-// As�, tanto el AppContext como el interceptor de API leen del mismo lugar.
+// Así, tanto el AppContext como el interceptor de API leen del mismo lugar.
 
 export const AuthHelper = {
     getAccessToken: () => localStorage.getItem('accessToken'),
@@ -10,7 +10,7 @@ export const AuthHelper = {
         } else {
             localStorage.removeItem('accessToken');
         }
-        // Disparamos un evento para que AppContext se actualice si est� escuchando.
+        // Disparamos un evento para que AppContext se actualice si está escuchando.
         window.dispatchEvent(new Event('storage'));
     },
 
@@ -20,7 +20,7 @@ export const AuthHelper = {
         localStorage.removeItem('userRole');
         window.dispatchEvent(new Event('storage'));
         if (redirectToLogin)
-            // Redirecci�n forzada al login.
+            // Redirección forzada al login.
             window.location.href = '/login';
     }
 };

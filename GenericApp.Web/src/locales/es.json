@@ -1,4 +1,15 @@
 {
+  "logout": "Cerrar sesión",
+  "select_language": "Seleccionar idioma",
+  "select_theme_dark": "Color oscuro",
+  "select_theme_light": "Color claro",
+  "language_spanish": "Español",
+  "language_english": "Inglés",
+  "language_current": "Español",
+
+
+
+
   "mi_sistema": "Mi Sistema",
   "dashboard": "Dashboard",
   "usuarios": "Usuarios",

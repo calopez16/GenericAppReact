@@ -1,12 +1,43 @@
 ﻿import React, { useState, useContext, useEffect } from 'react';
-import { useTranslation } from 'react-i18next'; // Importa el hook
-import { Row, Col, Card, Alert, ProgressBar, Table, Pagination, Button } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
 
+// MUI Imports
+import {
+    Box,
+    Grid,
+    Card,
+    CardContent,
+    Typography,
+    Button,
+    LinearProgress,
+    Alert,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Pagination
+} from '@mui/material';
+
+// Iconos de Material-UI
+import RefreshIcon from '@mui/icons-material/Refresh';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+
 const mockData = [
-    // ... tus datos de ejemplo
     { id: 1, firstName: 'Juan', lastName: 'Pérez', username: '@jperez' },
-    // ...
+    { id: 2, firstName: 'María', lastName: 'García', username: '@mgarcia' },
+    { id: 3, firstName: 'Pedro', lastName: 'López', username: '@plopez' },
+    { id: 4, firstName: 'Ana', lastName: 'Martínez', username: '@amartinez' },
+    { id: 5, firstName: 'Luis', lastName: 'Sánchez', username: '@lsanchez' },
+    { id: 6, firstName: 'Sofía', lastName: 'Ramírez', username: '@sramirez' },
+    { id: 7, firstName: 'Carlos', lastName: 'Torres', username: '@ctorres' },
+    { id: 8, firstName: 'Laura', lastName: 'Díaz', username: '@ldiaz' },
 ];
 
 function Home() {
@@ -22,64 +53,150 @@ function Home() {
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
     const handleRefreshData = () => {
-        setLoading(true); // Activa el loader para esta acción específica
-        // Simula la llamada a una API
+        setLoading(true);
         setTimeout(() => {
-            // Lógica para actualizar los datos aquí
-            setLoading(false); // Desactiva el loader al finalizar
+            setLoading(false);
         }, 1500);
     };
 
     return (
-        <div className="p-4">
-            <h1 className="mb-4">{t('dashboard_stats')}</h1>
+        <Box sx={{ p: 4 }}>
+            <Typography variant="h4" component="h1" gutterBottom>
+                {t('dashboard_stats')}
+            </Typography>
 
-            {/* Resto de tu código del dashboard */}
+            {/* Fila de estadísticas mejorada */}
+            <Grid container spacing={4} sx={{ mb: 4 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card variant="outlined">
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                        {t('usuarios_activos')}
+                                    </Typography>
+                                    <Typography variant="h4" color="primary.main">
+                                        2,548
+                                    </Typography>
+                                </Box>
+                                <PeopleAltIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                                {t('en_la_ultima_semana')}
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card variant="outlined">
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                        {t('ventas_mensuales')}
+                                    </Typography>
+                                    <Typography variant="h4" color="secondary.main">
+                                        $12,456
+                                    </Typography>
+                                </Box>
+                                <MonetizationOnIcon sx={{ fontSize: 40, color: 'secondary.main' }} />
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                                {t('comparado_con_el_mes_anterior')}
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card variant="outlined">
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                        {t('tasas_de_conversion')}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                        <LinearProgress variant="determinate" value={75} sx={{ width: '100%', mr: 1, height: 8 }} />
+                                        <Typography variant="body2" color="text.secondary">75%</Typography>
+                                    </Box>
+                                </Box>
+                                <TimelineIcon sx={{ fontSize: 40, color: 'info.main' }} />
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                                {t('objetivo_80%')}
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card variant="outlined">
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                        {t('estado_del_sistema')}
+                                    </Typography>
+                                    <Alert severity="success" sx={{ mt: 1 }}>
+                                        {t('operativo')}
+                                    </Alert>
+                                </Box>
+                                <VerifiedUserIcon sx={{ fontSize: 40, color: 'success.main' }} />
+                            </Box>
+                        </CardContent>
+                    </Card>
+                </Grid>
+            </Grid>
 
-            <h2 className="mt-5 mb-3">
-                {t('ejemplo_tabla')}
-                <Button variant="outline-primary" size="sm" className="ms-3" onClick={handleRefreshData}>
-                    Recargar Datos
-                </Button>
-            </h2>
-            <Card>
-                <Card.Body>
-                    <Table striped bordered hover responsive>
-                        <thead>
-                            <tr>
-                                <th>{t('id')}</th>
-                                <th>{t('nombre')}</th>
-                                <th>{t('apellido')}</th>
-                                <th>{t('usuario')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentItems.map((item) => (
-                                <tr key={item.id}>
-                                    <td>{item.id}</td>
-                                    <td>{item.firstName}</td>
-                                    <td>{item.lastName}</td>
-                                    <td>{item.username}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
-                    <div className="d-flex justify-content-center">
-                        <Pagination>
-                            {Array.from({ length: totalPages }, (_, index) => (
-                                <Pagination.Item
-                                    key={index + 1}
-                                    active={index + 1 === currentPage}
-                                    onClick={() => paginate(index + 1)}
-                                >
-                                    {index + 1}
-                                </Pagination.Item>
-                            ))}
-                        </Pagination>
-                    </div>
-                </Card.Body>
-            </Card>
-        </div>
+            {/* Sección de la tabla */}
+            <Box sx={{ mt: 5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <Typography variant="h5" component="h2">
+                        {t('ejemplo_tabla')}
+                    </Typography>
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        sx={{ ml: 2 }}
+                        onClick={handleRefreshData}
+                        startIcon={<RefreshIcon />}
+                    >
+                        Recargar Datos
+                    </Button>
+                </Box>
+                <Card variant="outlined">
+                    <TableContainer component={Paper}>
+                        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>{t('id')}</TableCell>
+                                    <TableCell>{t('nombre')}</TableCell>
+                                    <TableCell>{t('apellido')}</TableCell>
+                                    <TableCell>{t('usuario')}</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {currentItems.map((item) => (
+                                    <TableRow key={item.id}>
+                                        <TableCell component="th" scope="row">{item.id}</TableCell>
+                                        <TableCell>{item.firstName}</TableCell>
+                                        <TableCell>{item.lastName}</TableCell>
+                                        <TableCell>{item.username}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Card>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                    <Pagination
+                        count={totalPages}
+                        page={currentPage}
+                        onChange={(event, value) => paginate(value)}
+                        color="primary"
+                    />
+                </Box>
+            </Box>
+        </Box>
     );
 }
 
