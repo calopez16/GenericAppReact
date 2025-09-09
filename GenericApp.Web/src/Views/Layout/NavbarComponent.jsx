@@ -74,20 +74,20 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                 </IconButton>
 
                 {/* Logo y título */}
-                <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
-                    <Avatar
-                        src="https://via.placeholder.com/40"
-                        alt="Logo"
-                        sx={{ mr: 2, width: 40, height: 40 }}
-                    />
-                    <Typography
-                        variant="h6"
-                        component="div"
-                        sx={{ flexGrow: 1 }}
-                    >
-                        {t('mi_sistema')}
-                    </Typography>
-                </Box>
+                {/*<Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>*/}
+                {/*    <Avatar*/}
+                {/*        src="https://via.placeholder.com/40"*/}
+                {/*        alt="Logo"*/}
+                {/*        sx={{ mr: 2, width: 40, height: 40 }}*/}
+                {/*    />*/}
+                {/*    <Typography*/}
+                {/*        variant="h6"*/}
+                {/*        component="div"*/}
+                {/*        sx={{ flexGrow: 1 }}*/}
+                {/*    >*/}
+                {/*        {t('app_name')}*/}
+                {/*    </Typography>*/}
+                {/*</Box>*/}
 
                 {/* Contenedor de elementos de la derecha */}
                 <Box sx={{ flexGrow: 1 }} />
@@ -110,7 +110,7 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                         >
                             <Avatar
                                 src={langFlags[i18n.language]}
-                                alt="Current Language"
+                                alt={t('current_language')}
                                 sx={{ width: 30, height: 30 }}
                             />
                         </IconButton>

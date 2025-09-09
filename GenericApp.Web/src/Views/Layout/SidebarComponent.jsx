@@ -100,7 +100,7 @@ const SidebarComponent = ({ showSidebar, toggleSidebar }) => {
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Avatar src="https://via.placeholder.com/40" alt="Logo" sx={{ mr: 2, width: 40, height: 40 }} />
-                        <Typography variant="h6" component="div">{t('mi_sistema')}</Typography>
+                        <Typography variant="h6" component="div">{t('app_name')}</Typography>
                     </Box>
                     <IconButton onClick={toggleSidebar}>
                         <CloseIcon />
@@ -126,7 +126,7 @@ const SidebarComponent = ({ showSidebar, toggleSidebar }) => {
                 <Box sx={{ p: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <Avatar src="https://via.placeholder.com/40" alt="Logo" sx={{ mr: 2, width: 40, height: 40 }} />
-                        <Typography variant="h6" component="div">{t('mi_sistema')}</Typography>
+                        <Typography variant="h6" component="div">{t('app_name')}</Typography>
                     </Box>
                 </Box>
                 {menuContent(t, toggleSubmenu, openSubmenu)}

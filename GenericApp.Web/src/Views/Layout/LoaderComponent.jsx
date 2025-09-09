@@ -1,8 +1,10 @@
-// src/components/LoaderComponent.jsx
-import React from 'react';
+import React, { useContext } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next'; 
 
 const LoaderComponent = () => {
+    const { t } = useTranslation();
+
     return (
         <Box
             sx={{
@@ -15,7 +17,7 @@ const LoaderComponent = () => {
             }}
         >
             <CircularProgress color="primary" sx={{ mb: 2 }} />
-            <Typography variant="srOnly">Cargando...</Typography>
+            <Typography variant="srOnly">{t('loading')}...</Typography>
         </Box>
     );
 };

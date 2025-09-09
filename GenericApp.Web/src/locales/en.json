@@ -1,4 +1,15 @@
 {
+  "logout": "Log Out",
+  "select_language": "Select Language",
+  "select_theme_dark": "Dark Theme",
+  "select_theme_light": "Light Theme",
+  "language_spanish": "Spanish",
+  "language_english": "English",
+  "language_current": "Spanish",
+  "loading": "Loading",
+  "app_name": "System Name",
+  "current_language": "Current Language",
+
   "mi_sistema": "My System",
   "dashboard": "Dashboard",
   "usuarios": "Users",

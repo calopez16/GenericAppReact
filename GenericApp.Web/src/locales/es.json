@@ -6,8 +6,9 @@
   "language_spanish": "Español",
   "language_english": "Inglés",
   "language_current": "Español",
-
-
+  "loading": "Cargando",
+  "app_name": "Nombre del sistema",
+  "current_language": "Lenguaje actual",
 
 
   "mi_sistema": "Mi Sistema",
