@@ -1,39 +1,22 @@
-import GenericApiService from '../GenericApiMethods';
-import { GET, POST } from '../GenericApiCalls';
-import { useAppContext } from '../../config/AppContext';
+import createApiMethodsService from '@data/GenericApiMethods';
+import { GET, POST, PUT } from '@data/GenericApiCalls';
 
 const moduleSource = "users";
 
 const dataMapper = (i, rowData) => {
-    return {
-        "id": rowData[i]["idUser"],
-        "employeeNumber": rowData[i]["employeeNumber"],
-        "fullName": rowData[i]["fullName"],
-        "userName": rowData[i]["userName"],
-        "sid": rowData[i]["sid"],
-        "email": rowData[i]["email"],
-        "active": rowData[i]["active"],
-        "idRole": rowData[i]["idRole"],
-        "roleDescription": rowData[i]["roleDescription"],
-    };
+    return rowData;
 };
 
-class DataAPIService extends GenericApiService {
-    constructor(apiUrl) {
-        super(apiUrl, moduleSource, dataMapper);
-        this.apiUrl = apiUrl;
-    }
+export const DataAPIUsersService = () => {
+    const genericService = createApiMethodsService(moduleSource, dataMapper);
 
-    async GetByUserName(username) {
-        return await GET(this.apiUrl, `${this.moduleSource}/username/${username}`);
-    }
-
-    async GetADByUserName(username) {
-        return await GET(this.apiUrl, `${this.moduleSource}/ad-user/${username}`);
-    }
-}
-
-export const DataAPIServices = () => {
-    const { apiUrl } = useAppContext(); // Use the hook to get apiUrl
-    return new DataAPIService(apiUrl);
+    return {
+        ...genericService,
+        getUsersPagination: (pageNumber = 1, pageSize = 10, searchTerm = "") => GET(`${moduleSource}/pagination?pageNumber=${pageNumber}&pageSize=${pageSize}&searchTerm=${searchTerm}`),
+        getRoles: () => GET(`${moduleSource}/roles`),
+        GetByUserName: (username) => GET(`${moduleSource}/username/${username}`),
+        disableUser: (userId) => POST(`${moduleSource}/${userId}/disable`),
+        enableUser: (userId) => POST(`${moduleSource}/${userId}/enable`),
+        resetPassword: (userId, newPasswordData) => POST(`${moduleSource}/reset-password/${userId}`, newPasswordData),
+    };
 };

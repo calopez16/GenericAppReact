@@ -11,5 +11,6 @@ export const AuthenticationAPIService = () => {
         ...genericService,
         authenticate: (credentials) => POST(`${moduleSource}/login`, credentials, true),
         refreshToken: () => GET(`${moduleSource}/refresh-token`),
+        passwordRestart: () => POST(`${moduleSource}/pass-restart`),
     };
 };

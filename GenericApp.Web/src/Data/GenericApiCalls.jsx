@@ -86,6 +86,9 @@ const sendRequest = async (endPoint, method, data = null, isReturnData = false) 
             try {
                 const refreshTokenResponse = await fetch(`${API_BASE_URL}/Auth/refresh-token`, {
                     method: 'GET',
+                    headers: {
+                        ...(token && { 'Authorization': `Bearer ${token}` })
+                    },
                     //credentials: 'include',
                 });
 
@@ -93,12 +96,12 @@ const sendRequest = async (endPoint, method, data = null, isReturnData = false) 
                     throw new Error("Failed to refresh token");
                 }
 
-                const { accessToken: newAccessToken } = await refreshTokenResponse.json();
-                AuthHelper.setAccessToken(newAccessToken); // Guardamos el nuevo token
-                processQueue(null, newAccessToken); // Procesamos la cola de peticiones fallidas
+                const authLogin = await refreshTokenResponse.json();
+                AuthHelper.setAccessToken(authLogin.token); // Guardamos el nuevo token
+                processQueue(null, authLogin.token); // Procesamos la cola de peticiones fallidas
 
                 // Reintentamos la petición original con el nuevo token
-                options.headers['Authorization'] = `Bearer ${newAccessToken}`;
+                options.headers['Authorization'] = `Bearer ${authLogin.token}`;
                 response = await fetch(url, options);
 
             } catch (refreshError) {

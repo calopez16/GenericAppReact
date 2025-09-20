@@ -1,104 +1,210 @@
-﻿import React, { useContext, useState } from 'react';
+﻿import React, { useContext, useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '@helpers/AppContext';
 import { AuthenticationAPIService } from '@data/Auth/Authentication';
 import { useAlert } from '@helpers/AlertContext';
-import '@styles/App.css'
+import '@styles/App.css';
+import '@styles/Login.css';
 
-// MUI Imports
 import { Box, Container, Typography, TextField, Button, CircularProgress, Card, CardContent } from '@mui/material';
 
 function LoginPage() {
     const { t } = useTranslation();
     const { setAccessToken, setUserRole, setUserName } = useContext(AppContext);
     const navigate = useNavigate();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
+
     const [isLoading, setIsLoading] = useState(false);
+    const [isRestartPasswordNeeded, setIsRestartPasswordNeeded] = useState(false);
 
     const { addAlert } = useAlert();
+    const authService = AuthenticationAPIService();
+
+    const newPasswordRef = useRef(null);
+
+    useEffect(() => {
+        if (isRestartPasswordNeeded && newPasswordRef.current) {
+            newPasswordRef.current.focus();
+        }
+    }, [isRestartPasswordNeeded]);
 
     const handleLogin = async (event) => {
         event.preventDefault();
 
         if (!email || !password) {
-            addAlert(t('error_campos_vacios'), 'danger');
+            addAlert(t('emptyFields'), 'danger');
             return;
         }
-
         setIsLoading(true);
 
         try {
-            const authService = AuthenticationAPIService();
             const response = await authService.authenticate({ email, password });
 
             if (response && response.success) {
-                const { token, roleName, userName } = response.data;
-                setAccessToken(token);
-                setUserRole(roleName);
-                setUserName(userName);
+                const { token, roleName, userName, isChangePasswordNeeded } = response.data;
 
-                addAlert(t('login_exitoso'), 'success');
-                navigate('/');
+                if (isChangePasswordNeeded) {
+                    setAccessToken(token);
+                    // Oculta el formulario de login y muestra el de cambio de contraseña con transición
+                    setIsRestartPasswordNeeded(true);
+                    setNewPassword('');
+                    setConfirmNewPassword('');
+                    addAlert(t('changePasswordNeeded'), 'info');
+                } else {
+                    setAccessToken(token);
+                    setUserRole(roleName);
+                    setUserName(userName);
+                    navigate('/');
+                }
             } else {
-                addAlert(t('error_credenciales_invalidas'), 'danger');
+                addAlert(t('invalidCredentials'), 'danger');
             }
         } catch (err) {
-            addAlert(t('error_conexion'), 'danger');
+            addAlert(t('conectionError'), 'danger');
             console.error('Error de login:', err);
         } finally {
             setIsLoading(false);
         }
     };
 
+    const handlePasswordChange = async (event) => {
+        event.preventDefault();
+
+        if (!newPassword || !confirmNewPassword) {
+            addAlert(t('emptyFields'), 'danger');
+            return;
+        }
+        if (newPassword !== confirmNewPassword) {
+            addAlert(t('passwordsDontMatch'), 'danger');
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            const response = await authService.passwordRestart({ newPassword });
+
+            if (response && response.success) {
+                const { token, roleName, userName } = response.data;
+                setAccessToken(token);
+                setUserRole(roleName);
+                setUserName(userName);
+                addAlert(t('passwordChanged'), 'success');
+                navigate('/');
+            } else {
+                addAlert(t('error'), 'danger');
+            }
+        } catch (err) {
+            addAlert(t('conectionError'), 'danger');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Manejador para el botón de regresar (sin animación de salida)
+    const handleGoBack = () => {
+        setIsRestartPasswordNeeded(false);
+    };
+
     return (
         <Container component="main" maxWidth="xs" sx={{ display: 'flex', alignItems: 'center', minHeight: '100vh', justifyContent: 'center' }}>
-            <Card sx={{ p: 4, width: '100%' }}>
+            <Card sx={{ p: 4, width: '100%' }} className="">
                 <CardContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', transition:"2s ease-in-out;" }}>
                         <Typography component="h1" variant="h5" sx={{ mb: 4 }}>
-                            {t('login_titulo')}
+                            {isRestartPasswordNeeded ? t('changePassword') : t('login')}
                         </Typography>
-                        <Box component="form" onSubmit={handleLogin} noValidate sx={{ width: '100%' }}>
-                            <TextField
-                                margin="normal"
-                                required
-                                fullWidth
-                                id="email"
-                                label={t('correo_electronico')}
-                                name="email"
-                                autoComplete="email"
-                                autoFocus
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                            <TextField
-                                margin="normal"
-                                required
-                                fullWidth
-                                name="password"
-                                label={t('contrasena')}
-                                type="password"
-                                id="password"
-                                autoComplete="current-password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                            <Button
-                                type="submit"
-                                fullWidth
-                                variant="contained"
-                                sx={{ mt: 3, mb: 2 }}
-                                disabled={isLoading}
-                            >
-                                {isLoading ? (
-                                    <CircularProgress size={24} color="inherit" />
-                                ) : (
-                                    t('entrar')
-                                )}
-                            </Button>
-                        </Box>
+
+                        {/* Formulario de login normal: se oculta sin transición */}
+                        <div className={`form-container ${isRestartPasswordNeeded ? 'hidden' : 'visible'}`}>
+                            <Box component="form" onSubmit={handleLogin} noValidate sx={{ width: '100%' }}>
+                                <TextField
+                                    margin="normal"
+                                    required
+                                    fullWidth
+                                    id="email"
+                                    label={t('username')}
+                                    name="email"
+                                    autoComplete="email"
+                                    autoFocus
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                                <TextField
+                                    margin="normal"
+                                    required
+                                    fullWidth
+                                    name="password"
+                                    label={t('password')}
+                                    type="password"
+                                    id="password"
+                                    autoComplete="current-password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <Button
+                                    type="submit"
+                                    fullWidth
+                                    variant="contained"
+                                    sx={{ mt: 3, mb: 2 }}
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? <CircularProgress size={24} color="inherit" /> : t('login')}
+                                </Button>
+                            </Box>
+                        </div>
+
+                        {/* Formulario de cambio de contraseña: aparece con transición */}
+                        <div className={`form-container ${isRestartPasswordNeeded ? 'visible' : 'hidden'}`}>
+                            <Box component="form" onSubmit={handlePasswordChange} noValidate sx={{ width: '100%' }}>
+                                <TextField
+                                    ref={newPasswordRef}
+                                    margin="normal"
+                                    required
+                                    fullWidth
+                                    name="newPassword"
+                                    label={t('newPassword')}
+                                    type="password"
+                                    id="newPassword"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                />
+                                <TextField
+                                    margin="normal"
+                                    required
+                                    fullWidth
+                                    name="confirmNewPassword"
+                                    label={t('confirmPassword')}
+                                    type="password"
+                                    id="confirmNewPassword"
+                                    value={confirmNewPassword}
+                                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                />
+                                <Button
+                                    type="submit"
+                                    fullWidth
+                                    variant="contained"
+                                    sx={{ mt: 3, mb: 2 }}
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? <CircularProgress size={24} color="inherit" /> : t('changePassword')}
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    sx={{ mt: 1, mb: 2 }}
+                                    onClick={handleGoBack}
+                                    disabled={isLoading}
+                                >
+                                    {t('goBack')}
+                                </Button>
+                            </Box>
+                        </div>
                     </Box>
                 </CardContent>
             </Card>

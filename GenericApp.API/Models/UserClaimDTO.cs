@@ -1,0 +1,8 @@
+﻿namespace GenericApp.API.Models
+{
+    public class UserClaimDTO
+    {
+        public string Type { get; set; }
+        public string Value { get; set; }
+    }
+}

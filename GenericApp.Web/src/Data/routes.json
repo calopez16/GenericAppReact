@@ -1,0 +1,34 @@
+[
+  {
+    "id": "dashboard",
+    "path": "/",
+    "i18nKey": "dashboard",
+    "icon": "DashboardIcon",
+    "exact": true
+  },
+  {
+    "id": "configuration",
+    "path": "",
+    "i18nKey": "configuration",
+    "icon": "PeopleIcon",
+    "submenu": [
+      {
+        "id": "users",
+        "path": "/users",
+        "i18nKey": "users"
+      }
+    ]
+  },
+  {
+    "id": "reports",
+    "path": "/reports",
+    "i18nKey": "reportes",
+    "icon": "BarChartIcon"
+  },
+  {
+    "id": "settings",
+    "path": "/settings",
+    "i18nKey": "configuracion",
+    "icon": "SettingsIcon"
+  }
+]

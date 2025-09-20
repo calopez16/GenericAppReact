@@ -1,6 +1,7 @@
-﻿using GenericApp.Data;
+﻿using GenericApp.API.Constants;
 using GenericApp.BLL.Sevices;
 using GenericApp.BLL.Sevices.Interface;
+using GenericApp.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -76,7 +77,9 @@ namespace GenericApp
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("admin", policy => policy.RequireClaim("isAdmin"));
+                options.AddPolicy(AppPolicies.Admin.ToString(), policy => policy.RequireClaim(AppClaims.IsAdmin));
+                options.AddPolicy(AppPolicies.User.ToString(), policy => policy.RequireClaim(AppClaims.IsUser));
+                options.AddPolicy("IsChangePasswordNeeded", policy => policy.RequireClaim(AppClaims.IsChangePasswordNeeded));
             });
 
             services.AddCors(options =>

@@ -9,6 +9,7 @@
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="src\Views\Users\" />
+    <None Remove=".vite\**" />
+    <TypeScriptConfiguration Remove=".vite\**" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
-﻿using GenericApp.BLL.Sevices.Interface;
+﻿using GenericApp.API.Constants;
+using GenericApp.BLL.Sevices.Interface;
 using GenericApp.Data.Models;
 using GenericApp.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -6,9 +7,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.VisualBasic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.Serialization;
 using System.Security.Claims;
 using System.Text;
 
@@ -35,44 +39,57 @@ namespace GenericApp.Controllers
             _repository = repository;
         }
 
-        //[HttpPost("register")]
-        //public async Task<IActionResult> Register(LoginDTO loginDTO)
-        //{
-        //    var result = await _userManager.CreateAsync(new IdentityUser
-        //    {
-        //        UserName = loginDTO.Email,
-        //        Email = loginDTO.Email
-        //    }, loginDTO.Password);
-
-        //    if (!result.Succeeded)
-        //        return BadRequest(result.Errors);
-        //    var token = await GenerateToken(loginDTO);
-        //    return Ok(token);
-        //}
-
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO loginDTO)
         {
+            var user = await _userManager.FindByNameAsync(loginDTO.Email);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var isChangePasswordNeeded = false;
+            if (claims != null)
+            {
+                if (claims.Any(x => x.Type == AppClaims.IsDisabled))
+                    return Unauthorized();
+                isChangePasswordNeeded = claims.Any(x => x.Type == AppClaims.IsChangePasswordNeeded);
+            }
+
             var resultado = await _signInManager.PasswordSignInAsync(loginDTO.Email, loginDTO.Password, isPersistent: false, lockoutOnFailure: false);
             if (!resultado.Succeeded)
                 return Unauthorized();
-            var user = await _userManager.FindByNameAsync(loginDTO.Email);
             var accessToken = await GenerateToken(loginDTO);
-            var refreshToken = await GenerateToken(loginDTO, true);
-
+            var refreshToken = "";
             var actualRefreshToken = await _repository.FirstOrDefault<RefreshTokenAspNetUser>(x => x.IdUser == user.Id && x.IsActive == true);
-            if (actualRefreshToken != null)
+            if (actualRefreshToken == null)
             {
-                actualRefreshToken.IsActive = false;
-                await _repository.Update<RefreshTokenAspNetUser>(actualRefreshToken);
+                refreshToken = await GenerateToken(loginDTO, true);
+                await _repository.Add<RefreshTokenAspNetUser>(new RefreshTokenAspNetUser { IdUser = user.Id, RefreshToken = refreshToken, IsActive = true });
             }
-            await _repository.Add<RefreshTokenAspNetUser>(new RefreshTokenAspNetUser { IdUser = user.Id, RefreshToken = refreshToken, IsActive = true });
+            else
+            {
+                var validator = new JwtSecurityTokenHandler();
+                var tokenValidated = await validator.ValidateTokenAsync(actualRefreshToken.RefreshToken, new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = false,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["jwt:RefreshToken:SecurityKeyJwt"])),
+                    ClockSkew = TimeSpan.Zero
+                });
+                if (!tokenValidated.IsValid)
+                {
+                    actualRefreshToken.IsActive = false;
+                    await _repository.Update<RefreshTokenAspNetUser>(actualRefreshToken);
+                    refreshToken = await GenerateToken(loginDTO, true);
+                    await _repository.Add<RefreshTokenAspNetUser>(new RefreshTokenAspNetUser { IdUser = user.Id, RefreshToken = refreshToken, IsActive = true });
+                }
+            }
 
             return Ok(new LoginResponseDTO
             {
                 Token = accessToken,
                 UserName = user.UserName,
-                FullName = user.UserName
+                FullName = user.UserName,
+                IsChangePasswordNeeded = isChangePasswordNeeded
             });
         }
 
@@ -84,9 +101,8 @@ namespace GenericApp.Controllers
             var jwtToken = headerAuth.FirstOrDefault()?.Split(" ").Last();
             if (jwtToken != null)
             {
-
                 var tokenInfo = validator.ReadJwtToken(jwtToken);
-                var emailUser = tokenInfo.Claims.FirstOrDefault(x => x.Type.Equals("email"));
+                var emailUser = tokenInfo.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email);
                 var user = await _userManager.FindByNameAsync(emailUser?.Value);
                 var actualRefreshToken = await _repository.FirstOrDefault<RefreshTokenAspNetUser>(x => x.IdUser == user.Id && x.IsActive == true);
                 var tokenValidated = await validator.ValidateTokenAsync(actualRefreshToken.RefreshToken, new TokenValidationParameters
@@ -112,21 +128,61 @@ namespace GenericApp.Controllers
             return Unauthorized();
         }
 
-        //[HttpPost("pass-restart")]
-        ////[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "admin")]
-        //public async Task<ActionResult<LoginResponseDTO>> RefreshToken2(string email)
-        //{
-        //    var user = await _userManager.FindByEmailAsync(email);
-        //    var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-        //    await _userManager.ResetPasswordAsync(user, resetToken, "Admin123!");
-        //    return Ok();
-        //}
+        [HttpPost("pass-restart")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "IsChangePasswordNeeded")]
+        public async Task<ActionResult<LoginResponseDTO>> RestartPassword([FromBody] string newPassword)
+        {
+            var validator = new JwtSecurityTokenHandler();
+            Request.Headers.TryGetValue("Authorization", out var headerAuth);
+            var jwtToken = headerAuth.FirstOrDefault()?.Split(" ").Last();
+            if (jwtToken != null)
+            {
+                var tokenInfo = validator.ReadJwtToken(jwtToken);
+                var emailUser = tokenInfo.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email);
+                var user = await _userManager.FindByNameAsync(emailUser?.Value);
+                if (user != null)
+                {
+                    var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    var changePasswordResult = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+                    if (changePasswordResult.Succeeded)
+                    {
+                        await _userManager.RemoveClaimAsync(user, new Claim(AppClaims.IsChangePasswordNeeded, "1"));
+                        await _userManager.AddClaimAsync(user, new Claim(AppClaims.IsUser, "1"));
+
+                        var loginDTO = new LoginDTO { Email = user.Email };
+                        var accessToken = await GenerateToken(loginDTO);
+                        var refreshToken = await GenerateToken(loginDTO, true);
+
+                        var actualRefreshToken = await _repository.FirstOrDefault<RefreshTokenAspNetUser>(x => x.IdUser == user.Id && x.IsActive == true);
+                        if (actualRefreshToken != null)
+                        {
+                            actualRefreshToken.IsActive = false;
+                            await _repository.Update<RefreshTokenAspNetUser>(actualRefreshToken);
+                        }
+                        await _repository.Add<RefreshTokenAspNetUser>(new RefreshTokenAspNetUser { IdUser = user.Id, RefreshToken = refreshToken, IsActive = true });
+
+                        return Ok(new LoginResponseDTO
+                        {
+                            Token = accessToken,
+                            UserName = user.UserName,
+                            FullName = user.UserName,
+                        });
+                    }
+                }
+
+
+
+
+
+            }
+            return Unauthorized();
+        }
 
         [HttpPost("AllowClaim")]
         public async Task<ActionResult> AllowClaim(LoginDTO loginDTO)
         {
             var user = await _userManager.FindByEmailAsync(loginDTO.Email);
-            await _userManager.AddClaimAsync(user, new Claim("isAdmin", "1"));
+            await _userManager.AddClaimAsync(user, new Claim(AppClaims.IsAdmin, "1"));
             return NoContent();
 
         }
@@ -135,7 +191,7 @@ namespace GenericApp.Controllers
         public async Task<ActionResult> RemoveClaim(LoginDTO loginDTO)
         {
             var user = await _userManager.FindByEmailAsync(loginDTO.Email);
-            await _userManager.RemoveClaimAsync(user, new Claim("isAdmin", "1"));
+            await _userManager.RemoveClaimAsync(user, new Claim(AppClaims.IsAdmin, "1"));
             return NoContent();
 
         }
@@ -146,13 +202,16 @@ namespace GenericApp.Controllers
             {
 
                 var claims = new List<Claim>
-            {
-                new("email", loginDTO.Email)
-            };
+                {
+                    new(ClaimTypes.Email, loginDTO.Email)
+                };
 
-                var user = await _userManager.FindByEmailAsync(loginDTO.Email);
+                var user = await _userManager.FindByNameAsync(loginDTO.Email);
                 var claimsDB = await _userManager.GetClaimsAsync(user);
                 claims.AddRange(claimsDB);
+                var roles = await _userManager.GetRolesAsync(user);
+                foreach (var role in roles)
+                    claims.Add(new Claim(ClaimTypes.Role, role));
 
                 var SecurityKeyJwtFromConfig = !refreshToken ? _configuration["jwt:SecurityKeyJwt"] : _configuration["jwt:RefreshToken:SecurityKeyJwt"];
                 var TokenExpirationTimeFromConfig = !refreshToken ? _configuration["jwt:ExpirationInMinutes"] : _configuration["jwt:RefreshToken:ExpirationInDays"];
@@ -175,7 +234,5 @@ namespace GenericApp.Controllers
                 return null;
             }
         }
-
-
     }
 }

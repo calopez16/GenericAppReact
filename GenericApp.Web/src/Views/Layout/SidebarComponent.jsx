@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
-
+import routes from '@data/routes.json'; 
 // MUI Imports
 import {
     Drawer,
@@ -28,44 +28,53 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 
 const drawerWidth = 240;
 
-// Extraer el contenido del menú a una función para evitar duplicación de código
-const menuContent = (t, toggleSubmenu, openSubmenu) => (
-    <List>
-        <ListItem disablePadding>
-            <ListItemButton component="a" href="#dashboard">
-                <ListItemIcon><DashboardIcon /></ListItemIcon>
-                <ListItemText primary={t('dashboard')} />
-            </ListItemButton>
-        </ListItem>
-        <ListItemButton onClick={() => toggleSubmenu('users')}>
-            <ListItemIcon><PeopleIcon /></ListItemIcon>
-            <ListItemText primary={t('usuarios')} />
-            {openSubmenu === 'users' ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
-        <Collapse in={openSubmenu === 'users'} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-                <ListItemButton sx={{ pl: 4 }} component="a" href="#users/list">
-                    <ListItemText primary={t('ver_todos')} />
+// Mapeo de nombres de iconos a componentes
+const iconMap = {
+    DashboardIcon: DashboardIcon,
+    PeopleIcon: PeopleIcon,
+    SettingsIcon: SettingsIcon,
+    BarChartIcon: BarChartIcon,
+};
+
+// Componente recursivo para renderizar los ítems del menú
+const renderMenuItems = (items, t, toggleSubmenu, openSubmenu) => {
+    return items.map((item) => {
+        const IconComponent = iconMap[item.icon];
+        const isSubmenuOpen = openSubmenu === item.id;
+
+        // Si el ítem tiene submenú
+        if (item.submenu) {
+            return (
+                <React.Fragment key={item.id}>
+                    <ListItemButton onClick={() => toggleSubmenu(item.id)}>
+                        {IconComponent && <ListItemIcon><IconComponent /></ListItemIcon>}
+                        <ListItemText primary={t(item.i18nKey)} />
+                        {isSubmenuOpen ? <ExpandLess /> : <ExpandMore />}
+                    </ListItemButton>
+                    <Collapse in={isSubmenuOpen} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding>
+                            {item.submenu.map((subItem) => (
+                                <ListItemButton key={subItem.id} sx={{ pl: 4 }} component="a" href={subItem.path}>
+                                    <ListItemText primary={t(subItem.i18nKey)} />
+                                </ListItemButton>
+                            ))}
+                        </List>
+                    </Collapse>
+                </React.Fragment>
+            );
+        }
+
+        // Si es un ítem de menú normal
+        return (
+            <ListItem key={item.id} disablePadding>
+                <ListItemButton component="a" href={item.path}>
+                    {IconComponent && <ListItemIcon><IconComponent /></ListItemIcon>}
+                    <ListItemText primary={t(item.i18nKey)} />
                 </ListItemButton>
-                <ListItemButton sx={{ pl: 4 }} component="a" href="#users/add">
-                    <ListItemText primary={t('anadir_usuario')} />
-                </ListItemButton>
-            </List>
-        </Collapse>
-        <ListItem disablePadding>
-            <ListItemButton component="a" href="#reports">
-                <ListItemIcon><BarChartIcon /></ListItemIcon>
-                <ListItemText primary={t('reportes')} />
-            </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-            <ListItemButton component="a" href="#settings">
-                <ListItemIcon><SettingsIcon /></ListItemIcon>
-                <ListItemText primary={t('configuracion')} />
-            </ListItemButton>
-        </ListItem>
-    </List>
-);
+            </ListItem>
+        );
+    });
+};
 
 const SidebarComponent = ({ showSidebar, toggleSidebar }) => {
     const { t } = useTranslation();
@@ -75,6 +84,8 @@ const SidebarComponent = ({ showSidebar, toggleSidebar }) => {
     const toggleSubmenu = (submenuName) => {
         setOpenSubmenu(openSubmenu === submenuName ? null : submenuName);
     };
+
+    const menuContent = renderMenuItems(routes, t, toggleSubmenu, openSubmenu);
 
     return (
         <Box
@@ -106,7 +117,9 @@ const SidebarComponent = ({ showSidebar, toggleSidebar }) => {
                         <CloseIcon />
                     </IconButton>
                 </Box>
-                {menuContent(t, toggleSubmenu, openSubmenu)}
+                <List>
+                    {menuContent}
+                </List>
             </Drawer>
 
             {/* Drawer Permanente (para escritorio) */}
@@ -129,7 +142,9 @@ const SidebarComponent = ({ showSidebar, toggleSidebar }) => {
                         <Typography variant="h6" component="div">{t('app_name')}</Typography>
                     </Box>
                 </Box>
-                {menuContent(t, toggleSubmenu, openSubmenu)}
+                <List>
+                    {menuContent}
+                </List>
             </Drawer>
         </Box>
     );
