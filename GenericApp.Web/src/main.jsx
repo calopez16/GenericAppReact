@@ -5,7 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import '@styles/App.css';
 import App from '@views/Index';
 import { AppContextProvider, AppContext } from '@helpers/AppContext';
-import { AlertProvider } from '@helpers/AlertContext';
+import { NotificationContext } from '@helpers/NotificationContext';
 import { lightTheme, darkTheme } from '@helpers/ThemeHelper';
 import '@locales/i18n';
 
@@ -21,13 +21,11 @@ const AppWithThemeWrapper = () => {
 };
 
 createRoot(document.getElementById('root')).render(
-    <StrictMode>
-        <AppContextProvider>
-            <AlertProvider>
-                <BrowserRouter>
-                    <AppWithThemeWrapper />
-                </BrowserRouter>
-            </AlertProvider>
-        </AppContextProvider>
-    </StrictMode>
+    <AppContextProvider>
+        <NotificationContext>
+            <BrowserRouter>
+                <AppWithThemeWrapper />
+            </BrowserRouter>
+        </NotificationContext>
+    </AppContextProvider>
 );

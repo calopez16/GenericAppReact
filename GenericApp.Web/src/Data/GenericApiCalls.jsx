@@ -1,6 +1,9 @@
 import { AuthHelper } from '@helpers/AuthHelper'; // Asegúrate de que la ruta sea correcta
 import { API_BASE_URL } from '@config';
 
+const API_ENDPOINT_REFRESH_TOKEN = "Auth/refresh-token";
+const API_ENDPOINT_LOGIN = "Auth/login";
+
 // --- Lógica para manejar el Refresh Token ---
 let isRefreshing = false;
 let failedQueue = [];
@@ -17,7 +20,7 @@ const processQueue = (error, token = null) => {
 };
 
 const handleResponse = async (response, isReturnData) => {
-    if (!response.ok) {
+    if (!response.ok && response.status !== 409) {
         // Si el error es 401, el interceptor ya lo habrá manejado.
         // Aquí manejamos otros errores.
         if (response.status === 401) {
@@ -31,7 +34,8 @@ const handleResponse = async (response, isReturnData) => {
 
     return {
         success: response.ok,
-        data: data
+        data: data,
+        responseCode: response.status
     };
 };
 
@@ -56,13 +60,19 @@ const sendRequest = async (endPoint, method, data = null, isReturnData = false) 
     try {
         let response = await fetch(url, options);
 
+        //Autorizacion por medio del token, cuando el token no tiene permisos para consultar lanza un 403
+        if (response.status === 403) {
+            AuthHelper.logout();
+            return false;
+        }
+
         // --- Interceptor de respuesta 401 ---
         if (response.status === 401) {
             // Si la llamada que falla es la de refresh-token, hacemos logout directamente para evitar un bucle infinito.
-            if (endPoint.includes('Auth/refresh-token')) {
+            if (endPoint.includes(API_ENDPOINT_REFRESH_TOKEN)) {
                 AuthHelper.logout();
                 return Promise.reject(new Error("Refresh token failed"));
-            } else if (endPoint.includes('Auth/login')) {
+            } else if (endPoint.includes(API_ENDPOINT_LOGIN)) {
                 AuthHelper.logout(false);
                 return false;
             }
@@ -84,16 +94,15 @@ const sendRequest = async (endPoint, method, data = null, isReturnData = false) 
 
             // Intentamos obtener un nuevo token
             try {
-                const refreshTokenResponse = await fetch(`${API_BASE_URL}/Auth/refresh-token`, {
+                const refreshTokenResponse = await fetch(`${API_BASE_URL}/${API_ENDPOINT_REFRESH_TOKEN}`, {
                     method: 'GET',
                     headers: {
                         ...(token && { 'Authorization': `Bearer ${token}` })
                     },
-                    //credentials: 'include',
                 });
 
                 if (!refreshTokenResponse.ok) {
-                    throw new Error("Failed to refresh token");
+                    throw new Error("Failed refresh token");
                 }
 
                 const authLogin = await refreshTokenResponse.json();

@@ -21,7 +21,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import { DataAPIUsersService } from '@data/Users/Data';
 import { useTranslation } from 'react-i18next';
-import UserFormModal from './UserFormModal'; // Importa el nuevo componente
+import UserFormModal from './UserFormModal';
+import { ShowMessage } from '@helpers/NotificationService';
+import Tooltip from '@mui/material/Tooltip';
 
 function Index() {
     const { t } = useTranslation();
@@ -71,9 +73,14 @@ function Index() {
         try {
             const isEnabled = !user.isDisabled;
             if (isEnabled) {
-                await service.disableUser(user.userName);
+                var dataResult = await service.disableUser(user.userName);
+                if (dataResult.success)
+                    ShowMessage(t('recordDisabled'), 'success');
+
             } else {
-                await service.enableUser(user.userName);
+                var dataResult = await service.enableUser(user.userName);
+                if (dataResult.success)
+                    ShowMessage(t('recordEnabled'), 'success');
             }
             loadUsers();
         } catch (error) {
@@ -95,8 +102,8 @@ function Index() {
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
-        setSelectedUser(null);
-        setIsEditing(false);
+        //setSelectedUser(null);
+        //setIsEditing(false);
         loadUsers(); // Recarga la lista de usuarios después de cerrar el modal
     };
 
@@ -122,7 +129,7 @@ function Index() {
                         }}
                         sx={{ mr: 2 }}
                     />
-                    <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddUser}>
+                    <Button variant="contained" endIcon={<AddIcon />} onClick={handleOpenAddUser}>
                         {t('add')}
                     </Button>
                 </Box>
@@ -151,18 +158,22 @@ function Index() {
                             users.map((user, index) => (
                                 <TableRow key={index}>
                                     <TableCell>
-                                        <Switch
-                                            checked={!user.isDisabled}
-                                            onChange={() => handleToggleUserStatus(user)}
-                                            color="primary"
-                                        />
+                                        <Tooltip title={user.isDisabled ? t('enable') : t('disable')}>
+                                            <Switch
+                                                checked={!user.isDisabled}
+                                                onChange={() => handleToggleUserStatus(user)}
+                                                color="primary"
+                                            />
+                                        </Tooltip>
                                     </TableCell>
                                     <TableCell>{user.userName}</TableCell>
                                     <TableCell>{user.email}</TableCell>
                                     <TableCell align="right">
-                                        <IconButton color="primary" onClick={() => handleOpenEditUser(user)}>
-                                            <EditIcon />
-                                        </IconButton>
+                                        <Tooltip title={t('edit')}>
+                                            <IconButton color="primary" onClick={() => handleOpenEditUser(user)}>
+                                                <EditIcon />
+                                            </IconButton>
+                                        </Tooltip>
                                     </TableCell>
                                 </TableRow>
                             ))

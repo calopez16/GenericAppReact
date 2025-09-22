@@ -21,16 +21,23 @@ import {
     Alert,
 } from '@mui/material';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
+import CancelIcon from '@mui/icons-material/CancelSharp';
+import SaveIcon from '@mui/icons-material/Save';
+import AddIcon from '@mui/icons-material/Add';
 import { DataAPIUsersService } from '@data/Users/Data';
 import { useTranslation } from 'react-i18next';
+import { ShowMessage } from '@helpers/NotificationService';
+import Tooltip from '@mui/material/Tooltip';
 
 // Componente para el modal de la contraseña
 const PasswordModal = ({ open, onClose, password }) => {
+    const { t } = useTranslation();
     const [snackbarOpen, setSnackbarOpen] = useState(false);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(password);
         setSnackbarOpen(true);
+        ShowMessage(t('textCopiedOnClipboard'), 'info');
     };
 
     const handleCloseSnackbar = () => {
@@ -39,10 +46,10 @@ const PasswordModal = ({ open, onClose, password }) => {
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>Contraseña de Usuario</DialogTitle>
+            <DialogTitle>{t('userPassword')}</DialogTitle>
             <DialogContent>
                 <Typography variant="body1" sx={{ mb: 2 }}>
-                    La contraseña asignada al nuevo usuario es:
+                    {t('newUserPasswordIs')}
                 </Typography>
                 <TextField
                     fullWidth
@@ -51,22 +58,19 @@ const PasswordModal = ({ open, onClose, password }) => {
                         readOnly: true,
                         endAdornment: (
                             <InputAdornment position="end">
-                                <IconButton onClick={handleCopy} edge="end">
-                                    <FileCopyIcon />
-                                </IconButton>
+                                <Tooltip title={t('copy')}>
+                                    <IconButton onClick={handleCopy} edge="end">
+                                        <FileCopyIcon />
+                                    </IconButton>
+                                </Tooltip>
                             </InputAdornment>
                         ),
                     }}
                 />
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Cerrar</Button>
+                <Button onClick={onClose}>{t('close')}</Button>
             </DialogActions>
-            <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleCloseSnackbar}>
-                <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-                    Contraseña copiada al portapapeles.
-                </Alert>
-            </Snackbar>
         </Dialog>
     );
 };
@@ -82,6 +86,7 @@ const UserFormModal = ({ open, handleClose, user, isEditing }) => {
     const [roles, setRoles] = useState([]);
     const [passwordModalOpen, setPasswordModalOpen] = useState(false);
     const [assignedPassword, setAssignedPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         const loadRoles = async () => {
@@ -89,7 +94,7 @@ const UserFormModal = ({ open, handleClose, user, isEditing }) => {
                 const response = await service.getRoles();
                 setRoles(response.data);
             } catch (error) {
-                console.error("Error loading roles:", error);
+                console.error(t('error_loadingRoles'), error);
             }
         };
         loadRoles();
@@ -100,7 +105,7 @@ const UserFormModal = ({ open, handleClose, user, isEditing }) => {
             setFormData({
                 userName: user.userName,
                 email: user.email,
-                roles: user.roles?.map(role => role) || [], // Corregido: mapea a 'role.name'
+                roles: user.roles?.map(role => role) || [],
             });
         } else {
             setFormData({
@@ -128,28 +133,43 @@ const UserFormModal = ({ open, handleClose, user, isEditing }) => {
     };
 
     const handleSubmit = async () => {
-        if (isEditing) {
-            alert("Functionality to update a user is not implemented yet in the API service.");
-            return;
-        }
-
-        const userPayload = {
-            userName: formData.userName,
-            email: formData.email,
-            roles: formData.roles,
-        };
 
         try {
-            // Lógica para agregar usuario (simulada)
-            const response = await service.addData(userPayload, true);
-            const newPassword = response.data.newPassword;
+            setIsLoading(true);
+            const userPayload = {
+                userName: formData.userName,
+                email: formData.email,
+                roles: formData.roles,
+            };
+
+            let response;
+            let messageKey;
+            let newPassword = null;
+
+            if (isEditing) {
+                response = await service.editData(userPayload);
+                messageKey = 'recordEditedSuccessPlural';
+            } else {
+                response = await service.addData(userPayload, true);
+                messageKey = 'recordAddedSuccessPlural';
+                newPassword = response.data?.newPassword;
+            }
+
+            if (response.responseCode == 409) {
+                ShowMessage(t('daraAlreadyExists') + ": " + response.data.conflict, 'warning');
+                return;
+            }
 
             handleClose();
-            setAssignedPassword(newPassword);
-            setPasswordModalOpen(true);
+            if (newPassword) {
+                setAssignedPassword(newPassword);
+                setPasswordModalOpen(true);
+            }
+            ShowMessage(t(messageKey), 'success');
         } catch (error) {
             console.error("Error saving user:", error);
-            alert(t('error'));
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -206,10 +226,10 @@ const UserFormModal = ({ open, handleClose, user, isEditing }) => {
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose} color="primary">
+                    <Button color="error" variant="outlined" endIcon={<CancelIcon />} onClick={handleClose}>
                         {t('cancel')}
                     </Button>
-                    <Button onClick={handleSubmit} color="primary" variant="contained">
+                    <Button color="primary" variant="contained" endIcon={isEditing ? <SaveIcon /> : <AddIcon />} onClick={handleSubmit} loading={isLoading}>
                         {isEditing ? t('save') : t('add')}
                     </Button>
                 </DialogActions>

@@ -127,11 +127,11 @@ namespace GenericApp.API.Controllers
 
             var userExists = await _userManager.FindByNameAsync(model.UserName);
             if (userExists != null)
-                return Conflict(model.UserName);
+                return Conflict(new { Conflict = model.UserName });
 
             var emailExists = await _userManager.FindByEmailAsync(model.Email);
             if (emailExists != null)
-                return Conflict(model.Email);
+                return Conflict(new { Conflict = model.Email });
 
             var userToCreate = new IdentityUser { UserName = model.UserName, Email = model.Email };
             var result = await _userManager.CreateAsync(userToCreate, newPassword);
@@ -158,10 +158,10 @@ namespace GenericApp.API.Controllers
             return BadRequest(result.Errors);
         }
 
-        [HttpPut("{userId}")]
-        public async Task<ActionResult> UpdateUser(string userId, [FromBody] UserDTO model)
+        [HttpPut]
+        public async Task<ActionResult> UpdateUser([FromBody] UserDTO model)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByNameAsync(model.UserName);
             if (user == null)
                 return NotFound();
 
@@ -169,7 +169,7 @@ namespace GenericApp.API.Controllers
             {
                 var existingUser = await _userManager.FindByNameAsync(model.UserName);
                 if (existingUser != null)
-                    return Conflict(model.UserName);
+                    return Conflict(new { Conflict = model.UserName });
                 user.UserName = model.UserName;
             }
 
@@ -177,7 +177,7 @@ namespace GenericApp.API.Controllers
             {
                 var existingEmailUser = await _userManager.FindByEmailAsync(model.Email);
                 if (existingEmailUser != null)
-                    return Conflict(model.Email);
+                    return Conflict(new { Conflict = model.Email });
                 user.Email = model.Email;
             }
 

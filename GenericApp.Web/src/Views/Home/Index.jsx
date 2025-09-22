@@ -21,6 +21,7 @@ import {
     Paper,
     Pagination
 } from '@mui/material';
+import { ShowMessage } from '@helpers/NotificationService';
 
 // Iconos de Material-UI
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -59,11 +60,25 @@ function Home() {
         }, 1500);
     };
 
+    const handleAlert = () => {
+        ShowMessage('¡Operación exitosa!', 'error');
+    }
+
     return (
         <Box sx={{ p: 4 }}>
             <Typography variant="h4" component="h1" gutterBottom>
                 {t('dashboard_stats')}
             </Typography>
+
+            <Button
+                variant="outlined"
+                size="small"
+                sx={{ ml: 2 }}
+                onClick={handleAlert}
+                startIcon={<RefreshIcon />}
+            >
+                Mostrar alerta
+            </Button>
 
             {/* Fila de estadísticas mejorada */}
             <Grid container spacing={4} sx={{ mb: 4 }}>

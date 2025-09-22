@@ -43,6 +43,8 @@ namespace GenericApp.Controllers
         public async Task<IActionResult> Login(LoginDTO loginDTO)
         {
             var user = await _userManager.FindByNameAsync(loginDTO.Email);
+            if (user == null)
+                return Unauthorized();
             var claims = await _userManager.GetClaimsAsync(user);
             var isChangePasswordNeeded = false;
             if (claims != null)
@@ -149,7 +151,7 @@ namespace GenericApp.Controllers
                         await _userManager.RemoveClaimAsync(user, new Claim(AppClaims.IsChangePasswordNeeded, "1"));
                         await _userManager.AddClaimAsync(user, new Claim(AppClaims.IsUser, "1"));
 
-                        var loginDTO = new LoginDTO { Email = user.Email };
+                        var loginDTO = new LoginDTO { Email = user.UserName };
                         var accessToken = await GenerateToken(loginDTO);
                         var refreshToken = await GenerateToken(loginDTO, true);
 

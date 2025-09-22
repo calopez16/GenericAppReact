@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '@helpers/AppContext';
 import { AuthenticationAPIService } from '@data/Auth/Authentication';
-import { useAlert } from '@helpers/AlertContext';
+import { ShowMessage, HideMessage } from '@helpers/NotificationService';
 import '@styles/App.css';
 import '@styles/Login.css';
+import LoginIcon from '@mui/icons-material/Login';
 
 import { Box, Container, Typography, TextField, Button, CircularProgress, Card, CardContent } from '@mui/material';
 
@@ -22,7 +23,6 @@ function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isRestartPasswordNeeded, setIsRestartPasswordNeeded] = useState(false);
 
-    const { addAlert } = useAlert();
     const authService = AuthenticationAPIService();
 
     const newPasswordRef = useRef(null);
@@ -37,7 +37,7 @@ function LoginPage() {
         event.preventDefault();
 
         if (!email || !password) {
-            addAlert(t('emptyFields'), 'danger');
+            ShowMessage(t('emptyFields'), 'warning');
             return;
         }
         setIsLoading(true);
@@ -50,11 +50,10 @@ function LoginPage() {
 
                 if (isChangePasswordNeeded) {
                     setAccessToken(token);
-                    // Oculta el formulario de login y muestra el de cambio de contraseña con transición
                     setIsRestartPasswordNeeded(true);
                     setNewPassword('');
                     setConfirmNewPassword('');
-                    addAlert(t('changePasswordNeeded'), 'info');
+                    ShowMessage(t('changePasswordNeeded'), 'info');
                 } else {
                     setAccessToken(token);
                     setUserRole(roleName);
@@ -62,13 +61,14 @@ function LoginPage() {
                     navigate('/');
                 }
             } else {
-                addAlert(t('invalidCredentials'), 'danger');
+                ShowMessage(t('invalidCredentials'), 'error');
             }
         } catch (err) {
-            addAlert(t('conectionError'), 'danger');
+            ShowMessage(t('conectionError'), 'error');
             console.error('Error de login:', err);
         } finally {
             setIsLoading(false);
+            HideMessage();
         }
     };
 
@@ -76,31 +76,31 @@ function LoginPage() {
         event.preventDefault();
 
         if (!newPassword || !confirmNewPassword) {
-            addAlert(t('emptyFields'), 'danger');
+            ShowMessage(t('emptyFields'), 'error');
             return;
         }
         if (newPassword !== confirmNewPassword) {
-            addAlert(t('passwordsDontMatch'), 'danger');
+            ShowMessage(t('passwordsDontMatch'), 'error');
             return;
         }
 
         setIsLoading(true);
 
         try {
-            const response = await authService.passwordRestart({ newPassword });
+            const response = await authService.passwordRestart(newPassword);
 
             if (response && response.success) {
                 const { token, roleName, userName } = response.data;
                 setAccessToken(token);
                 setUserRole(roleName);
                 setUserName(userName);
-                addAlert(t('passwordChanged'), 'success');
+                ShowMessage(t('passwordChanged'), 'success');
                 navigate('/');
             } else {
-                addAlert(t('error'), 'danger');
+                ShowMessage(t('error'), 'error');
             }
         } catch (err) {
-            addAlert(t('conectionError'), 'danger');
+            ShowMessage(t('conectionError'), 'error');
         } finally {
             setIsLoading(false);
         }
@@ -115,7 +115,7 @@ function LoginPage() {
         <Container component="main" maxWidth="xs" sx={{ display: 'flex', alignItems: 'center', minHeight: '100vh', justifyContent: 'center' }}>
             <Card sx={{ p: 4, width: '100%' }} className="">
                 <CardContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', transition:"2s ease-in-out;" }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', transition: "2s ease-in-out;" }}>
                         <Typography component="h1" variant="h5" sx={{ mb: 4 }}>
                             {isRestartPasswordNeeded ? t('changePassword') : t('login')}
                         </Typography>
@@ -127,10 +127,10 @@ function LoginPage() {
                                     margin="normal"
                                     required
                                     fullWidth
-                                    id="email"
+                                    id="username"
                                     label={t('username')}
-                                    name="email"
-                                    autoComplete="email"
+                                    name="username"
+                                    autoComplete="username"
                                     autoFocus
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -147,14 +147,17 @@ function LoginPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
+
                                 <Button
                                     type="submit"
-                                    fullWidth
                                     variant="contained"
+                                    fullWidth
+                                    endIcon={<LoginIcon />}
+                                    loading={isLoading}
                                     sx={{ mt: 3, mb: 2 }}
-                                    disabled={isLoading}
                                 >
-                                    {isLoading ? <CircularProgress size={24} color="inherit" /> : t('login')}
+
+                                    {t('login')}
                                 </Button>
                             </Box>
                         </div>
