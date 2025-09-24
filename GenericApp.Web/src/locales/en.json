@@ -55,6 +55,9 @@
   "disable": "Disable",
   "edit": "Edit",
   "copy": "Copy",
-  "daraAlreadyExists": "Data already exists"
-
+  "daraAlreadyExists": "Data already exists",
+  "resetPassword": "Restart password",
+  "confirmAction": "Action confirm",
+  "question_areYouSure": "Are you sure to permform this action?",
+  "confirm": "Confirm"
 }

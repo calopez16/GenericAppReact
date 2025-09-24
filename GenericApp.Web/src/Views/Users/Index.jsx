@@ -15,15 +15,28 @@ import {
     InputAdornment,
     Button,
     TablePagination,
+    useMediaQuery,
+    useTheme,
+    Grid,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+    LinearProgress
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
+import VpnKeyIcon from '@mui/icons-material/VpnKey'; // Importa el icono de la llave
 import { DataAPIUsersService } from '@data/Users/Data';
 import { useTranslation } from 'react-i18next';
 import UserFormModal from './UserFormModal';
 import { ShowMessage } from '@helpers/NotificationService';
 import Tooltip from '@mui/material/Tooltip';
+import PasswordModal from './PasswordModal'; // Asegúrate de que la ruta sea correcta
+import ConfirmationResetPasswordModal from '@views/Layout/ConfirmationModal'; // Asegúrate de que la ruta sea correcta
+
 
 function Index() {
     const { t } = useTranslation();
@@ -34,9 +47,17 @@ function Index() {
     const [totalUsers, setTotalUsers] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false); // Estado para abrir/cerrar el modal
-    const [selectedUser, setSelectedUser] = useState(null); // Estado para el usuario seleccionado a editar
-    const [isEditing, setIsEditing] = useState(false); // Estado para saber si estamos editando
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isConfirmResetPasswordModalOpen, setIsConfirmResetPasswordModalOpen] = useState(false);
+
+    // Estados para la nueva funcionalidad de la contraseña
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [assignedPassword, setAssignedPassword] = useState('');
+
+    const theme = useTheme();
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     const loadUsers = async () => {
         try {
@@ -72,19 +93,47 @@ function Index() {
     const handleToggleUserStatus = async (user) => {
         try {
             const isEnabled = !user.isDisabled;
+            let dataResult;
             if (isEnabled) {
-                var dataResult = await service.disableUser(user.userName);
-                if (dataResult.success)
+                dataResult = await service.disableUser(user.userName);
+                if (dataResult.success) {
                     ShowMessage(t('recordDisabled'), 'success');
-
+                }
             } else {
-                var dataResult = await service.enableUser(user.userName);
-                if (dataResult.success)
+                dataResult = await service.enableUser(user.userName);
+                if (dataResult.success) {
                     ShowMessage(t('recordEnabled'), 'success');
+                }
             }
-            loadUsers();
+            if (dataResult.success) {
+                setUsers(prevUsers =>
+                    prevUsers.map(u =>
+                        u.userName === user.userName ? { ...u, isDisabled: !u.isDisabled } : u
+                    )
+                );
+            }
         } catch (error) {
+            ShowMessage(t('error'), 'error');
             console.error("Error toggling user status:", error);
+        }
+    };
+
+    // Función para reiniciar la contraseña
+    const handleResetPassword = async (user) => {
+        try {
+            setIsConfirmResetPasswordModalOpen(false);
+            const response = await service.resetPassword(user.userName);
+            if (response.success) {
+                setAssignedPassword(response.data.newPassword);
+                setIsPasswordModalOpen(true);
+                ShowMessage(t('passwordChanged'), 'success');
+            } else {
+                ShowMessage(t('error'), 'error');
+            }
+        } catch (error) {
+            console.error("Error resetting password:", error);
+            ShowMessage(t('error'), 'error');
+        } finally {
         }
     };
 
@@ -102,18 +151,22 @@ function Index() {
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
-        //setSelectedUser(null);
-        //setIsEditing(false);
-        loadUsers(); // Recarga la lista de usuarios después de cerrar el modal
     };
 
     return (
         <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: isSmallScreen ? 'column' : 'row',
+                justifyContent: 'space-between',
+                alignItems: isSmallScreen ? 'stretch' : 'center',
+                gap: isSmallScreen ? 1 : 2,
+                mb: 2,
+            }}>
                 <Typography variant="h4" component="h1">
                     {t('users')}
                 </Typography>
-                <Box>
+                <Box sx={{ display: 'flex', flexDirection: isSmallScreen ? 'column' : 'row', gap: 1, flexGrow: 1, justifyContent: 'flex-end' }}>
                     <TextField
                         label={t('search') + "..."}
                         variant="outlined"
@@ -127,14 +180,20 @@ function Index() {
                                 </InputAdornment>
                             ),
                         }}
-                        sx={{ mr: 2 }}
+                        fullWidth={isSmallScreen}
+                        sx={{ flexShrink: 1 }}
                     />
-                    <Button variant="contained" endIcon={<AddIcon />} onClick={handleOpenAddUser}>
+                    <Button
+                        variant="contained"
+                        endIcon={<AddIcon />}
+                        onClick={handleOpenAddUser}
+                        fullWidth={isSmallScreen}
+                    >
                         {t('add')}
                     </Button>
                 </Box>
             </Box>
-
+            {loading && <LinearProgress />}
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
@@ -147,11 +206,13 @@ function Index() {
                     </TableHead>
                     <TableBody>
                         {loading ? (
-                            <TableRow key={1}>
-                                <TableCell key={1} colSpan={4} align="center"> {t('loading')}...</TableCell>
+                            <TableRow>
+                                <TableCell colSpan={4} align="center">
+                                    {t('loading')}...
+                                </TableCell>
                             </TableRow>
-                        ) : (users?.length ?? 0) === 0 ? (
-                            <TableRow key={1}>
+                        ) : users?.length === 0 ? (
+                            <TableRow>
                                 <TableCell colSpan={4} align="center"> {t('records_notFound')}.</TableCell>
                             </TableRow>
                         ) : (
@@ -172,6 +233,11 @@ function Index() {
                                         <Tooltip title={t('edit')}>
                                             <IconButton color="primary" onClick={() => handleOpenEditUser(user)}>
                                                 <EditIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title={t('resetPassword')}>
+                                            <IconButton color="primary" onClick={() => { setIsConfirmResetPasswordModalOpen(true), setSelectedUser(user) }}>
+                                                <VpnKeyIcon />
                                             </IconButton>
                                         </Tooltip>
                                     </TableCell>
@@ -195,11 +261,24 @@ function Index() {
                     `${from}-${to} ${t('of')} ${count !== -1 ? count : `${t('moreThan')} ${to}`}`
                 }
             />
+
             <UserFormModal
                 open={isModalOpen}
                 handleClose={handleCloseModal}
-                user={selectedUser}
+                data={selectedUser}
                 isEditing={isEditing}
+                setData={setUsers}
+            />
+            <PasswordModal
+                open={isPasswordModalOpen}
+                onClose={() => setIsPasswordModalOpen(!isPasswordModalOpen)}
+                password={assignedPassword}
+            />
+
+            <ConfirmationResetPasswordModal
+                open={isConfirmResetPasswordModalOpen}
+                onClose={() => setIsConfirmResetPasswordModalOpen(!isConfirmResetPasswordModalOpen)}
+                onConfirm={() => handleResetPassword(selectedUser)}
             />
         </Box>
     );

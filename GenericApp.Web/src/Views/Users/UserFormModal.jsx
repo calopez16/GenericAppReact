@@ -1,3 +1,4 @@
+// Elimina la definición del componente PasswordModal
 import React, { useState, useEffect } from 'react';
 import {
     Dialog,
@@ -21,7 +22,7 @@ import {
     Alert,
 } from '@mui/material';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
-import CancelIcon from '@mui/icons-material/CancelSharp';
+import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import { DataAPIUsersService } from '@data/Users/Data';
@@ -29,53 +30,10 @@ import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import Tooltip from '@mui/material/Tooltip';
 
-// Componente para el modal de la contraseña
-const PasswordModal = ({ open, onClose, password }) => {
-    const { t } = useTranslation();
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
+import PasswordModal from './PasswordModal'; // Asegúrate de que la ruta sea correcta
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(password);
-        setSnackbarOpen(true);
-        ShowMessage(t('textCopiedOnClipboard'), 'info');
-    };
-
-    const handleCloseSnackbar = () => {
-        setSnackbarOpen(false);
-    };
-
-    return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>{t('userPassword')}</DialogTitle>
-            <DialogContent>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                    {t('newUserPasswordIs')}
-                </Typography>
-                <TextField
-                    fullWidth
-                    value={password}
-                    InputProps={{
-                        readOnly: true,
-                        endAdornment: (
-                            <InputAdornment position="end">
-                                <Tooltip title={t('copy')}>
-                                    <IconButton onClick={handleCopy} edge="end">
-                                        <FileCopyIcon />
-                                    </IconButton>
-                                </Tooltip>
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>{t('close')}</Button>
-            </DialogActions>
-        </Dialog>
-    );
-};
-
-const UserFormModal = ({ open, handleClose, user, isEditing }) => {
+// Componente principal de la vista
+const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const { t } = useTranslation();
     const service = DataAPIUsersService();
     const [formData, setFormData] = useState({
@@ -101,11 +59,11 @@ const UserFormModal = ({ open, handleClose, user, isEditing }) => {
     }, []);
 
     useEffect(() => {
-        if (isEditing && user) {
+        if (isEditing && data) {
             setFormData({
-                userName: user.userName,
-                email: user.email,
-                roles: user.roles?.map(role => role) || [],
+                userName: data.userName,
+                email: data.email,
+                roles: data.roles?.map(role => role) || [],
             });
         } else {
             setFormData({
@@ -114,7 +72,7 @@ const UserFormModal = ({ open, handleClose, user, isEditing }) => {
                 roles: [],
             });
         }
-    }, [open, isEditing, user]);
+    }, [open, isEditing, data]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -133,10 +91,10 @@ const UserFormModal = ({ open, handleClose, user, isEditing }) => {
     };
 
     const handleSubmit = async () => {
-
         try {
             setIsLoading(true);
             const userPayload = {
+                userNameId: data?.userNameId,
                 userName: formData.userName,
                 email: formData.email,
                 roles: formData.roles,
@@ -147,7 +105,7 @@ const UserFormModal = ({ open, handleClose, user, isEditing }) => {
             let newPassword = null;
 
             if (isEditing) {
-                response = await service.editData(userPayload);
+                response = await service.editData(userPayload, true);
                 messageKey = 'recordEditedSuccessPlural';
             } else {
                 response = await service.addData(userPayload, true);
@@ -156,8 +114,20 @@ const UserFormModal = ({ open, handleClose, user, isEditing }) => {
             }
 
             if (response.responseCode == 409) {
-                ShowMessage(t('daraAlreadyExists') + ": " + response.data.conflict, 'warning');
+                ShowMessage(t('daraAlreadyExists') + ": " + response.conflict, 'warning');
                 return;
+            }
+
+            if (response.success) {
+                if (isEditing) {
+                    setData(prevData =>
+                        prevData.map(data =>
+                            data.userNameId === userPayload.userNameId ? { ...data, ...userPayload, userNameId: userPayload.userName } : data
+                        )
+                    );
+                } else {
+                    setData(prevData => [...prevData, userPayload]);
+                }
             }
 
             handleClose();
@@ -167,6 +137,7 @@ const UserFormModal = ({ open, handleClose, user, isEditing }) => {
             }
             ShowMessage(t(messageKey), 'success');
         } catch (error) {
+            ShowMessage(t('error'), 'error');
             console.error("Error saving user:", error);
         } finally {
             setIsLoading(false);
@@ -194,7 +165,6 @@ const UserFormModal = ({ open, handleClose, user, isEditing }) => {
                             name="userName"
                             value={formData.userName}
                             onChange={handleChange}
-                            disabled={isEditing}
                         />
                         <TextField
                             margin="normal"

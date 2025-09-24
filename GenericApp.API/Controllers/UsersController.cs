@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
@@ -40,31 +41,26 @@ namespace GenericApp.API.Controllers
         public async Task<ActionResult> AddRole([FromBody] string roleName)
         {
             if (string.IsNullOrWhiteSpace(roleName))
-            {
-                return BadRequest("El nombre del rol es requerido.");
-            }
+                return BadRequest(new ApiResponse { Message = "El nombre del rol es requerido." });
 
             var roleExists = await _roleManager.RoleExistsAsync(roleName);
             if (roleExists)
-            {
-                return BadRequest(new { message = "El rol ya existe." });
-            }
+                return BadRequest(new ApiResponse { Message = "El rol ya existe." });
 
             var result = await _roleManager.CreateAsync(new IdentityRole(roleName));
 
             if (result.Succeeded)
-            {
-                return Ok(new { message = "Rol creado exitosamente." });
-            }
+                return Ok(new ApiResponse { Message = "Rol creado exitosamente." });
 
-            return BadRequest(result.Errors);
+            return BadRequest(new ApiResponse { Data = result.Errors });
         }
 
         [HttpGet("roles")]
         public ActionResult GetRoles()
         {
             var roles = _roleManager.Roles.ToList();
-            return Ok(roles);
+            return Ok(new ApiResponse { Data = roles });
+
         }
 
         [HttpGet("pagination")]
@@ -99,6 +95,7 @@ namespace GenericApp.API.Controllers
                 var claims = await _userManager.GetClaimsAsync(user);
                 usersWithClaims.Add(new UserDTO
                 {
+                    UserNameId = user.UserName,
                     UserName = user.UserName,
                     Email = user.Email,
                     Roles = roles.ToList(),
@@ -115,7 +112,7 @@ namespace GenericApp.API.Controllers
                 Users = usersWithClaims
             };
 
-            return Ok(paginatedResponse);
+            return Ok(new ApiResponse { Data = paginatedResponse });
         }
 
         [HttpPost]
@@ -127,11 +124,11 @@ namespace GenericApp.API.Controllers
 
             var userExists = await _userManager.FindByNameAsync(model.UserName);
             if (userExists != null)
-                return Conflict(new { Conflict = model.UserName });
+                return Conflict(new ApiResponse { Conflict = model.UserName });
 
             var emailExists = await _userManager.FindByEmailAsync(model.Email);
             if (emailExists != null)
-                return Conflict(new { Conflict = model.Email });
+                return Conflict(new ApiResponse { Conflict = model.Email });
 
             var userToCreate = new IdentityUser { UserName = model.UserName, Email = model.Email };
             var result = await _userManager.CreateAsync(userToCreate, newPassword);
@@ -152,16 +149,16 @@ namespace GenericApp.API.Controllers
                     }
                 }
 
-                return Ok(new UserDTO { NewPassword = newPassword });
+                return Ok(new ApiResponse{ Data = new { NewPassword = newPassword } });
             }
 
-            return BadRequest(result.Errors);
+            return BadRequest(new ApiResponse { Data = result.Errors });
         }
 
         [HttpPut]
         public async Task<ActionResult> UpdateUser([FromBody] UserDTO model)
         {
-            var user = await _userManager.FindByNameAsync(model.UserName);
+            var user = await _userManager.FindByNameAsync(model.UserNameId);
             if (user == null)
                 return NotFound();
 
@@ -169,7 +166,7 @@ namespace GenericApp.API.Controllers
             {
                 var existingUser = await _userManager.FindByNameAsync(model.UserName);
                 if (existingUser != null)
-                    return Conflict(new { Conflict = model.UserName });
+                    return Conflict(new ApiResponse { Conflict = model.UserName });
                 user.UserName = model.UserName;
             }
 
@@ -177,7 +174,7 @@ namespace GenericApp.API.Controllers
             {
                 var existingEmailUser = await _userManager.FindByEmailAsync(model.Email);
                 if (existingEmailUser != null)
-                    return Conflict(new { Conflict = model.Email });
+                    return Conflict(new ApiResponse { Conflict = model.Email });
                 user.Email = model.Email;
             }
 
@@ -195,7 +192,7 @@ namespace GenericApp.API.Controllers
             if (rolesToRemove.Any())
                 await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
 
-            return Ok();
+            return Ok(new ApiResponse ());
         }
 
         [HttpGet("username/{username}")]
@@ -203,54 +200,57 @@ namespace GenericApp.API.Controllers
         {
             var user = await _userManager.FindByNameAsync(username);
             if (user == null)
-                return NotFound();
+                return NotFound(new ApiResponse());
 
             var roles = await _userManager.GetRolesAsync(user);
 
             var userResponse = new UserDTO
             {
+                UserNameId = user.UserName,
                 UserName = user.UserName,
                 Email = user.Email,
                 Roles = roles.ToList(),
             };
 
-            return Ok(userResponse);
+            return Ok(new ApiResponse { Data = userResponse });
         }
 
-        [HttpPost("reset-password/{userId}")]
-        public async Task<ActionResult> ResetPassword(string userId, [FromBody] UserDTO model)
+        [HttpPost("reset-password")]
+        public async Task<ActionResult> ResetPassword([FromBody]string userName)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var newPassword = "Nuevo123!";
+            var user = await _userManager.FindByNameAsync(userName);
             if (user == null)
-                return NotFound();
+                return NotFound(new ApiResponse());
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
+            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
 
             var currentClaims = await _userManager.GetClaimsAsync(user);
             var isDisabledClaim = currentClaims.Any(c => c.Type == AppClaims.IsDisabled);
             var isUserClaim = currentClaims.Any(c => c.Type == AppClaims.IsUser);
             var isChangePasswordNeededClaim = currentClaims.Any(c => c.Type == AppClaims.IsChangePasswordNeeded);
 
-            if (isDisabledClaim)
-                await _userManager.RemoveClaimAsync(user, new System.Security.Claims.Claim(AppClaims.IsDisabled, "1"));
+            //if (isDisabledClaim)
+            //    await _userManager.RemoveClaimAsync(user, new System.Security.Claims.Claim(AppClaims.IsDisabled, "1"));
             if (isUserClaim)
                 await _userManager.RemoveClaimAsync(user, new System.Security.Claims.Claim(AppClaims.IsUser, "1"));
             if (!isChangePasswordNeededClaim)
                 await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim(AppClaims.IsChangePasswordNeeded, "1"));
 
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+                return BadRequest(new ApiResponse { Data = result.Errors });
 
-            return Ok();
+            return Ok(new ApiResponse { Data = new { NewPassword = newPassword } });
         }
+
 
         [HttpPost("{userName}/disable")]
         public async Task<ActionResult> DisableUser(string userName)
         {
             var user = await _userManager.FindByNameAsync(userName);
             if (user == null)
-                return NotFound();
+                return NotFound(new ApiResponse());
 
             var currentClaims = await _userManager.GetClaimsAsync(user);
             var isDisabledClaim = currentClaims.FirstOrDefault(c => c.Type == AppClaims.IsDisabled);
@@ -258,7 +258,7 @@ namespace GenericApp.API.Controllers
             if (isDisabledClaim == null)
                 await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim(AppClaims.IsDisabled, "1"));
 
-            return Ok();
+            return Ok(new ApiResponse());
         }
 
         [HttpPost("{userName}/enable")]
@@ -266,7 +266,7 @@ namespace GenericApp.API.Controllers
         {
             var user = await _userManager.FindByNameAsync(userName);
             if (user == null)
-                return NotFound();
+                return NotFound(new ApiResponse());
 
             var claims = await _userManager.GetClaimsAsync(user);
             var isDisabledClaim = claims.FirstOrDefault(c => c.Type == AppClaims.IsDisabled);
@@ -274,7 +274,7 @@ namespace GenericApp.API.Controllers
             if (isDisabledClaim != null)
                 await _userManager.RemoveClaimAsync(user, isDisabledClaim);
 
-            return Ok();
+            return Ok(new ApiResponse());
         }
     }
 }

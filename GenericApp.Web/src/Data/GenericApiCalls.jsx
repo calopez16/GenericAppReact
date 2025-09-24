@@ -30,11 +30,13 @@ const handleResponse = async (response, isReturnData) => {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
     }
-    var data = isReturnData ? await response.json() : response.ok;
+    var dataResponse = isReturnData ? await response.json() : response.ok;
 
     return {
         success: response.ok,
-        data: data,
+        data: dataResponse?.data,
+        conflict: dataResponse?.conflict,
+        message: dataResponse?.message,
         responseCode: response.status
     };
 };

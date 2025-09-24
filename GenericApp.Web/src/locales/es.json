@@ -54,5 +54,10 @@
   "enable": "Habilitar",
   "disable": "Deshabilitar",
   "edit": "Editar",
-  "daraAlreadyExists": "La información ya existe en el sistema"
+  "daraAlreadyExists": "La información ya existe en el sistema",
+  "resetPassword": "Reiniciar contraseña",
+  "confirmAction": "Confirmar acción",
+  "question_areYouSure": "¿Seguro(a) de realizar esta acción?",
+  "confirm": "Confirmar"
+  
 }

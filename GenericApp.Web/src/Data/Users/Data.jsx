@@ -17,6 +17,6 @@ export const DataAPIUsersService = () => {
         GetByUserName: (username) => GET(`${moduleSource}/username/${username}`),
         disableUser: (userId) => POST(`${moduleSource}/${userId}/disable`),
         enableUser: (userId) => POST(`${moduleSource}/${userId}/enable`),
-        resetPassword: (userId, newPasswordData) => POST(`${moduleSource}/reset-password/${userId}`, newPasswordData),
+        resetPassword: (username) => POST(`${moduleSource}/reset-password`, username, true),
     };
 };

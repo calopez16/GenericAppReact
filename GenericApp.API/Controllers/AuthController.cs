@@ -86,12 +86,15 @@ namespace GenericApp.Controllers
                 }
             }
 
-            return Ok(new LoginResponseDTO
+            return Ok(new
             {
-                Token = accessToken,
-                UserName = user.UserName,
-                FullName = user.UserName,
-                IsChangePasswordNeeded = isChangePasswordNeeded
+                Data = new LoginResponseDTO
+                {
+                    Token = accessToken,
+                    UserName = user.UserName,
+                    FullName = user.UserName,
+                    IsChangePasswordNeeded = isChangePasswordNeeded
+                }
             });
         }
 
@@ -119,11 +122,14 @@ namespace GenericApp.Controllers
                 if (tokenValidated.IsValid)
                 {
                     var newAccessToken = await GenerateToken(new LoginDTO { Email = user.UserName });
-                    return Ok(new LoginResponseDTO
+                    return Ok(new
                     {
-                        Token = newAccessToken,
-                        UserName = user.UserName,
-                        FullName = user.UserName
+                        Data = new LoginResponseDTO
+                        {
+                            Token = newAccessToken,
+                            UserName = user.UserName,
+                            FullName = user.UserName
+                        }
                     });
                 }
             }
@@ -163,19 +169,17 @@ namespace GenericApp.Controllers
                         }
                         await _repository.Add<RefreshTokenAspNetUser>(new RefreshTokenAspNetUser { IdUser = user.Id, RefreshToken = refreshToken, IsActive = true });
 
-                        return Ok(new LoginResponseDTO
+                        return Ok(new
                         {
-                            Token = accessToken,
-                            UserName = user.UserName,
-                            FullName = user.UserName,
+                            Data = new LoginResponseDTO
+                            {
+                                Token = accessToken,
+                                UserName = user.UserName,
+                                FullName = user.UserName,
+                            }
                         });
                     }
                 }
-
-
-
-
-
             }
             return Unauthorized();
         }

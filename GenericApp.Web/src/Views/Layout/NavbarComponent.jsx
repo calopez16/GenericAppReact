@@ -73,7 +73,7 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                     <MenuIcon />
                 </IconButton>
 
-                {/* Logo y título */}
+                 {/*Logo y título */}
                 {/*<Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>*/}
                 {/*    <Avatar*/}
                 {/*        src="https://via.placeholder.com/40"*/}
