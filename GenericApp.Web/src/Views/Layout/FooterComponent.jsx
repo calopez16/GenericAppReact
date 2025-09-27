@@ -9,7 +9,7 @@ const FooterComponent = () => {
                 backgroundColor: 'background.paper',
                 color: 'text.primary',
                 textAlign: 'center',
-                p: 3,
+                p: 1,
                 mt: 'auto',
                 width: '100%',
                 position: 'fixed',
