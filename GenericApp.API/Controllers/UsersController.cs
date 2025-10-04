@@ -17,7 +17,7 @@ namespace GenericApp.API.Controllers
 {
     [ApiController]
     [Route("users")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
     public class UsersController : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
@@ -72,7 +72,7 @@ namespace GenericApp.API.Controllers
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 10;
 
-            var query = _userManager.Users.AsQueryable();
+            var query = _userManager.Users.Where(u => !u.UserName.Equals("admin")).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -99,7 +99,7 @@ namespace GenericApp.API.Controllers
                     UserName = user.UserName,
                     Email = user.Email,
                     Roles = roles.ToList(),
-                    IsDisabled = claims.Any(x => x.Type == AppClaims.IsDisabled)
+                    IsDisabled = claims.Any(x => x.Type == nameof(AppPolicies.IsDisabled))
                 });
             }
 
@@ -136,7 +136,7 @@ namespace GenericApp.API.Controllers
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByNameAsync(model.UserName);
-                await _userManager.AddClaimAsync(user, new Claim(AppClaims.IsChangePasswordNeeded, "1"));
+                await _userManager.AddClaimAsync(user, new Claim(nameof(AppPolicies.IsChangePasswordNeeded), "1"));
 
                 // Asignar roles al usuario
                 if (model.Roles != null && model.Roles.Any())
@@ -149,7 +149,7 @@ namespace GenericApp.API.Controllers
                     }
                 }
 
-                return Ok(new ApiResponse{ Data = new { NewPassword = newPassword } });
+                return Ok(new ApiResponse { Data = new { NewPassword = newPassword } });
             }
 
             return BadRequest(new ApiResponse { Data = result.Errors });
@@ -192,7 +192,7 @@ namespace GenericApp.API.Controllers
             if (rolesToRemove.Any())
                 await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
 
-            return Ok(new ApiResponse ());
+            return Ok(new ApiResponse());
         }
 
         [HttpGet("username/{username}")]
@@ -216,7 +216,7 @@ namespace GenericApp.API.Controllers
         }
 
         [HttpPost("reset-password")]
-        public async Task<ActionResult> ResetPassword([FromBody]string userName)
+        public async Task<ActionResult> ResetPassword([FromBody] string userName)
         {
             var newPassword = "Nuevo123!";
             var user = await _userManager.FindByNameAsync(userName);
@@ -227,16 +227,16 @@ namespace GenericApp.API.Controllers
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
 
             var currentClaims = await _userManager.GetClaimsAsync(user);
-            var isDisabledClaim = currentClaims.Any(c => c.Type == AppClaims.IsDisabled);
-            var isUserClaim = currentClaims.Any(c => c.Type == AppClaims.IsUser);
-            var isChangePasswordNeededClaim = currentClaims.Any(c => c.Type == AppClaims.IsChangePasswordNeeded);
+            var isDisabledClaim = currentClaims.Any(c => c.Type == nameof(AppPolicies.IsDisabled));
+            var isUserClaim = currentClaims.Any(c => c.Type == nameof(AppPolicies.User));
+            var isChangePasswordNeededClaim = currentClaims.Any(c => c.Type == nameof(AppPolicies.IsChangePasswordNeeded));
 
             //if (isDisabledClaim)
             //    await _userManager.RemoveClaimAsync(user, new System.Security.Claims.Claim(AppClaims.IsDisabled, "1"));
             if (isUserClaim)
-                await _userManager.RemoveClaimAsync(user, new System.Security.Claims.Claim(AppClaims.IsUser, "1"));
+                await _userManager.RemoveClaimAsync(user, new System.Security.Claims.Claim(nameof(AppPolicies.User), "1"));
             if (!isChangePasswordNeededClaim)
-                await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim(AppClaims.IsChangePasswordNeeded, "1"));
+                await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim(nameof(AppPolicies.IsChangePasswordNeeded), "1"));
 
             if (!result.Succeeded)
                 return BadRequest(new ApiResponse { Data = result.Errors });
@@ -253,10 +253,10 @@ namespace GenericApp.API.Controllers
                 return NotFound(new ApiResponse());
 
             var currentClaims = await _userManager.GetClaimsAsync(user);
-            var isDisabledClaim = currentClaims.FirstOrDefault(c => c.Type == AppClaims.IsDisabled);
+            var isDisabledClaim = currentClaims.FirstOrDefault(c => c.Type == nameof(AppPolicies.IsDisabled));
 
             if (isDisabledClaim == null)
-                await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim(AppClaims.IsDisabled, "1"));
+                await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim(nameof(AppPolicies.IsDisabled), "1"));
 
             return Ok(new ApiResponse());
         }
@@ -269,7 +269,7 @@ namespace GenericApp.API.Controllers
                 return NotFound(new ApiResponse());
 
             var claims = await _userManager.GetClaimsAsync(user);
-            var isDisabledClaim = claims.FirstOrDefault(c => c.Type == AppClaims.IsDisabled);
+            var isDisabledClaim = claims.FirstOrDefault(c => c.Type == nameof(AppPolicies.IsDisabled));
 
             if (isDisabledClaim != null)
                 await _userManager.RemoveClaimAsync(user, isDisabledClaim);

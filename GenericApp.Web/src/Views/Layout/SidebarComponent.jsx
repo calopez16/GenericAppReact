@@ -1,7 +1,7 @@
-import React, { useState, useContext } from 'react';
+﻿import React, { useState, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
-import routes from '@data/routes.json'; 
+import routes from '@data/routes.json';
 // MUI Imports
 import {
     Drawer,
@@ -19,6 +19,7 @@ import {
 
 // MUI Icon Imports
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import HomeIcon from '@mui/icons-material/Home';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
 import BarChartIcon from '@mui/icons-material/BarChart';
@@ -34,40 +35,68 @@ const iconMap = {
     PeopleIcon: PeopleIcon,
     SettingsIcon: SettingsIcon,
     BarChartIcon: BarChartIcon,
+    HomeIcon: HomeIcon
 };
 
-// Componente recursivo para renderizar los �tems del men�
-const renderMenuItems = (items, t, toggleSubmenu, openSubmenu) => {
+// Componente recursivo para renderizar los ítems del menú
+// MODIFICADO: Recibe 'currentPath' para la lógica de selección.
+const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath) => {
     return items.map((item) => {
         const IconComponent = iconMap[item.icon];
         const isSubmenuOpen = openSubmenu === item.id;
+        // Determina si el ítem principal está seleccionado (si no tiene submenú)
+        const isItemSelected = item.path === currentPath;
 
-        // Si el �tem tiene submen�
+        // Si el ítem tiene submenú
         if (item.submenu) {
+            // Determina si *alguno* de los sub-ítems está activo
+            const isAnySubItemSelected = item.submenu.some(subItem => subItem.path === currentPath);
+
             return (
                 <React.Fragment key={item.id}>
-                    <ListItemButton onClick={() => toggleSubmenu(item.id)}>
+                    <ListItemButton
+                        onClick={() => toggleSubmenu(item.id)}
+                        // Opcional: Resaltar el menú padre si un sub-ítem está activo
+                        selected={isAnySubItemSelected}
+                    >
                         {IconComponent && <ListItemIcon><IconComponent /></ListItemIcon>}
                         <ListItemText primary={t(item.i18nKey)} />
                         {isSubmenuOpen ? <ExpandLess /> : <ExpandMore />}
                     </ListItemButton>
                     <Collapse in={isSubmenuOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
-                            {item.submenu.map((subItem) => (
-                                <ListItemButton key={subItem.id} sx={{ pl: 4 }} component="a" href={subItem.path}>
-                                    <ListItemText primary={t(subItem.i18nKey)} />
-                                </ListItemButton>
-                            ))}
+                            {item.submenu.map((subItem) => {
+                                //const SubIconComponent = iconMap[subItem.icon];
+                                // Determina si el sub-ítem está seleccionado
+                                const isSubItemSelected = subItem.path === currentPath;
+
+                                return (
+                                    <ListItemButton
+                                        key={subItem.id}
+                                        sx={{ pl: 4 }}
+                                        component="a"
+                                        href={subItem.path}
+                                        selected={isSubItemSelected} 
+                                    >
+                                        {/*{SubIconComponent && <ListItemIcon><SubIconComponent /></ListItemIcon>}*/}
+                                        <ListItemText primary={t(subItem.i18nKey)} />
+                                    </ListItemButton>
+                                );
+                            })}
                         </List>
                     </Collapse>
                 </React.Fragment>
             );
         }
 
-        // Si es un �tem de men� normal
+        // Si es un ítem de menú normal
         return (
             <ListItem key={item.id} disablePadding>
-                <ListItemButton component="a" href={item.path}>
+                <ListItemButton
+                    component="a"
+                    href={item.path}
+                    selected={isItemSelected} // 👈 Aplica el estado seleccionado
+                >
                     {IconComponent && <ListItemIcon><IconComponent /></ListItemIcon>}
                     <ListItemText primary={t(item.i18nKey)} />
                 </ListItemButton>
@@ -76,23 +105,43 @@ const renderMenuItems = (items, t, toggleSubmenu, openSubmenu) => {
     });
 };
 
+// --- MODIFICACIÓN CLAVE EN SidebarComponent ---
 const SidebarComponent = ({ showSidebar, toggleSidebar }) => {
     const { t } = useTranslation();
     const { themeMode } = useContext(AppContext);
-    const [openSubmenu, setOpenSubmenu] = useState(null);
+    // 1. Obtener la ruta actual (pathname)
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+
+    // Función auxiliar para encontrar el ID del menú padre si la ruta actual es un sub-ítem
+    const findParentId = (routes, path) => {
+        for (const item of routes) {
+            if (item.submenu) {
+                const isSubItemActive = item.submenu.some(subItem => subItem.path === path);
+                if (isSubItemActive) {
+                    return item.id;
+                }
+            }
+        }
+        return null;
+    };
+
+    // 2. Inicializar openSubmenu para asegurar que el submenú activo esté abierto
+    const initialOpenSubmenu = findParentId(routes, currentPath);
+    const [openSubmenu, setOpenSubmenu] = useState(initialOpenSubmenu);
 
     const toggleSubmenu = (submenuName) => {
         setOpenSubmenu(openSubmenu === submenuName ? null : submenuName);
     };
 
-    const menuContent = renderMenuItems(routes, t, toggleSubmenu, openSubmenu);
+    // 3. Pasar la ruta actual a la función de renderizado
+    const menuContent = renderMenuItems(routes, t, toggleSubmenu, openSubmenu, currentPath);
 
     return (
         <Box
             component="nav"
             sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
         >
-            {/* Drawer Temporal (para m�viles) */}
+            {/* Drawer Temporal (para móviles) */}
             <Drawer
                 variant="temporary"
                 open={showSidebar}
@@ -134,7 +183,7 @@ const SidebarComponent = ({ showSidebar, toggleSidebar }) => {
                         color: themeMode === 'light' ? 'text.primary' : 'text.secondary',
                     }
                 }}
-                open // Este Drawer siempre est� abierto
+                open // Este Drawer siempre está abierto
             >
                 <Box sx={{ p: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>

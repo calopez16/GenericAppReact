@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualBasic;
+using System.Drawing;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.Serialization;
@@ -49,9 +50,9 @@ namespace GenericApp.Controllers
             var isChangePasswordNeeded = false;
             if (claims != null)
             {
-                if (claims.Any(x => x.Type == AppClaims.IsDisabled))
+                if (claims.Any(x => x.Type == nameof(AppPolicies.IsDisabled)))
                     return Unauthorized();
-                isChangePasswordNeeded = claims.Any(x => x.Type == AppClaims.IsChangePasswordNeeded);
+                isChangePasswordNeeded = claims.Any(x => x.Type == nameof(AppPolicies.IsChangePasswordNeeded));
             }
 
             var resultado = await _signInManager.PasswordSignInAsync(loginDTO.Email, loginDTO.Password, isPersistent: false, lockoutOnFailure: false);
@@ -137,7 +138,7 @@ namespace GenericApp.Controllers
         }
 
         [HttpPost("pass-restart")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "IsChangePasswordNeeded")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.IsChangePasswordNeeded))]
         public async Task<ActionResult<LoginResponseDTO>> RestartPassword([FromBody] string newPassword)
         {
             var validator = new JwtSecurityTokenHandler();
@@ -154,8 +155,8 @@ namespace GenericApp.Controllers
                     var changePasswordResult = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
                     if (changePasswordResult.Succeeded)
                     {
-                        await _userManager.RemoveClaimAsync(user, new Claim(AppClaims.IsChangePasswordNeeded, "1"));
-                        await _userManager.AddClaimAsync(user, new Claim(AppClaims.IsUser, "1"));
+                        await _userManager.RemoveClaimAsync(user, new Claim(nameof(AppPolicies.IsChangePasswordNeeded), "1"));
+                        await _userManager.AddClaimAsync(user, new Claim(nameof(AppPolicies.User), "1"));
 
                         var loginDTO = new LoginDTO { Email = user.UserName };
                         var accessToken = await GenerateToken(loginDTO);
@@ -182,24 +183,6 @@ namespace GenericApp.Controllers
                 }
             }
             return Unauthorized();
-        }
-
-        [HttpPost("AllowClaim")]
-        public async Task<ActionResult> AllowClaim(LoginDTO loginDTO)
-        {
-            var user = await _userManager.FindByEmailAsync(loginDTO.Email);
-            await _userManager.AddClaimAsync(user, new Claim(AppClaims.IsAdmin, "1"));
-            return NoContent();
-
-        }
-
-        [HttpPost("RemoveClaim")]
-        public async Task<ActionResult> RemoveClaim(LoginDTO loginDTO)
-        {
-            var user = await _userManager.FindByEmailAsync(loginDTO.Email);
-            await _userManager.RemoveClaimAsync(user, new Claim(AppClaims.IsAdmin, "1"));
-            return NoContent();
-
         }
 
         private async Task<string> GenerateToken(LoginDTO loginDTO, bool refreshToken = false)

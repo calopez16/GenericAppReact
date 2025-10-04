@@ -4,6 +4,7 @@ import Layout from '@layout/Layout';
 import LoginPage from '@views/Auth/Login'
 import HomePage from '@views/Home'
 import UsersPage from '@views/Users'
+import ParametersPage from '@views/Parameters'
 
 function App() {
     return (
@@ -12,6 +13,7 @@ function App() {
             <Route element={<Layout />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/users" element={<UsersPage />} />
+                <Route path="/parameters" element={<ParametersPage />} />
                 {/*<Route path="/perfil" element={<ProfilePage />} />*/}
                 {/*<Route path="/configuracion" element={<SettingsPage />} />*/}
             </Route>

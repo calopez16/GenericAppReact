@@ -13,9 +13,9 @@ namespace GenericApp.Data.Models
         public int IdRefreshTokenAspNetUser { get; set; }
         public DateTime CreationDate { get; set; }
         [Required]
-        public string IdUser { get; set; }
+        public string? IdUser { get; set; }
         [Required]
-        public string RefreshToken { get; set; }
+        public string? RefreshToken { get; set; }
         public bool? IsActive { get; set; }
     }
 }

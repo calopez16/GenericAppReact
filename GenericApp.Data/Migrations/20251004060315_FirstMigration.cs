@@ -49,6 +49,37 @@ namespace GenericApp.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Parameters",
+                columns: table => new
+                {
+                    IdParameter = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ParameterCode = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    Value = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Parameters", x => x.IdParameter);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RefreshTokenAspNetUser",
+                columns: table => new
+                {
+                    IdRefreshTokenAspNetUser = table.Column<int>(type: "int", maxLength: 80, nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CreationDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    IdUser = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    RefreshToken = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: true, defaultValueSql: "1")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshTokenAspNetUser", x => x.IdRefreshTokenAspNetUser);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -154,6 +185,31 @@ namespace GenericApp.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[] { "a18be9c0-aa65-4af8-bd17-00bd9344e575", "a18be9c0-aa65-4af8-bd17-00bd9344e575", "Administrator", "ADMINISTRATOR" });
+
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[] { "a18be9c0-aa65-4af8-bd17-00bd9344e576", "a18be9c0-aa65-4af8-bd17-00bd9344e576", "User", "USER" });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUsers",
+                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
+                values: new object[] { "a18be9c0-aa65-4af8-bd17-00bd9344e577", 0, "a18be9c0-aa65-4af8-bd17-00bd9344e577", "admin", true, false, null, "ADMIN", "ADMIN", "AQAAAAEAACcQAAAAECo0He2/AuNrUY8cnPFnKRAbWNNWCHqb5/ap+apGg8EljTDV+O/4aV9QtSX4GzTzsQ==", null, false, "00000000-0000-0000-0000-000000000000", false, "admin" });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUserClaims",
+                columns: new[] { "Id", "ClaimType", "ClaimValue", "UserId" },
+                values: new object[] { -1, "User", "1", "a18be9c0-aa65-4af8-bd17-00bd9344e577" });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUserRoles",
+                columns: new[] { "RoleId", "UserId" },
+                values: new object[] { "a18be9c0-aa65-4af8-bd17-00bd9344e575", "a18be9c0-aa65-4af8-bd17-00bd9344e577" });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -210,6 +266,12 @@ namespace GenericApp.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "Parameters");
+
+            migrationBuilder.DropTable(
+                name: "RefreshTokenAspNetUser");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

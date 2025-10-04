@@ -1,4 +1,12 @@
-/* src/styles/Transition.css */
+Ôªøbody.login-background {
+    background-image: url('../img/login_background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    height: 100vh;
+    margin: 0;
+}
 
 .form-container {
     width: 100%;
@@ -13,14 +21,17 @@
         position: relative;
         opacity: 1;
         transform: translateY(0);
-        /* AnimaciÛn de entrada: la misma que antes */
+        /* Animaci√≥n de entrada: la misma que antes */
         transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
     }
 
     .form-container.hidden {
         position: absolute;
         opacity: 0;
-        /* TransiciÛn instant·nea: no se animar· el cambio de estado */
+        /* Transici√≥n instant√°nea: no se animar√° el cambio de estado */
         transition: none;
         pointer-events: none;
     }
+
+
+

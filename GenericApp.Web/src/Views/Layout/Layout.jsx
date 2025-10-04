@@ -12,7 +12,7 @@ const Layout = () => {
     const { accessToken, loading, setLoading } = useContext(AppContext);
     const [showSidebar, setShowSidebar] = useState(false);
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+    const isMobile = useMediaQuery(theme.breakpoints.down('xl'));
 
     if (!accessToken) {
         return <Navigate to="/login" replace />;

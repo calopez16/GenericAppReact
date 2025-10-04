@@ -77,9 +77,8 @@ namespace GenericApp
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy(AppPolicies.Admin.ToString(), policy => policy.RequireClaim(AppClaims.IsAdmin));
-                options.AddPolicy(AppPolicies.User.ToString(), policy => policy.RequireClaim(AppClaims.IsUser));
-                options.AddPolicy("IsChangePasswordNeeded", policy => policy.RequireClaim(AppClaims.IsChangePasswordNeeded));
+                options.AddPolicy(nameof(AppPolicies.User), policy => policy.RequireClaim(nameof(AppPolicies.User)));
+                options.AddPolicy(nameof(AppPolicies.IsChangePasswordNeeded), policy => policy.RequireClaim(nameof(AppPolicies.IsChangePasswordNeeded)));
             });
 
             services.AddCors(options =>

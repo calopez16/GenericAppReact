@@ -1,4 +1,5 @@
 {
+  "language_selected": "Español",
   "actions": "Acciones",
   "active": "Activo",
   "add": "Agregar",
@@ -53,11 +54,17 @@
   "users": "Usuarios",
   "enable": "Habilitar",
   "disable": "Deshabilitar",
+  "disabled": "Deshabilitado",
+  "enabled": "Habilitado",
+  "status": "Estatus",
   "edit": "Editar",
   "daraAlreadyExists": "La información ya existe en el sistema",
   "resetPassword": "Reiniciar contraseña",
   "confirmAction": "Confirmar acción",
   "question_areYouSure": "¿Seguro(a) de realizar esta acción?",
-  "confirm": "Confirmar"
-  
+  "question_areYouSureResetPassword": "¿Estás seguro(a) de reiniciar el password?",
+  "confirm": "Confirmar",
+  "home": "Inicio",
+  "generalConfiguration": "Configuración general",
+  "parameters": "Parámetros"
 }

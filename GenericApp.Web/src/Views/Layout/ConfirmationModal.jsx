@@ -10,7 +10,6 @@ import {
 import { useTranslation } from 'react-i18next';
 import CancelIcon from '@mui/icons-material/Clear';
 import CheckIcon from '@mui/icons-material/Check';
-// Define las props que el componente aceptará
 const ConfirmationModal = ({
     open,
     onClose,

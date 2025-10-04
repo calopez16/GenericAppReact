@@ -2,20 +2,27 @@
   {
     "id": "dashboard",
     "path": "/",
-    "i18nKey": "dashboard",
-    "icon": "DashboardIcon",
+    "i18nKey": "home",
+    "icon": "HomeIcon",
     "exact": true
   },
   {
     "id": "configuration",
     "path": "",
     "i18nKey": "configuration",
-    "icon": "PeopleIcon",
+    "icon": "SettingsIcon",
     "submenu": [
       {
         "id": "users",
         "path": "/users",
-        "i18nKey": "users"
+        "i18nKey": "users",
+        "icon": "PeopleIcon"
+      },
+      {
+        "id": "parameters",
+        "path": "/parameters",
+        "i18nKey": "parameters",
+        "icon": "SettingsIcon"
       }
     ]
   },

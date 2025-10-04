@@ -2,40 +2,24 @@ import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
-    TableContainer,
-    Paper,
-    Table,
-    TableHead,
-    TableRow,
-    TableCell,
-    TableBody,
-    Switch,
-    IconButton,
     TextField,
     InputAdornment,
     Button,
     TablePagination,
     useMediaQuery,
     useTheme,
-    Grid,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogContentText,
-    DialogActions,
     LinearProgress
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
-import VpnKeyIcon from '@mui/icons-material/VpnKey'; // Importa el icono de la llave
 import { DataAPIUsersService } from '@data/Users/Data';
 import { useTranslation } from 'react-i18next';
-import UserFormModal from './UserFormModal';
 import { ShowMessage } from '@helpers/NotificationService';
-import Tooltip from '@mui/material/Tooltip';
-import PasswordModal from './PasswordModal'; // Asegúrate de que la ruta sea correcta
-import ConfirmationResetPasswordModal from '@views/Layout/ConfirmationModal'; // Asegúrate de que la ruta sea correcta
+import ConfirmationResetPasswordModal from '@views/Layout/ConfirmationModal';
+import PasswordModal from './PasswordModal';
+import UserFormModal from './UserFormModal';
+import UserCardList from './UserCardList';
+import UserListTable from './UserTableList';
 
 
 function Index() {
@@ -45,36 +29,58 @@ function Index() {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalUsers, setTotalUsers] = useState(0);
+
+    // 1. Estado para el input inmediato y para el valor "debounced"
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isConfirmResetPasswordModalOpen, setIsConfirmResetPasswordModalOpen] = useState(false);
-
-    // Estados para la nueva funcionalidad de la contraseña
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [assignedPassword, setAssignedPassword] = useState('');
 
     const theme = useTheme();
-    const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
 
-    const loadUsers = async () => {
-        try {
-            setLoading(true);
-            const response = await service.getUsersPagination(page + 1, rowsPerPage, searchTerm);
-            setUsers(response.data.users);
-            setTotalUsers(response.data.totalCount);
-        } catch (error) {
-            console.error("Error loading users:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
+    // 2. useEffect para implementar el "debounce"
+    // Este efecto se ejecuta cada vez que 'searchTerm' cambia
     useEffect(() => {
+        // Se crea un temporizador que actualizará el término de búsqueda debounced después de 500ms
+        const timerId = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 500);
+
+        // Función de limpieza: se ejecuta si el usuario vuelve a escribir antes de que pasen los 500ms.
+        // Cancela el temporizador anterior para evitar ejecuciones innecesarias.
+        return () => {
+            clearTimeout(timerId);
+        };
+    }, [searchTerm]); // La dependencia es el término de búsqueda del input
+
+
+    // 3. useEffect para la carga de datos
+    // Este efecto ahora depende de 'debouncedSearchTerm' en lugar de 'searchTerm'
+    useEffect(() => {
+        const loadUsers = async () => {
+            try {
+                setLoading(true);
+                // Se usa el valor "debounced" para hacer la petición a la API
+                const response = await service.getUsersPagination(page + 1, rowsPerPage, debouncedSearchTerm);
+                setUsers(response.data.users);
+                setTotalUsers(response.data.totalCount);
+            } catch (error) {
+                console.error("Error loading users:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         loadUsers();
-    }, [page, rowsPerPage, searchTerm]);
+    }, [page, rowsPerPage, debouncedSearchTerm]); // La dependencia ahora es el término de búsqueda "debounced"
+
 
     const handlePageChange = (event, newPage) => {
         setPage(newPage);
@@ -118,7 +124,6 @@ function Index() {
         }
     };
 
-    // Función para reiniciar la contraseña
     const handleResetPassword = async (user) => {
         try {
             setIsConfirmResetPasswordModalOpen(false);
@@ -133,7 +138,6 @@ function Index() {
         } catch (error) {
             console.error("Error resetting password:", error);
             ShowMessage(t('error'), 'error');
-        } finally {
         }
     };
 
@@ -151,6 +155,16 @@ function Index() {
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
+    };
+
+    const commonListProps = {
+        users,
+        loading,
+        t,
+        handleOpenEditUser,
+        handleToggleUserStatus,
+        setIsConfirmResetPasswordModalOpen,
+        setSelectedUser
     };
 
     return (
@@ -193,60 +207,14 @@ function Index() {
                     </Button>
                 </Box>
             </Box>
+
             {loading && <LinearProgress />}
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>{t('active')}</TableCell>
-                            <TableCell>{t('userName')}</TableCell>
-                            <TableCell>{t('email')}</TableCell>
-                            <TableCell align="right">{t('actions')}</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {loading ? (
-                            <TableRow>
-                                <TableCell colSpan={4} align="center">
-                                    {t('loading')}...
-                                </TableCell>
-                            </TableRow>
-                        ) : users?.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={4} align="center"> {t('records_notFound')}.</TableCell>
-                            </TableRow>
-                        ) : (
-                            users.map((user, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>
-                                        <Tooltip title={user.isDisabled ? t('enable') : t('disable')}>
-                                            <Switch
-                                                checked={!user.isDisabled}
-                                                onChange={() => handleToggleUserStatus(user)}
-                                                color="primary"
-                                            />
-                                        </Tooltip>
-                                    </TableCell>
-                                    <TableCell>{user.userName}</TableCell>
-                                    <TableCell>{user.email}</TableCell>
-                                    <TableCell align="right">
-                                        <Tooltip title={t('edit')}>
-                                            <IconButton color="primary" onClick={() => handleOpenEditUser(user)}>
-                                                <EditIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title={t('resetPassword')}>
-                                            <IconButton color="primary" onClick={() => { setIsConfirmResetPasswordModalOpen(true), setSelectedUser(user) }}>
-                                                <VpnKeyIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+
+            {isSmallScreen ? (
+                <UserCardList {...commonListProps} />
+            ) : (
+                <UserListTable {...commonListProps} />
+            )}
 
             <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
@@ -274,11 +242,12 @@ function Index() {
                 onClose={() => setIsPasswordModalOpen(!isPasswordModalOpen)}
                 password={assignedPassword}
             />
-
             <ConfirmationResetPasswordModal
                 open={isConfirmResetPasswordModalOpen}
                 onClose={() => setIsConfirmResetPasswordModalOpen(!isConfirmResetPasswordModalOpen)}
                 onConfirm={() => handleResetPassword(selectedUser)}
+                title={t("resetPassword")}
+                message={t("question_areYouSureResetPassword")}
             />
         </Box>
     );
