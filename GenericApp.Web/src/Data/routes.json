@@ -3,6 +3,7 @@
     "id": "dashboard",
     "path": "/",
     "i18nKey": "home",
+    "i18nKeyDescription": "homepage_description",
     "icon": "HomeIcon",
     "exact": true
   },
@@ -10,32 +11,17 @@
     "id": "configuration",
     "path": "",
     "i18nKey": "configuration",
+    "i18nKeyDescription": "configuration_description",
     "icon": "SettingsIcon",
     "submenu": [
       {
         "id": "users",
         "path": "/users",
         "i18nKey": "users",
+        "i18nKeyDescription": "users_description",
         "icon": "PeopleIcon"
-      },
-      {
-        "id": "parameters",
-        "path": "/parameters",
-        "i18nKey": "parameters",
-        "icon": "SettingsIcon"
       }
     ]
-  },
-  {
-    "id": "reports",
-    "path": "/reports",
-    "i18nKey": "reportes",
-    "icon": "BarChartIcon"
-  },
-  {
-    "id": "settings",
-    "path": "/settings",
-    "i18nKey": "configuracion",
-    "icon": "SettingsIcon"
   }
+
 ]

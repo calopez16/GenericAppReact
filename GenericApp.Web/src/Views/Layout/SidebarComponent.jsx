@@ -2,6 +2,8 @@
 import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
 import routes from '@data/routes.json';
+import AppLogoImage from '@images/logo.png'
+
 // MUI Imports
 import {
     Drawer,
@@ -159,7 +161,7 @@ const SidebarComponent = ({ showSidebar, toggleSidebar }) => {
             >
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar src="https://via.placeholder.com/40" alt="Logo" sx={{ mr: 2, width: 40, height: 40 }} />
+                        <Avatar src={AppLogoImage} alt="Logo" sx={{ mr: 2, width: 40, height: 40 }} />
                         <Typography variant="h6" component="div">{t('app_name')}</Typography>
                     </Box>
                     <IconButton onClick={toggleSidebar}>
@@ -187,7 +189,7 @@ const SidebarComponent = ({ showSidebar, toggleSidebar }) => {
             >
                 <Box sx={{ p: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Avatar src="https://via.placeholder.com/40" alt="Logo" sx={{ mr: 2, width: 40, height: 40 }} />
+                        <Avatar src={AppLogoImage} alt="Logo" sx={{ mr: 2, width: 40, height: 40 }} />
                         <Typography variant="h6" component="div">{t('app_name')}</Typography>
                     </Box>
                 </Box>

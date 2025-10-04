@@ -4,7 +4,6 @@ import Layout from '@layout/Layout';
 import LoginPage from '@views/Auth/Login'
 import HomePage from '@views/Home'
 import UsersPage from '@views/Users'
-import NotFoundPage from '@views/Pages/NotFound'
 
 function App() {
     return (
@@ -15,7 +14,6 @@ function App() {
                 <Route path="/users" element={<UsersPage />} />
                 {/*<Route path="/perfil" element={<ProfilePage />} />*/}
                 {/*<Route path="/configuracion" element={<SettingsPage />} />*/}
-                <Route path="*" element={<NotFoundPage />} />
             </Route>
         </Routes>
     );

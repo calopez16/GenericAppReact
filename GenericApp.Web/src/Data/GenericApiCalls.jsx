@@ -108,11 +108,11 @@ const sendRequest = async (endPoint, method, data = null, isReturnData = false) 
                 }
 
                 const authLogin = await refreshTokenResponse.json();
-                AuthHelper.setAccessToken(authLogin.token); // Guardamos el nuevo token
-                processQueue(null, authLogin.token); // Procesamos la cola de peticiones fallidas
+                AuthHelper.setAccessToken(authLogin.data.token); // Guardamos el nuevo token
+                processQueue(null, authLogin.data.token); // Procesamos la cola de peticiones fallidas
 
                 // Reintentamos la petición original con el nuevo token
-                options.headers['Authorization'] = `Bearer ${authLogin.token}`;
+                options.headers['Authorization'] = `Bearer ${authLogin.data.token}`;
                 response = await fetch(url, options);
 
             } catch (refreshError) {

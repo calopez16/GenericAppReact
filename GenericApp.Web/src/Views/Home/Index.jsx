@@ -1,218 +1,188 @@
-﻿import React, { useState, useContext, useEffect } from 'react';
+﻿import React, { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link as RouterLink } from 'react-router-dom';
 import { AppContext } from '@helpers/AppContext';
+import AppLogoImage from '@images/logo.png'
 
-// MUI Imports
+// Importaciones de rutas
+import routes from '@data/routes.json';
+
+// Importaciones de MUI (estilo unificado)
 import {
-    Box,
+    Container,
+    Typography,
     Grid,
     Card,
     CardContent,
-    Typography,
+    CardActions,
     Button,
-    LinearProgress,
-    Alert,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
+    Box,
     Paper,
-    Pagination
+    Link
 } from '@mui/material';
-import { ShowMessage } from '@helpers/NotificationService';
 
-// Iconos de Material-UI
-import RefreshIcon from '@mui/icons-material/Refresh';
-import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import TimelineIcon from '@mui/icons-material/Timeline';
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+// Importaciones de Iconos
+import HomeIcon from '@mui/icons-material/Home';
+import SettingsIcon from '@mui/icons-material/Settings';
+import PeopleIcon from '@mui/icons-material/People';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 
-const mockData = [
-    { id: 1, firstName: 'Juan', lastName: 'Pérez', username: '@jperez' },
-    { id: 2, firstName: 'María', lastName: 'García', username: '@mgarcia' },
-    { id: 3, firstName: 'Pedro', lastName: 'López', username: '@plopez' },
-    { id: 4, firstName: 'Ana', lastName: 'Martínez', username: '@amartinez' },
-    { id: 5, firstName: 'Luis', lastName: 'Sánchez', username: '@lsanchez' },
-    { id: 6, firstName: 'Sofía', lastName: 'Ramírez', username: '@sramirez' },
-    { id: 7, firstName: 'Carlos', lastName: 'Torres', username: '@ctorres' },
-    { id: 8, firstName: 'Laura', lastName: 'Díaz', username: '@ldiaz' },
-];
+// Mapa de iconos
+const iconMap = {
+    HomeIcon: <HomeIcon color="primary" />,
+    SettingsIcon: <SettingsIcon color="primary" />,
+    PeopleIcon: <PeopleIcon color="primary" />,
+    BarChartIcon: <BarChartIcon color="primary" />,
+    DashboardIcon: <DashboardIcon color="primary" />,
+    AttachMoneyIcon: <AttachMoneyIcon color="primary" />
+};
 
-function Home() {
+const WelcomePage = () => {
+    // Hook de traducción
     const { t } = useTranslation();
-    const { setLoading } = useContext(AppContext);
-
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5);
-    const totalPages = Math.ceil(mockData.length / itemsPerPage);
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = mockData.slice(indexOfFirstItem, indexOfLastItem);
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-    const handleRefreshData = () => {
-        setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-        }, 1500);
-    };
-
-    const handleAlert = () => {
-        ShowMessage('¡Operación exitosa!', 'error');
-    }
+    const { userName = 'Usuario' } = useContext(AppContext);
 
     return (
-        <Box sx={{ p: 4 }}>
-            <Typography variant="h4" component="h1" gutterBottom>
-                {t('dashboard_stats')}
-            </Typography>
+        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 2, mb: 5 }}>
 
-            <Button
-                variant="outlined"
-                size="small"
-                sx={{ ml: 2 }}
-                onClick={handleAlert}
-                startIcon={<RefreshIcon />}
-            >
-                Mostrar alerta
-            </Button>
+                {/* INICIO: Bloque de Contenido de Bienvenida y Logo (Flexbox) */}
+                <Box
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexDirection: { xs: 'column', md: 'row' },
+                        textAlign: { xs: 'center', md: 'left' }
+                    }}
+                >
+                    <Box sx={{ mb: { xs: 2, md: 0 } }}> {/* Contenedor del texto */}
+                        <Typography variant="h4" component="h1" gutterBottom>
+                            {t('welcome_page_title')} {userName} 👋
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary">
+                            {t('welcome_page_subtitle')}
+                        </Typography>
+                    </Box>
 
-            {/* Fila de estadísticas mejorada */}
-            <Grid container spacing={4} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6} md={3}>
-                    <Card variant="outlined">
-                        <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <Box>
-                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                        {t('usuarios_activos')}
-                                    </Typography>
-                                    <Typography variant="h4" color="primary.main">
-                                        2,548
-                                    </Typography>
-                                </Box>
-                                <PeopleAltIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-                            </Box>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                                {t('en_la_ultima_semana')}
-                            </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <Card variant="outlined">
-                        <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <Box>
-                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                        {t('ventas_mensuales')}
-                                    </Typography>
-                                    <Typography variant="h4" color="secondary.main">
-                                        $12,456
-                                    </Typography>
-                                </Box>
-                                <MonetizationOnIcon sx={{ fontSize: 40, color: 'secondary.main' }} />
-                            </Box>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                                {t('comparado_con_el_mes_anterior')}
-                            </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <Card variant="outlined">
-                        <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <Box>
-                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                        {t('tasas_de_conversion')}
-                                    </Typography>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                        <LinearProgress variant="determinate" value={75} sx={{ width: '100%', mr: 1, height: 8 }} />
-                                        <Typography variant="body2" color="text.secondary">75%</Typography>
+                    {/* Logo más grande y circular */}
+                    <Box sx={{
+                        flexShrink: 0,
+                        ml: { md: 4 },
+                        display: 'flex', // Asegura que el contenedor del logo también sea flex para centrar la imagen si es necesario
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}>
+                        <img
+                            src={AppLogoImage}
+                            alt="Logo de la Aplicación"
+                            style={{
+                                width: '200px', // Ancho fijo para el círculo
+                                height: '200px', // Alto fijo para el círculo (igual al ancho)
+                                borderRadius: '50%', // Hace la imagen circular
+                                objectFit: 'cover',  // Asegura que la imagen cubra el área sin distorsionarse
+                                border: '2px solid', // Añade un borde sutil
+                                borderColor: 'primary.main', // Color del borde (usando el tema de MUI)
+                                boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)' // Sombra para darle profundidad
+                            }}
+                        />
+                    </Box>
+                </Box>
+                {/* FIN: Bloque de Contenido de Bienvenida y Logo */}
+
+            </Paper>
+
+            <Box>
+                <Typography variant="h5" component="h2" gutterBottom>
+                    {t('welcome_page_options_title')}
+                </Typography>
+
+                {/* GRID RESPONSIVE - Asegura que no se desborde con muchas opciones */}
+                <Grid container spacing={4}>
+                    {routes.map((route) => (
+                        <Grid
+                            item
+                            key={route.id}
+                            xs={12} // 1 por fila en móvil
+                            sm={6}  // 2 por fila en tablet
+                            md={4}  // 3 por fila en escritorio pequeño
+                            lg={3}  // 4 por fila en escritorio grande
+                            xl={2}  // 6 por fila en escritorio extra grande
+                        >
+                            <Card sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                height: '100%',
+                                transition: 'transform 0.3s',
+                                '&:hover': {
+                                    transform: 'translateY(-5px)',
+                                    boxShadow: 6
+                                }
+                            }}>
+                                <CardContent sx={{ flexGrow: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        {iconMap[route.icon] || <SettingsIcon color="primary" />}
+                                        <Typography variant="h6" component="div" sx={{ ml: 2 }}>
+                                            {t(route.i18nKey)}
+                                        </Typography>
                                     </Box>
-                                </Box>
-                                <TimelineIcon sx={{ fontSize: 40, color: 'info.main' }} />
-                            </Box>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                                {t('objetivo_80%')}
-                            </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <Card variant="outlined">
-                        <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <Box>
-                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                        {t('estado_del_sistema')}
+                                    <Typography variant="body2" color="text.secondary">
+                                        {t(route.i18nKeyDescription)}
                                     </Typography>
-                                    <Alert severity="success" sx={{ mt: 1 }}>
-                                        {t('operativo')}
-                                    </Alert>
-                                </Box>
-                                <VerifiedUserIcon sx={{ fontSize: 40, color: 'success.main' }} />
-                            </Box>
-                        </CardContent>
-                    </Card>
+                                </CardContent>
+                                <CardActions
+                                    sx={{
+                                        flexWrap: 'wrap',
+                                        justifyContent: route.submenu ? 'flex-start' : 'flex-end',
+                                        p: 2,
+                                    }}
+                                >
+                                    {route.submenu ? (
+                                        route.submenu.map(subItem => (
+                                            <Button
+                                                key={subItem.id}
+                                                component={RouterLink}
+                                                to={subItem.path}
+                                                size="small"
+                                                variant="contained"
+                                                sx={{ m: 0.5 }}
+                                            >
+                                                {t('welcome_page_goTo', { page: t(subItem.i18nKey) })}
+                                            </Button>
+                                        ))
+                                    ) : (
+                                        <Button
+                                            component={RouterLink}
+                                            to={route.path}
+                                            size="small"
+                                            variant="contained"
+                                        >
+                                            {t('welcome_page_goTo', { page: t(route.i18nKey) })}
+                                        </Button>
+                                    )}
+                                </CardActions>
+                            </Card>
+                        </Grid>
+                    ))}
                 </Grid>
-            </Grid>
-
-            {/* Sección de la tabla */}
-            <Box sx={{ mt: 5 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h5" component="h2">
-                        {t('ejemplo_tabla')}
-                    </Typography>
-                    <Button
-                        variant="outlined"
-                        size="small"
-                        sx={{ ml: 2 }}
-                        onClick={handleRefreshData}
-                        startIcon={<RefreshIcon />}
-                    >
-                        Recargar Datos
-                    </Button>
-                </Box>
-                <Card variant="outlined">
-                    <TableContainer component={Paper}>
-                        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>{t('id')}</TableCell>
-                                    <TableCell>{t('nombre')}</TableCell>
-                                    <TableCell>{t('apellido')}</TableCell>
-                                    <TableCell>{t('usuario')}</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {currentItems.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell component="th" scope="row">{item.id}</TableCell>
-                                        <TableCell>{item.firstName}</TableCell>
-                                        <TableCell>{item.lastName}</TableCell>
-                                        <TableCell>{item.username}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </Card>
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-                    <Pagination
-                        count={totalPages}
-                        page={currentPage}
-                        onChange={(event, value) => paginate(value)}
-                        color="primary"
-                    />
-                </Box>
             </Box>
-        </Box>
-    );
-}
 
-export default Home;
+            {/*<Box sx={{ mt: 5, textAlign: 'center' }}>*/}
+            {/*    <Paper elevation={1} sx={{ p: 2, display: 'inline-block' }}>*/}
+            {/*        <Typography variant="body2" color="text.secondary">*/}
+            {/*            {t('welcome_page.support_text')} {' '}*/}
+            {/*            <Link href="mailto:soporte@tuempresa.com">*/}
+            {/*                soporte@tuempresa.com*/}
+            {/*            </Link>*/}
+            {/*            .*/}
+            {/*        </Typography>*/}
+            {/*    </Paper>*/}
+            {/*</Box>*/}
+
+        </Container>
+    );
+};
+
+export default WelcomePage;
