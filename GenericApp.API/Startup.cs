@@ -5,6 +5,7 @@ using GenericApp.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
@@ -105,6 +106,28 @@ namespace GenericApp
             app.UseSwagger();
             app.UseSwaggerUI();
             app.UseHttpsRedirection();
+
+            // ====================================================================
+            // === CONFIGURACIÓN CLAVE PARA SERVIR IMÁGENES EN /api/img ===
+            // ====================================================================
+
+            // Esta configuración mapea la URL '/api/img' a la carpeta física 'wwwroot/img'.
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                // RequestPath: La URL que usará React para acceder (e.g., /api/img/logo.png)
+                RequestPath = "/img",
+
+                // FileProvider: La ubicación física de los archivos.
+                FileProvider = new PhysicalFileProvider(
+                    // Combina la ruta base de 'wwwroot' con la subcarpeta 'img'
+                    Path.Combine(env.WebRootPath, "img")
+                )
+            });
+
+            // Si necesitas servir archivos estáticos desde la raíz de wwwroot, descomenta esto:
+            // app.UseStaticFiles(); 
+
+            // ====================================================================
 
             app.UseRouting();
             app.UseCors();

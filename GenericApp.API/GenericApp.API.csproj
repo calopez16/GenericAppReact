@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\img\login_background.png" />
+    <Content Remove="wwwroot\img\logo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.36" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.36" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.36">
@@ -20,6 +25,11 @@
   <ItemGroup>
     <ProjectReference Include="..\GenericApp.BLL\GenericApp.BLL.csproj" />
     <ProjectReference Include="..\GenericApp.Data\GenericApp.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\img\login_background.png" />
+    <None Include="wwwroot\img\logo.png" />
   </ItemGroup>
 
 </Project>

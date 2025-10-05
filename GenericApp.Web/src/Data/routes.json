@@ -20,6 +20,13 @@
         "i18nKey": "users",
         "i18nKeyDescription": "users_description",
         "icon": "PeopleIcon"
+      },
+      {
+        "id": "parameters",
+        "path": "/parameters",
+        "i18nKey": "parameters",
+        "i18nKeyDescription": "parameters_description",
+        "icon": "PeopleIcon"
       }
     ]
   }

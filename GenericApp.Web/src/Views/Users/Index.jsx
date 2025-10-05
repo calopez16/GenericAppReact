@@ -24,7 +24,7 @@ import UserListTable from './UserTableList';
 
 function Index() {
     const { t } = useTranslation();
-    const service = DataAPIUsersService();
+    const userDataService = DataAPIUsersService();
     const [users, setUsers] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -68,7 +68,7 @@ function Index() {
             try {
                 setLoading(true);
                 // Se usa el valor "debounced" para hacer la petición a la API
-                const response = await service.getUsersPagination(page + 1, rowsPerPage, debouncedSearchTerm);
+                const response = await userDataService.getUsersPagination(page + 1, rowsPerPage, debouncedSearchTerm);
                 setUsers(response.data.users);
                 setTotalUsers(response.data.totalCount);
             } catch (error) {
@@ -101,12 +101,12 @@ function Index() {
             const isEnabled = !user.isDisabled;
             let dataResult;
             if (isEnabled) {
-                dataResult = await service.disableUser(user.userName);
+                dataResult = await userDataService.disableUser(user.userName);
                 if (dataResult.success) {
                     ShowMessage(t('recordDisabled'), 'success');
                 }
             } else {
-                dataResult = await service.enableUser(user.userName);
+                dataResult = await userDataService.enableUser(user.userName);
                 if (dataResult.success) {
                     ShowMessage(t('recordEnabled'), 'success');
                 }
@@ -127,7 +127,7 @@ function Index() {
     const handleResetPassword = async (user) => {
         try {
             setIsConfirmResetPasswordModalOpen(false);
-            const response = await service.resetPassword(user.userName);
+            const response = await userDataService.resetPassword(user.userName);
             if (response.success) {
                 setAssignedPassword(response.data.newPassword);
                 setIsPasswordModalOpen(true);

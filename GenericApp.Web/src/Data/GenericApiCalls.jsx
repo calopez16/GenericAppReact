@@ -1,10 +1,10 @@
-import { AuthHelper } from '@helpers/AuthHelper'; // Asegúrate de que la ruta sea correcta
+ï»¿import { AuthHelper } from '@helpers/AuthHelper'; // AsegÃºrate de que la ruta sea correcta
 import { API_BASE_URL } from '@config';
 
 const API_ENDPOINT_REFRESH_TOKEN = "Auth/refresh-token";
 const API_ENDPOINT_LOGIN = "Auth/login";
 
-// --- Lógica para manejar el Refresh Token ---
+// --- LÃ³gica para manejar el Refresh Token ---
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -21,11 +21,11 @@ const processQueue = (error, token = null) => {
 
 const handleResponse = async (response, isReturnData) => {
     if (!response.ok && response.status !== 409) {
-        // Si el error es 401, el interceptor ya lo habrá manejado.
-        // Aquí manejamos otros errores.
+        // Si el error es 401, el interceptor ya lo habrÃ¡ manejado.
+        // AquÃ­ manejamos otros errores.
         if (response.status === 401) {
-            // Este error solo debería lanzarse si el refresh token falla.
-            throw new Error("Su sesión ha expirado. Por favor, inicie sesión de nuevo.");
+            // Este error solo deberÃ­a lanzarse si el refresh token falla.
+            throw new Error("Su sesiÃ³n ha expirado. Por favor, inicie sesiÃ³n de nuevo.");
         }
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
@@ -45,18 +45,20 @@ const sendRequest = async (endPoint, method, data = null, isReturnData = false) 
     const url = `${API_BASE_URL}/${endPoint}`;
     const token = AuthHelper.getAccessToken(); // Obtenemos el token actual
 
+    const isFormData = data instanceof FormData; // â¬…ï¸ Nueva lÃ³gica de detecciÃ³n
+
     const options = {
         //credentials: 'include',
         method: method,
         headers: {
-            'Content-Type': 'application/json',
-            // Adjuntamos el token de autorización si existe
+            ...(!isFormData && { 'Content-Type': 'application/json' }),
+            // Adjuntamos el token de autorizaciÃ³n si existe
             ...(token && { 'Authorization': `Bearer ${token}` })
         },
     };
 
     if (data && ['POST', 'PUT', 'DELETE'].includes(method)) {
-        options.body = JSON.stringify(data);
+        options.body = isFormData ? data : JSON.stringify(data); 
     }
 
     try {
@@ -80,12 +82,12 @@ const sendRequest = async (endPoint, method, data = null, isReturnData = false) 
             }
 
             if (isRefreshing) {
-                // Si ya se está refrescando el token, encolamos esta petición.
+                // Si ya se estÃ¡ refrescando el token, encolamos esta peticiÃ³n.
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
                 })
                     .then(newToken => {
-                        // Reintentamos la petición con el nuevo token
+                        // Reintentamos la peticiÃ³n con el nuevo token
                         options.headers['Authorization'] = `Bearer ${newToken}`;
                         return fetch(url, options);
                     })
@@ -111,13 +113,13 @@ const sendRequest = async (endPoint, method, data = null, isReturnData = false) 
                 AuthHelper.setAccessToken(authLogin.data.token); // Guardamos el nuevo token
                 processQueue(null, authLogin.data.token); // Procesamos la cola de peticiones fallidas
 
-                // Reintentamos la petición original con el nuevo token
+                // Reintentamos la peticiÃ³n original con el nuevo token
                 options.headers['Authorization'] = `Bearer ${authLogin.data.token}`;
                 response = await fetch(url, options);
 
             } catch (refreshError) {
                 processQueue(refreshError, null);
-                AuthHelper.logout(); // Si el refresh falla, cerramos la sesión
+                AuthHelper.logout(); // Si el refresh falla, cerramos la sesiÃ³n
                 return Promise.reject(refreshError);
             } finally {
                 isRefreshing = false;

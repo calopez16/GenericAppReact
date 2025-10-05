@@ -2,7 +2,9 @@
 import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
 import routes from '@data/routes.json';
-import AppLogoImage from '@images/logo.png'
+//import { API_BASE_URL } from '@config';
+import AppLogoImage from '@images/logo.png';
+import { Link as RouterLink } from 'react-router-dom';
 
 // MUI Imports
 import {
@@ -43,6 +45,7 @@ const iconMap = {
 // Componente recursivo para renderizar los ítems del menú
 // MODIFICADO: Recibe 'currentPath' para la lógica de selección.
 const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath) => {
+
     return items.map((item) => {
         const IconComponent = iconMap[item.icon];
         const isSubmenuOpen = openSubmenu === item.id;
@@ -76,8 +79,8 @@ const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath) => {
                                     <ListItemButton
                                         key={subItem.id}
                                         sx={{ pl: 4 }}
-                                        component="a"
-                                        href={subItem.path}
+                                        to={subItem.path}
+                                        component={RouterLink}
                                         selected={isSubItemSelected} 
                                     >
                                         {/*{SubIconComponent && <ListItemIcon><SubIconComponent /></ListItemIcon>}*/}
@@ -95,8 +98,8 @@ const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath) => {
         return (
             <ListItem key={item.id} disablePadding>
                 <ListItemButton
-                    component="a"
-                    href={item.path}
+                    to={item.path}
+                    component={RouterLink}
                     selected={isItemSelected} // 👈 Aplica el estado seleccionado
                 >
                     {IconComponent && <ListItemIcon><IconComponent /></ListItemIcon>}
@@ -113,6 +116,7 @@ const SidebarComponent = ({ showSidebar, toggleSidebar }) => {
     const { themeMode } = useContext(AppContext);
     // 1. Obtener la ruta actual (pathname)
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+    //const LOGO_URL = API_BASE_URL + '/img/logo.png?key=' + (new Date()).getDay() + (new Date()).getHours();
 
     // Función auxiliar para encontrar el ID del menú padre si la ruta actual es un sub-ítem
     const findParentId = (routes, path) => {
