@@ -1,7 +1,7 @@
 ﻿import React, { useState, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
-import routes from '@data/routes.json';
+import routes from '@views/routes.json';
 //import { API_BASE_URL } from '@config';
 import AppLogoImage from '@images/logo.png';
 import { Link as RouterLink } from 'react-router-dom';
@@ -30,6 +30,7 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
+import TruckIcon from '@mui/icons-material/FireTruck';
 
 const drawerWidth = 240;
 
@@ -39,7 +40,8 @@ const iconMap = {
     PeopleIcon: PeopleIcon,
     SettingsIcon: SettingsIcon,
     BarChartIcon: BarChartIcon,
-    HomeIcon: HomeIcon
+    HomeIcon: HomeIcon,
+    TruckIcon: TruckIcon
 };
 
 // Componente recursivo para renderizar los ítems del menú
@@ -81,7 +83,7 @@ const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath) => {
                                         sx={{ pl: 4 }}
                                         to={subItem.path}
                                         component={RouterLink}
-                                        selected={isSubItemSelected} 
+                                        selected={isSubItemSelected}
                                     >
                                         {/*{SubIconComponent && <ListItemIcon><SubIconComponent /></ListItemIcon>}*/}
                                         <ListItemText primary={t(subItem.i18nKey)} />

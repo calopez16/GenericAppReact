@@ -54,7 +54,7 @@ const { t } = useTranslation();
                 to="/"              // La ruta a la que debe navegar
                 size="large"
             >
-                {t('backHome')}
+                {t('backToHome')}
             </Button>
         </Box>
     );

@@ -6,6 +6,7 @@ import HomePage from '@views/Home'
 import UsersPage from '@views/Users'
 import NotFoundPage from '@views/Pages/NotFound'
 import Parameters from '@views/Parameters'
+import Embarques from '@views/Embarques'
 
 function App() {
     return (
@@ -15,6 +16,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/parameters" element={<Parameters />} />
+                <Route path="/embarques" element={<Embarques />} />
                 {/*<Route path="/perfil" element={<ProfilePage />} />*/}
                 <Route path="*" element={<NotFoundPage />} />
             </Route>

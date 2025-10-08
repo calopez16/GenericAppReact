@@ -1,0 +1,71 @@
+[
+  {
+    "id": "dashboard",
+    "path": "/",
+    "i18nKey": "home",
+    "i18nKeyDescription": "homepage_description",
+    "icon": "HomeIcon",
+    "exact": true
+  },
+  {
+    "id": "embarques",
+    "path": "",
+    "i18nKey": "embarques",
+    "i18nKeyDescription": "embarques_description",
+    "icon": "TruckIcon",
+    "submenu": [
+      {
+        "id": "embarques",
+        "path": "/embarques",
+        "i18nKey": "embarques",
+        "i18nKeyDescription": "embarques_description",
+        "icon": "TruckIcon"
+      },
+      {
+        "id": "labels",
+        "path": "/labels",
+        "i18nKey": "labels",
+        "i18nKeyDescription": "labels_description",
+        "icon": "TruckIcon"
+      }
+    ]
+  },
+  {
+    "id": "configuration",
+    "path": "",
+    "i18nKey": "configuration",
+    "i18nKeyDescription": "configuration_description",
+    "icon": "SettingsIcon",
+    "submenu": [
+      {
+        "id": "users",
+        "path": "/users",
+        "i18nKey": "users",
+        "i18nKeyDescription": "users_description",
+        "icon": "PeopleIcon"
+      },
+      {
+        "id": "clients",
+        "path": "/clients",
+        "i18nKey": "clients",
+        "i18nKeyDescription": "clients_description",
+        "icon": "PeopleIcon"
+      },
+      {
+        "id": "seasons",
+        "path": "/seasons",
+        "i18nKey": "seasons",
+        "i18nKeyDescription": "seasons_description",
+        "icon": "PeopleIcon"
+      },
+      {
+        "id": "drivers",
+        "path": "/drivers",
+        "i18nKey": "drivers",
+        "i18nKeyDescription": "drivers_description",
+        "icon": "PeopleIcon"
+      }
+    ]
+  }
+
+]

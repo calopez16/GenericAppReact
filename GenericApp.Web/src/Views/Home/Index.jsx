@@ -5,7 +5,7 @@ import { AppContext } from '@helpers/AppContext';
 import AppLogoImage from '@images/logo.png'
 
 // Importaciones de rutas
-import routes from '@data/routes.json';
+import routes from '@views/routes.json';
 
 // Importaciones de MUI (estilo unificado)
 import {
