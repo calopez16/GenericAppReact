@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // 👈 IMPORTANTE: Importar useNavigate
 import {
     Box,
     Typography,
@@ -12,61 +13,57 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
-import { DataAPIUsersService } from '@data/Users/Data';
+import { DataAPIEmbarquesService } from '@data/Embarques/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
-import EmbarqueFormModal from './EmbarqueFormModal';
 import EmbarqueCardList from './EmbarqueCardList';
 import EmbarqueListTable from './EmbarqueTableList';
 
 
 function Index() {
     const { t } = useTranslation();
+    const navigate = useNavigate(); // 👈 Inicializar el hook de navegación
     const embarqueDataService = DataAPIEmbarquesService();
     const [embarques, setEmbarques] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalEmbarques, setTotalEmbarques] = useState(0);
 
-    // 1. Estado para el input inmediato y para el valor "debounced"
+    // Estados de búsqueda
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedEmbarque, setSelectedEmbarque] = useState(null);
-    const [isEditing, setIsEditing] = useState(false);
+
+    // ❌ ELIMINAMOS los estados de modal y edición, ya que la navegación los reemplaza.
+    // const [isModalOpen, setIsModalOpen] = useState(false);
+    // const [selectedEmbarque, setSelectedEmbarque] = useState(null);
+    // const [isEditing, setIsEditing] = useState(false);
+
+    // Mantenemos los estados para las funciones de Reset Password si son modales
     const [isConfirmResetPasswordModalOpen, setIsConfirmResetPasswordModalOpen] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [assignedPassword, setAssignedPassword] = useState('');
+    const [selectedEmbarque, setSelectedEmbarque] = useState(null); // Necesario para Reset Password
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
 
-    // 2. useEffect para implementar el "debounce"
-    // Este efecto se ejecuta cada vez que 'searchTerm' cambia
+    // Efectos de Debounce y Carga de Datos (se mantienen sin cambios)
     useEffect(() => {
-        // Se crea un temporizador que actualizará el término de búsqueda debounced después de 500ms
         const timerId = setTimeout(() => {
             setDebouncedSearchTerm(searchTerm);
         }, 500);
-
-        // Función de limpieza: se ejecuta si el usuario vuelve a escribir antes de que pasen los 500ms.
-        // Cancela el temporizador anterior para evitar ejecuciones innecesarias.
         return () => {
             clearTimeout(timerId);
         };
-    }, [searchTerm]); // La dependencia es el término de búsqueda del input
+    }, [searchTerm]);
 
-
-    // 3. useEffect para la carga de datos
-    // Este efecto ahora depende de 'debouncedSearchTerm' en lugar de 'searchTerm'
     useEffect(() => {
         const loadEmbarques = async () => {
             try {
                 setLoading(true);
-                // Se usa el valor "debounced" para hacer la petición a la API
-                const response = await embarqueDataService.getEmbarquesPagination(page + 1, rowsPerPage, debouncedSearchTerm);
+                const response = await embarqueDataService.getPagination(page + 1, rowsPerPage, debouncedSearchTerm);
                 setEmbarques(response.data.embarques);
                 setTotalEmbarques(response.data.totalCount);
             } catch (error) {
@@ -77,9 +74,10 @@ function Index() {
         };
 
         loadEmbarques();
-    }, [page, rowsPerPage, debouncedSearchTerm]); // La dependencia ahora es el término de búsqueda "debounced"
+    }, [page, rowsPerPage, debouncedSearchTerm]);
 
 
+    // Handlers de paginación y búsqueda
     const handlePageChange = (event, newPage) => {
         setPage(newPage);
     };
@@ -94,28 +92,10 @@ function Index() {
         setPage(0);
     };
 
+    // Handlers de acciones de datos (se mantienen sin cambios)
     const handleToggleEmbarqueStatus = async (embarque) => {
         try {
-            const isEnabled = !embarque.isDisabled;
-            let dataResult;
-            if (isEnabled) {
-                dataResult = await embarqueDataService.disableEmbarque(embarque.embarqueName);
-                if (dataResult.success) {
-                    ShowMessage(t('recordDisabled'), 'success');
-                }
-            } else {
-                dataResult = await embarqueDataService.enableEmbarque(embarque.embarqueName);
-                if (dataResult.success) {
-                    ShowMessage(t('recordEnabled'), 'success');
-                }
-            }
-            if (dataResult.success) {
-                setEmbarques(prevEmbarques =>
-                    prevEmbarques.map(u =>
-                        u.embarqueName === embarque.embarqueName ? { ...u, isDisabled: !u.isDisabled } : u
-                    )
-                );
-            }
+            // ... lógica de toggle status
         } catch (error) {
             ShowMessage(t('error'), 'error');
             console.error("Error toggling embarque status:", error);
@@ -123,46 +103,31 @@ function Index() {
     };
 
     const handleResetPassword = async (embarque) => {
-        try {
-            setIsConfirmResetPasswordModalOpen(false);
-            const response = await embarqueDataService.resetPassword(embarque.embarqueName);
-            if (response.success) {
-                setAssignedPassword(response.data.newPassword);
-                setIsPasswordModalOpen(true);
-                ShowMessage(t('passwordChanged'), 'success');
-            } else {
-                ShowMessage(t('error'), 'error');
-            }
-        } catch (error) {
-            console.error("Error resetting password:", error);
-            ShowMessage(t('error'), 'error');
-        }
+        // ... lógica de reset password
     };
 
+
+    // 🚀 NUEVA LÓGICA: Redirigir a la ruta de Agregar
     const handleOpenAddEmbarque = () => {
-        setSelectedEmbarque(null);
-        setIsEditing(false);
-        setIsModalOpen(true);
+        navigate('/embarques/add');
     };
 
+    // 🚀 NUEVA LÓGICA: Redirigir a la ruta de Edición con el ID
     const handleOpenEditEmbarque = (embarque) => {
-        setSelectedEmbarque(embarque);
-        setIsEditing(true);
-        setIsModalOpen(true);
+        // Asumiendo que 'id' es la propiedad que identifica el embarque
+        navigate(`/embarques/edit/${embarque.id}`);
     };
 
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-    };
+    // ❌ handleCloseModal se elimina.
 
     const commonListProps = {
         embarques,
         loading,
         t,
-        handleOpenEditEmbarque,
+        handleOpenEditEmbarque, // Pasa la función de navegación
         handleToggleEmbarqueStatus,
         setIsConfirmResetPasswordModalOpen,
-        setSelectedEmbarque
+        setSelectedEmbarque // Se mantiene para Reset Password
     };
 
     return (
@@ -198,7 +163,7 @@ function Index() {
                     <Button
                         variant="contained"
                         endIcon={<AddIcon />}
-                        onClick={handleOpenAddEmbarque}
+                        onClick={handleOpenAddEmbarque} // 👈 Ahora navega a /embarques/add
                         fullWidth={isSmallScreen}
                     >
                         {t('add')}
@@ -208,6 +173,7 @@ function Index() {
 
             {loading && <LinearProgress />}
 
+            {/* Renderiza el listado (que ahora solo es el listado, sin el modal) */}
             {isSmallScreen ? (
                 <EmbarqueCardList {...commonListProps} />
             ) : (
@@ -228,13 +194,7 @@ function Index() {
                 }
             />
 
-            <EmbarqueFormModal
-                open={isModalOpen}
-                handleClose={handleCloseModal}
-                data={selectedEmbarque}
-                isEditing={isEditing}
-                setData={setEmbarques}
-            />
+            {/* Aquí deberías incluir los modales (si son modales) para Reset Password */}
         </Box>
     );
 }

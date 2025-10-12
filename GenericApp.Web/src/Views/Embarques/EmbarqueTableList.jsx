@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
     TableContainer,
     Paper,
@@ -7,74 +7,124 @@ import {
     TableRow,
     TableCell,
     TableBody,
-    Switch,
     IconButton,
     Tooltip,
-    Typography
+    Typography,
+    Switch
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-import VpnKeyIcon from '@mui/icons-material/VpnKey';
+// ❌ Quitamos VpnKeyIcon
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever'; // 🚀 Añadimos ícono de eliminar
 
-// Este componente renderiza la lista de usuarios en formato de tabla.
-const UserListTable = ({
-    users,
+const EmbarqueListTable = ({
+    embarques,
     loading,
     t,
-    handleOpenEditUser,
-    handleToggleUserStatus,
+    handleOpenEditEmbarque,
+    handleToggleEmbarqueStatus,
     setIsConfirmResetPasswordModalOpen,
-    setSelectedUser
+    setSelectedEmbarque
+    // Si tienes un handler de eliminación, debes pasarlo como prop:
+    // handleDeleteEmbarque
 }) => {
 
-    // Ancho m�nimo para forzar el scroll horizontal si es necesario
-    const minTableWidth = 650;
+    const minTableWidth = 1400;
+
+    const formatTime = (timeSpan) => {
+        if (!timeSpan || typeof timeSpan !== 'string') return '-';
+        const parts = timeSpan.split(':');
+        return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : timeSpan;
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleDateString();
+    };
 
     return (
-        // Utilizamos overflowX: 'auto' para garantizar la responsividad en esta vista
         <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
             <Table sx={{ minWidth: minTableWidth }}>
                 <TableHead>
                     <TableRow>
-                        <TableCell>{t('active')}</TableCell>
-                        <TableCell>{t('userName')}</TableCell>
-                        <TableCell>{t('email')}</TableCell>
+                        <TableCell align="center">{t('Mixed')}</TableCell>
+                        <TableCell>{t('Trip Number')}</TableCell>
+                        <TableCell>{t('Date')}</TableCell>
+                        <TableCell>{t('Driver')}</TableCell>
+                        <TableCell>{t('Trailer Plates')}</TableCell>
+                        <TableCell>{t('Departure Time')}</TableCell>
+                        <TableCell>{t('Temperature')}</TableCell>
+                        <TableCell>{t('City, State')}</TableCell>
+                        <TableCell align="center">{t('Pallets Qty')}</TableCell>
                         <TableCell align="right">{t('actions')}</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={4} align="center">
+                            <TableCell colSpan={10} align="center">
                                 {t('loading')}...
                             </TableCell>
                         </TableRow>
-                    ) : users?.length === 0 ? (
+                    ) : embarques?.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={4} align="center"> {t('records_notFound')}.</TableCell>
+                            <TableCell colSpan={10} align="center"> {t('records_notFound')}.</TableCell>
                         </TableRow>
                     ) : (
-                        users.map((user, index) => (
-                            <TableRow key={index}>
-                                <TableCell>
-                                    <Tooltip title={user.isDisabled ? t('enable') : t('disable')}>
-                                        <Switch
-                                            checked={!user.isDisabled}
-                                            onChange={() => handleToggleUserStatus(user)}
-                                            color="primary"
-                                        />
+                        embarques.map((embarque, index) => (
+                            <TableRow key={embarque.id || index} hover>
+
+                                {/* Mixed (Mixto) */}
+                                <TableCell align="center">
+                                    <Tooltip title={embarque.mixed ? t('Mixed Cargo') : t('Single Cargo')}>
+                                        <Typography color={embarque.mixed ? 'secondary' : 'primary'} variant="body2">
+                                            {embarque.mixed ? 'MIX' : 'STD'}
+                                        </Typography>
                                     </Tooltip>
                                 </TableCell>
-                                <TableCell>{user.userName}</TableCell>
-                                <TableCell>{user.email}</TableCell>
+
+                                {/* TripNumber */}
+                                <TableCell sx={{ fontWeight: 'bold' }}>{embarque.tripNumber}</TableCell>
+
+                                {/* Date */}
+                                <TableCell>{formatDate(embarque.date)}</TableCell>
+
+                                {/* Driver */}
+                                <TableCell>{embarque.driver}</TableCell>
+
+                                {/* TrailerPlates */}
+                                <TableCell>{embarque.trailerPlates}</TableCell>
+
+                                {/* DepartureTime */}
+                                <TableCell>{formatTime(embarque.departureTime)}</TableCell>
+
+                                {/* Temperature */}
+                                <TableCell>{`${embarque.temperature}°C`}</TableCell>
+
+                                {/* City, State */}
+                                <TableCell>{`${embarque.city}, ${embarque.state}`}</TableCell>
+
+                                {/* Pallets Qty */}
+                                <TableCell align="center">{embarque.pallets?.length || 0}</TableCell>
+
+                                {/* Actions */}
                                 <TableCell align="right">
+                                    {/* Botón de Editar (se mantiene) */}
                                     <Tooltip title={t('edit')}>
-                                        <IconButton color="primary" onClick={() => handleOpenEditUser(user)}>
+                                        <IconButton color="primary" onClick={() => handleOpenEditEmbarque(embarque)}>
                                             <EditIcon />
                                         </IconButton>
                                     </Tooltip>
-                                    <Tooltip title={t('resetPassword')}>
-                                        <IconButton color="primary" onClick={() => { setIsConfirmResetPasswordModalOpen(true); setSelectedUser(user); }}>
-                                            <VpnKeyIcon />
+
+                                    {/* 🚀 Botón de Eliminar (reemplazado) */}
+                                    <Tooltip title={t('delete')}>
+                                        <IconButton
+                                            color="error" // Usamos color 'error' para visualmente indicar peligro
+                                            onClick={() => {
+                                                // 🚨 Aquí va la lógica para eliminar. 
+                                                // Deberías usar una prop handleDeleteEmbarque(embarque.id)
+                                                console.log("Acción de eliminar para embarque:", embarque.id);
+                                            }}>
+                                            <DeleteForeverIcon />
                                         </IconButton>
                                     </Tooltip>
                                 </TableCell>
@@ -87,4 +137,4 @@ const UserListTable = ({
     );
 };
 
-export default UserListTable;
+export default EmbarqueListTable;
