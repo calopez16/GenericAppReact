@@ -6,6 +6,7 @@ import SidebarComponent from './SidebarComponent';
 import FooterComponent from './FooterComponent';
 import { AuthHelper } from '@helpers/AuthHelper';
 import LoaderComponent from '@views/Layout/LoaderComponent';
+
 import { Box, CssBaseline, useMediaQuery, useTheme } from '@mui/material';
 
 const Layout = () => {
