@@ -10,18 +10,18 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 
-const EmbarqueCardList = ({
-    embarques,
+const UserCardList = ({
+    users,
     loading,
     t,
-    handleOpenEditEmbarque,
-    handleToggleEmbarqueStatus,
+    handleOpenEditUser,
+    handleToggleUserStatus,
     setIsConfirmResetPasswordModalOpen,
-    setSelectedEmbarque
+    setSelectedUser
 }) => {
 
     // Componente interno para cada tarjeta de usuario
-    const MobileEmbarqueCard = ({ embarque }) => (
+    const MobileUserCard = ({ user }) => (
         <Paper
             sx={{
                 p: 2,
@@ -29,38 +29,39 @@ const EmbarqueCardList = ({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 1,
-                borderLeft: !embarque.isDisabled ? '4px solid green' : '4px solid grey'
+                // Indicador visual de estado
+                borderLeft: !user.isDisabled ? '4px solid green' : '4px solid grey'
             }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="body1" component="div" sx={{ fontWeight: 'bold' }}>
-                    {embarque.embarqueName}
+                    {user.userName}
                 </Typography>
                 <Box>
                     <Tooltip title={t('edit')}>
-                        <IconButton size="small" color="primary" onClick={() => handleOpenEditEmbarque(embarque)}>
+                        <IconButton size="small" color="primary" onClick={() => handleOpenEditUser(user)}>
                             <EditIcon />
                         </IconButton>
                     </Tooltip>
                     <Tooltip title={t('resetPassword')}>
-                        <IconButton size="small" color="primary" onClick={() => { setIsConfirmResetPasswordModalOpen(true); setSelectedEmbarque(embarque); }}>
+                        <IconButton size="small" color="primary" onClick={() => { setIsConfirmResetPasswordModalOpen(true); setSelectedUser(user); }}>
                             <VpnKeyIcon />
                         </IconButton>
                     </Tooltip>
                 </Box>
             </Box>
             <Typography variant="body2" color="text.secondary">
-                {t('email')}: {embarque.email}
+                {t('email')}: {user.email}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography variant="body2" color="text.secondary">
-                    {t('status')}: {!embarque.isDisabled ? t('active') : t('disabled')}
+                    {t('status')}: {!user.isDisabled ? t('active') : t('disabled')}
                 </Typography>
-                <Tooltip title={embarque.isDisabled ? t('enable') : t('disable')}>
+                <Tooltip title={user.isDisabled ? t('enable') : t('disable')}>
                     <Switch
                         size="small"
-                        checked={!embarque.isDisabled}
-                        onChange={() => handleToggleEmbarqueStatus(embarque)}
+                        checked={!user.isDisabled}
+                        onChange={() => handleToggleUserStatus(user)}
                         color="primary"
                     />
                 </Tooltip>
@@ -72,17 +73,17 @@ const EmbarqueCardList = ({
         return <Typography align="center" sx={{ mt: 2 }}>{t('loading')}...</Typography>;
     }
 
-    if (embarques?.length === 0) {
+    if (users?.length === 0) {
         return <Typography align="center" sx={{ mt: 2 }}>{t('records_notFound')}.</Typography>;
     }
 
     return (
         <Box>
-            {embarques.map((embarque, index) => (
-                <MobileEmbarqueCard key={index} embarque={embarque} />
+            {users.map((user, index) => (
+                <MobileUserCard key={index} user={user} />
             ))}
         </Box>
     );
 };
 
-export default EmbarqueCardList;
+export default UserCardList;

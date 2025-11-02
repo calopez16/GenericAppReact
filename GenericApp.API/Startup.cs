@@ -5,11 +5,13 @@ using GenericApp.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using AutoMapper;
 
 namespace GenericApp
 {
@@ -25,7 +27,6 @@ namespace GenericApp
         public void ConfigurationServices(IServiceCollection services)
         {
             services.AddControllers();
-
             services.AddDbContext<ApplicationDBContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("defaultConnection"));
@@ -91,6 +92,7 @@ namespace GenericApp
             });
 
             services.AddScoped<IRepository, Repository>();
+            services.AddAutoMapper(typeof(Startup));
 
             //services.AddDataProtection();
         }

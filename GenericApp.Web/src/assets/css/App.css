@@ -1,0 +1,128 @@
+/* ----------------------------------------------------------- */
+/* --- ESTILOS PARA LA VISTA 2D DEL CAMIÓN (TRUCK2DVIEW) --- */
+/* ----------------------------------------------------------- */
+
+/* Contenedor Principal: Ocupa el 100% del espacio disponible y usa flexbox */
+.truck-container {
+    display: flex;
+    align-items: flex-start;
+    margin-top: 16px;
+    width: 100%;
+    /* Importante: oculta cualquier desbordamiento causado por el solapamiento */
+    overflow: hidden;
+    min-height: 320px;
+}
+
+/* 1. Cabina Fija (120px de ancho) */
+.truck-cabin {
+    width: 120px;
+    height: 300px;
+    background-color: #d32f2f; /* Rojo */
+    border-radius: 8px 8px 0 0;
+    border: 2px solid #546e7a;
+    box-shadow: 4px 4px 8px rgba(0,0,0,0.2);
+    position: relative;
+    flex-shrink: 0; /* Evita que se encoja */
+    margin-right: -5px; /* Solapamiento con el tráiler */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+}
+
+/* 2. Tráiler Contenedor: Crece para ocupar el espacio restante */
+.truck-trailer {
+    flex-grow: 1;
+    /* CRUCIAL: Permite que el contenedor se encoja dentro del 'truck-container' */
+    min-width: 0;
+    height: 300px;
+    background-color: #cfd8dc; /* Gris */
+    border: 2px solid #546e7a;
+    border-radius: 0 8px 8px 0;
+    /* Habilita el scroll horizontal dentro del tráiler */
+    position: relative;
+    padding: 8px;
+}
+
+.trailer-header {
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+/* Contenedor de Pallets: Define el ancho total del contenido scrollable */
+.pallet-scroller {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    padding-bottom: 20px;
+    /* Ancho forzado: 13 pares * ~115px/par. Ajústalo si cambias PALLET_SIZE o MARGIN */
+    width: 100%;
+}
+
+/* Columna de Pallets (Representa una fila de 2 cajas) */
+.pallet-pair-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 8px;
+    flex-shrink: 0;
+    width: 115px; /* Ancho consistente por par */
+    border-right: 1px dashed #9e9e9e;
+    padding-right: 5px;
+}
+
+    .pallet-pair-column.last-column {
+        border-right: none;
+        padding-right: 0px;
+    }
+
+
+/* ----------------------------------------------------------- */
+/* --- ESTILOS DE SLOTS DE PALETS --- */
+/* ----------------------------------------------------------- */
+
+.pallet-slot {
+    width: 100px;
+    height: 100px;
+    margin: 5px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+/* Palet Cargado */
+.pallet-loaded {
+    background-color: #00BCD4; /* Azul */
+    border: 3px solid #0097a7;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* Slot Vacío */
+.pallet-empty {
+    background-color: #f0f0f0;
+    border: 2px dashed #9e9e9e;
+    box-shadow: none;
+}
+
+    .pallet-empty:hover {
+        background-color: #e8e8e8;
+    }
+
+/* Palet Seleccionado (Aplicado tanto a cargados como a vacíos) */
+.pallet-loaded.pallet-selected {
+    border-color: #FF9800; /* Naranja */
+    box-shadow: 0 0 10px rgba(255, 152, 0, 1);
+}
+
+.pallet-empty.pallet-selected {
+    border-color: #4caf50; /* Verde */
+}

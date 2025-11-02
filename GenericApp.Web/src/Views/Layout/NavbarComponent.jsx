@@ -99,22 +99,22 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                         </IconButton>
                     </Tooltip>
                     {/* Menú de idioma */}
-                    <Tooltip title={t('select_language')}>
-                        <IconButton
-                            aria-label="language selector"
-                            aria-controls={open ? 'language-menu' : undefined}
-                            aria-haspopup="true"
-                            aria-expanded={open ? 'true' : undefined}
-                            onClick={handleClick}
-                            sx={{ mr: 1 }}
-                        >
-                            <Avatar
-                                src={langFlags[i18n.language]}
-                                alt={t('current_language')}
-                                sx={{ width: 30, height: 30 }}
-                            />
-                        </IconButton>
-                    </Tooltip>
+                    {/*<Tooltip title={t('select_language')}>*/}
+                    {/*    <IconButton*/}
+                    {/*        aria-label="language selector"*/}
+                    {/*        aria-controls={open ? 'language-menu' : undefined}*/}
+                    {/*        aria-haspopup="true"*/}
+                    {/*        aria-expanded={open ? 'true' : undefined}*/}
+                    {/*        onClick={handleClick}*/}
+                    {/*        sx={{ mr: 1 }}*/}
+                    {/*    >*/}
+                    {/*        <Avatar*/}
+                    {/*            src={langFlags[i18n.language]}*/}
+                    {/*            alt={t('current_language')}*/}
+                    {/*            sx={{ width: 30, height: 30 }}*/}
+                    {/*        />*/}
+                    {/*    </IconButton>*/}
+                    {/*</Tooltip>*/}
                     <Menu
                         id="language-menu"
                         anchorEl={anchorEl}

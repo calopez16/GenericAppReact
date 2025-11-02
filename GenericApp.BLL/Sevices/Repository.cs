@@ -17,102 +17,212 @@ namespace GenericApp.BLL.Sevices
             if (_context != null)
                 _context.Dispose();
         }
-        public async Task<T> Add<T>(T entity) where T : class
+
+        // Modificado: Devuelve Task<bool>
+        public async Task<bool> Add<T>(T entity) where T : class
         {
-            await _context.Set<T>().AddAsync(entity);
-            await _context.SaveChangesAsync();
-            return entity;
+            try
+            {
+                await _context.Set<T>().AddAsync(entity);
+                // Si SaveChangesAsync es exitoso, devuelve true (o el número de filas afectadas > 0)
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                // TODO: Registrar la excepción (log the exception)
+                // Console.WriteLine(ex.Message); 
+                return false; // Error al agregar/guardar
+            }
         }
 
         public async Task<bool> Any<T>(Expression<Func<T, bool>> filter = null, params Expression<Func<T, object>>[] includes) where T : class
         {
-            IQueryable<T> query = _context.Set<T>();
-            if (filter != null)
+            try
             {
-                query = query.Where(filter);
-            }
+                IQueryable<T> query = _context.Set<T>();
+                if (filter != null)
+                {
+                    query = query.Where(filter);
+                }
 
-            if (includes != null)
+                if (includes != null)
+                {
+                    query = includes.Aggregate(query,
+                                     (current, include) => current.Include(include));
+                }
+
+                return await query.AnyAsync();
+            }
+            catch (Exception ex)
             {
-                query = includes.Aggregate(query,
-                          (current, include) => current.Include(include));
+                // TODO: Registrar la excepción (log the exception)
+                // Console.WriteLine(ex.Message);
+                return default; // default para bool es false
             }
-
-            return await query.AnyAsync();
         }
 
         public async Task<IEnumerable<T>> FindBy<T>(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderby = null, params Expression<Func<T, object>>[] includes) where T : class
         {
-            IQueryable<T> query = _context.Set<T>();
-            if (filter != null)
+            try
             {
-                query = query.Where(filter);
-            }
+                IQueryable<T> query = _context.Set<T>();
+                if (filter != null)
+                {
+                    query = query.Where(filter);
+                }
 
-            if (includes != null)
-            {
-                query = includes.Aggregate(query,
-                          (current, include) => current.Include(include));
-            }
+                if (includes != null)
+                {
+                    query = includes.Aggregate(query,
+                                     (current, include) => current.Include(include));
+                }
 
-            if (orderby != null)
-            {
-                return await orderby(query).ToListAsync();
+                if (orderby != null)
+                {
+                    return await orderby(query).ToListAsync();
+                }
+                return await query.ToListAsync();
             }
-            return await query.ToListAsync();
+            catch (Exception ex)
+            {
+                // TODO: Registrar la excepción (log the exception)
+                // Console.WriteLine(ex.Message);
+                return default; // default para IEnumerable<T> es null
+            }
         }
 
         public async Task<T> FirstOrDefault<T>(Expression<Func<T, bool>> filter = null, params Expression<Func<T, object>>[] includes) where T : class
         {
-            IQueryable<T> query = _context.Set<T>();
-            if (filter != null)
+            try
             {
-                query = query.Where(filter);
-            }
+                IQueryable<T> query = _context.Set<T>();
+                if (filter != null)
+                {
+                    query = query.Where(filter);
+                }
 
-            if (includes != null)
+                if (includes != null)
+                {
+                    query = includes.Aggregate(query,
+                                     (current, include) => current.Include(include));
+                }
+                return await query.FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
             {
-                query = includes.Aggregate(query,
-                          (current, include) => current.Include(include));
+                // TODO: Registrar la excepción (log the exception)
+                // Console.WriteLine(ex.Message);
+                return default; // default para T es null (porque T: class)
             }
-
-            return await query.FirstOrDefaultAsync();
         }
+
         public async Task<IEnumerable<T>> Get<T>(IQueryable<T> query) where T : class
         {
-            return await query.ToListAsync();
+            try
+            {
+                return await query.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                // TODO: Registrar la excepción (log the exception)
+                // Console.WriteLine(ex.Message);
+                return default;
+            }
         }
+
         public async Task<IEnumerable<T>> GetAll<T>() where T : class
         {
-            return await _context.Set<T>().ToListAsync();
+            try
+            {
+                return await _context.Set<T>().ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                // TODO: Registrar la excepción (log the exception)
+                // Console.WriteLine(ex.Message);
+                return default;
+            }
         }
 
         public async Task<T> GetById<T>(int id) where T : class
         {
-            return await _context.Set<T>().FindAsync(id);
+            try
+            {
+                return await _context.Set<T>().FindAsync(id);
+            }
+            catch (Exception ex)
+            {
+                // TODO: Registrar la excepción (log the exception)
+                // Console.WriteLine(ex.Message);
+                return null;
+            }
         }
 
-        public async Task Remove<T>(T entity) where T : class
+        // Modificado: Devuelve Task<bool>
+        public async Task<bool> Remove<T>(T entity) where T : class
         {
-            _context.Set<T>().Remove(entity);
+            try
+            {
+                _context.Set<T>().Remove(entity);
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                // TODO: Registrar la excepción (log the exception)
+                // Console.WriteLine(ex.Message);
+                return false; // Error al eliminar/guardar
+            }
         }
 
-        public async Task RemoveById<T>(int id) where T : class
+        // Modificado: Devuelve Task<bool>
+        public async Task<bool> RemoveById<T>(int id) where T : class
         {
-            var entity = await _context.Set<T>().FindAsync(id);
-            _context.Set<T>().Remove(entity);
+            try
+            {
+                var entity = await _context.Set<T>().FindAsync(id);
+                if (entity != null)
+                {
+                    _context.Set<T>().Remove(entity);
+                    return await _context.SaveChangesAsync() > 0;
+                }
+                return false; // No se encontró la entidad para eliminar
+            }
+            catch (Exception ex)
+            {
+                // TODO: Registrar la excepción (log the exception)
+                // Console.WriteLine(ex.Message);
+                return false; // Error al eliminar/guardar
+            }
         }
 
-        public async Task Update<T>(T entity) where T : class
+        // Modificado: Devuelve Task<bool>
+        public async Task<bool> Update<T>(T entity) where T : class
         {
-            _context.Entry(entity).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Entry(entity).State = EntityState.Modified;
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                // TODO: Registrar la excepción (log the exception)
+                // Console.WriteLine(ex.Message);
+                return false; // Error al actualizar/guardar
+            }
         }
 
         public async Task<IQueryable<T>> Query<T>() where T : class
         {
-            return _context.Set<T>().AsQueryable();
+            try
+            {
+                return _context.Set<T>().AsQueryable();
+            }
+            catch (Exception ex)
+            {
+                // TODO: Registrar la excepción (log the exception)
+                // Console.WriteLine(ex.Message);
+                return null;
+            }
         }
     }
-
 }

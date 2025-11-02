@@ -9,32 +9,18 @@
   },
   {
     "id": "embarques",
-    "path": "",
+    "path": "/embarques",
     "i18nKey": "embarques",
     "i18nKeyDescription": "embarques_description",
     "icon": "TruckIcon",
-    "submenu": [
-      {
-        "id": "embarques",
-        "path": "/embarques",
-        "i18nKey": "embarques",
-        "i18nKeyDescription": "embarques_description",
-        "icon": "TruckIcon"
-      },
-      {
-        "id": "labels",
-        "path": "/labels",
-        "i18nKey": "labels",
-        "i18nKeyDescription": "labels_description",
-        "icon": "TruckIcon"
-      }
-    ]
+    "exact": true
   },
+
   {
-    "id": "configuration",
+    "id": "administration",
     "path": "",
-    "i18nKey": "configuration",
-    "i18nKeyDescription": "configuration_description",
+    "i18nKey": "administration",
+    "i18nKeyDescription": "administration_description",
     "icon": "SettingsIcon",
     "submenu": [
       {
@@ -43,6 +29,13 @@
         "i18nKey": "users",
         "i18nKeyDescription": "users_description",
         "icon": "PeopleIcon"
+      },
+      {
+        "id": "labels",
+        "path": "/labels",
+        "i18nKey": "labels",
+        "i18nKeyDescription": "labels_description",
+        "icon": "TruckIcon"
       },
       {
         "id": "clients",
@@ -64,8 +57,14 @@
         "i18nKey": "drivers",
         "i18nKeyDescription": "drivers_description",
         "icon": "PeopleIcon"
+      },
+      {
+        "id": "shippingCompanies",
+        "path": "/shipping-companies",
+        "i18nKey": "shippingCompanies",
+        "i18nKeyDescription": "shippingCompanies_description",
+        "icon": "PeopleIcon"
       }
     ]
   }
-
 ]
