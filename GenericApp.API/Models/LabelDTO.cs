@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GenericApp.Data.Models
+﻿namespace GenericApp.API.Models
 {
-    public class Label
+    public class LabelDTO
     {
         public int IdLabel { get; set; }
         public string Description { get; set; }

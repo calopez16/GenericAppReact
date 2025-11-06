@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GenericApp.Data.Models
+﻿namespace GenericApp.API.Models
 {
-    public class Driver
+    public class DriverDTO
     {
         public int IdDriver { get; set; }
         public string Name { get; set; }

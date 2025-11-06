@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251106050823_AddCountryStates")]
+    partial class AddCountryStates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -340,12 +342,17 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<int?>("LabelIdLabel")
+                        .HasColumnType("int");
+
                     b.Property<int>("MaxBoxQuantity")
                         .HasColumnType("int");
 
                     b.HasKey("IdLabelType");
 
                     b.HasIndex("IdLabel");
+
+                    b.HasIndex("LabelIdLabel");
 
                     b.ToTable("LabelTypes");
                 });
@@ -668,7 +675,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEFMRaLzRJBIw0M1MnCpGv2Dz/rCnCXBjeyrhw6kasx854KYlbeUtzG5GP6oHnTlC3A==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEObSYHid3QzExnLX5Yp6RYX7iK3ihcBzv0D4G89+wF8Ubv7cJl/7vK1fDA6TB+1EXw==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
@@ -816,6 +823,10 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("IdLabel")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("GenericApp.Data.Models.Label", null)
+                        .WithMany("LabelTypes")
+                        .HasForeignKey("LabelIdLabel");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Season", b =>
@@ -885,6 +896,11 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("GenericApp.Data.Models.Label", b =>
+                {
+                    b.Navigation("LabelTypes");
                 });
 #pragma warning restore 612, 618
         }

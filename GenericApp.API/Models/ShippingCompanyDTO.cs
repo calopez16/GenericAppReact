@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GenericApp.Data.Models
+﻿namespace GenericApp.API.Models
 {
-    public class ShippingCompany
+    public class ShippingCompanyDTO
     {
         public int IdShippingCompany { get; set; }
         public string Name { get; set; }

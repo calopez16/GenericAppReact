@@ -11,6 +11,9 @@ namespace GenericApp.API.Utility
 
             CreateMap<Client, ClientDTO>();
             CreateMap<ClientDTO, Client>();
+
+            CreateMap<Company, CompanyDTO>();
+            CreateMap<CompanyDTO, Company>();
         }
     }
 }

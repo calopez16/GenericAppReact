@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 
 namespace GenericApp.Data.Models
 {
-    public class ShippingCompany
+    public class Country
     {
-        public int IdShippingCompany { get; set; }
-        public string Name { get; set; }
+        public int IdCountry { get; set; }
+        public string Description { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
-        public int IdCompany { get; set; }
     }
 }

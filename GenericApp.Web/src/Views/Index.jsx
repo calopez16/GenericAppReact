@@ -4,6 +4,7 @@ import Layout from '@layout/Layout';
 import LoginPage from '@views/Auth/Login'
 import HomePage from '@views/Home'
 import UsersPage from '@views/Users'
+import ClientsPage from '@views/Clients'
 import NotFoundPage from '@views/Pages/NotFound'
 import Parameters from '@views/Parameters'
 import EmbarquesList from '@views/Embarques/Index';
@@ -18,6 +19,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/parameters" element={<Parameters />} />
+                <Route path="/clients" element={<ClientsPage />} />
 
                 {/* Configuración para Embarques:
                   Usamos una ruta padre sin elemento para agrupar las rutas hijas.

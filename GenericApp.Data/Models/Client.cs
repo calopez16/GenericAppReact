@@ -16,8 +16,8 @@ namespace GenericApp.Data.Models
         public string PostalCode { get; set; }
         public string Phone { get; set; }
         public string Notes { get; set; }
-        public bool IsActive { get; set; }
-        public bool IsDeleted { get; set; }
+        public bool? IsActive { get; set; }
+        public bool? IsDeleted { get; set; }
         public int IdCompany { get; set; }
     }
 }

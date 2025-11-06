@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GenericApp.Data.Models
+﻿namespace GenericApp.API.Models
 {
-    public class Company
+    public class CompanyDTO
     {
         public int IdCompany { get; set; }
         public string Name { get; set; }

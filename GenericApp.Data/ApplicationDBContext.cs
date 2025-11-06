@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System; // Agregado para usar Guid
 
 namespace GenericApp.Data
 {
@@ -22,6 +21,9 @@ namespace GenericApp.Data
         public DbSet<RefreshTokenAspNetUser> RefreshTokenAspNetUser { get; set; }
         public DbSet<Parameter> Parameters { get; set; }
         public DbSet<Client> Clients { get; set; }
+        public DbSet<City> Cities { get; set; }
+        public DbSet<Country> Countries { get; set; }
+        public DbSet<State> States { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Driver> Drivers { get; set; }
         public DbSet<Label> Labels { get; set; }
@@ -68,6 +70,40 @@ namespace GenericApp.Data
                 b.Property(x => x.Notes).HasMaxLength(250);
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            });
+
+            modelBuilder.Entity<Country>(b =>
+            {
+                b.HasKey(x => x.IdCountry);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            });
+            modelBuilder.Entity<State>(b =>
+            {
+                b.HasKey(x => x.IdState);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne<Country>()
+                 .WithMany()
+                 .HasForeignKey(x => x.IdCountry)
+                 .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // === City ===
+            modelBuilder.Entity<City>(b =>
+            {
+                b.HasKey(x => x.IdCity);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne<State>()
+                 .WithMany()
+                 .HasForeignKey(x => x.IdState)
+                 .OnDelete(DeleteBehavior.Restrict);
             });
 
             // === Client ===

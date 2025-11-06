@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251106044035_AddCity")]
+    partial class AddCity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -86,9 +88,6 @@ namespace GenericApp.Data.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<int>("IdState")
-                        .HasColumnType("int");
-
                     b.Property<bool?>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -100,8 +99,6 @@ namespace GenericApp.Data.Migrations
                         .HasDefaultValue(false);
 
                     b.HasKey("IdCity");
-
-                    b.HasIndex("IdState");
 
                     b.ToTable("Cities");
                 });
@@ -220,34 +217,6 @@ namespace GenericApp.Data.Migrations
                     b.ToTable("Companies");
                 });
 
-            modelBuilder.Entity("GenericApp.Data.Models.Country", b =>
-                {
-                    b.Property<int>("IdCountry")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCountry"), 1L, 1);
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<bool?>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.HasKey("IdCountry");
-
-                    b.ToTable("Countries");
-                });
-
             modelBuilder.Entity("GenericApp.Data.Models.Driver", b =>
                 {
                     b.Property<int>("IdDriver")
@@ -340,12 +309,17 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<int?>("LabelIdLabel")
+                        .HasColumnType("int");
+
                     b.Property<int>("MaxBoxQuantity")
                         .HasColumnType("int");
 
                     b.HasKey("IdLabelType");
 
                     b.HasIndex("IdLabel");
+
+                    b.HasIndex("LabelIdLabel");
 
                     b.ToTable("LabelTypes");
                 });
@@ -492,39 +466,6 @@ namespace GenericApp.Data.Migrations
                     b.ToTable("ShippingCompanies");
                 });
 
-            modelBuilder.Entity("GenericApp.Data.Models.State", b =>
-                {
-                    b.Property<int>("IdState")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdState"), 1L, 1);
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<int>("IdCountry")
-                        .HasColumnType("int");
-
-                    b.Property<bool?>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.HasKey("IdState");
-
-                    b.HasIndex("IdCountry");
-
-                    b.ToTable("States");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -668,7 +609,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEFMRaLzRJBIw0M1MnCpGv2Dz/rCnCXBjeyrhw6kasx854KYlbeUtzG5GP6oHnTlC3A==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEC+wlQhqpgA89ym0lix264jugBQEFBgsZ7/pKAM8c+FJmKT5V6KHulveQCPHWy0Ygw==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
@@ -773,15 +714,6 @@ namespace GenericApp.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("GenericApp.Data.Models.City", b =>
-                {
-                    b.HasOne("GenericApp.Data.Models.State", null)
-                        .WithMany()
-                        .HasForeignKey("IdState")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("GenericApp.Data.Models.Client", b =>
                 {
                     b.HasOne("GenericApp.Data.Models.Company", null)
@@ -816,6 +748,10 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("IdLabel")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("GenericApp.Data.Models.Label", null)
+                        .WithMany("LabelTypes")
+                        .HasForeignKey("LabelIdLabel");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Season", b =>
@@ -823,15 +759,6 @@ namespace GenericApp.Data.Migrations
                     b.HasOne("GenericApp.Data.Models.Company", null)
                         .WithMany()
                         .HasForeignKey("IdCompany")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.State", b =>
-                {
-                    b.HasOne("GenericApp.Data.Models.Country", null)
-                        .WithMany()
-                        .HasForeignKey("IdCountry")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -885,6 +812,11 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("GenericApp.Data.Models.Label", b =>
+                {
+                    b.Navigation("LabelTypes");
                 });
 #pragma warning restore 612, 618
         }

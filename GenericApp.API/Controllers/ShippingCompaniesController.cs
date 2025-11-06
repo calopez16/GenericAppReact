@@ -5,20 +5,19 @@ using GenericApp.Data.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using System.Data;
 
 namespace GenericApp.API.Controllers
 {
     [ApiController]
-    [Route("clients")]
+    [Route("ShippingCompanies")]
     //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
-    public class ClientsController : ControllerBase
+    public class ShippingCompaniesController : ControllerBase
     {
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
 
-        public ClientsController(
+        public ShippingCompaniesController(
             IRepository repository,
             IMapper mapper)
         {
@@ -27,7 +26,7 @@ namespace GenericApp.API.Controllers
         }
 
         [HttpGet("pagination")]
-        public async Task<ActionResult> GetClientsPagination(
+        public async Task<ActionResult> GetShippingCompaniesPagination(
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
             [FromQuery] string? searchTerm = null)
@@ -35,15 +34,14 @@ namespace GenericApp.API.Controllers
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 10;
 
-            var query = await _repository.Query<Client>();
+            var query = await _repository.Query<ShippingCompany>();
 
             query = query.Where(x => !(x.IsDeleted ?? false));
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 query = query.Where(u =>
-                    u.Name.Contains(searchTerm) ||
-                    u.Rfc.Contains(searchTerm));
+                    u.Name.Contains(searchTerm));
             }
 
             var totalRows = query.Count();
@@ -66,58 +64,50 @@ namespace GenericApp.API.Controllers
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ClientDTO>> GetClientById(int id)
+        public async Task<ActionResult<ShippingCompanyDTO>> GetShippingCompanyById(int id)
         {
-            var client = await _repository.FindBy<Client>(x => x.IdClient == id && !(x.IsDeleted ?? false));
+            var client = await _repository.FindBy<ShippingCompany>(x => x.IdShippingCompany == id && !(x.IsDeleted ?? false));
             if (client == null)
                 return NotFound(new ApiResponse());
 
-            var clientDTO = _mapper.Map<ClientDTO>(client);
+            var clientDTO = _mapper.Map<ShippingCompanyDTO>(client);
 
             return Ok(new ApiResponse { Data = clientDTO });
         }
         [HttpPost]
-        public async Task<ActionResult> AddClient([FromBody] ClientDTO model)
+        public async Task<ActionResult> AddShippingCompany([FromBody] ShippingCompanyDTO model)
         {
-            var clientExists = await _repository.FirstOrDefault<Client>(x => (x.Name.ToLower().Equals(model.Name.ToLower()) || (!model.Rfc.IsNullOrEmpty() && x.Rfc.ToLower().Equals(model.Rfc.ToLower()))) && !(x.IsDeleted ?? false));
+            var clientExists = await _repository.FirstOrDefault<ShippingCompany>(x => (x.Name.ToLower().Equals(model.Name.ToLower())) && !(x.IsDeleted ?? false));
             if (clientExists != null)
                 return Conflict(
                     new ApiResponse
                     {
-                        Conflict = $"{(clientExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}, {(!model.Rfc.IsNullOrEmpty() && clientExists.Rfc.ToLower().Equals(model.Rfc.ToLower()) ? model.Rfc : "")}"
+                        Conflict = $"{(clientExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}"
                     }
                 );
 
-            var clientDB = _mapper.Map<Client>(model);
-            clientDB.IdCompany = 1;
+            var clientDB = _mapper.Map<ShippingCompany>(model);
             var result = await _repository.Add(clientDB);
 
             if (!result)
                 return BadRequest(new ApiResponse());
 
-            return Ok(new ApiResponse { Data = clientDB });
+            return Ok(new ApiResponse());
         }
 
         [HttpPut]
-        public async Task<ActionResult> UpdateClient([FromBody] ClientDTO model)
+        public async Task<ActionResult> UpdateShippingCompany([FromBody] ShippingCompanyDTO model)
         {
-            var clientExists = await _repository.FirstOrDefault<Client>(x => x.IdClient != model.IdClient && (x.Name.ToLower().Equals(model.Name.ToLower()) || (!model.Rfc.IsNullOrEmpty() && x.Rfc.ToLower().Equals(model.Rfc.ToLower()))) && !(x.IsDeleted ?? false));
+            var clientExists = await _repository.FirstOrDefault<ShippingCompany>(x => (x.Name.ToLower().Equals(model.Name.ToLower())) && (x.IsDeleted ?? false));
             if (clientExists != null)
                 return Conflict(
                     new ApiResponse
                     {
-                        Conflict = $"{(clientExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}, {(!clientExists.Rfc.IsNullOrEmpty() && clientExists.Rfc.ToLower().Equals(model.Rfc.ToLower()) ? model.Rfc : "")}"
+                        Conflict = $"{(clientExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}"
                     }
                 );
 
-            var clientDB = await _repository.GetById<Client>(model.IdClient);
-            clientDB.Name = model.Name;
-            clientDB.Rfc = model.Rfc;
-            clientDB.Phone = model.Phone;
-            clientDB.Address = model.Address;
-            clientDB.PostalCode = model.PostalCode;
-            clientDB.IdCity = model.IdCity;
-            clientDB.Notes = model.Notes;
+            var clientDB = _mapper.Map<ShippingCompany>(model);
             var result = await _repository.Update(clientDB);
 
             if (!result)
@@ -127,9 +117,9 @@ namespace GenericApp.API.Controllers
         }
 
         [HttpPut("disable/{id}")]
-        public async Task<ActionResult> DisableClient(int id)
+        public async Task<ActionResult> DisableShippingCompany(int id)
         {
-            var client = await _repository.GetById<Client>(id);
+            var client = await _repository.GetById<ShippingCompany>(id);
             if (client == null)
                 return NotFound(new ApiResponse());
             client.IsActive = false;
@@ -137,14 +127,14 @@ namespace GenericApp.API.Controllers
             if (!result)
                 return BadRequest(new ApiResponse());
 
-            var clientDTO = _mapper.Map<ClientDTO>(client);
+            var clientDTO = _mapper.Map<ShippingCompanyDTO>(client);
             return Ok(new ApiResponse { Data = clientDTO });
         }
 
         [HttpPut("enable/{id}")]
-        public async Task<ActionResult> EnableClient(int id)
+        public async Task<ActionResult> EnableShippingCompany(int id)
         {
-            var client = await _repository.FirstOrDefault<Client>(x => x.IdClient == id && !(x.IsDeleted ?? false));
+            var client = await _repository.FirstOrDefault<ShippingCompany>(x => x.IdShippingCompany == id && !(x.IsDeleted ?? false));
             if (client == null)
                 return NotFound(new ApiResponse());
             client.IsActive = true;
@@ -152,13 +142,13 @@ namespace GenericApp.API.Controllers
             if (!result)
                 return BadRequest(new ApiResponse());
 
-            var clientDTO = _mapper.Map<ClientDTO>(client);
+            var clientDTO = _mapper.Map<ShippingCompanyDTO>(client);
             return Ok(new ApiResponse { Data = clientDTO });
         }
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteClient(int id)
+        public async Task<ActionResult> DeleteShippingCompany(int id)
         {
-            var client = await _repository.FirstOrDefault<Client>(x => x.IdClient == id && !(x.IsDeleted ?? false));
+            var client = await _repository.FirstOrDefault<ShippingCompany>(x => x.IdShippingCompany == id && !(x.IsDeleted ?? false));
             if (client == null)
                 return NotFound(new ApiResponse());
             client.IsDeleted = true;
@@ -166,7 +156,7 @@ namespace GenericApp.API.Controllers
             if (!result)
                 return BadRequest(new ApiResponse());
 
-            var clientDTO = _mapper.Map<ClientDTO>(client);
+            var clientDTO = _mapper.Map<ShippingCompanyDTO>(client);
             return Ok(new ApiResponse { Data = clientDTO });
         }
     }

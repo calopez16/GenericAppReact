@@ -6,7 +6,11 @@ const createApiMethodsService = (moduleSource, rowMapper) => ({
     deleteData: (id, isReturnData = false) => DELETE(`${moduleSource}/${id}`, null, isReturnData),
     getDataById: (id) => GET(`${moduleSource}/${id}`),
     getAllData: () => GET(moduleSource),
-    getDataActive: (id) => GET(`${moduleSource}/active`)
+    getDataActive: () => GET(`${moduleSource}/active`),
+    getDataPagination: (pageNumber = 1, pageSize = 10, searchTerm = "") => GET(`${moduleSource}/pagination?pageNumber=${pageNumber}&pageSize=${pageSize}&searchTerm=${searchTerm}`),
+    disableData: (dataId) => PUT(`${moduleSource}/disable/${dataId}`),
+    enableData: (dataId) => PUT(`${moduleSource}/enable/${dataId}`)
+
 });
 
 export default createApiMethodsService;
