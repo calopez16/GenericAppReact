@@ -12,36 +12,34 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
-import { DataAPISeasonsService } from '@data/Seasons/Data';
+import { DataAPIDriversService } from '@data/Drivers/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import ConfirmationModal from '@layout/ConfirmationModal';
-import SeasonFormModal from '@views/Seasons/SeasonFormModal';
-import SeasonCardList from '@views/Seasons/SeasonCardList';
-import SeasonListTable from '@views/Seasons/SeasonTableList';
+import DriverFormModal from '@views/Drivers/DriverFormModal';
+import DriverCardList from '@views/Drivers/DriverCardList';
+import DriverListTable from '@views/Drivers/DriverTableList';
 
-// Importar los componentes necesarios para el DatePicker de MUI X
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 function Index() {
     const { t } = useTranslation();
-    const seasonDataService = DataAPISeasonsService();
-    const [seasons, setSeasons] = useState([]);
+    const driverDataService = DataAPIDriversService();
+    const [drivers, setDrivers] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [totalSeasons, setTotalSeasons] = useState(0);
+    const [totalDrivers, setTotalDrivers] = useState(0);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedSeason, setSelectedSeason] = useState(null);
+    const [selectedDriver, setSelectedDriver] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 
+    // **NUEVOS ESTADOS** para el modal de confirmación de eliminación
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
-    const [seasonToDelete, setSeasonToDelete] = useState(null);
+    const [driverToDelete, setDriverToDelete] = useState(null);
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
@@ -56,20 +54,20 @@ function Index() {
     }, [searchTerm]);
 
     useEffect(() => {
-        const loadSeasons = async () => {
+        const loadDrivers = async () => {
             try {
                 setLoading(true);
-                const response = await seasonDataService.getDataPagination(page + 1, rowsPerPage, debouncedSearchTerm);
-                setSeasons(response.data.data);
-                setTotalSeasons(response.data.totalCount);
+                const response = await driverDataService.getDataPagination(page + 1, rowsPerPage, debouncedSearchTerm);
+                setDrivers(response.data.data);
+                setTotalDrivers(response.data.totalCount);
             } catch (error) {
-                console.error("Error loading seasons:", error);
+                console.error("Error loading drivers:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        loadSeasons();
+        loadDrivers();
     }, [page, rowsPerPage, debouncedSearchTerm]);
 
 
@@ -87,81 +85,86 @@ function Index() {
         setPage(0);
     };
 
-    const handleToggleSeasonStatus = async (season) => {
-        const isActiveNow = season.isActive;
+    const handleToggleDriverStatus = async (driver) => {
+        const isActiveNow = driver.isActive;
 
         try {
             let dataResult;
             if (isActiveNow) {
-                dataResult = await seasonDataService.disableData(season.idSeason);
+                dataResult = await driverDataService.disableData(driver.idDriver);
                 if (dataResult.success) {
                     ShowMessage(t('recordDisabled'), 'success');
                 }
             } else {
-                dataResult = await seasonDataService.enableData(season.idSeason);
+                dataResult = await driverDataService.enableData(driver.idDriver);
                 if (dataResult.success) {
                     ShowMessage(t('recordEnabled'), 'success');
                 }
             }
 
             if (dataResult.success) {
-                setSeasons(prevSeasons =>
-                    prevSeasons.map(u =>
-                        u.idSeason === season.idSeason ? { ...u, isActive: !isActiveNow } : u
+                setDrivers(prevDrivers =>
+                    prevDrivers.map(u =>
+                        u.idDriver === driver.idDriver ? { ...u, isActive: !isActiveNow } : u
                     )
                 );
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
-            console.error("Error toggling season status:", error);
+            console.error("Error toggling driver status:", error);
         }
     };
 
-    const handleOpenDeleteConfirmation = (season) => {
-        setSeasonToDelete(season);
+    // **NUEVA FUNCIÓN:** Abre el modal de confirmación y guarda el drivere
+    const handleOpenDeleteConfirmation = (driver) => {
+        setDriverToDelete(driver);
         setIsConfirmDeleteModalOpen(true);
     };
 
-    const handleDeleteSeason = async () => {
+    // **FUNCIÓN ACTUALIZADA:** Ejecuta la eliminación
+    const handleDeleteDriver = async () => {
+        // Cierra el modal de confirmación inmediatamente
         setIsConfirmDeleteModalOpen(false);
 
-        if (!seasonToDelete) return;
+        if (!driverToDelete) return; // Seguridad
 
         try {
             setLoading(true);
 
-            const dataResult = await seasonDataService.deleteData(seasonToDelete.idSeason);
+            const dataResult = await driverDataService.deleteData(driverToDelete.idDriver);
 
             if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
-                setSeasons(prevSeasons => prevSeasons.filter(c => c.idSeason !== seasonToDelete.idSeason));
+                // Quitar el drivere de la lista local
+                setDrivers(prevDrivers => prevDrivers.filter(c => c.idDriver !== driverToDelete.idDriver));
+                // Resetea la página a 0 para recargar y reajustar la paginación
                 setPage(0);
             } else {
                 ShowMessage(dataResult.message || t('errorDeletingRecord'), 'error');
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
-            console.error("Error deleting season:", error);
+            console.error("Error deleting driver:", error);
         } finally {
-            setSeasonToDelete(null);
+            setDriverToDelete(null); // Limpia el drivere seleccionado
             setLoading(false);
         }
     };
 
     const handleCloseDeleteConfirmation = () => {
         setIsConfirmDeleteModalOpen(false);
-        setSeasonToDelete(null);
+        setDriverToDelete(null);
     };
 
 
-    const handleOpenAddSeason = () => {
-        setSelectedSeason(null);
+    const handleOpenAddDriver = () => {
+        setSelectedDriver(null);
         setIsEditing(false);
         setIsModalOpen(true);
     };
 
-    const handleOpenEditSeason = (season) => {
-        setSelectedSeason(season);
+    const handleOpenEditDriver = (driver) => {
+        setSelectedDriver(driver);
         setIsEditing(true);
         setIsModalOpen(true);
     };
@@ -171,17 +174,18 @@ function Index() {
     };
 
     const commonListProps = {
-        seasons,
+        drivers,
         loading,
         t,
-        handleOpenEditSeason,
-        handleToggleSeasonStatus,
+        handleOpenEditDriver,
+        handleToggleDriverStatus,
         handleOpenDeleteConfirmation,
-        setSelectedSeason
+        setSelectedDriver
     };
 
     return (
         <Box sx={{ p: 3 }}>
+            {/* ... (Header, Search y Add Button) ... */}
             <Box sx={{
                 display: 'flex',
                 flexDirection: isSmallScreen ? 'column' : 'row',
@@ -191,7 +195,7 @@ function Index() {
                 mb: 2,
             }}>
                 <Typography variant="h4" component="h1">
-                    {t('seasons')}
+                    {t('drivers')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: isSmallScreen ? 'column' : 'row', gap: 1, flexGrow: 1, justifyContent: 'flex-end' }}>
                     <TextField
@@ -213,7 +217,7 @@ function Index() {
                     <Button
                         variant="contained"
                         endIcon={<AddIcon />}
-                        onClick={handleOpenAddSeason}
+                        onClick={handleOpenAddDriver}
                         fullWidth={isSmallScreen}
                     >
                         {t('add')}
@@ -224,15 +228,18 @@ function Index() {
             {loading && <LinearProgress />}
 
             {isSmallScreen ? (
-                <SeasonCardList {...commonListProps} />
+                // **PASAR PROP ACTUALIZADA**
+                <DriverCardList {...commonListProps} />
             ) : (
-                <SeasonListTable {...commonListProps} />
+                // **PASAR PROP ACTUALIZADA**
+                <DriverListTable {...commonListProps} />
             )}
 
+            {/* ... (TablePagination) ... */}
             <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
-                count={totalSeasons}
+                count={totalDrivers}
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={handlePageChange}
@@ -243,23 +250,22 @@ function Index() {
                 }
             />
 
-            {/* SOLUCIÓN: Envolver el modal con LocalizationProvider */}
-            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
-                <SeasonFormModal
-                    open={isModalOpen}
-                    handleClose={handleCloseModal}
-                    data={selectedSeason}
-                    isEditing={isEditing}
-                    setData={setSeasons}
-                />
-            </LocalizationProvider>
+            {/* ... (DriverFormModal) ... */}
+            <DriverFormModal
+                open={isModalOpen}
+                handleClose={handleCloseModal}
+                data={selectedDriver}
+                isEditing={isEditing}
+                setData={setDrivers}
+            />
 
+            {/* **NUEVO:** Confirmation Modal para Eliminación */}
             <ConfirmationModal
                 open={isConfirmDeleteModalOpen}
                 onClose={handleCloseDeleteConfirmation}
-                onConfirm={handleDeleteSeason}
-                title={t('deleteSeason')}
-                message={t('question_areYouSureDeleteSeason', { seasonName: seasonToDelete?.description || '' })}
+                onConfirm={handleDeleteDriver}
+                title={t('deleteDriver')}
+                message={t('question_areYouSureDeleteDriver', { driverName: driverToDelete?.description || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
             />

@@ -21,13 +21,12 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const { t } = useTranslation();
     const dataService = DataAPICitiesService();
 
-    // Referencia para el foco automático en 'description'
     const descriptionRef = useRef(null);
 
     const [formData, setFormData] = useState({
         idCity: 0,
-        description: '', // Requerido
-        idState: null // Requerido
+        description: '',
+        idState: null
     });
 
     const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +35,6 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const [isStatesLoading, setIsStatesLoading] = useState(false);
     const [isAutocompleteOpen, setIsAutocompleteOpen] = useState(false);
 
-    // ESTADOS NUEVOS para la validación diferida
     const [validationErrors, setValidationErrors] = useState({
         description: false,
         idState: false,
@@ -46,7 +44,6 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const debounceTimerRef = useRef(null);
     const DEBOUNCE_TIME = 500;
 
-    // --- Lógica de Carga de Ciudades ---
     const fetchStates = async (searchTerm = "") => {
         setIsStatesLoading(true);
         try {
@@ -68,14 +65,12 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    // 1. Efecto para cargar los estados al abrir el modal
     useEffect(() => {
         if (open) {
             fetchStates();
         }
     }, [open]);
 
-    // 2. Efecto para inicializar el formulario y RESETEAR la validación
     useEffect(() => {
         if (open) {
             if (isEditing && data) {
@@ -92,14 +87,12 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     idState: null
                 });
             }
-            // RESETEAR la validación al abrir el modal
+            setSelectedState(null);
             setValidationErrors({ description: false, idState: false });
             setHasAttemptedSubmit(false);
         }
     }, [open, isEditing, data]);
 
-
-    // 3. Efecto para inicializar el Autocomplete (selectedState)
     useEffect(() => {
         if (open && formData.idState !== null && states.length > 0) {
             const initialState = states.find(state => state.id === formData.idState);
@@ -109,9 +102,8 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     }, [open, states, formData.idState]);
 
-    // 4. EFECTO PARA ENFOCAR EL CAMPO 'description'
     useEffect(() => {
-        if (open && descriptionRef.current) {
+        if (open) {
             setTimeout(() => {
                 descriptionRef.current.focus();
             }, 100);
@@ -126,7 +118,6 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             [name]: value
         }));
 
-        // Mostrar/Ocultar error instantáneamente si ya se intentó enviar y el campo es 'description'
         if (hasAttemptedSubmit && name === 'description') {
             setValidationErrors(prev => ({
                 ...prev,
@@ -143,7 +134,6 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             idState: newIdState
         }));
 
-        // Mostrar/Ocultar error instantáneamente si ya se intentó enviar
         if (hasAttemptedSubmit) {
             setValidationErrors(prev => ({
                 ...prev,
@@ -176,7 +166,6 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    // --- FUNCIÓN DE VALIDACIÓN ---
     const validateForm = () => {
         const errors = {
             description: !formData.description.trim(),
@@ -189,9 +178,10 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     };
 
 
-    // --- FUNCIÓN DE SUBMIT MODIFICADA ---
-    const handleSubmit = async () => {
-        setHasAttemptedSubmit(true); // Activa la visualización de errores
+    const handleSubmit = async (event) => {
+        if (event) event.preventDefault();
+
+        setHasAttemptedSubmit(true);
 
         if (!validateForm()) {
             ShowMessage(t('FillRequiredFields') || 'Por favor, rellene todos los campos obligatorios.', 'warning');
@@ -246,7 +236,6 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    // ----------------------------------------------------------------
     const requiredErrorText = t('ThisFieldIsRequired') || 'Este campo es obligatorio.';
 
     return (
@@ -255,101 +244,97 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 <DialogTitle>
                     {isEditing ? t('editCity') : t('addCity')}
                 </DialogTitle>
-                <DialogContent>
-                    <Box
-                        component="form"
-                        noValidate
+                <Box component="form" onSubmit={handleSubmit} noValidate>
+                    <DialogContent>
+                        <Box
+                            sx={{
+                                mt: 2,
+                                display: 'grid',
+                                gridTemplateColumns: {
+                                    xs: '1fr',
+                                    sm: 'repeat(auto-fit, minmax(300px, 1fr))'
+                                },
+                                gap: 2
+                            }}
+                        >
+
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                label={t('description')}
+                                name="description"
+                                value={formData.description}
+                                onChange={handleChange}
+                                inputRef={descriptionRef}
+                                sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
+                                error={validationErrors.description}
+                                helperText={validationErrors.description ? requiredErrorText : ''}
+                            />
+
+
+                            <Autocomplete
+                                id="state-autocomplete"
+                                options={states}
+                                getOptionLabel={(option) => option.name || ""}
+                                isOptionEqualToValue={(option, value) => option.id === value.id}
+                                loading={isStatesLoading}
+                                value={selectedState}
+                                onChange={handleStateChange}
+                                onOpen={handleAutocompleteOpen}
+                                onClose={() => setIsAutocompleteOpen(false)}
+                                open={isAutocompleteOpen}
+                                onInputChange={handleStateInputChange}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        margin="normal"
+                                        required
+                                        fullWidth
+                                        label={t('idState')}
+                                        name="idState"
+                                        error={validationErrors.idState}
+                                        helperText={validationErrors.idState ? requiredErrorText : ''}
+                                    />
+                                )}
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions
                         sx={{
-                            mt: 2,
-                            display: 'grid',
-                            gridTemplateColumns: {
-                                xs: '1fr',
-                                sm: 'repeat(auto-fit, minmax(300px, 1fr))'
-                            },
-                            gap: 2
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            justifyContent: 'flex-end',
+                            p: 3
                         }}
                     >
-
-                        {/* DESCRIPTION / NAME */}
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            label={t('description')}
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            inputRef={descriptionRef}
-                            sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
-                            // CONTROL DE ERROR usando el estado de validación
-                            error={validationErrors.description}
-                            helperText={validationErrors.description ? requiredErrorText : ''}
-                        />
-
-
-                        {/* STATE AUTOCOMPLETE */}
-                        <Autocomplete
-                            id="state-autocomplete"
-                            options={states}
-                            getOptionLabel={(option) => option.name || ""}
-                            isOptionEqualToValue={(option, value) => option.id === value.id}
-                            loading={isStatesLoading}
-                            value={selectedState}
-                            onChange={handleStateChange}
-                            onOpen={handleAutocompleteOpen}
-                            onClose={() => setIsAutocompleteOpen(false)}
-                            open={isAutocompleteOpen}
-                            onInputChange={handleStateInputChange}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    margin="normal"
-                                    required
-                                    fullWidth
-                                    label={t('idState')}
-                                    name="idState"
-                                    // CONTROL DE ERROR usando el estado de validación
-                                    error={validationErrors.idState}
-                                    helperText={validationErrors.idState ? requiredErrorText : ''}
-                                />
-                            )}
-                        />
-                    </Box>
-                </DialogContent>
-                <DialogActions
-                    sx={{
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        justifyContent: 'flex-end',
-                        p: 3
-                    }}
-                >
-                    <Box
-                        sx={{
-                            width: { xs: '100%', sm: 'auto' },
-                            display: 'flex',
-                            justifyContent: { xs: 'space-between', sm: 'flex-end' },
-                        }}
-                    >
-                        <Button
-                            color="error"
-                            variant="outlined"
-                            endIcon={<CancelIcon />}
-                            onClick={handleClose}
-                            sx={{ mr: { xs: 0, sm: 1 } }}
+                        <Box
+                            sx={{
+                                width: { xs: '100%', sm: 'auto' },
+                                display: 'flex',
+                                justifyContent: { xs: 'space-between', sm: 'flex-end' },
+                            }}
                         >
-                            {(t('cancel') || 'Cancelar')}
-                        </Button>
-                        <Button
-                            color="primary"
-                            variant="contained"
-                            endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
-                            onClick={handleSubmit}
-                            disabled={isLoading || isStatesLoading}
-                        >
-                            {(isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar'))}
-                        </Button>
-                    </Box>
-                </DialogActions>
+                            <Button
+                                color="error"
+                                variant="outlined"
+                                endIcon={<CancelIcon />}
+                                onClick={handleClose}
+                                sx={{ mr: { xs: 0, sm: 1 } }}
+                            >
+                                {(t('cancel') || 'Cancelar')}
+                            </Button>
+                            <Button
+                                type="submit"
+                                color="primary"
+                                variant="contained"
+                                endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
+                                disabled={isLoading || isStatesLoading}
+                            >
+                                {(isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar'))}
+                            </Button>
+                        </Box>
+                    </DialogActions>
+                </Box>
             </Dialog>
         </>
     );

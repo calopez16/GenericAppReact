@@ -12,36 +12,33 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
-import { DataAPISeasonsService } from '@data/Seasons/Data';
+import { DataAPILabelsService } from '@data/Labels/Data'; // CAMBIO: Importar servicio de Labels
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import ConfirmationModal from '@layout/ConfirmationModal';
-import SeasonFormModal from '@views/Seasons/SeasonFormModal';
-import SeasonCardList from '@views/Seasons/SeasonCardList';
-import SeasonListTable from '@views/Seasons/SeasonTableList';
+import LabelFormModal from './LabelFormModal'; // CAMBIO: Importar LabelFormModal
+import LabelCardList from './LabelCardList'; // CAMBIO: Importar LabelCardList
+import LabelListTable from './LabelTableList'; // CAMBIO: Importar LabelListTable
 
-// Importar los componentes necesarios para el DatePicker de MUI X
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 function Index() {
     const { t } = useTranslation();
-    const seasonDataService = DataAPISeasonsService();
-    const [seasons, setSeasons] = useState([]);
+    const labelDataService = DataAPILabelsService(); // CAMBIO: Servicio de Labels
+    const [labels, setLabels] = useState([]); // CAMBIO: drivers -> labels
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [totalSeasons, setTotalSeasons] = useState(0);
+    const [totalLabels, setTotalLabels] = useState(0); // CAMBIO: Drivers -> Labels
 
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedSeason, setSelectedSeason] = useState(null);
+    const [selectedLabel, setSelectedLabel] = useState(null); // CAMBIO: selectedDriver -> selectedLabel
     const [isEditing, setIsEditing] = useState(false);
 
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
-    const [seasonToDelete, setSeasonToDelete] = useState(null);
+    const [labelToDelete, setLabelToDelete] = useState(null); // CAMBIO: driverToDelete -> labelToDelete
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
@@ -56,20 +53,20 @@ function Index() {
     }, [searchTerm]);
 
     useEffect(() => {
-        const loadSeasons = async () => {
+        const loadLabels = async () => { // CAMBIO: loadDrivers -> loadLabels
             try {
                 setLoading(true);
-                const response = await seasonDataService.getDataPagination(page + 1, rowsPerPage, debouncedSearchTerm);
-                setSeasons(response.data.data);
-                setTotalSeasons(response.data.totalCount);
+                const response = await labelDataService.getDataPagination(page + 1, rowsPerPage, debouncedSearchTerm);
+                setLabels(response.data.data); // CAMBIO: setDrivers -> setLabels
+                setTotalLabels(response.data.totalCount); // CAMBIO: setTotalDrivers -> setTotalLabels
             } catch (error) {
-                console.error("Error loading seasons:", error);
+                console.error("Error loading labels:", error); // CAMBIO: drivers -> labels
             } finally {
                 setLoading(false);
             }
         };
 
-        loadSeasons();
+        loadLabels(); // CAMBIO: loadDrivers -> loadLabels
     }, [page, rowsPerPage, debouncedSearchTerm]);
 
 
@@ -87,81 +84,81 @@ function Index() {
         setPage(0);
     };
 
-    const handleToggleSeasonStatus = async (season) => {
-        const isActiveNow = season.isActive;
+    const handleToggleLabelStatus = async (label) => { // CAMBIO: Driver -> Label
+        const isActiveNow = label.isActive;
 
         try {
             let dataResult;
             if (isActiveNow) {
-                dataResult = await seasonDataService.disableData(season.idSeason);
+                dataResult = await labelDataService.disableData(label.idLabel); // CAMBIO: idDriver -> idLabel
                 if (dataResult.success) {
                     ShowMessage(t('recordDisabled'), 'success');
                 }
             } else {
-                dataResult = await seasonDataService.enableData(season.idSeason);
+                dataResult = await labelDataService.enableData(label.idLabel); // CAMBIO: idDriver -> idLabel
                 if (dataResult.success) {
                     ShowMessage(t('recordEnabled'), 'success');
                 }
             }
 
             if (dataResult.success) {
-                setSeasons(prevSeasons =>
-                    prevSeasons.map(u =>
-                        u.idSeason === season.idSeason ? { ...u, isActive: !isActiveNow } : u
+                setLabels(prevLabels => // CAMBIO: setDrivers -> setLabels
+                    prevLabels.map(u =>
+                        u.idLabel === label.idLabel ? { ...u, isActive: !isActiveNow } : u // CAMBIO: idDriver -> idLabel
                     )
                 );
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
-            console.error("Error toggling season status:", error);
+            console.error("Error toggling label status:", error); // CAMBIO: driver -> label
         }
     };
 
-    const handleOpenDeleteConfirmation = (season) => {
-        setSeasonToDelete(season);
+    const handleOpenDeleteConfirmation = (label) => { // CAMBIO: Driver -> Label
+        setLabelToDelete(label); // CAMBIO: setDriverToDelete -> setLabelToDelete
         setIsConfirmDeleteModalOpen(true);
     };
 
-    const handleDeleteSeason = async () => {
+    const handleDeleteLabel = async () => { // CAMBIO: handleDeleteDriver -> handleDeleteLabel
         setIsConfirmDeleteModalOpen(false);
 
-        if (!seasonToDelete) return;
+        if (!labelToDelete) return; // CAMBIO: driverToDelete -> labelToDelete
 
         try {
             setLoading(true);
 
-            const dataResult = await seasonDataService.deleteData(seasonToDelete.idSeason);
+            const dataResult = await labelDataService.deleteData(labelToDelete.idLabel); // CAMBIO: idDriver -> idLabel
 
             if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
-                setSeasons(prevSeasons => prevSeasons.filter(c => c.idSeason !== seasonToDelete.idSeason));
+                setLabels(prevLabels => prevLabels.filter(c => c.idLabel !== labelToDelete.idLabel)); // CAMBIO: idDriver -> idLabel
                 setPage(0);
             } else {
                 ShowMessage(dataResult.message || t('errorDeletingRecord'), 'error');
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
-            console.error("Error deleting season:", error);
+            console.error("Error deleting label:", error); // CAMBIO: driver -> label
         } finally {
-            setSeasonToDelete(null);
+            setLabelToDelete(null); // CAMBIO: setDriverToDelete -> setLabelToDelete
             setLoading(false);
         }
     };
 
     const handleCloseDeleteConfirmation = () => {
         setIsConfirmDeleteModalOpen(false);
-        setSeasonToDelete(null);
+        setLabelToDelete(null); // CAMBIO: setDriverToDelete -> setLabelToDelete
     };
 
 
-    const handleOpenAddSeason = () => {
-        setSelectedSeason(null);
+    const handleOpenAddLabel = () => { // CAMBIO: Driver -> Label
+        setSelectedLabel(null); // CAMBIO: setSelectedDriver -> setSelectedLabel
         setIsEditing(false);
         setIsModalOpen(true);
     };
 
-    const handleOpenEditSeason = (season) => {
-        setSelectedSeason(season);
+    const handleOpenEditLabel = (label) => { // CAMBIO: Driver -> Label
+        setSelectedLabel(label); // CAMBIO: setSelectedDriver -> setSelectedLabel
         setIsEditing(true);
         setIsModalOpen(true);
     };
@@ -171,13 +168,13 @@ function Index() {
     };
 
     const commonListProps = {
-        seasons,
+        labels: labels, // CAMBIO: drivers -> labels
         loading,
         t,
-        handleOpenEditSeason,
-        handleToggleSeasonStatus,
+        handleOpenEditLabel: handleOpenEditLabel, // CAMBIO: Driver -> Label
+        handleToggleLabelStatus: handleToggleLabelStatus, // CAMBIO: Driver -> Label
         handleOpenDeleteConfirmation,
-        setSelectedSeason
+        setSelectedLabel: setSelectedLabel // CAMBIO: setSelectedDriver -> setSelectedLabel
     };
 
     return (
@@ -191,7 +188,7 @@ function Index() {
                 mb: 2,
             }}>
                 <Typography variant="h4" component="h1">
-                    {t('seasons')}
+                    {t('labels')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: isSmallScreen ? 'column' : 'row', gap: 1, flexGrow: 1, justifyContent: 'flex-end' }}>
                     <TextField
@@ -213,7 +210,7 @@ function Index() {
                     <Button
                         variant="contained"
                         endIcon={<AddIcon />}
-                        onClick={handleOpenAddSeason}
+                        onClick={handleOpenAddLabel} // CAMBIO: Driver -> Label
                         fullWidth={isSmallScreen}
                     >
                         {t('add')}
@@ -224,15 +221,15 @@ function Index() {
             {loading && <LinearProgress />}
 
             {isSmallScreen ? (
-                <SeasonCardList {...commonListProps} />
+                <LabelCardList {...commonListProps} /> 
             ) : (
-                <SeasonListTable {...commonListProps} />
+            <LabelListTable {...commonListProps} /> 
             )}
 
             <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
-                count={totalSeasons}
+                count={totalLabels} // CAMBIO: totalDrivers -> totalLabels
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={handlePageChange}
@@ -243,23 +240,20 @@ function Index() {
                 }
             />
 
-            {/* SOLUCIÓN: Envolver el modal con LocalizationProvider */}
-            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
-                <SeasonFormModal
-                    open={isModalOpen}
-                    handleClose={handleCloseModal}
-                    data={selectedSeason}
-                    isEditing={isEditing}
-                    setData={setSeasons}
-                />
-            </LocalizationProvider>
+            <LabelFormModal // CAMBIO: Componente Label
+                open={isModalOpen}
+                handleClose={handleCloseModal}
+                data={selectedLabel} // CAMBIO: selectedDriver -> selectedLabel
+                isEditing={isEditing}
+                setData={setLabels} // CAMBIO: setDrivers -> setLabels
+            />
 
             <ConfirmationModal
                 open={isConfirmDeleteModalOpen}
                 onClose={handleCloseDeleteConfirmation}
-                onConfirm={handleDeleteSeason}
-                title={t('deleteSeason')}
-                message={t('question_areYouSureDeleteSeason', { seasonName: seasonToDelete?.description || '' })}
+                onConfirm={handleDeleteLabel} // CAMBIO: handleDeleteDriver -> handleDeleteLabel
+                title={t('deleteLabel')} // CAMBIO: Driver -> Label
+                message={t('question_areYouSureDeleteLabel', { labelName: labelToDelete?.description || '' })} // CAMBIO: driverToDelete?.description
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
             />

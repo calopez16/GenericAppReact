@@ -6,7 +6,10 @@ import HomePage from '@views/Home'
 import UsersPage from '@views/Users'
 import CitiesPage from '@views/Cities'
 import ClientsPage from '@views/Clients'
+import ShippingCompaniesPage from '@views/ShippingCompanies'
+import DriversPage from '@views/Drivers'
 import SeasonsPage from '@views/Seasons'
+import LabelsPage from '@views/Labels'
 import NotFoundPage from '@views/Pages/NotFound'
 import Parameters from '@views/Parameters'
 import EmbarquesList from '@views/Embarques/Index';
@@ -23,21 +26,14 @@ function App() {
                 <Route path="/clients" element={<ClientsPage />} />
                 <Route path="/cities" element={<CitiesPage />} />
                 <Route path="/seasons" element={<SeasonsPage />} />
+                <Route path="/drivers" element={<DriversPage />} />
+                <Route path="/shipping-companies" element={<ShippingCompaniesPage />} />
+                <Route path="/labels" element={<LabelsPage />} />
 
-                {/* Configuración para Embarques:
-                  Usamos una ruta padre sin elemento para agrupar las rutas hijas.
-                  Esto asegura que el componente <Layout> se mantenga para todas ellas.
-                */}
-                <Route path="/embarques">
-                    {/* Ruta de Índice: Muestra la lista SOLO cuando la URL es exactamente /embarques
-                      Se asume que tu componente Embarques es solo el LISTADO (renombrado a EmbarquesList)
-                    */}
+                
+                <Route path="/embarques">                   
                     <Route index element={<EmbarquesList />} />
-
-                    {/* Ruta para AGREGAR */}
                     <Route path="add" element={<EmbarqueAddOrEdit isEditing={false} />} />
-
-                    {/* Ruta para EDITAR */}
                     <Route path="edit/:id" element={<EmbarqueAddOrEdit isEditing={true} />} />
                 </Route>
 

@@ -15,10 +15,6 @@ import {
     OutlinedInput,
     Checkbox,
     ListItemText,
-    IconButton,
-    InputAdornment,
-    Snackbar,
-    Alert,
 } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
@@ -26,10 +22,8 @@ import AddIcon from '@mui/icons-material/Add';
 import { DataAPIUsersService } from '@data/Users/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
-import Tooltip from '@mui/material/Tooltip';
 import PasswordModal from './PasswordModal';
 
-// Componente principal de la vista
 const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const { t } = useTranslation();
     const service = DataAPIUsersService();
@@ -45,17 +39,14 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const [assignedPassword, setAssignedPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // NUEVO ESTADO: Para controlar los errores de validación después de un intento de submit
     const [validationErrors, setValidationErrors] = useState({
         userName: false,
         email: false,
         roles: false,
     });
-    // NUEVO ESTADO: Bandera para saber si ya se intentó hacer submit
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
 
-    // --- Efecto para cargar Roles (Se mantiene igual) ---
     useEffect(() => {
         const loadRoles = async () => {
             try {
@@ -68,9 +59,8 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         loadRoles();
     }, []);
 
-    // --- Efecto para inicializar el formulario (Modificado para resetear la validación) ---
     useEffect(() => {
-        if (open) { // Solo inicializar cuando el modal está abierto
+        if (open) {
             if (isEditing && data) {
                 setFormData({
                     userName: data.userName,
@@ -84,7 +74,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     roles: [],
                 });
             }
-            // Resetear la validación al abrir el modal de nuevo
             setValidationErrors({ userName: false, email: false, roles: false });
             setHasAttemptedSubmit(false);
         }
@@ -97,7 +86,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             [name]: value
         }));
 
-        // Resetear el error tan pronto como el usuario escribe (solo si ya se intentó hacer submit)
         if (hasAttemptedSubmit) {
             setValidationErrors(prev => ({
                 ...prev,
@@ -114,7 +102,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             roles: newRoles,
         }));
 
-        // Resetear el error de roles tan pronto como se selecciona algo
         if (hasAttemptedSubmit) {
             setValidationErrors(prev => ({
                 ...prev,
@@ -123,7 +110,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    // --- NUEVA FUNCIÓN DE VALIDACIÓN ---
     const validateForm = () => {
         const errors = {
             userName: !formData.userName.trim(),
@@ -136,9 +122,10 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         return !errors.userName && !errors.email && !errors.roles;
     };
 
-    // --- FUNCIÓN DE SUBMIT MODIFICADA ---
-    const handleSubmit = async () => {
-        setHasAttemptedSubmit(true); // Marcar que se intentó enviar
+    const handleSubmit = async (event) => {
+        if (event) event.preventDefault();
+
+        setHasAttemptedSubmit(true);
 
         if (!validateForm()) {
             ShowMessage(t('FillRequiredFields') || 'Por favor, rellene todos los campos obligatorios.', 'warning');
@@ -184,7 +171,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 }
             }
 
-            // Cerrar el modal principal y mostrar el modal de contraseña si aplica
             handleClose();
             if (newPassword) {
                 setAssignedPassword(newPassword);
@@ -204,8 +190,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         setAssignedPassword('');
     };
 
-    // --- RENDER ---
-
     const requiredErrorText = t('ThisFieldIsRequired') || 'Este campo es obligatorio.';
 
     return (
@@ -214,8 +198,8 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 <DialogTitle>
                     {isEditing ? t('editUser') : t('addUser')}
                 </DialogTitle>
-                <DialogContent>
-                    <Box component="form" noValidate sx={{ mt: 2 }}>
+                <Box component="form" onSubmit={handleSubmit} noValidate>
+                    <DialogContent>
                         <TextField
                             margin="normal"
                             required
@@ -224,7 +208,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             name="userName"
                             value={formData.userName}
                             onChange={handleChange}
-                            // CONTROL DE ERROR: Usar el estado de validación
                             error={validationErrors.userName}
                             helperText={validationErrors.userName ? requiredErrorText : ''}
                         />
@@ -237,7 +220,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             type="email"
                             value={formData.email}
                             onChange={handleChange}
-                            // CONTROL DE ERROR: Usar el estado de validación
                             error={validationErrors.email}
                             helperText={validationErrors.email ? requiredErrorText : ''}
                         />
@@ -245,7 +227,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             fullWidth
                             margin="normal"
                             required
-                            // CONTROL DE ERROR: En FormControl
                             error={validationErrors.roles}
                         >
                             <InputLabel>{t('roles')}</InputLabel>
@@ -263,38 +244,36 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                     </MenuItem>
                                 ))}
                             </Select>
-                            {/* Mostrar helperText para errores de Select */}
                             {validationErrors.roles && (
                                 <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>
                                     {requiredErrorText}
                                 </Typography>
                             )}
                         </FormControl>
-                    </Box>
-                </DialogContent>
-                <DialogActions
-                    sx={{
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        justifyContent: 'flex-end',
-                        p: 3
-                    }}
-                >
-                    <Box
+                    </DialogContent>
+                    <DialogActions
                         sx={{
-                            width: { xs: '100%', sm: 'auto' },
-                            display: 'flex',
-                            justifyContent: { xs: 'space-between', sm: 'flex-end' },
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            justifyContent: 'flex-end',
+                            p: 3
                         }}
                     >
-                        <Button color="error" sx={{ mr: { xs: 0, sm: 1 } }} variant="outlined" endIcon={<CancelIcon />} onClick={handleClose}>
-                            {t('cancel')}
-                        </Button>
-                        <Button color="primary" variant="contained" endIcon={isEditing ? <SaveIcon /> : <AddIcon />} onClick={handleSubmit} disabled={isLoading}>
-                            {isEditing ? t('save') : t('add')}
-                        </Button>
-                    </Box>
-                </DialogActions>
-               
+                        <Box
+                            sx={{
+                                width: { xs: '100%', sm: 'auto' },
+                                display: 'flex',
+                                justifyContent: { xs: 'space-between', sm: 'flex-end' },
+                            }}
+                        >
+                            <Button type="button" color="error" sx={{ mr: { xs: 0, sm: 1 } }} variant="outlined" endIcon={<CancelIcon />} onClick={handleClose}>
+                                {t('cancel')}
+                            </Button>
+                            <Button type="submit" color="primary" variant="contained" endIcon={isEditing ? <SaveIcon /> : <AddIcon />} disabled={isLoading}>
+                                {isEditing ? t('save') : t('add')}
+                            </Button>
+                        </Box>
+                    </DialogActions>
+                </Box>
             </Dialog>
             <PasswordModal
                 open={passwordModalOpen}

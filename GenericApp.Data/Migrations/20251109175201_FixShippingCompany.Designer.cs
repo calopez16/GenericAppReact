@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251109175201_FixShippingCompany")]
+    partial class FixShippingCompany
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -294,6 +296,9 @@ namespace GenericApp.Data.Migrations
                     b.Property<int>("IdCompany")
                         .HasColumnType("int");
 
+                    b.Property<int>("IdCompanyNavigationIdCompany")
+                        .HasColumnType("int");
+
                     b.Property<bool?>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -307,6 +312,8 @@ namespace GenericApp.Data.Migrations
                     b.HasKey("IdLabel");
 
                     b.HasIndex("IdCompany");
+
+                    b.HasIndex("IdCompanyNavigationIdCompany");
 
                     b.ToTable("Labels");
                 });
@@ -665,7 +672,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEAytFZuRwyfgHVhMbK1sEGz1vV04UNxNEsWNhc0xJpNufN02HXelxNV2Es0/qO0BFw==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEKBiPwakPucfWtwTPtZHQRDyAcsf2NWi71FrjhblGmjUMMbF3Du2XEKIs3Cq8NY+fQ==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
@@ -813,6 +820,14 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("IdCompany")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("GenericApp.Data.Models.Company", "IdCompanyNavigation")
+                        .WithMany()
+                        .HasForeignKey("IdCompanyNavigationIdCompany")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("IdCompanyNavigation");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.LabelType", b =>

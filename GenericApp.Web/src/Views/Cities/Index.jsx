@@ -23,7 +23,7 @@ import CityListTable from '@views/cities/CityTableList';
 
 function Index() {
     const { t } = useTranslation();
-    const clientDataService = DataAPICitiesService();
+    const cityDataService = DataAPICitiesService();
     const [cities, setCities] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -39,7 +39,7 @@ function Index() {
 
     // **NUEVOS ESTADOS** para el modal de confirmación de eliminación
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
-    const [clientToDelete, setCityToDelete] = useState(null);
+    const [cityToDelete, setCityToDelete] = useState(null);
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
@@ -57,7 +57,7 @@ function Index() {
         const loadCities = async () => {
             try {
                 setLoading(true);
-                const response = await clientDataService.getDataPagination(page + 1, rowsPerPage, debouncedSearchTerm);
+                const response = await cityDataService.getDataPagination(page + 1, rowsPerPage, debouncedSearchTerm);
                 setCities(response.data.data);
                 setTotalCities(response.data.totalCount);
             } catch (error) {
@@ -85,18 +85,18 @@ function Index() {
         setPage(0);
     };
 
-    const handleToggleCityStatus = async (client) => {
-        const isActiveNow = client.isActive;
+    const handleToggleCityStatus = async (city) => {
+        const isActiveNow = city.isActive;
 
         try {
             let dataResult;
             if (isActiveNow) {
-                dataResult = await clientDataService.disableData(client.idCity);
+                dataResult = await cityDataService.disableData(city.idCity);
                 if (dataResult.success) {
                     ShowMessage(t('recordDisabled'), 'success');
                 }
             } else {
-                dataResult = await clientDataService.enableData(client.idCity);
+                dataResult = await cityDataService.enableData(city.idCity);
                 if (dataResult.success) {
                     ShowMessage(t('recordEnabled'), 'success');
                 }
@@ -105,19 +105,19 @@ function Index() {
             if (dataResult.success) {
                 setCities(prevCities =>
                     prevCities.map(u =>
-                        u.idCity === client.idCity ? { ...u, isActive: !isActiveNow } : u
+                        u.idCity === city.idCity ? { ...u, isActive: !isActiveNow } : u
                     )
                 );
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
-            console.error("Error toggling client status:", error);
+            console.error("Error toggling city status:", error);
         }
     };
 
-    // **NUEVA FUNCIÓN:** Abre el modal de confirmación y guarda el cliente
-    const handleOpenDeleteConfirmation = (client) => {
-        setCityToDelete(client);
+    // **NUEVA FUNCIÓN:** Abre el modal de confirmación y guarda el citye
+    const handleOpenDeleteConfirmation = (city) => {
+        setCityToDelete(city);
         setIsConfirmDeleteModalOpen(true);
     };
 
@@ -126,17 +126,17 @@ function Index() {
         // Cierra el modal de confirmación inmediatamente
         setIsConfirmDeleteModalOpen(false);
 
-        if (!clientToDelete) return; // Seguridad
+        if (!cityToDelete) return; // Seguridad
 
         try {
             setLoading(true);
 
-            const dataResult = await clientDataService.deleteData(clientToDelete.idCity);
+            const dataResult = await cityDataService.deleteData(cityToDelete.idCity);
 
             if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
-                // Quitar el cliente de la lista local
-                setCities(prevCities => prevCities.filter(c => c.idCity !== clientToDelete.idCity));
+                // Quitar el citye de la lista local
+                setCities(prevCities => prevCities.filter(c => c.idCity !== cityToDelete.idCity));
                 // Resetea la página a 0 para recargar y reajustar la paginación
                 setPage(0);
             } else {
@@ -144,9 +144,9 @@ function Index() {
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
-            console.error("Error deleting client:", error);
+            console.error("Error deleting city:", error);
         } finally {
-            setCityToDelete(null); // Limpia el cliente seleccionado
+            setCityToDelete(null); // Limpia el citye seleccionado
             setLoading(false);
         }
     };
@@ -163,8 +163,8 @@ function Index() {
         setIsModalOpen(true);
     };
 
-    const handleOpenEditCity = (client) => {
-        setSelectedCity(client);
+    const handleOpenEditCity = (city) => {
+        setSelectedCity(city);
         setIsEditing(true);
         setIsModalOpen(true);
     };
@@ -265,7 +265,7 @@ function Index() {
                 onClose={handleCloseDeleteConfirmation}
                 onConfirm={handleDeleteCity}
                 title={t('deleteCity')}
-                message={t('question_areYouSureDeleteCity', { clientName: clientToDelete?.description || '' })}
+                message={t('question_areYouSureDeleteCity', { cityName: cityToDelete?.description || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
             />

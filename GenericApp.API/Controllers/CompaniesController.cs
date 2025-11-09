@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using GenericApp.API.Constants;
 using GenericApp.API.Models;
 using GenericApp.BLL.Sevices.Interface;
 using GenericApp.Data.Models;
@@ -11,7 +12,7 @@ namespace GenericApp.API.Controllers
 {
     [ApiController]
     [Route("companies")]
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
     public class CompaniesController : ControllerBase
     {
         private readonly IRepository _repository;

@@ -89,7 +89,7 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     }, [open, isEditing, data]);
 
     useEffect(() => {
-        if (open && nameRef.current) {
+        if (open) {
             setTimeout(() => {
                 nameRef.current.focus();
             }, 100);
@@ -164,7 +164,9 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     };
 
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (event) => {
+        if (event) event.preventDefault();
+
         setHasAttemptedSubmit(true);
 
         const validationResult = validateForm();
@@ -280,145 +282,127 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 <DialogTitle>
                     {isEditing ? t('editSeason') : t('addSeason')}
                 </DialogTitle>
-                <DialogContent>
-                    <Box
-                        component="form"
-                        noValidate
-                        sx={{
-                            mt: 2,
-                            display: 'grid',
-                            // En xs, solo definimos una columna (1fr). 
-                            // En sm (y superiores), definimos dos columnas (repeat(2, 1fr)).
-                            gridTemplateColumns: {
-                                xs: '1fr',
-                                sm: 'repeat(2, 1fr)'
-                            },
-                            gap: 2
-                        }}
-                    >
-
-                        {/* Campo Name: Ocupa las 2 columnas en sm, y como solo hay 1 columna en xs, ocupa el 100% */}
-                        <TextField
-                            required
-                            fullWidth
-                            label={t('Name')}
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            inputRef={nameRef}
-                            // En sm, ocupa las 2 columnas, en xs ocupa la única columna disponible.
-                            sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
-                            error={validationErrors.name}
-                            helperText={validationErrors.name ? requiredErrorText : ''}
-                        />
-
-                        {/* Campo Initial Date: Ocupa 1 columna en sm, y la única columna disponible en xs */}
-                        <DatePicker
-                            label={t('Initial Date')}
-                            value={formData.initialDate}
-                            onChange={(date) => handleDateChange(date, 'initialDate')}
-                            inputFormat={DISPLAY_FORMAT}
-                            // En xs, forzamos a que ocupe la única columna disponible (span 1 = 100%).
-                            // En sm, ocupa 1 de las 2 columnas.
-                            sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    required
-                                    fullWidth
-                                    name="initialDate"
-                                    error={validationErrors.initialDate || params.error}
-                                    helperText={validationErrors.initialDate ? requiredErrorText : params.helperText}
-                                />
-                            )}
-                        />
-
-                        {/* Campo End Date: Ocupa 1 columna en sm, y la única columna disponible en xs */}
-                        <DatePicker
-                            label={t('End Date')}
-                            value={formData.endDate}
-                            onChange={(date) => handleDateChange(date, 'endDate')}
-                            inputFormat={DISPLAY_FORMAT}
-                            // En xs, forzamos a que ocupe la única columna disponible (span 1 = 100%).
-                            // En sm, ocupa 1 de las 2 columnas.
-                            sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    required
-                                    fullWidth
-                                    name="endDate"
-                                    error={validationErrors.endDate || params.error}
-                                    helperText={validationErrors.endDate ? requiredErrorText : params.helperText}
-                                />
-                            )}
-                        />
-
-                        {/* Campo Description: Ocupa las 2 columnas en sm, y la única columna en xs */}
-                        <TextField
-                            fullWidth
-                            label={t('description')}
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            multiline
-                            rows={2}
-                            // En sm, ocupa las 2 columnas, en xs ocupa la única columna disponible.
-                            sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
-                        />
-                    </Box>
-                </DialogContent>
-                <DialogActions
-                    sx={{
-                        // Orden de botones: 'column' en xs, 'row' en sm
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        // Alineación en xs: 'flex-start' o 'center'. Usamos 'space-between' para el layout original en sm, y reajustamos el orden.
-                        justifyContent: isEditing ? { xs: 'flex-start', sm: 'space-between' } : 'flex-end',
-                        p: 3 // Aumentamos el padding para la disposición de columna
-                    }}
-                >
-                    {isEditing && (
-                        // Botón "Cerrar temporada" o "Abrir Temporada" (row1: Cerrar temporada en la solicitud)
-                        <Button
-                            color={formData.isClosed ? "success" : "error"}
-                            variant="contained"
-                            onClick={handleToggleCloseStatus}
-                            disabled={isClosingOrOpening || isLoading}
-                            // En xs, se pone en la parte superior (row1). En sm, a la izquierda (orden 1).
+                <Box component="form" onSubmit={handleSubmit} noValidate>
+                    <DialogContent>
+                        <Box
                             sx={{
-                                order: { xs: 1, sm: 1 },
-                                width: { xs: '100%', sm: 'auto' }, // Ancho completo en xs
-                                mb: { xs: 2, sm: 0 } // Margen inferior en xs
+                                mt: 2,
+                                display: 'grid',
+                                gridTemplateColumns: {
+                                    xs: '1fr',
+                                    sm: 'repeat(2, 1fr)'
+                                },
+                                gap: 2
                             }}
                         >
-                            {toggleButtonText}
-                        </Button>
-                    )}
 
-                    {/* Botones Cancelar y Guardar (row2: Cancelar y guardar en la solicitud) */}
-                    <Box
+                            <TextField
+                                required
+                                fullWidth
+                                label={t('Name')}
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                inputRef={nameRef}
+                                sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
+                                error={validationErrors.name}
+                                helperText={validationErrors.name ? requiredErrorText : ''}
+                            />
+
+                            <DatePicker
+                                label={t('Initial Date')}
+                                value={formData.initialDate}
+                                onChange={(date) => handleDateChange(date, 'initialDate')}
+                                inputFormat={DISPLAY_FORMAT}
+                                sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        required
+                                        fullWidth
+                                        name="initialDate"
+                                        error={validationErrors.initialDate || params.error}
+                                        helperText={validationErrors.initialDate ? requiredErrorText : params.helperText}
+                                    />
+                                )}
+                            />
+
+                            <DatePicker
+                                label={t('End Date')}
+                                value={formData.endDate}
+                                onChange={(date) => handleDateChange(date, 'endDate')}
+                                inputFormat={DISPLAY_FORMAT}
+                                sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        required
+                                        fullWidth
+                                        name="endDate"
+                                        error={validationErrors.endDate || params.error}
+                                        helperText={validationErrors.endDate ? requiredErrorText : params.helperText}
+                                    />
+                                )}
+                            />
+
+                            <TextField
+                                fullWidth
+                                label={t('description')}
+                                name="description"
+                                value={formData.description}
+                                onChange={handleChange}
+                                multiline
+                                rows={2}
+                                sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions
                         sx={{
-                            // En xs, se pone en la parte inferior (row2). En sm, a la derecha (orden 2).
-                            order: { xs: 2, sm: isEditing ? 2 : 1 },
-                            width: { xs: '100%', sm: 'auto' }, // Ancho completo en xs
-                            display: 'flex',
-                            justifyContent: { xs: 'space-between', sm: 'flex-end' } // Espacio entre botones en xs
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            justifyContent: isEditing ? { xs: 'flex-start', sm: 'space-between' } : 'flex-end',
+                            p: 3
                         }}
                     >
-                        <Button color="error" variant="outlined" endIcon={<CancelIcon />} onClick={handleClose} sx={{ mr: { xs: 0, sm: 1 } }}>
-                            {t('cancel') || 'Cancelar'}
-                        </Button>
-                        <Button
-                            color="primary"
-                            variant="contained"
-                            endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
-                            onClick={handleSubmit}
-                            disabled={isLoading || isClosingOrOpening}
+                        {isEditing && (
+                            <Button
+                                color={formData.isClosed ? "success" : "error"}
+                                variant="contained"
+                                onClick={handleToggleCloseStatus}
+                                disabled={isClosingOrOpening || isLoading}
+                                sx={{
+                                    order: { xs: 1, sm: 1 },
+                                    width: { xs: '100%', sm: 'auto' },
+                                    mb: { xs: 2, sm: 0 }
+                                }}
+                            >
+                                {toggleButtonText}
+                            </Button>
+                        )}
+
+                        <Box
+                            sx={{
+                                order: { xs: 2, sm: isEditing ? 2 : 1 },
+                                width: { xs: '100%', sm: 'auto' },
+                                display: 'flex',
+                                justifyContent: { xs: 'space-between', sm: 'flex-end' }
+                            }}
                         >
-                            {isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar')}
-                        </Button>
-                    </Box>
-                </DialogActions>
+                            <Button color="error" variant="outlined" endIcon={<CancelIcon />} onClick={handleClose} sx={{ mr: { xs: 0, sm: 1 } }}>
+                                {t('cancel') || 'Cancelar'}
+                            </Button>
+                            <Button
+                                type="submit"
+                                color="primary"
+                                variant="contained"
+                                endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
+                                disabled={isLoading || isClosingOrOpening}
+                            >
+                                {isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar')}
+                            </Button>
+                        </Box>
+                    </DialogActions>
+                </Box>
             </Dialog>
         </>
     );

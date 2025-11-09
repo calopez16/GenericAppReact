@@ -142,7 +142,6 @@ namespace GenericApp.Data
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
 
-                // Relación FK_Drivers_Companies
                 b.HasOne<Company>()
                  .WithMany()
                  .HasForeignKey(x => x.IdCompany)

@@ -23,7 +23,6 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const service = DataAPIClientsService();
     const citiesService = DataAPICitiesService();
 
-    // Referencia para el foco automático en 'name'
     const nameRef = useRef(null);
 
     const [formData, setFormData] = useState({
@@ -43,16 +42,14 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const [isCitiesLoading, setIsCitiesLoading] = useState(false);
     const [isAutocompleteOpen, setIsAutocompleteOpen] = useState(false);
 
-    // ESTADOS NUEVOS/MODIFICADOS para la validación diferida
     const [validationErrors, setValidationErrors] = useState({
-        name: false, // Solo controlamos 'name'
+        name: false,
     });
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
     const debounceTimerRef = useRef(null);
     const DEBOUNCE_TIME = 500;
 
-    // --- Lógica de Carga de Ciudades ---
     const fetchCities = async (searchTerm = "") => {
         setIsCitiesLoading(true);
         try {
@@ -74,14 +71,12 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    // 1. Efecto para cargar las ciudades
     useEffect(() => {
         if (open) {
             fetchCities();
         }
     }, [open]);
 
-    // 2. Efecto para inicializar el formulario y RESETEAR la validación
     useEffect(() => {
         if (open) {
             if (isEditing && data) {
@@ -103,13 +98,12 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     postalCode: '', phone: '', notes: '',
                 });
             }
-            // RESETEAR la validación al abrir el modal
+            setSelectedCity(null);
             setValidationErrors({ name: false });
             setHasAttemptedSubmit(false);
         }
     }, [open, isEditing, data]);
 
-    // 3. Efecto para inicializar el Autocomplete (selectedCity)
     useEffect(() => {
         if (open && formData.idCity !== null && cities.length > 0) {
             const initialCity = cities.find(city => city.idCity === formData.idCity);
@@ -119,9 +113,8 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     }, [open, cities, formData.idCity]);
 
-    // 4. EFECTO PARA ENFOCAR EL CAMPO 'NAME'
     useEffect(() => {
-        if (open && nameRef.current) {
+        if (open) {
             setTimeout(() => {
                 nameRef.current.focus();
             }, 100);
@@ -136,7 +129,6 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             [name]: value
         }));
 
-        // Mostrar/Ocultar error instantáneamente si ya se intentó enviar y el campo es 'name'
         if (hasAttemptedSubmit && name === 'name') {
             setValidationErrors(prev => ({
                 ...prev,
@@ -177,7 +169,6 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    // --- FUNCIÓN DE VALIDACIÓN (solo Name) ---
     const validateForm = () => {
         const isNameEmpty = !formData.name.trim();
         const errors = {
@@ -189,9 +180,10 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         return !isNameEmpty;
     };
 
-    // --- FUNCIÓN DE SUBMIT MODIFICADA ---
-    const handleSubmit = async () => {
-        setHasAttemptedSubmit(true); // Activa la visualización de errores
+    const handleSubmit = async (event) => {
+        if (event) event.preventDefault();
+
+        setHasAttemptedSubmit(true);
 
         if (!validateForm()) {
             ShowMessage(t('NameIsRequired') || 'El nombre del cliente es requerido.', 'warning');
@@ -253,7 +245,6 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    // ----------------------------------------------------------------
     const requiredErrorText = t('ThisFieldIsRequired') || 'Este campo es obligatorio.';
 
     return (
@@ -262,128 +253,121 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 <DialogTitle>
                     {isEditing ? t('editClient') : t('addClient')}
                 </DialogTitle>
-                <DialogContent>
-                    <Box
-                        component="form"
-                        noValidate
+                <Box component="form" onSubmit={handleSubmit} noValidate>
+                    <DialogContent>
+                        <Box
+                            sx={{
+                                mt: 2,
+                                display: 'grid',
+                                gridTemplateColumns: {
+                                    xs: '1fr',
+                                    sm: 'repeat(auto-fit, minmax(300px, 1fr))'
+                                },
+                                gap: 2
+                            }}
+                        >
+
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                label={t('Name')}
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                inputRef={nameRef}
+                                sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
+                                error={validationErrors.name}
+                                helperText={validationErrors.name ? requiredErrorText : ''}
+                            />
+
+                            <TextField margin="normal" fullWidth label={t('Rfc')} name="rfc" value={formData.rfc} onChange={handleChange} />
+                            <TextField margin="normal" fullWidth label={t('Phone')} name="phone" value={formData.phone} onChange={handleChange} />
+
+                            <TextField
+                                margin="normal"
+                                fullWidth
+                                label={t('Address')}
+                                name="address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
+                            />
+
+                            <TextField margin="normal" fullWidth label={t('PostalCode')} name="postalCode" value={formData.postalCode} onChange={handleChange} />
+
+                            <Autocomplete
+                                id="city-autocomplete"
+                                options={cities}
+                                getOptionLabel={(option) => option.name || ""}
+                                isOptionEqualToValue={(option, value) => option.idCity === value.idCity}
+                                loading={isCitiesLoading}
+                                value={selectedCity}
+                                onChange={handleCityChange}
+                                onOpen={handleAutocompleteOpen}
+                                onClose={() => setIsAutocompleteOpen(false)}
+                                open={isAutocompleteOpen}
+                                onInputChange={handleCityInputChange}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        margin="normal"
+                                        fullWidth
+                                        label={t('IdCity')}
+                                        name="idCity"
+                                    />
+                                )}
+                            />
+
+                            <TextField
+                                margin="normal"
+                                fullWidth
+                                label={t('Notes')}
+                                name="notes"
+                                value={formData.notes}
+                                onChange={handleChange}
+                                multiline
+                                rows={4}
+                                sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
+                            />
+
+                        </Box>
+                    </DialogContent>
+                    <DialogActions
                         sx={{
-                            mt: 2,
-                            display: 'grid',
-                            gridTemplateColumns: {
-                                xs: '1fr',
-                                sm: 'repeat(auto-fit, minmax(300px, 1fr))'
-                            },
-                            gap: 2
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            justifyContent: 'flex-end',
+                            p: 3
                         }}
                     >
-
-                        {/* NAME */}
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            label={t('Name')}
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            inputRef={nameRef}
-                            sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
-                            // CONTROL DE ERROR usando el estado de validación
-                            error={validationErrors.name}
-                            helperText={validationErrors.name ? requiredErrorText : ''}
-                        />
-
-                        {/* RFC y PHONE */}
-                        <TextField margin="normal" fullWidth label={t('Rfc')} name="rfc" value={formData.rfc} onChange={handleChange} />
-                        <TextField margin="normal" fullWidth label={t('Phone')} name="phone" value={formData.phone} onChange={handleChange} />
-
-                        {/* ADDRESS (Ahora no es requerido por la validación) */}
-                        <TextField
-                            margin="normal"
-                            fullWidth
-                            label={t('Address')}
-                            name="address"
-                            value={formData.address}
-                            onChange={handleChange}
-                            sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
-                        />
-
-                        {/* POSTAL CODE y CITY */}
-                        <TextField margin="normal" fullWidth label={t('PostalCode')} name="postalCode" value={formData.postalCode} onChange={handleChange} />
-
-                        {/* CITY AUTOCOMPLETE */}
-                        <Autocomplete
-                            id="city-autocomplete"
-                            options={cities}
-                            getOptionLabel={(option) => option.name || ""}
-                            isOptionEqualToValue={(option, value) => option.idCity === value.idCity}
-                            loading={isCitiesLoading}
-                            value={selectedCity}
-                            onChange={handleCityChange}
-                            onOpen={handleAutocompleteOpen}
-                            onClose={() => setIsAutocompleteOpen(false)}
-                            open={isAutocompleteOpen}
-                            onInputChange={handleCityInputChange}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    margin="normal"
-                                    fullWidth
-                                    label={t('IdCity')}
-                                    name="idCity"
-                                />
-                            )}
-                        />
-
-                        {/* NOTES */}
-                        <TextField
-                            margin="normal"
-                            fullWidth
-                            label={t('Notes')}
-                            name="notes"
-                            value={formData.notes}
-                            onChange={handleChange}
-                            multiline
-                            rows={4}
-                            sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
-                        />
-
-                    </Box>
-                </DialogContent>
-                <DialogActions
-                    sx={{
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        justifyContent: 'flex-end',
-                        p: 3
-                    }}
-                >
-                    <Box
-                        sx={{
-                            width: { xs: '100%', sm: 'auto' },
-                            display: 'flex',
-                            justifyContent: { xs: 'space-between', sm: 'flex-end' },
-                        }}
-                    >
-                        <Button
-                            color="error"
-                            variant="outlined"
-                            endIcon={<CancelIcon />}
-                            onClick={handleClose}
-                            sx={{ mr: { xs: 0, sm: 1 } }}
+                        <Box
+                            sx={{
+                                width: { xs: '100%', sm: 'auto' },
+                                display: 'flex',
+                                justifyContent: { xs: 'space-between', sm: 'flex-end' },
+                            }}
                         >
-                            {(t('cancel') || 'Cancelar')}
-                        </Button>
-                        <Button
-                            color="primary"
-                            variant="contained"
-                            endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
-                            onClick={handleSubmit}
-                            disabled={isLoading}
-                        >
-                            {(isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar'))}
-                        </Button>
-                    </Box>
-                </DialogActions>
+                            <Button
+                                color="error"
+                                variant="outlined"
+                                endIcon={<CancelIcon />}
+                                onClick={handleClose}
+                                sx={{ mr: { xs: 0, sm: 1 } }}
+                            >
+                                {(t('cancel') || 'Cancelar')}
+                            </Button>
+                            <Button
+                                type="submit"
+                                color="primary"
+                                variant="contained"
+                                endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
+                                disabled={isLoading}
+                            >
+                                {(isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar'))}
+                            </Button>
+                        </Box>
+                    </DialogActions>
+                </Box>
             </Dialog>
         </>
     );
