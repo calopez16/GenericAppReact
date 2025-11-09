@@ -12,5 +12,6 @@ namespace GenericApp.Data.Models
         public string Description { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
+        public ICollection<State> States { get; set; } = new List<State>();
     }
 }

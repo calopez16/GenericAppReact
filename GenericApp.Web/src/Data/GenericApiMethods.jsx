@@ -7,7 +7,7 @@ const createApiMethodsService = (moduleSource, rowMapper) => ({
     getDataById: (id) => GET(`${moduleSource}/${id}`),
     getAllData: () => GET(moduleSource),
     getDataActive: () => GET(`${moduleSource}/active`),
-    getDataPagination: (pageNumber = 1, pageSize = 10, searchTerm = "") => GET(`${moduleSource}/pagination?pageNumber=${pageNumber}&pageSize=${pageSize}&searchTerm=${searchTerm}`),
+    getDataPagination: (pageNumber = 1, pageSize = 10, searchTerm = "", active = null) => GET(`${moduleSource}/pagination?pageNumber=${pageNumber}&pageSize=${pageSize}&searchTerm=${searchTerm}` + (active ? `&active=${active}` : '')),
     disableData: (dataId) => PUT(`${moduleSource}/disable/${dataId}`),
     enableData: (dataId) => PUT(`${moduleSource}/enable/${dataId}`)
 

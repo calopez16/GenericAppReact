@@ -29,5 +29,6 @@ namespace GenericApp.BLL.Sevices.Interface
         Task<bool> Update<T>(T entity) where T : class;
 
         Task<IQueryable<T>> Query<T>() where T : class;
+        Task<IQueryable<T>> Query<T>(params Expression<Func<T, object>>[] includes) where T : class;
     }
 }

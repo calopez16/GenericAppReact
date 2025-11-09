@@ -17,5 +17,6 @@ namespace GenericApp.Data.Models
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
         public int IdCompany { get; set; }
+
     }
 }

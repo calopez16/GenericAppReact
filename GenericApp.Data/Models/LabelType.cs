@@ -14,5 +14,6 @@ namespace GenericApp.Data.Models
         public int MaxBoxQuantity { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
+        public Label IdLabelNavigation { get; set; }
     }
 }

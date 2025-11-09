@@ -224,5 +224,29 @@ namespace GenericApp.BLL.Sevices
                 return null;
             }
         }
+
+        // Modifica la firma para recibir los includes:
+        public async Task<IQueryable<T>> Query<T>(params Expression<Func<T, object>>[] includes) where T : class
+        {
+            try
+            {
+                IQueryable<T> query = _context.Set<T>(); // Inicializa el IQueryable
+
+                // Aplica los includes si existen
+                if (includes != null && includes.Any())
+                {
+                    query = includes.Aggregate(query,
+                                               (current, include) => current.Include(include));
+                }
+
+                return query;
+            }
+            catch (Exception ex)
+            {
+                // TODO: Registrar la excepción (log the exception)
+                // Console.WriteLine(ex.Message);
+                return null;
+            }
+        }
     }
 }

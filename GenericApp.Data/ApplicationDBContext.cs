@@ -17,6 +17,7 @@ namespace GenericApp.Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer("Server=localhost;Database=GenericApi;User=sa;Pwd=saadmin;");
+            optionsBuilder.UseLazyLoadingProxies(false);
         }
         public DbSet<RefreshTokenAspNetUser> RefreshTokenAspNetUser { get; set; }
         public DbSet<Parameter> Parameters { get; set; }
@@ -86,10 +87,10 @@ namespace GenericApp.Data
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
 
-                b.HasOne<Country>()
-                 .WithMany()
-                 .HasForeignKey(x => x.IdCountry)
-                 .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(s => s.IdCountryNavigation)
+                  .WithMany(c => c.States)
+                  .HasForeignKey(s => s.IdCountry)
+                  .OnDelete(DeleteBehavior.Restrict);
             });
 
             // === City ===
@@ -100,10 +101,11 @@ namespace GenericApp.Data
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
 
-                b.HasOne<State>()
-                 .WithMany()
-                 .HasForeignKey(x => x.IdState)
-                 .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(s => s.IdStateNavigation)
+                    .WithMany(c => c.Cities)
+                    .HasForeignKey(s => s.IdState)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // === Client ===
@@ -124,6 +126,12 @@ namespace GenericApp.Data
                  .WithMany()
                  .HasForeignKey(x => x.IdCompany)
                  .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(lt => lt.IdCityNavigation)
+                .WithMany(l => l.Clients)
+                .HasForeignKey(x => x.IdCity)
+                .OnDelete(DeleteBehavior.Restrict);
+
             });
 
             // === Driver ===
@@ -166,12 +174,11 @@ namespace GenericApp.Data
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
 
-                // Relación LabelType -> Label (IdLabel NOT NULL)
-                b.HasOne<Label>()
-                 .WithMany()
-                 .HasForeignKey(x => x.IdLabel)
-                 .IsRequired()
-                 .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(lt => lt.IdLabelNavigation)
+                  .WithMany(l => l.LabelTypes)
+                  .HasForeignKey(x => x.IdLabel)
+                  .IsRequired()
+                  .OnDelete(DeleteBehavior.Restrict);
             });
 
             // === Season ===

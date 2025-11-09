@@ -10,7 +10,7 @@ import LoaderComponent from '@views/Layout/LoaderComponent';
 import { Box, CssBaseline, useMediaQuery, useTheme } from '@mui/material';
 
 const Layout = () => {
-    const { accessToken, loading, setLoading } = useContext(AppContext);
+    const { accessToken, loading } = useContext(AppContext);
     const [showSidebar, setShowSidebar] = useState(false);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('xl'));
@@ -22,9 +22,6 @@ const Layout = () => {
     const toggleSidebar = () => setShowSidebar(!showSidebar);
 
     useEffect(() => {
-        //setLoading(true);
-        //const timer = setTimeout(() => setLoading(false), 1500);
-
         const handleResize = () => {
             if (!isMobile) {
                 setShowSidebar(false);
@@ -33,10 +30,9 @@ const Layout = () => {
 
         window.addEventListener('resize', handleResize);
         return () => {
-            //clearTimeout(timer);
             window.removeEventListener('resize', handleResize);
         };
-    }, [setLoading, isMobile]);
+    }, [isMobile]);
 
     const handleLogout = () => {
         AuthHelper.logout();
@@ -51,7 +47,11 @@ const Layout = () => {
                 <>
                     <NavbarComponent handleLogout={handleLogout} toggleSidebar={toggleSidebar} />
                     <Box sx={{ display: 'flex', flexGrow: 1 }}>
-                        <SidebarComponent showSidebar={showSidebar} toggleSidebar={toggleSidebar} />
+                        <SidebarComponent
+                            showSidebar={showSidebar}
+                            toggleSidebar={toggleSidebar}
+                            isMobile={isMobile}
+                        />
                         {showSidebar && isMobile && (
                             <Box
                                 onClick={toggleSidebar}

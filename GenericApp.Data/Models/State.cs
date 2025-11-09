@@ -13,5 +13,7 @@ namespace GenericApp.Data.Models
         public int IdCountry { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
+        public Country IdCountryNavigation { get; set; }
+        public ICollection<City> Cities { get; set; } = new List<City>();
     }
 }

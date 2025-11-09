@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251109060757_AddFixes")]
+    partial class AddFixes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -119,6 +121,7 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("nvarchar(250)");
 
                     b.Property<int?>("IdCity")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int>("IdCompany")
@@ -438,6 +441,9 @@ namespace GenericApp.Data.Migrations
                     b.Property<int>("IdCompany")
                         .HasColumnType("int");
 
+                    b.Property<int>("IdCompanyNavigationIdCompany")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("InitialDate")
                         .HasColumnType("date");
 
@@ -464,6 +470,8 @@ namespace GenericApp.Data.Migrations
                     b.HasKey("IdSeason");
 
                     b.HasIndex("IdCompany");
+
+                    b.HasIndex("IdCompanyNavigationIdCompany");
 
                     b.ToTable("Seasons");
                 });
@@ -680,7 +688,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEOgIdL6lXLphYzMtJLBJlmEu77FxnD2Ejqwn+dU7uzio3GMkoCNWOw45fcQSV2//Sw==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEFqYHNOjMb61N342euIvrbfdgiHXkfHZDg/MJnn9ctyfAzVKuEyuPXUCznahde2pjQ==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
@@ -801,7 +809,8 @@ namespace GenericApp.Data.Migrations
                     b.HasOne("GenericApp.Data.Models.City", "IdCityNavigation")
                         .WithMany("Clients")
                         .HasForeignKey("IdCity")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("GenericApp.Data.Models.Company", null)
                         .WithMany()
@@ -864,6 +873,14 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("IdCompany")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("GenericApp.Data.Models.Company", "IdCompanyNavigation")
+                        .WithMany()
+                        .HasForeignKey("IdCompanyNavigationIdCompany")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("IdCompanyNavigation");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.ShippingCompany", b =>

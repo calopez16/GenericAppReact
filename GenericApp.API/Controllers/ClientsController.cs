@@ -5,6 +5,7 @@ using GenericApp.Data.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Data;
 
@@ -32,11 +33,11 @@ namespace GenericApp.API.Controllers
             [FromQuery] int pageSize = 10,
             [FromQuery] string? searchTerm = null)
         {
+
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 10;
 
             var query = await _repository.Query<Client>();
-
             query = query.Where(x => !(x.IsDeleted ?? false));
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -50,6 +51,18 @@ namespace GenericApp.API.Controllers
             var data = query
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
+                .Select(x => new ClientDTO
+                {
+                    Name = x.Name,
+                    Address = x.Address,
+                    IdCity = x.IdCity,
+                    IdClient = x.IdClient,
+                    IsActive = x.IsActive,
+                    Notes = x.Notes,
+                    Phone = x.Phone,
+                    PostalCode = x.PostalCode,
+                    Rfc = x.Rfc
+                })
                 .ToList();
 
             var paginatedResponse = new
@@ -62,6 +75,7 @@ namespace GenericApp.API.Controllers
             };
 
             return Ok(new ApiResponse { Data = paginatedResponse });
+
         }
 
 
@@ -123,7 +137,7 @@ namespace GenericApp.API.Controllers
             if (!result)
                 return BadRequest(new ApiResponse());
 
-            return Ok(new ApiResponse());
+            return Ok(new ApiResponse { Data = clientDB });
         }
 
         [HttpPut("disable/{id}")]

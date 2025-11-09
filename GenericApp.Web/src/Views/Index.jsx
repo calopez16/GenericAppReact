@@ -4,12 +4,13 @@ import Layout from '@layout/Layout';
 import LoginPage from '@views/Auth/Login'
 import HomePage from '@views/Home'
 import UsersPage from '@views/Users'
+import CitiesPage from '@views/Cities'
 import ClientsPage from '@views/Clients'
+import SeasonsPage from '@views/Seasons'
 import NotFoundPage from '@views/Pages/NotFound'
 import Parameters from '@views/Parameters'
 import EmbarquesList from '@views/Embarques/Index';
 import EmbarqueAddOrEdit from '@views/Embarques/EmbarqueAddOrEdit';
-
 
 function App() {
     return (
@@ -20,6 +21,8 @@ function App() {
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/parameters" element={<Parameters />} />
                 <Route path="/clients" element={<ClientsPage />} />
+                <Route path="/cities" element={<CitiesPage />} />
+                <Route path="/seasons" element={<SeasonsPage />} />
 
                 {/* Configuración para Embarques:
                   Usamos una ruta padre sin elemento para agrupar las rutas hijas.

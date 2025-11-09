@@ -13,39 +13,33 @@ import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 
-import { DataAPIClientsService } from '@data/Clients/Data';
 import { DataAPICitiesService } from '@data/Cities/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 
-const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
+const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const { t } = useTranslation();
-    const service = DataAPIClientsService();
-    const citiesService = DataAPICitiesService();
+    const dataService = DataAPICitiesService();
 
-    // Referencia para el foco automático en 'name'
-    const nameRef = useRef(null);
+    // Referencia para el foco automático en 'description'
+    const descriptionRef = useRef(null);
 
     const [formData, setFormData] = useState({
-        idClient: 0,
-        name: '',
-        rfc: '',
-        address: '',
-        idCity: null,
-        postalCode: '',
-        phone: '',
-        notes: '',
+        idCity: 0,
+        description: '', // Requerido
+        idState: null // Requerido
     });
 
     const [isLoading, setIsLoading] = useState(false);
-    const [cities, setCities] = useState([]);
-    const [selectedCity, setSelectedCity] = useState(null);
-    const [isCitiesLoading, setIsCitiesLoading] = useState(false);
+    const [states, setStates] = useState([]);
+    const [selectedState, setSelectedState] = useState(null);
+    const [isStatesLoading, setIsStatesLoading] = useState(false);
     const [isAutocompleteOpen, setIsAutocompleteOpen] = useState(false);
 
-    // ESTADOS NUEVOS/MODIFICADOS para la validación diferida
+    // ESTADOS NUEVOS para la validación diferida
     const [validationErrors, setValidationErrors] = useState({
-        name: false, // Solo controlamos 'name'
+        description: false,
+        idState: false,
     });
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
@@ -53,31 +47,31 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const DEBOUNCE_TIME = 500;
 
     // --- Lógica de Carga de Ciudades ---
-    const fetchCities = async (searchTerm = "") => {
-        setIsCitiesLoading(true);
+    const fetchStates = async (searchTerm = "") => {
+        setIsStatesLoading(true);
         try {
-            const response = await citiesService.getDataPagination(1, 100, searchTerm, true);
+            const response = await dataService.getStatesPagination(1, 100, searchTerm);
             if (response.success && Array.isArray(response.data.data)) {
-                const cityList = response.data.data.map(city => ({
-                    idCity: city.idCity,
-                    name: `${city.description}, ${city.idStateNavigation?.description}, ${city.idStateNavigation?.idCountryNavigation.description}`
+                const stateList = response.data.data.map(state => ({
+                    id: state.idState,
+                    name: `${state.description}, ${state.idCountryNavigation.description}`
                 }));
-                setCities(cityList);
+                setStates(stateList);
             } else {
-                setCities([]);
+                setStates([]);
             }
         } catch (error) {
-            console.error("Error fetching cities:", error);
-            setCities([]);
+            console.error("Error fetching states:", error);
+            setStates([]);
         } finally {
-            setIsCitiesLoading(false);
+            setIsStatesLoading(false);
         }
     };
 
-    // 1. Efecto para cargar las ciudades
+    // 1. Efecto para cargar los estados al abrir el modal
     useEffect(() => {
         if (open) {
-            fetchCities();
+            fetchStates();
         }
     }, [open]);
 
@@ -85,45 +79,41 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     useEffect(() => {
         if (open) {
             if (isEditing && data) {
-                const clientData = { ...data };
                 setFormData({
-                    idClient: clientData.idClient || 0,
-                    name: clientData.name || '',
-                    rfc: clientData.rfc || '',
-                    address: clientData.address || '',
-                    idCity: clientData.idCity || null,
-                    postalCode: clientData.postalCode || '',
-                    phone: clientData.phone || '',
-                    notes: clientData.notes || '',
+                    idCity: data.idCity || 0,
+                    description: data.description || '',
+                    idState: data.idState || null
                 });
+
             } else if (!isEditing) {
                 setFormData({
-                    idClient: 0,
-                    name: '', rfc: '', address: '', idCity: null,
-                    postalCode: '', phone: '', notes: '',
+                    idCity: 0,
+                    description: '',
+                    idState: null
                 });
             }
             // RESETEAR la validación al abrir el modal
-            setValidationErrors({ name: false });
+            setValidationErrors({ description: false, idState: false });
             setHasAttemptedSubmit(false);
         }
     }, [open, isEditing, data]);
 
-    // 3. Efecto para inicializar el Autocomplete (selectedCity)
-    useEffect(() => {
-        if (open && formData.idCity !== null && cities.length > 0) {
-            const initialCity = cities.find(city => city.idCity === formData.idCity);
-            setSelectedCity(initialCity || null);
-        } else if (open && formData.idCity === null) {
-            setSelectedCity(null);
-        }
-    }, [open, cities, formData.idCity]);
 
-    // 4. EFECTO PARA ENFOCAR EL CAMPO 'NAME'
+    // 3. Efecto para inicializar el Autocomplete (selectedState)
     useEffect(() => {
-        if (open && nameRef.current) {
+        if (open && formData.idState !== null && states.length > 0) {
+            const initialState = states.find(state => state.id === formData.idState);
+            setSelectedState(initialState || null);
+        } else if (open && formData.idState === null) {
+            setSelectedState(null);
+        }
+    }, [open, states, formData.idState]);
+
+    // 4. EFECTO PARA ENFOCAR EL CAMPO 'description'
+    useEffect(() => {
+        if (open && descriptionRef.current) {
             setTimeout(() => {
-                nameRef.current.focus();
+                descriptionRef.current.focus();
             }, 100);
         }
     }, [open]);
@@ -136,91 +126,96 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             [name]: value
         }));
 
-        // Mostrar/Ocultar error instantáneamente si ya se intentó enviar y el campo es 'name'
-        if (hasAttemptedSubmit && name === 'name') {
+        // Mostrar/Ocultar error instantáneamente si ya se intentó enviar y el campo es 'description'
+        if (hasAttemptedSubmit && name === 'description') {
             setValidationErrors(prev => ({
                 ...prev,
-                name: value.trim().length === 0
+                description: value.trim().length === 0
             }));
         }
     };
 
-    const handleCityChange = (event, newValue) => {
-        setSelectedCity(newValue);
+    const handleStateChange = (event, newValue) => {
+        setSelectedState(newValue);
+        const newIdState = newValue ? newValue.id : null;
         setFormData(prev => ({
             ...prev,
-            idCity: newValue ? newValue.idCity : null
+            idState: newIdState
         }));
+
+        // Mostrar/Ocultar error instantáneamente si ya se intentó enviar
+        if (hasAttemptedSubmit) {
+            setValidationErrors(prev => ({
+                ...prev,
+                idState: newIdState === null,
+            }));
+        }
     };
 
     const handleAutocompleteOpen = () => {
         setIsAutocompleteOpen(true);
-        if (cities.length <= 1 || (cities.length === 1 && selectedCity && cities[0].idCity === selectedCity.idCity)) {
-            fetchCities("");
+        if (states.length <= 1) {
+            fetchStates("");
         }
     };
 
-    const handleCityInputChange = (event, newInputValue) => {
+    const handleStateInputChange = (event, newInputValue) => {
         if (debounceTimerRef.current) {
             clearTimeout(debounceTimerRef.current);
         }
 
         if (newInputValue.length === 0) {
-            fetchCities("");
+            fetchStates("");
             return;
         }
 
         if (newInputValue.length >= 3) {
             debounceTimerRef.current = setTimeout(() => {
-                fetchCities(newInputValue);
+                fetchStates(newInputValue);
             }, DEBOUNCE_TIME);
         }
     };
 
-    // --- FUNCIÓN DE VALIDACIÓN (solo Name) ---
+    // --- FUNCIÓN DE VALIDACIÓN ---
     const validateForm = () => {
-        const isNameEmpty = !formData.name.trim();
         const errors = {
-            name: isNameEmpty,
+            description: !formData.description.trim(),
+            idState: formData.idState === null || formData.idState === 0,
         };
 
         setValidationErrors(errors);
 
-        return !isNameEmpty;
+        return !errors.description && !errors.idState;
     };
+
 
     // --- FUNCIÓN DE SUBMIT MODIFICADA ---
     const handleSubmit = async () => {
         setHasAttemptedSubmit(true); // Activa la visualización de errores
 
         if (!validateForm()) {
-            ShowMessage(t('NameIsRequired') || 'El nombre del cliente es requerido.', 'warning');
+            ShowMessage(t('FillRequiredFields') || 'Por favor, rellene todos los campos obligatorios.', 'warning');
             return;
         }
 
         try {
             setIsLoading(true);
 
-            const finalIdCity = formData.idCity ? parseInt(formData.idCity) : null;
+            const finalIdState = formData.idState ? parseInt(formData.idState) : 0;
 
-            const clientPayload = {
-                idClient: formData.idClient || 0,
-                name: formData.name,
-                rfc: formData.rfc,
-                address: formData.address,
-                idCity: finalIdCity,
-                postalCode: formData.postalCode,
-                phone: formData.phone,
-                notes: formData.notes,
+            const cityPayload = {
+                idCity: formData.idCity || 0,
+                description: formData.description,
+                idState: finalIdState
             };
 
             let response;
             let messageKey;
             if (isEditing) {
-                response = await service.editData(clientPayload, true);
+                response = await dataService.editData(cityPayload, true);
                 messageKey = 'recordEditedSuccessPlural';
             } else {
-                response = await service.addData(clientPayload, true);
+                response = await dataService.addData(cityPayload, true);
                 messageKey = 'recordAddedSuccessPlural';
             }
 
@@ -230,16 +225,14 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             }
 
             if (response.success) {
-                const newClientData = { ...clientPayload, idClient: response.data?.idClient || clientPayload.idClient, isActive: response.data?.isActive };
-
                 if (isEditing) {
                     setData(prevData =>
-                        prevData.map(client =>
-                            client.idClient === clientPayload.idClient ? { ...client, ...newClientData } : client
+                        prevData.map(city =>
+                            city.idCity === cityPayload.idCity ? { ...city, ...cityPayload, idStateNavigation: response.data.idStateNavigation } : city
                         )
                     );
                 } else {
-                    setData(prevData => [...prevData, newClientData]);
+                    setData(prevData => [...prevData, { ...cityPayload, idCity: response.data.idCity, isActive: response.data.isActive, idStateNavigation: response.data.idStateNavigation }]);
                 }
             }
 
@@ -247,7 +240,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             ShowMessage(t(messageKey), 'success');
         } catch (error) {
             ShowMessage(t('error'), 'error');
-            console.error("Error saving client:", error);
+            console.error("Error saving city:", error);
         } finally {
             setIsLoading(false);
         }
@@ -260,7 +253,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         <>
             <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
                 <DialogTitle>
-                    {isEditing ? t('editClient') : t('addClient')}
+                    {isEditing ? t('editCity') : t('addCity')}
                 </DialogTitle>
                 <DialogContent>
                     <Box
@@ -277,77 +270,50 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                         }}
                     >
 
-                        {/* NAME */}
+                        {/* DESCRIPTION / NAME */}
                         <TextField
                             margin="normal"
                             required
                             fullWidth
-                            label={t('Name')}
-                            name="name"
-                            value={formData.name}
+                            label={t('description')}
+                            name="description"
+                            value={formData.description}
                             onChange={handleChange}
-                            inputRef={nameRef}
+                            inputRef={descriptionRef}
                             sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                             // CONTROL DE ERROR usando el estado de validación
-                            error={validationErrors.name}
-                            helperText={validationErrors.name ? requiredErrorText : ''}
+                            error={validationErrors.description}
+                            helperText={validationErrors.description ? requiredErrorText : ''}
                         />
 
-                        {/* RFC y PHONE */}
-                        <TextField margin="normal" fullWidth label={t('Rfc')} name="rfc" value={formData.rfc} onChange={handleChange} />
-                        <TextField margin="normal" fullWidth label={t('Phone')} name="phone" value={formData.phone} onChange={handleChange} />
 
-                        {/* ADDRESS (Ahora no es requerido por la validación) */}
-                        <TextField
-                            margin="normal"
-                            fullWidth
-                            label={t('Address')}
-                            name="address"
-                            value={formData.address}
-                            onChange={handleChange}
-                            sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
-                        />
-
-                        {/* POSTAL CODE y CITY */}
-                        <TextField margin="normal" fullWidth label={t('PostalCode')} name="postalCode" value={formData.postalCode} onChange={handleChange} />
-
-                        {/* CITY AUTOCOMPLETE */}
+                        {/* STATE AUTOCOMPLETE */}
                         <Autocomplete
-                            id="city-autocomplete"
-                            options={cities}
+                            id="state-autocomplete"
+                            options={states}
                             getOptionLabel={(option) => option.name || ""}
-                            isOptionEqualToValue={(option, value) => option.idCity === value.idCity}
-                            loading={isCitiesLoading}
-                            value={selectedCity}
-                            onChange={handleCityChange}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                            loading={isStatesLoading}
+                            value={selectedState}
+                            onChange={handleStateChange}
                             onOpen={handleAutocompleteOpen}
                             onClose={() => setIsAutocompleteOpen(false)}
                             open={isAutocompleteOpen}
-                            onInputChange={handleCityInputChange}
+                            onInputChange={handleStateInputChange}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
                                     margin="normal"
+                                    required
                                     fullWidth
-                                    label={t('IdCity')}
-                                    name="idCity"
+                                    label={t('idState')}
+                                    name="idState"
+                                    // CONTROL DE ERROR usando el estado de validación
+                                    error={validationErrors.idState}
+                                    helperText={validationErrors.idState ? requiredErrorText : ''}
                                 />
                             )}
                         />
-
-                        {/* NOTES */}
-                        <TextField
-                            margin="normal"
-                            fullWidth
-                            label={t('Notes')}
-                            name="notes"
-                            value={formData.notes}
-                            onChange={handleChange}
-                            multiline
-                            rows={4}
-                            sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
-                        />
-
                     </Box>
                 </DialogContent>
                 <DialogActions
@@ -378,7 +344,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             variant="contained"
                             endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
                             onClick={handleSubmit}
-                            disabled={isLoading}
+                            disabled={isLoading || isStatesLoading}
                         >
                             {(isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar'))}
                         </Button>
@@ -389,4 +355,4 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     );
 };
 
-export default ClientFormModal;
+export default CityFormModal;

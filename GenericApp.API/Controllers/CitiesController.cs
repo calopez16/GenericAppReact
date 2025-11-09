@@ -5,6 +5,7 @@ using GenericApp.Data.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Data;
 
 namespace GenericApp.API.Controllers
@@ -29,14 +30,17 @@ namespace GenericApp.API.Controllers
         public async Task<ActionResult> GetCitiesPagination(
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
-            [FromQuery] string? searchTerm = null)
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] bool? active = null
+            )
         {
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 10;
 
             var query = await _repository.Query<City>();
 
-            query = query.Where(x => !(x.IsDeleted ?? false));
+            query = query.Include(x => x.IdStateNavigation);
+            query = query.Where(x => !(x.IsDeleted ?? false) && (!active.HasValue || x.IsActive == active));
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -45,10 +49,27 @@ namespace GenericApp.API.Controllers
             }
 
             var totalRows = query.Count();
-            var data = query
+            var data = await query
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
-                .ToList();
+                .Select(s => new CityDTO
+                {
+                    Description = s.Description,
+                    IdCity = s.IdCity,
+                    IdState = s.IdState,
+                    IsActive = s.IsActive,
+                    IdStateNavigation = new StateDTO
+                    {
+                        IdCountry = s.IdStateNavigation.IdCountry,
+                        IdState = s.IdStateNavigation.IdState,
+                        Description = s.IdStateNavigation.Description,
+                        IdCountryNavigation = new CountryDTO
+                        {
+                            Description = s.IdStateNavigation.IdCountryNavigation.Description
+                        },
+                    }
+                })
+                .ToListAsync();
 
             var paginatedResponse = new
             {
@@ -61,7 +82,6 @@ namespace GenericApp.API.Controllers
 
             return Ok(new ApiResponse { Data = paginatedResponse });
         }
-
 
         [HttpGet("{id}")]
         public async Task<ActionResult<CityDTO>> GetCityById(int id)
@@ -77,12 +97,12 @@ namespace GenericApp.API.Controllers
         [HttpPost]
         public async Task<ActionResult> AddCity([FromBody] CityDTO model)
         {
-            var cityExists = await _repository.FirstOrDefault<City>(x => (x.Description.ToLower().Equals(model.Description.ToLower())) && !(x.IsDeleted ?? false));
+            var cityExists = await _repository.FirstOrDefault<City>(x => (x.Description.ToLower().Equals(model.Description.ToLower())) && x.IdState == model.IdState && !(x.IsDeleted ?? false), x => x.IdStateNavigation, x => x.IdStateNavigation.IdCountryNavigation);
             if (cityExists != null)
                 return Conflict(
                     new ApiResponse
                     {
-                        Conflict = $"{(cityExists.Description.ToLower().Equals(model.Description.ToLower()) ? model.Description : "")}"
+                        Conflict = $"{(cityExists.Description.ToLower().Equals(model.Description.ToLower()) ? model.Description : "")} {((cityExists.IdState == model.IdState) ? $"{cityExists.IdStateNavigation.Description}, {cityExists.IdStateNavigation.IdCountryNavigation.Description}" : "")}"
                     }
                 );
 
@@ -90,10 +110,20 @@ namespace GenericApp.API.Controllers
 
             var result = await _repository.Add(cityDB);
 
+            var newState = await _repository.FirstOrDefault<State>(x => x.IdState == model.IdState, x => x.IdCountryNavigation);
+            cityDB.IdStateNavigation = new State
+            {
+                Description = newState.Description,
+                IdCountryNavigation = new Country
+                {
+                    Description = newState.IdCountryNavigation.Description
+                }
+            };
+
             if (!result)
                 return BadRequest(new ApiResponse());
 
-            return Ok(new ApiResponse());
+            return Ok(new ApiResponse { Data = cityDB });
         }
 
         [HttpPut]
@@ -110,13 +140,22 @@ namespace GenericApp.API.Controllers
 
             var cityDB = await _repository.GetById<City>(model.IdCity);
             cityDB.Description = model.Description;
+            var isIdStateChanged = (cityDB.IdState != model.IdState);
             cityDB.IdState = model.IdState;
             var result = await _repository.Update(cityDB);
-
+            var newState = await _repository.FirstOrDefault<State>(x => x.IdState == model.IdState, x => x.IdCountryNavigation);
+            cityDB.IdStateNavigation = new State
+            {
+                Description = newState.Description,
+                IdCountryNavigation = new Country
+                {
+                    Description = newState.IdCountryNavigation.Description
+                }
+            };
             if (!result)
                 return BadRequest(new ApiResponse());
 
-            return Ok(new ApiResponse());
+            return Ok(new ApiResponse { Data = cityDB });
         }
 
         [HttpPut("disable/{id}")]
@@ -164,15 +203,75 @@ namespace GenericApp.API.Controllers
         }
 
         [HttpGet("states")]
-        public async Task<ActionResult<StateDTO>> GetStatesByCountry([FromQuery] int? idCountry)
+        public async Task<ActionResult<StateDTO>> GetStatesByCountry([FromQuery] int? idCountry = null)
         {
-            var states = await _repository.FindBy<State>(x => (!idCountry.HasValue || x.IdCountry == idCountry) && !(x.IsDeleted ?? false));
-            if (states == null)
-                return NotFound(new ApiResponse());
+            try
+            {
+                var states = await _repository.FindBy<State>(x => (!idCountry.HasValue || x.IdCountry == idCountry) && !(x.IsDeleted ?? false));
+                if (states == null)
+                    return NotFound(new ApiResponse());
 
-            var statesDTO = _mapper.Map<StateDTO>(states);
+                var statesDTO = _mapper.Map<List<StateDTO>>(states);
 
-            return Ok(new ApiResponse { Data = statesDTO });
+                return Ok(new ApiResponse { Data = statesDTO });
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+
+        [HttpGet("pagination-states")]
+        public async Task<ActionResult> GetStatesPagination(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] int? idCountry = null
+            )
+        {
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var query = await _repository.Query<State>();
+
+            query = query.Include(x => x.IdCountryNavigation);
+            query = query.Where(x => !(x.IsDeleted ?? false) && (x.IsActive ?? true) && (!idCountry.HasValue || x.IdCountry == idCountry));
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(u =>
+                    u.Description.Contains(searchTerm));
+            }
+
+            var totalRows = query.Count();
+            var data = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(s => new StateDTO
+                {
+                    Description = s.Description,
+                    IdCountry = s.IdCountry,
+                    IdState = s.IdState,
+                    IsActive = s.IsActive,
+                    IdCountryNavigation = new CountryDTO
+                    {
+                        IdCountry = s.IdCountryNavigation.IdCountry,
+                        Description = s.IdCountryNavigation.Description
+                    }
+                })
+                .ToListAsync();
+
+            var paginatedResponse = new
+            {
+                TotalCount = totalRows,
+                PageSize = pageSize,
+                CurrentPage = pageNumber,
+                TotalPages = (int)System.Math.Ceiling((double)totalRows / pageSize),
+                Data = data
+            };
+
+            return Ok(new ApiResponse { Data = paginatedResponse });
         }
 
         [HttpGet("countries")]

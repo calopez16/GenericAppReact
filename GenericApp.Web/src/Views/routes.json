@@ -45,6 +45,13 @@
         "icon": "PeopleIcon"
       },
       {
+        "id": "cities",
+        "path": "/cities",
+        "i18nKey": "cities",
+        "i18nKeyDescription": "cities_description",
+        "icon": "PeopleIcon"
+      },
+      {
         "id": "seasons",
         "path": "/seasons",
         "i18nKey": "seasons",

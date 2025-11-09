@@ -13,5 +13,7 @@ namespace GenericApp.Data.Models
         public int IdState { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
+        public State IdStateNavigation { get; set; }
+        public List<Client> Clients { get; set; }
     }
 }
