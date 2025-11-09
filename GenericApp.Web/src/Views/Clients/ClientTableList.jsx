@@ -15,16 +15,34 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-// Este componente renderiza la lista de usuarios en formato de tabla.
+const ANIMATION_DURATION = 500;
+
+const deletingRowStyle = {
+    transition: `all ${ANIMATION_DURATION}ms ease-out`,
+    transform: 'translateX(-100%)',
+    opacity: 0,
+    height: 0,
+    padding: 0,
+    overflow: 'hidden',
+};
+
+const normalRowStyle = {
+    transition: `all ${ANIMATION_DURATION}ms ease-out`,
+    transform: 'translateX(0)',
+    opacity: 1,
+    maxHeight: '1000px',
+};
+
 const ClientListTable = ({
     clients,
     loading,
     t,
     handleOpenEditClient,
     handleToggleClientStatus,
-    // **CORRECCIÓN: Asegúrate de desestructurar la nueva prop**
     handleOpenDeleteConfirmation,
-    setSelectedClient // Esta prop se mantiene sin cambios
+    setSelectedClient,
+    // RECIBIR LA PROP DE ANIMACIÓN
+    deletingId
 }) => {
 
     const minTableWidth = 900;
@@ -54,40 +72,55 @@ const ClientListTable = ({
                             <TableCell colSpan={6} align="center"> {t('records_notFound')}.</TableCell>
                         </TableRow>
                     ) : (
-                        clients.map((client) => (
-                            <TableRow key={client.idClient}>
-                                <TableCell>
-                                    <Tooltip title={client.isActive ? t('disable') : t('enable')}>
-                                        <Switch
-                                            checked={client.isActive}
-                                            onChange={() => handleToggleClientStatus(client)}
-                                            color="primary"
-                                        />
-                                    </Tooltip>
-                                </TableCell>
-                                <TableCell>{client.name}</TableCell>
-                                <TableCell>{client.rfc}</TableCell>
-                                <TableCell>{client.address}</TableCell>
-                                <TableCell>{client.phone}</TableCell>
-                                <TableCell align="right">
-                                    <Tooltip title={t('edit')}>
-                                        <IconButton color="primary" onClick={() => handleOpenEditClient(client)}>
-                                            <EditIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                    {/* Uso de handleOpenDeleteConfirmation */}
-                                    <Tooltip title={t('delete')}>
-                                        <IconButton
-                                            color="error"
-                                            onClick={() => handleOpenDeleteConfirmation(client)}
-                                            sx={{ ml: 1 }}
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                </TableCell>
-                            </TableRow>
-                        ))
+                        clients.map((client) => {
+                            const isDeleting = client.idClient === deletingId;
+
+                            // Aplicar estilos condicionales
+                            const rowCurrentStyle = isDeleting ? deletingRowStyle : normalRowStyle;
+
+                            return (
+                                <TableRow
+                                    key={client.idClient}
+                                    sx={rowCurrentStyle}
+                                >
+                                    <TableCell>
+                                        <Tooltip title={client.isActive ? t('disable') : t('enable')}>
+                                            <Switch
+                                                checked={client.isActive}
+                                                onChange={() => handleToggleClientStatus(client)}
+                                                color="primary"
+                                                disabled={isDeleting}
+                                            />
+                                        </Tooltip>
+                                    </TableCell>
+                                    <TableCell>{client.name}</TableCell>
+                                    <TableCell>{client.rfc}</TableCell>
+                                    <TableCell>{client.address}</TableCell>
+                                    <TableCell>{client.phone}</TableCell>
+                                    <TableCell align="right">
+                                        <Tooltip title={t('edit')}>
+                                            <IconButton
+                                                color="primary"
+                                                onClick={() => handleOpenEditClient(client)}
+                                                disabled={isDeleting}
+                                            >
+                                                <EditIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title={t('delete')}>
+                                            <IconButton
+                                                color="error"
+                                                onClick={() => handleOpenDeleteConfirmation(client)}
+                                                sx={{ ml: 1 }}
+                                                disabled={isDeleting}
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })
                     )}
                 </TableBody>
             </Table>

@@ -19,8 +19,6 @@ import ConfirmationModal from '@layout/ConfirmationModal';
 import SeasonFormModal from '@views/Seasons/SeasonFormModal';
 import SeasonCardList from '@views/Seasons/SeasonCardList';
 import SeasonListTable from '@views/Seasons/SeasonTableList';
-
-// Importar los componentes necesarios para el DatePicker de MUI X
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
@@ -42,6 +40,9 @@ function Index() {
 
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [seasonToDelete, setSeasonToDelete] = useState(null);
+
+    const [deletingId, setDeletingId] = useState(null);
+    const ANIMATION_DURATION = 500;
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
@@ -127,24 +128,32 @@ function Index() {
 
         if (!seasonToDelete) return;
 
-        try {
-            setLoading(true);
+        const idToDelete = seasonToDelete.idSeason;
 
-            const dataResult = await seasonDataService.deleteData(seasonToDelete.idSeason);
+        try {
+            setDeletingId(idToDelete);
+
+            const dataResult = await seasonDataService.deleteData(idToDelete);
 
             if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
-                setSeasons(prevSeasons => prevSeasons.filter(c => c.idSeason !== seasonToDelete.idSeason));
-                setPage(0);
+
+                setTimeout(() => {
+                    setSeasons(prevSeasons => prevSeasons.filter(c => c.idSeason !== idToDelete));
+                    setDeletingId(null);
+                    setPage(0);
+                }, ANIMATION_DURATION);
+
             } else {
                 ShowMessage(dataResult.message || t('errorDeletingRecord'), 'error');
+                setDeletingId(null);
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
             console.error("Error deleting season:", error);
+            setDeletingId(null);
         } finally {
             setSeasonToDelete(null);
-            setLoading(false);
         }
     };
 
@@ -177,7 +186,8 @@ function Index() {
         handleOpenEditSeason,
         handleToggleSeasonStatus,
         handleOpenDeleteConfirmation,
-        setSelectedSeason
+        setSelectedSeason,
+        deletingId
     };
 
     return (
@@ -243,7 +253,6 @@ function Index() {
                 }
             />
 
-            {/* SOLUCIÓN: Envolver el modal con LocalizationProvider */}
             <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
                 <SeasonFormModal
                     open={isModalOpen}

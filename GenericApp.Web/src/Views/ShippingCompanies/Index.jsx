@@ -39,6 +39,10 @@ function Index() {
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [shippingCompanyToDelete, setShippingCompanyToDelete] = useState(null);
 
+    // ESTADO DE ANIMACIÓN
+    const [deletingId, setDeletingId] = useState(null);
+    const ANIMATION_DURATION = 500;
+
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
 
@@ -123,24 +127,34 @@ function Index() {
 
         if (!shippingCompanyToDelete) return;
 
-        try {
-            setLoading(true);
+        const idToDelete = shippingCompanyToDelete.idShippingCompany;
 
-            const dataResult = await shippingCompanyDataService.deleteData(shippingCompanyToDelete.idShippingCompany);
+        try {
+            // Activar animación de eliminación
+            setDeletingId(idToDelete);
+
+            const dataResult = await shippingCompanyDataService.deleteData(idToDelete);
 
             if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
-                setShippingCompanies(prevShippingCompanies => prevShippingCompanies.filter(c => c.idShippingCompany !== shippingCompanyToDelete.idShippingCompany));
-                setPage(0);
+
+                // Esperar a que la animación termine antes de remover del estado.
+                setTimeout(() => {
+                    setShippingCompanies(prevShippingCompanies => prevShippingCompanies.filter(c => c.idShippingCompany !== idToDelete));
+                    setDeletingId(null);
+                    setPage(0);
+                }, ANIMATION_DURATION);
+
             } else {
                 ShowMessage(dataResult.message || t('errorDeletingRecord'), 'error');
+                setDeletingId(null);
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
             console.error("Error deleting shippingCompany:", error);
+            setDeletingId(null);
         } finally {
             setShippingCompanyToDelete(null);
-            setLoading(false);
         }
     };
 
@@ -173,7 +187,9 @@ function Index() {
         handleOpenEditShippingCompany,
         handleToggleShippingCompanyStatus,
         handleOpenDeleteConfirmation,
-        setSelectedShippingCompany
+        setSelectedShippingCompany,
+        // PASAR EL ESTADO DE ANIMACIÓN
+        deletingId
     };
 
     return (

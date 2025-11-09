@@ -122,16 +122,23 @@ const DriverFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             }
 
             if (response.success) {
-                const updatedDriver = { ...driverPayload, isActive: response.data.isActive, idCompany: response.data.idCompany, isDeleted: response.data.isDeleted };
+                const newOrUpdatedDriver = {
+                    ...driverPayload,
+                    isActive: response.data.isActive,
+                    idCompany: response.data.idCompany,
+                    isDeleted: response.data.isDeleted,
+                    idDriver: response.data.idDriver
+                };
 
                 if (isEditing) {
                     setData(prevData =>
                         prevData.map(driver =>
-                            driver.idDriver === driverPayload.idDriver ? updatedDriver : driver
+                            driver.idDriver === driverPayload.idDriver ? newOrUpdatedDriver : driver
                         )
                     );
                 } else {
-                    setData(prevData => [...prevData, { ...updatedDriver, idDriver: response.data.idDriver }]);
+                    // Lógica original: Añadir al final del listado
+                    setData(prevData => [...prevData, newOrUpdatedDriver]);
                 }
             }
 

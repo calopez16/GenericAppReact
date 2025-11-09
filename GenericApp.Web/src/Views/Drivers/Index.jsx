@@ -37,9 +37,12 @@ function Index() {
     const [selectedDriver, setSelectedDriver] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 
-    // **NUEVOS ESTADOS** para el modal de confirmación de eliminación
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [driverToDelete, setDriverToDelete] = useState(null);
+
+    // Mantenemos solo el estado de eliminación
+    const [deletingId, setDeletingId] = useState(null);
+    const ANIMATION_DURATION = 500;
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
@@ -115,39 +118,44 @@ function Index() {
         }
     };
 
-    // **NUEVA FUNCIÓN:** Abre el modal de confirmación y guarda el drivere
     const handleOpenDeleteConfirmation = (driver) => {
         setDriverToDelete(driver);
         setIsConfirmDeleteModalOpen(true);
     };
 
-    // **FUNCIÓN ACTUALIZADA:** Ejecuta la eliminación
     const handleDeleteDriver = async () => {
-        // Cierra el modal de confirmación inmediatamente
         setIsConfirmDeleteModalOpen(false);
 
-        if (!driverToDelete) return; // Seguridad
+        if (!driverToDelete) return;
+
+        const idToDelete = driverToDelete.idDriver;
 
         try {
-            setLoading(true);
+            // Activar animación de eliminación
+            setDeletingId(idToDelete);
 
-            const dataResult = await driverDataService.deleteData(driverToDelete.idDriver);
+            const dataResult = await driverDataService.deleteData(idToDelete);
 
             if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
-                // Quitar el drivere de la lista local
-                setDrivers(prevDrivers => prevDrivers.filter(c => c.idDriver !== driverToDelete.idDriver));
-                // Resetea la página a 0 para recargar y reajustar la paginación
-                setPage(0);
+
+                // Esperar a que la animación termine antes de remover del estado.
+                setTimeout(() => {
+                    setDrivers(prevDrivers => prevDrivers.filter(c => c.idDriver !== idToDelete));
+                    setDeletingId(null);
+                    setPage(0);
+                }, ANIMATION_DURATION);
+
             } else {
                 ShowMessage(dataResult.message || t('errorDeletingRecord'), 'error');
+                setDeletingId(null); // Detener animación si falla
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
             console.error("Error deleting driver:", error);
+            setDeletingId(null);
         } finally {
-            setDriverToDelete(null); // Limpia el drivere seleccionado
-            setLoading(false);
+            setDriverToDelete(null);
         }
     };
 
@@ -173,6 +181,11 @@ function Index() {
         setIsModalOpen(false);
     };
 
+    // Función de actualización original (sin lógica de adición/animación)
+    const handleSetDrivers = (data) => {
+        setDrivers(data);
+    };
+
     const commonListProps = {
         drivers,
         loading,
@@ -180,12 +193,13 @@ function Index() {
         handleOpenEditDriver,
         handleToggleDriverStatus,
         handleOpenDeleteConfirmation,
-        setSelectedDriver
+        setSelectedDriver,
+        // Mantenemos solo deletingId
+        deletingId
     };
 
     return (
         <Box sx={{ p: 3 }}>
-            {/* ... (Header, Search y Add Button) ... */}
             <Box sx={{
                 display: 'flex',
                 flexDirection: isSmallScreen ? 'column' : 'row',
@@ -228,14 +242,11 @@ function Index() {
             {loading && <LinearProgress />}
 
             {isSmallScreen ? (
-                // **PASAR PROP ACTUALIZADA**
                 <DriverCardList {...commonListProps} />
             ) : (
-                // **PASAR PROP ACTUALIZADA**
                 <DriverListTable {...commonListProps} />
             )}
 
-            {/* ... (TablePagination) ... */}
             <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
@@ -250,22 +261,20 @@ function Index() {
                 }
             />
 
-            {/* ... (DriverFormModal) ... */}
             <DriverFormModal
                 open={isModalOpen}
                 handleClose={handleCloseModal}
                 data={selectedDriver}
                 isEditing={isEditing}
-                setData={setDrivers}
+                setData={setDrivers} // Usar setDrivers original
             />
 
-            {/* **NUEVO:** Confirmation Modal para Eliminación */}
             <ConfirmationModal
                 open={isConfirmDeleteModalOpen}
                 onClose={handleCloseDeleteConfirmation}
                 onConfirm={handleDeleteDriver}
                 title={t('deleteDriver')}
-                message={t('question_areYouSureDeleteDriver', { driverName: driverToDelete?.description || '' })}
+                message={t('question_areYouSureDeleteDriver', { driverName: driverToDelete?.name || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
             />

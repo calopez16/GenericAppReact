@@ -37,9 +37,13 @@ function Index() {
     const [selectedCity, setSelectedCity] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 
-    // **NUEVOS ESTADOS** para el modal de confirmación de eliminación
+    // Estados para la eliminación
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [cityToDelete, setCityToDelete] = useState(null);
+
+    // ESTADO DE ANIMACIÓN
+    const [deletingId, setDeletingId] = useState(null);
+    const ANIMATION_DURATION = 500;
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
@@ -115,39 +119,45 @@ function Index() {
         }
     };
 
-    // **NUEVA FUNCIÓN:** Abre el modal de confirmación y guarda el citye
     const handleOpenDeleteConfirmation = (city) => {
         setCityToDelete(city);
         setIsConfirmDeleteModalOpen(true);
     };
 
-    // **FUNCIÓN ACTUALIZADA:** Ejecuta la eliminación
+    // FUNCIÓN DE ELIMINACIÓN AJUSTADA
     const handleDeleteCity = async () => {
-        // Cierra el modal de confirmación inmediatamente
         setIsConfirmDeleteModalOpen(false);
 
-        if (!cityToDelete) return; // Seguridad
+        if (!cityToDelete) return;
+
+        const idToDelete = cityToDelete.idCity;
 
         try {
-            setLoading(true);
+            // 1. Activar animación de eliminación
+            setDeletingId(idToDelete);
 
-            const dataResult = await cityDataService.deleteData(cityToDelete.idCity);
+            const dataResult = await cityDataService.deleteData(idToDelete);
 
             if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
-                // Quitar el citye de la lista local
-                setCities(prevCities => prevCities.filter(c => c.idCity !== cityToDelete.idCity));
-                // Resetea la página a 0 para recargar y reajustar la paginación
-                setPage(0);
+
+                // 2. Esperar a que la animación termine antes de remover del estado.
+                setTimeout(() => {
+                    setCities(prevCities => prevCities.filter(c => c.idCity !== idToDelete));
+                    setDeletingId(null);
+                    setPage(0);
+                }, ANIMATION_DURATION);
+
             } else {
                 ShowMessage(dataResult.message || t('errorDeletingRecord'), 'error');
+                setDeletingId(null); // Detener animación si falla
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
             console.error("Error deleting city:", error);
+            setDeletingId(null);
         } finally {
-            setCityToDelete(null); // Limpia el citye seleccionado
-            setLoading(false);
+            setCityToDelete(null);
         }
     };
 
@@ -180,7 +190,9 @@ function Index() {
         handleOpenEditCity,
         handleToggleCityStatus,
         handleOpenDeleteConfirmation,
-        setSelectedCity
+        setSelectedCity,
+        // PASAR EL ESTADO DE ANIMACIÓN
+        deletingId,
     };
 
     return (
@@ -228,10 +240,9 @@ function Index() {
             {loading && <LinearProgress />}
 
             {isSmallScreen ? (
-                // **PASAR PROP ACTUALIZADA**
+                // NOTA: También deberías pasar deletingId a CityCardList
                 <CityCardList {...commonListProps} />
             ) : (
-                // **PASAR PROP ACTUALIZADA**
                 <CityListTable {...commonListProps} />
             )}
 

@@ -12,13 +12,11 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
-// Importación necesaria para el botón de eliminar (si no estaba ya)
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DataAPIClientsService } from '@data/Clients/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
-// **NUEVA IMPORTACIÓN:** Importa tu ConfirmationModal
-import ConfirmationModal from '@layout/ConfirmationModal'; // Asegúrate de ajustar la ruta si es necesario
+import ConfirmationModal from '@layout/ConfirmationModal';
 import ClientFormModal from '@views/clients/ClientFormModal';
 import ClientCardList from '@views/clients/ClientCardList';
 import ClientListTable from '@views/clients/ClientTableList';
@@ -40,14 +38,15 @@ function Index() {
     const [selectedClient, setSelectedClient] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 
-    // **NUEVOS ESTADOS** para el modal de confirmación de eliminación
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [clientToDelete, setClientToDelete] = useState(null);
+
+    const [deletingId, setDeletingId] = useState(null);
+    const ANIMATION_DURATION = 500;
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
 
-    // ... (useEffect para debounce y carga de datos se mantienen iguales) ...
     useEffect(() => {
         const timerId = setTimeout(() => {
             setDebouncedSearchTerm(searchTerm);
@@ -119,39 +118,42 @@ function Index() {
         }
     };
 
-    // **NUEVA FUNCIÓN:** Abre el modal de confirmación y guarda el cliente
     const handleOpenDeleteConfirmation = (client) => {
         setClientToDelete(client);
         setIsConfirmDeleteModalOpen(true);
     };
 
-    // **FUNCIÓN ACTUALIZADA:** Ejecuta la eliminación
     const handleDeleteClient = async () => {
-        // Cierra el modal de confirmación inmediatamente
         setIsConfirmDeleteModalOpen(false);
 
-        if (!clientToDelete) return; // Seguridad
+        if (!clientToDelete) return;
+
+        const idToDelete = clientToDelete.idClient;
 
         try {
-            setLoading(true);
+            setDeletingId(idToDelete);
 
-            const dataResult = await clientDataService.deleteData(clientToDelete.idClient);
+            const dataResult = await clientDataService.deleteData(idToDelete);
 
             if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
-                // Quitar el cliente de la lista local
-                setClients(prevClients => prevClients.filter(c => c.idClient !== clientToDelete.idClient));
-                // Resetea la página a 0 para recargar y reajustar la paginación
-                setPage(0);
+
+                setTimeout(() => {
+                    setClients(prevClients => prevClients.filter(c => c.idClient !== idToDelete));
+                    setDeletingId(null);
+                    setPage(0);
+                }, ANIMATION_DURATION);
+
             } else {
                 ShowMessage(dataResult.message || t('errorDeletingRecord'), 'error');
+                setDeletingId(null);
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
             console.error("Error deleting client:", error);
+            setDeletingId(null);
         } finally {
-            setClientToDelete(null); // Limpia el cliente seleccionado
-            setLoading(false);
+            setClientToDelete(null);
         }
     };
 
@@ -184,12 +186,12 @@ function Index() {
         handleOpenEditClient,
         handleToggleClientStatus,
         handleOpenDeleteConfirmation,
-        setSelectedClient
+        setSelectedClient,
+        deletingId
     };
 
     return (
         <Box sx={{ p: 3 }}>
-            {/* ... (Header, Search y Add Button) ... */}
             <Box sx={{
                 display: 'flex',
                 flexDirection: isSmallScreen ? 'column' : 'row',
@@ -232,14 +234,11 @@ function Index() {
             {loading && <LinearProgress />}
 
             {isSmallScreen ? (
-                // **PASAR PROP ACTUALIZADA**
                 <ClientCardList {...commonListProps} />
             ) : (
-                // **PASAR PROP ACTUALIZADA**
                 <ClientListTable {...commonListProps} />
             )}
 
-            {/* ... (TablePagination) ... */}
             <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
@@ -254,7 +253,6 @@ function Index() {
                 }
             />
 
-            {/* ... (ClientFormModal) ... */}
             <ClientFormModal
                 open={isModalOpen}
                 handleClose={handleCloseModal}
@@ -263,13 +261,12 @@ function Index() {
                 setData={setClients}
             />
 
-            {/* **NUEVO:** Confirmation Modal para Eliminación */}
             <ConfirmationModal
                 open={isConfirmDeleteModalOpen}
                 onClose={handleCloseDeleteConfirmation}
                 onConfirm={handleDeleteClient}
                 title={t('deleteClient')}
-                message={t('question_areYouSureDeleteClient', { clientName: clientToDelete?.name || '' })}
+                message={t('question_areYouSureDeleteClient', { clientName: clientToDelete?.description || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
             />

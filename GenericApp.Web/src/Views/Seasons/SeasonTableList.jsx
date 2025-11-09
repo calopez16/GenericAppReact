@@ -17,6 +17,24 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+const ANIMATION_DURATION = 500;
+
+const deletingRowStyle = {
+    transition: `all ${ANIMATION_DURATION}ms ease-out`,
+    transform: 'translateX(-100%)',
+    opacity: 0,
+    height: 0,
+    padding: 0,
+    overflow: 'hidden',
+};
+
+const normalRowStyle = {
+    transition: `all ${ANIMATION_DURATION}ms ease-out`,
+    transform: 'translateX(0)',
+    opacity: 1,
+    maxHeight: '1000px',
+};
+
 const SeasonListTable = ({
     seasons,
     loading,
@@ -24,7 +42,8 @@ const SeasonListTable = ({
     handleOpenEditSeason,
     handleToggleSeasonStatus,
     handleOpenDeleteConfirmation,
-    setSelectedSeason
+    setSelectedSeason,
+    deletingId
 }) => {
 
     const minTableWidth = 900;
@@ -63,62 +82,77 @@ const SeasonListTable = ({
                             <TableCell colSpan={6} align="center"> {t('records_notFound')}.</TableCell>
                         </TableRow>
                     ) : (
-                        seasons.map((season) => (
-                            <TableRow key={season.idSeason}>
-                                <TableCell>
-                                    <Tooltip title={season.isActive ? t('disable') : t('enable')}>
-                                        <Switch
-                                            checked={season.isActive}
-                                            onChange={() => handleToggleSeasonStatus(season)}
-                                            color="primary"
-                                        />
-                                    </Tooltip>
-                                </TableCell>
-                                <TableCell>
-                                    <Tooltip title={`ID: ${season.idSeason}`}>
-                                        <Typography>{season.name}</Typography>
-                                    </Tooltip>
-                                </TableCell>
-                                <TableCell>
-                                    {formatDate(season.initialDate)}
-                                </TableCell>
-                                <TableCell>
-                                    {formatDate(season.endDate)}
-                                </TableCell>
-                                <TableCell>
-                                    {season.isClosed ? (
-                                        <Chip
-                                            label={t('Closed')}
-                                            size="small"
-                                            color="error"
-                                        />
-                                    ) : (
-                                        <Chip
-                                            label={t('Open')}
-                                            size="small"
-                                            color="success"
-                                            variant="outlined"
-                                        />
-                                    )}
-                                </TableCell>
-                                <TableCell align="right">
-                                    <Tooltip title={t('edit')}>
-                                        <IconButton color="primary" onClick={() => handleOpenEditSeason(season)}>
-                                            <EditIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title={t('delete')}>
-                                        <IconButton
-                                            color="error"
-                                            onClick={() => handleOpenDeleteConfirmation(season)}
-                                            sx={{ ml: 1 }}
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                </TableCell>
-                            </TableRow>
-                        ))
+                        seasons.map((season) => {
+                            const isDeleting = season.idSeason === deletingId;
+
+                            const rowCurrentStyle = isDeleting ? deletingRowStyle : normalRowStyle;
+
+                            return (
+                                <TableRow
+                                    key={season.idSeason}
+                                    sx={rowCurrentStyle}
+                                >
+                                    <TableCell>
+                                        <Tooltip title={season.isActive ? t('disable') : t('enable')}>
+                                            <Switch
+                                                checked={season.isActive}
+                                                onChange={() => handleToggleSeasonStatus(season)}
+                                                color="primary"
+                                                disabled={isDeleting}
+                                            />
+                                        </Tooltip>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Tooltip title={`ID: ${season.idSeason}`}>
+                                            <Typography>{season.name}</Typography>
+                                        </Tooltip>
+                                    </TableCell>
+                                    <TableCell>
+                                        {formatDate(season.initialDate)}
+                                    </TableCell>
+                                    <TableCell>
+                                        {formatDate(season.endDate)}
+                                    </TableCell>
+                                    <TableCell>
+                                        {season.isClosed ? (
+                                            <Chip
+                                                label={t('Closed')}
+                                                size="small"
+                                                color="error"
+                                            />
+                                        ) : (
+                                            <Chip
+                                                label={t('Open')}
+                                                size="small"
+                                                color="success"
+                                                variant="outlined"
+                                            />
+                                        )}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <Tooltip title={t('edit')}>
+                                            <IconButton
+                                                color="primary"
+                                                onClick={() => handleOpenEditSeason(season)}
+                                                disabled={isDeleting}
+                                            >
+                                                <EditIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title={t('delete')}>
+                                            <IconButton
+                                                color="error"
+                                                onClick={() => handleOpenDeleteConfirmation(season)}
+                                                sx={{ ml: 1 }}
+                                                disabled={isDeleting}
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })
                     )}
                 </TableBody>
             </Table>

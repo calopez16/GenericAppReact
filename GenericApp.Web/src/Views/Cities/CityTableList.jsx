@@ -15,6 +15,25 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+const ANIMATION_DURATION = 500;
+
+const deletingRowStyle = {
+    transition: `all ${ANIMATION_DURATION}ms ease-out`,
+    transform: 'translateX(-100%)', // Deslizar fuera de la vista a la izquierda
+    opacity: 0,
+    height: 0,
+    padding: 0,
+    overflow: 'hidden',
+};
+
+const normalRowStyle = {
+    transition: `all ${ANIMATION_DURATION}ms ease-out`,
+    transform: 'translateX(0)',
+    opacity: 1,
+    maxHeight: '1000px',
+    padding: '16px 24px', // padding normal de las TableCell (ajusta si es diferente en tu tema)
+};
+
 const CityListTable = ({
     cities,
     loading,
@@ -22,7 +41,9 @@ const CityListTable = ({
     handleOpenEditCity,
     handleToggleCityStatus,
     handleOpenDeleteConfirmation,
-    setSelectedCity
+    setSelectedCity,
+    // RECIBIR LA PROP DE ANIMACIÓN
+    deletingId
 }) => {
 
     const minTableWidth = 900;
@@ -51,46 +72,62 @@ const CityListTable = ({
                             <TableCell colSpan={5} align="center"> {t('records_notFound')}.</TableCell>
                         </TableRow>
                     ) : (
-                        cities.map((city) => (
-                            <TableRow key={city.idCity}>
-                                <TableCell>
-                                    <Tooltip title={city.isActive ? t('disable') : t('enable')}>
-                                        <Switch
-                                            checked={city.isActive}
-                                            onChange={() => handleToggleCityStatus(city)}
-                                            color="primary"
-                                        />
-                                    </Tooltip>
-                                </TableCell>
-                                <TableCell>
-                                    <Tooltip title={`ID: ${city.idCity}`}>
-                                        <Typography>{city.description}</Typography>
-                                    </Tooltip>
-                                </TableCell>
-                                <TableCell>
-                                    {city.idStateNavigation?.description || 'N/A'}
-                                </TableCell>
-                                <TableCell>
-                                    {city.idStateNavigation?.idCountryNavigation?.description || 'N/A'}
-                                </TableCell>
-                                <TableCell align="right">
-                                    <Tooltip title={t('edit')}>
-                                        <IconButton color="primary" onClick={() => handleOpenEditCity(city)}>
-                                            <EditIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title={t('delete')}>
-                                        <IconButton
-                                            color="error"
-                                            onClick={() => handleOpenDeleteConfirmation(city)}
-                                            sx={{ ml: 1 }}
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                </TableCell>
-                            </TableRow>
-                        ))
+                        cities.map((city) => {
+                            const isDeleting = city.idCity === deletingId;
+
+                            // Aplicar estilos condicionales
+                            const rowCurrentStyle = isDeleting ? deletingRowStyle : normalRowStyle;
+
+                            return (
+                                <TableRow
+                                    key={city.idCity}
+                                    sx={rowCurrentStyle}
+                                >
+                                    <TableCell>
+                                        <Tooltip title={city.isActive ? t('disable') : t('enable')}>
+                                            <Switch
+                                                checked={city.isActive}
+                                                onChange={() => handleToggleCityStatus(city)}
+                                                color="primary"
+                                                disabled={isDeleting}
+                                            />
+                                        </Tooltip>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Tooltip title={`ID: ${city.idCity}`}>
+                                            <Typography>{city.description}</Typography>
+                                        </Tooltip>
+                                    </TableCell>
+                                    <TableCell>
+                                        {city.idStateNavigation?.description || 'N/A'}
+                                    </TableCell>
+                                    <TableCell>
+                                        {city.idStateNavigation?.idCountryNavigation?.description || 'N/A'}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <Tooltip title={t('edit')}>
+                                            <IconButton
+                                                color="primary"
+                                                onClick={() => handleOpenEditCity(city)}
+                                                disabled={isDeleting}
+                                            >
+                                                <EditIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title={t('delete')}>
+                                            <IconButton
+                                                color="error"
+                                                onClick={() => handleOpenDeleteConfirmation(city)}
+                                                sx={{ ml: 1 }}
+                                                disabled={isDeleting}
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })
                     )}
                 </TableBody>
             </Table>
