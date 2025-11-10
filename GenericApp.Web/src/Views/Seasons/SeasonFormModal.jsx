@@ -141,20 +141,16 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             endDate: !formData.endDate || !formData.endDate.isValid(),
         };
 
-        if (errors.name) {
-            errorMsg = t('NameIsRequired') || 'El nombre es obligatorio.';
-        } else if (errors.initialDate) {
-            errorMsg = t('InitialDateIsRequired') || 'La fecha de inicio es obligatoria.';
-        } else if (errors.endDate) {
-            errorMsg = t('EndDateIsRequired') || 'La fecha de fin es obligatoria.';
-        }
+        if (errors.name || errors.initialDate || errors.endDate) {
+            errorMsg = t('emptyFields');
+        } 
 
         if (!errorMsg) {
             const startDayjs = formData.initialDate;
             const endDayjs = formData.endDate;
 
             if (startDayjs.isAfter(endDayjs, 'day')) {
-                errorMsg = t('DateRangeError') || 'La fecha de inicio no puede ser posterior a la fecha de fin.';
+                errorMsg = t('season_dateRangeError');
             }
         }
 
@@ -204,7 +200,7 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             }
 
             if (response.responseCode === 409) {
-                ShowMessage(t('daraAlreadyExists') + ": " + response.conflict, 'warning');
+                ShowMessage(t('dataAlreadyExists') + ": " + response.conflict, 'warning');
                 return;
             }
 
@@ -254,15 +250,15 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     )
                 );
 
-                const messageKey = willClose ? 'Temporada cerrada con éxito' : 'Temporada abierta con éxito';
-                ShowMessage(t(messageKey) || messageKey, 'success');
+                const messageKey = willClose ? t('season_closeSuccesfully') : t('season_openSuccesfully');
+                ShowMessage(messageKey, 'success');
 
                 handleClose();
             } else {
-                ShowMessage(t('error') || 'Error al actualizar el estado de la temporada', 'error');
+                ShowMessage(t('season_errorUpdate'), 'error');
             }
         } catch (error) {
-            ShowMessage(t('error') || 'Error al comunicarse con el servidor', 'error');
+            ShowMessage(t('error'), 'error');
             console.error("Error toggling close status:", error);
         } finally {
             setIsClosingOrOpening(false);
@@ -270,17 +266,15 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     };
 
 
-    const requiredErrorText = t('ThisFieldIsRequired') || 'Este campo es obligatorio.';
-
     const toggleButtonText = formData.isClosed ?
-        (t('Abrir Temporada') || 'Abrir Temporada') :
-        (t('Cerrar Temporada') || 'Cerrar Temporada');
+        (t('season_open')) :
+        (t('season_close'));
 
     return (
         <>
             <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
                 <DialogTitle>
-                    {isEditing ? t('editSeason') : t('addSeason')}
+                    {isEditing ? t('season_edit') : t('season_add')}
                 </DialogTitle>
                 <Box component="form" onSubmit={handleSubmit} noValidate>
                     <DialogContent>
@@ -299,18 +293,18 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             <TextField
                                 required
                                 fullWidth
-                                label={t('Name')}
+                                label={t('name')}
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
                                 inputRef={nameRef}
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                                 error={validationErrors.name}
-                                helperText={validationErrors.name ? requiredErrorText : ''}
+                                helperText={validationErrors.name ? t('requiredField') : ''}
                             />
 
                             <DatePicker
-                                label={t('Initial Date')}
+                                label={t('initialDate')}
                                 value={formData.initialDate}
                                 onChange={(date) => handleDateChange(date, 'initialDate')}
                                 inputFormat={DISPLAY_FORMAT}
@@ -322,13 +316,13 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                         fullWidth
                                         name="initialDate"
                                         error={validationErrors.initialDate || params.error}
-                                        helperText={validationErrors.initialDate ? requiredErrorText : params.helperText}
+                                        helperText={validationErrors.initialDate ? t('requiredField') : params.helperText}
                                     />
                                 )}
                             />
 
                             <DatePicker
-                                label={t('End Date')}
+                                label={t('endDate')}
                                 value={formData.endDate}
                                 onChange={(date) => handleDateChange(date, 'endDate')}
                                 inputFormat={DISPLAY_FORMAT}
@@ -340,7 +334,7 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                         fullWidth
                                         name="endDate"
                                         error={validationErrors.endDate || params.error}
-                                        helperText={validationErrors.endDate ? requiredErrorText : params.helperText}
+                                        helperText={validationErrors.endDate ? t('requiredField') : params.helperText}
                                     />
                                 )}
                             />
@@ -398,7 +392,7 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
                                 disabled={isLoading || isClosingOrOpening}
                             >
-                                {isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar')}
+                                {isEditing ? t('save') : t('add')}
                             </Button>
                         </Box>
                     </DialogActions>

@@ -41,7 +41,6 @@ const ClientListTable = ({
     handleToggleClientStatus,
     handleOpenDeleteConfirmation,
     setSelectedClient,
-    // RECIBIR LA PROP DE ANIMACIÓN
     deletingId
 }) => {
 
@@ -54,9 +53,9 @@ const ClientListTable = ({
                     <TableRow>
                         <TableCell>{t('active')}</TableCell>
                         <TableCell>{t('name')}</TableCell>
-                        <TableCell>{t('Rfc')}</TableCell>
-                        <TableCell>{t('Address')}</TableCell>
-                        <TableCell>{t('Phone')}</TableCell>
+                        <TableCell>{t('rfc')}</TableCell>
+                        <TableCell>{t('address')}</TableCell>
+                        <TableCell>{t('phone')}</TableCell>
                         <TableCell align="right">{t('actions')}</TableCell>
                     </TableRow>
                 </TableHead>
@@ -75,7 +74,6 @@ const ClientListTable = ({
                         clients.map((client) => {
                             const isDeleting = client.idClient === deletingId;
 
-                            // Aplicar estilos condicionales
                             const rowCurrentStyle = isDeleting ? deletingRowStyle : normalRowStyle;
 
                             return (

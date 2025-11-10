@@ -64,9 +64,9 @@ const SeasonListTable = ({
                     <TableRow>
                         <TableCell>{t('active')}</TableCell>
                         <TableCell>{t('name')}</TableCell>
-                        <TableCell>{t('Initial Date')}</TableCell>
-                        <TableCell>{t('End Date')}</TableCell>
-                        <TableCell>{t('Status')}</TableCell>
+                        <TableCell>{t('initialDate')}</TableCell>
+                        <TableCell>{t('endDate')}</TableCell>
+                        <TableCell>{t('status')}</TableCell>
                         <TableCell align="right">{t('actions')}</TableCell>
                     </TableRow>
                 </TableHead>
@@ -116,13 +116,13 @@ const SeasonListTable = ({
                                     <TableCell>
                                         {season.isClosed ? (
                                             <Chip
-                                                label={t('Closed')}
+                                                label={t('closed')}
                                                 size="small"
                                                 color="error"
                                             />
                                         ) : (
                                             <Chip
-                                                label={t('Open')}
+                                                label={t('open')}
                                                 size="small"
                                                 color="success"
                                                 variant="outlined"

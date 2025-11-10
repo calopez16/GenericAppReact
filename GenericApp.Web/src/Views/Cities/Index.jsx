@@ -20,7 +20,6 @@ import CityFormModal from '@views/cities/CityFormModal';
 import CityCardList from '@views/cities/CityCardList';
 import CityListTable from '@views/cities/CityTableList';
 
-
 function Index() {
     const { t } = useTranslation();
     const cityDataService = DataAPICitiesService();
@@ -37,11 +36,9 @@ function Index() {
     const [selectedCity, setSelectedCity] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 
-    // Estados para la eliminación
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [cityToDelete, setCityToDelete] = useState(null);
 
-    // ESTADO DE ANIMACIÓN
     const [deletingId, setDeletingId] = useState(null);
     const ANIMATION_DURATION = 500;
 
@@ -124,7 +121,6 @@ function Index() {
         setIsConfirmDeleteModalOpen(true);
     };
 
-    // FUNCIÓN DE ELIMINACIÓN AJUSTADA
     const handleDeleteCity = async () => {
         setIsConfirmDeleteModalOpen(false);
 
@@ -133,7 +129,6 @@ function Index() {
         const idToDelete = cityToDelete.idCity;
 
         try {
-            // 1. Activar animación de eliminación
             setDeletingId(idToDelete);
 
             const dataResult = await cityDataService.deleteData(idToDelete);
@@ -141,7 +136,6 @@ function Index() {
             if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
 
-                // 2. Esperar a que la animación termine antes de remover del estado.
                 setTimeout(() => {
                     setCities(prevCities => prevCities.filter(c => c.idCity !== idToDelete));
                     setDeletingId(null);
@@ -150,7 +144,7 @@ function Index() {
 
             } else {
                 ShowMessage(dataResult.message || t('errorDeletingRecord'), 'error');
-                setDeletingId(null); // Detener animación si falla
+                setDeletingId(null);
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
@@ -191,13 +185,11 @@ function Index() {
         handleToggleCityStatus,
         handleOpenDeleteConfirmation,
         setSelectedCity,
-        // PASAR EL ESTADO DE ANIMACIÓN
         deletingId,
     };
 
     return (
         <Box sx={{ p: 3 }}>
-            {/* ... (Header, Search y Add Button) ... */}
             <Box sx={{
                 display: 'flex',
                 flexDirection: isSmallScreen ? 'column' : 'row',
@@ -240,13 +232,11 @@ function Index() {
             {loading && <LinearProgress />}
 
             {isSmallScreen ? (
-                // NOTA: También deberías pasar deletingId a CityCardList
                 <CityCardList {...commonListProps} />
             ) : (
                 <CityListTable {...commonListProps} />
             )}
 
-            {/* ... (TablePagination) ... */}
             <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
@@ -261,7 +251,6 @@ function Index() {
                 }
             />
 
-            {/* ... (CityFormModal) ... */}
             <CityFormModal
                 open={isModalOpen}
                 handleClose={handleCloseModal}
@@ -270,12 +259,11 @@ function Index() {
                 setData={setCities}
             />
 
-            {/* **NUEVO:** Confirmation Modal para Eliminación */}
             <ConfirmationModal
                 open={isConfirmDeleteModalOpen}
                 onClose={handleCloseDeleteConfirmation}
                 onConfirm={handleDeleteCity}
-                title={t('deleteCity')}
+                title={t('city_delete')}
                 message={t('question_areYouSureDeleteCity', { cityName: cityToDelete?.description || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}

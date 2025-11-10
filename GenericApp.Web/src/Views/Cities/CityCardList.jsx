@@ -20,7 +20,6 @@ const CityCardList = ({
     setSelectedCity
 }) => {
 
-    // Componente interno para cada tarjeta de ciudad
     const MobileCityCard = ({ city }) => (
         <Paper
             sx={{
@@ -29,13 +28,11 @@ const CityCardList = ({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 1,
-                // Uso de la propiedad ajustada: city.isActive
                 borderLeft: city.isActive ? '4px solid green' : '4px solid grey'
             }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="body1" component="div" sx={{ fontWeight: 'bold' }}>
-                    {/* Uso de la propiedad ajustada: city.description (Nombre de la Ciudad) */}
                     {city.description}
                 </Typography>
                 <Box>
@@ -44,7 +41,6 @@ const CityCardList = ({
                             <EditIcon />
                         </IconButton>
                     </Tooltip>
-                    {/* Uso de handleOpenDeleteConfirmation */}
                     <Tooltip title={t('delete')}>
                         <IconButton
                             size="small"
@@ -57,29 +53,22 @@ const CityCardList = ({
                 </Box>
             </Box>
 
-            {/* Agregando información de Estado/País para mayor contexto en la tarjeta */}
             {city.idStateNavigation && (
                 <Box>
                     <Typography variant="body2" color="text.secondary">
-                        {t('state')}: {city.idStateNavigation.description}
+                        {city.idStateNavigation.description}, {city.idStateNavigation.idCountryNavigation.description}
                     </Typography>
-                    {city.idStateNavigation.idCountryNavigation && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                            {t('country')}: {city.idStateNavigation.idCountryNavigation.description}
-                        </Typography>
-                    )}
                 </Box>
             )}
 
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography variant="body2" color="text.secondary">
-                    {/* Uso de la propiedad ajustada: city.isActive */}
                     {t('status')}: {city.isActive ? t('active') : t('disabled')}
                 </Typography>
                 <Tooltip title={city.isActive ? t('disable') : t('enable')}>
                     <Switch
                         size="small"
-                        checked={city.isActive} // Propiedad ajustada: isActive
+                        checked={city.isActive}
                         onChange={() => handleToggleCityStatus(city)}
                         color="primary"
                     />
@@ -99,7 +88,6 @@ const CityCardList = ({
     return (
         <Box>
             {cities.map((city) => (
-                // Uso de la propiedad ajustada: key={city.idCity}
                 <MobileCityCard key={city.idCity} city={city} />
             ))}
         </Box>

@@ -186,7 +186,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         setHasAttemptedSubmit(true);
 
         if (!validateForm()) {
-            ShowMessage(t('NameIsRequired') || 'El nombre del cliente es requerido.', 'warning');
+            ShowMessage(t('emptyFields'), 'warning');
             return;
         }
 
@@ -217,7 +217,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             }
 
             if (response.responseCode === 409) {
-                ShowMessage(t('daraAlreadyExists') + ": " + response.conflict, 'warning');
+                ShowMessage(t('dataAlreadyExists') + ": " + response.conflict, 'warning');
                 return;
             }
 
@@ -245,13 +245,11 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    const requiredErrorText = t('ThisFieldIsRequired') || 'Este campo es obligatorio.';
-
     return (
         <>
             <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
                 <DialogTitle>
-                    {isEditing ? t('editClient') : t('addClient')}
+                    {isEditing ? t('clients_edit') : t('clients_add')}
                 </DialogTitle>
                 <Box component="form" onSubmit={handleSubmit} noValidate>
                     <DialogContent>
@@ -271,30 +269,30 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 margin="normal"
                                 required
                                 fullWidth
-                                label={t('Name')}
+                                label={t('name')}
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
                                 inputRef={nameRef}
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                                 error={validationErrors.name}
-                                helperText={validationErrors.name ? requiredErrorText : ''}
+                                helperText={validationErrors.name ? t('requiredField') : ''}
                             />
 
-                            <TextField margin="normal" fullWidth label={t('Rfc')} name="rfc" value={formData.rfc} onChange={handleChange} />
-                            <TextField margin="normal" fullWidth label={t('Phone')} name="phone" value={formData.phone} onChange={handleChange} />
+                            <TextField margin="normal" fullWidth label={t('rfc')} name="rfc" value={formData.rfc} onChange={handleChange} />
+                            <TextField margin="normal" fullWidth label={t('phone')} name="phone" value={formData.phone} onChange={handleChange} />
 
                             <TextField
                                 margin="normal"
                                 fullWidth
-                                label={t('Address')}
+                                label={t('address')}
                                 name="address"
                                 value={formData.address}
                                 onChange={handleChange}
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                             />
 
-                            <TextField margin="normal" fullWidth label={t('PostalCode')} name="postalCode" value={formData.postalCode} onChange={handleChange} />
+                            <TextField margin="normal" fullWidth label={t('postalCode')} name="postalCode" value={formData.postalCode} onChange={handleChange} />
 
                             <Autocomplete
                                 id="city-autocomplete"
@@ -313,7 +311,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                         {...params}
                                         margin="normal"
                                         fullWidth
-                                        label={t('IdCity')}
+                                        label={t('city')}
                                         name="idCity"
                                     />
                                 )}
@@ -322,7 +320,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             <TextField
                                 margin="normal"
                                 fullWidth
-                                label={t('Notes')}
+                                label={t('notes')}
                                 name="notes"
                                 value={formData.notes}
                                 onChange={handleChange}
@@ -354,7 +352,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 onClick={handleClose}
                                 sx={{ mr: { xs: 0, sm: 1 } }}
                             >
-                                {(t('cancel') || 'Cancelar')}
+                                {t('cancel')}
                             </Button>
                             <Button
                                 type="submit"
@@ -363,7 +361,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
                                 disabled={isLoading}
                             >
-                                {(isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar'))}
+                                {(isEditing ? t('save') : t('add') )}
                             </Button>
                         </Box>
                     </DialogActions>

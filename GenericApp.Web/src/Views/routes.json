@@ -15,10 +15,9 @@
     "icon": "TruckIcon",
     "exact": true
   },
-
   {
     "id": "administration",
-    "path": "",
+    "path": "/",
     "i18nKey": "administration",
     "i18nKeyDescription": "administration_description",
     "icon": "SettingsIcon",

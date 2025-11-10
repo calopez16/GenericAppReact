@@ -19,7 +19,7 @@ const ANIMATION_DURATION = 500;
 
 const deletingRowStyle = {
     transition: `all ${ANIMATION_DURATION}ms ease-out`,
-    transform: 'translateX(-100%)', // Deslizar fuera de la vista a la izquierda
+    transform: 'translateX(-100%)',
     opacity: 0,
     height: 0,
     padding: 0,
@@ -31,7 +31,7 @@ const normalRowStyle = {
     transform: 'translateX(0)',
     opacity: 1,
     maxHeight: '1000px',
-    padding: '16px 24px', // padding normal de las TableCell (ajusta si es diferente en tu tema)
+    padding: '16px 24px',
 };
 
 const CityListTable = ({
@@ -42,7 +42,6 @@ const CityListTable = ({
     handleToggleCityStatus,
     handleOpenDeleteConfirmation,
     setSelectedCity,
-    // RECIBIR LA PROP DE ANIMACIÓN
     deletingId
 }) => {
 
@@ -74,10 +73,7 @@ const CityListTable = ({
                     ) : (
                         cities.map((city) => {
                             const isDeleting = city.idCity === deletingId;
-
-                            // Aplicar estilos condicionales
                             const rowCurrentStyle = isDeleting ? deletingRowStyle : normalRowStyle;
-
                             return (
                                 <TableRow
                                     key={city.idCity}

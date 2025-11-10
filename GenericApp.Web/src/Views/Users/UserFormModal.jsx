@@ -128,7 +128,7 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         setHasAttemptedSubmit(true);
 
         if (!validateForm()) {
-            ShowMessage(t('FillRequiredFields') || 'Por favor, rellene todos los campos obligatorios.', 'warning');
+            ShowMessage(t('emptyFields') || 'Por favor, rellene todos los campos obligatorios.', 'warning');
             return;
         }
 
@@ -155,7 +155,7 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             }
 
             if (response.responseCode == 409) {
-                ShowMessage(t('daraAlreadyExists') + ": " + response.conflict, 'warning');
+                ShowMessage(t('dataAlreadyExists') + ": " + response.conflict, 'warning');
                 return;
             }
 
@@ -190,7 +190,7 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         setAssignedPassword('');
     };
 
-    const requiredErrorText = t('ThisFieldIsRequired') || 'Este campo es obligatorio.';
+    const requiredErrorText = t('requiredField') || 'Este campo es obligatorio.';
 
     return (
         <>

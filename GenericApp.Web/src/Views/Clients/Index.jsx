@@ -21,7 +21,6 @@ import ClientFormModal from '@views/clients/ClientFormModal';
 import ClientCardList from '@views/clients/ClientCardList';
 import ClientListTable from '@views/clients/ClientTableList';
 
-
 function Index() {
     const { t } = useTranslation();
     const clientDataService = DataAPIClientsService();
@@ -265,8 +264,8 @@ function Index() {
                 open={isConfirmDeleteModalOpen}
                 onClose={handleCloseDeleteConfirmation}
                 onConfirm={handleDeleteClient}
-                title={t('deleteClient')}
-                message={t('question_areYouSureDeleteClient', { clientName: clientToDelete?.description || '' })}
+                title={t('clients_delete')}
+                message={t('question_areYouSureDeleteClient', { clientName: clientToDelete?.name || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
             />

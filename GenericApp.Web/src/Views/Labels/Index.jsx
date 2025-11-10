@@ -16,10 +16,9 @@ import { DataAPILabelsService } from '@data/Labels/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import ConfirmationModal from '@layout/ConfirmationModal';
-import LabelFormModal from './LabelFormModal';
-import LabelCardList from './LabelCardList';
-import LabelListTable from './LabelTableList';
-
+import LabelFormModal from '@views/Labels/LabelFormModal';
+import LabelCardList from '@views/Labels/LabelCardList';
+import LabelListTable from '@views/Labels/LabelTableList';
 
 function Index() {
     const { t } = useTranslation();
@@ -264,7 +263,7 @@ function Index() {
                 open={isConfirmDeleteModalOpen}
                 onClose={handleCloseDeleteConfirmation}
                 onConfirm={handleDeleteLabel}
-                title={t('deleteLabel')}
+                title={t('label_delete')}
                 message={t('question_areYouSureDeleteLabel', { labelName: labelToDelete?.description || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}

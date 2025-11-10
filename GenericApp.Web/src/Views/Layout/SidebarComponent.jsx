@@ -1,9 +1,8 @@
-﻿import React, { useState, useContext, useEffect } from 'react';
+﻿import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
 import routes from '@views/routes.json';
 import AppLogoImage from '@images/logo.png';
-// IMPORTAR HOOK useLocation
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 
 import {
@@ -47,25 +46,24 @@ const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath, clos
         const IconComponent = iconMap[item.icon];
         const isSubmenuOpen = openSubmenu === item.id;
 
-        // CORRECCIÓN CLAVE: Usamos 'startsWith' para manejar rutas más largas (ej: /drivers/edit/123)
         const isItemSelected = currentPath.startsWith(item.path) && item.path !== '/';
 
         if (item.submenu) {
-            // Un elemento padre se considera activo si su path coincide o si *cualquiera* de sus submenús coincide.
             const isAnySubItemSelected = item.submenu.some(subItem => currentPath.startsWith(subItem.path));
 
             return (
                 <React.Fragment key={item.id}>
                     <ListItemButton
                         onClick={() => toggleSubmenu(item.id)}
-                        // El padre se selecciona si alguna sub-ruta está activa.
                         selected={isAnySubItemSelected}
                     >
                         {IconComponent && <ListItemIcon><IconComponent /></ListItemIcon>}
                         <ListItemText primary={t(item.i18nKey)} />
+                        {/* El icono de expansión debe basarse en el estado actual del submenú */}
                         {isSubmenuOpen ? <ExpandLess /> : <ExpandMore />}
                     </ListItemButton>
-                    <Collapse in={isSubmenuOpen || isAnySubItemSelected} timeout="auto" unmountOnExit>
+                    {/* CRUCIAL: El colapso se mantiene abierto si fue abierto manualmente O si la ruta está activa */}
+                    <Collapse in={isSubmenuOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
                             {item.submenu.map((subItem) => {
                                 // Sub-elemento se selecciona si su path coincide
@@ -95,7 +93,6 @@ const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath, clos
                 <ListItemButton
                     to={item.path}
                     component={RouterLink}
-                    // CORRECCIÓN: Usar 'startsWith' para rutas simples
                     selected={isItemSelected}
                     onClick={closeSidebarOnMobile}
                 >
@@ -111,14 +108,15 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
     const { t } = useTranslation();
     const { themeMode } = useContext(AppContext);
 
-    // CAMBIO CLAVE: Usar useLocation para obtener la ruta y forzar re-renderizado
     const location = useLocation();
     const currentPath = location.pathname;
+
+    // Usamos un ref para saber si es la primera carga y si el usuario ya interactuó
+    const isFirstRender = useRef(true);
 
     const findParentId = (routes, path) => {
         for (const item of routes) {
             if (item.submenu) {
-                // Verificar si alguna sub-ruta comienza con el path actual
                 const isSubItemActive = item.submenu.some(subItem => path.startsWith(subItem.path));
                 if (isSubItemActive) {
                     return item.id;
@@ -128,19 +126,37 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
         return null;
     };
 
-    // Esto se recalcula en cada cambio de ruta gracias a useLocation
-    const initialOpenSubmenu = findParentId(routes, currentPath);
+    // Inicializamos openSubmenu a null (estado cerrado)
     const [openSubmenu, setOpenSubmenu] = useState(null);
 
-    // Efecto para abrir automáticamente el submenú si la ruta activa está dentro
+    // useEffect para manejar la apertura automática basada en la ruta
     useEffect(() => {
-        const parentId = findParentId(routes, currentPath);
-        if (parentId && openSubmenu !== parentId) {
-            setOpenSubmenu(parentId);
+        const activeParentId = findParentId(routes, currentPath);
+
+        if (isFirstRender.current) {
+            // En la primera carga, forzar la apertura del submenú activo
+            if (activeParentId) {
+                setOpenSubmenu(activeParentId);
+            }
+            isFirstRender.current = false;
+            return;
         }
-    }, [currentPath]); // Depende de la ruta actual
+
+        // Si la ruta activa (activeParentId) es diferente al submenú actualmente abierto,
+        // lo abrimos, respetando el cierre manual si se está en la misma ruta.
+        if (activeParentId && openSubmenu !== activeParentId) {
+            setOpenSubmenu(activeParentId);
+        }
+
+        // Si no hay un padre activo, forzamos el cierre si algo está abierto.
+        if (!activeParentId && openSubmenu) {
+            setOpenSubmenu(null);
+        }
+
+    }, [currentPath]); // Se ejecuta al cambiar de ruta
 
     const toggleSubmenu = (submenuName) => {
+        // La interacción del usuario SIEMPRE debe sobrescribir el estado
         setOpenSubmenu(openSubmenu === submenuName ? null : submenuName);
     };
 

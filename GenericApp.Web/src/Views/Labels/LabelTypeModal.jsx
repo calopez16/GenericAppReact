@@ -39,7 +39,7 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
                 });
             } else {
                 setFormData({
-                    idLabelType: Date.now() * -1, // ID temporal negativo para elementos nuevos en el cliente
+                    idLabelType: Date.now() * -1,
                     description: '',
                     maxBoxQuantity: 0,
                 });
@@ -110,13 +110,10 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
         handleClose();
     };
 
-    const requiredErrorText = t('ThisFieldIsRequired') || 'Este campo es obligatorio.';
-    const maxBoxErrorText = t('MaxBoxQuantityError') || 'Debe ser un número mayor a cero.';
-
     return (
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
             <DialogTitle>
-                {isEditing ? t('editLabelType') : t('addLabelType')}
+                {isEditing ? t('labelType_edit') : t('labelType_add')}
             </DialogTitle>
             <Box component="form" onSubmit={handleSubmit} noValidate>
                 <DialogContent>
@@ -130,20 +127,20 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
                         onChange={handleChange}
                         inputRef={descriptionRef}
                         error={validationErrors.description}
-                        helperText={validationErrors.description ? requiredErrorText : ''}
+                        helperText={validationErrors.description ? t('requiredField') : ''}
                     />
                     <TextField
                         margin="normal"
                         required
                         fullWidth
-                        label={t('maxBoxQuantity')}
+                        label={t('labelType_maxBoxQuantity')}
                         name="maxBoxQuantity"
                         type="number"
                         value={formData.maxBoxQuantity}
                         onChange={handleChange}
                         inputProps={{ min: 0 }}
                         error={validationErrors.maxBoxQuantity}
-                        helperText={validationErrors.maxBoxQuantity ? maxBoxErrorText : ''}
+                        helperText={validationErrors.maxBoxQuantity ? t('requiredField') : ''}
                     />
                 </DialogContent>
                 <DialogActions>

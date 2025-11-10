@@ -65,10 +65,10 @@ const SeasonCardList = ({
 
             <Box>
                 <Typography variant="body2" color="text.secondary">
-                    {t('Initial Date')}: **{formatDate(season.initialDate)}**
+                    {t('initialDate')}: {formatDate(season.initialDate)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                    {t('End Date')}: **{formatDate(season.endDate)}**
+                    {t('endDate')}: {formatDate(season.endDate)}
                 </Typography>
                 {season.description && (
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -78,27 +78,25 @@ const SeasonCardList = ({
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {season.isClosed ? (
-                        <Chip
-                            label={t('Closed') || 'Cerrada'}
-                            size="small"
-                            color="error"
-                        />
-                    ) : (
-                        <Chip
-                            label={t('Open') || 'Abierta'}
-                            size="small"
-                            color="success"
-                            variant="outlined"
-                        />
-                    )}
-
-                    <Typography variant="body2" color="text.secondary">
-                        {t('status')}: {season.isActive ? t('active') : t('disabled')}
-                    </Typography>
-                </Box>
-
+                {season.isClosed ? (
+                    <Chip
+                        label={t('closed')}
+                        size="small"
+                        color="error"
+                    />
+                ) : (
+                    <Chip
+                        label={t('open')}
+                        size="small"
+                        color="success"
+                        variant="outlined"
+                    />
+                )}      
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Typography variant="body2" color="text.secondary">
+                    {t('status')}: {season.isActive ? t('active') : t('disabled')}
+                </Typography>
                 <Tooltip title={season.isActive ? t('disable') : t('enable')}>
                     <Switch
                         size="small"
@@ -107,7 +105,7 @@ const SeasonCardList = ({
                         color="primary"
                     />
                 </Tooltip>
-            </Box>
+            </Box>        
         </Paper>
     );
 

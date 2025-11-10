@@ -11,13 +11,13 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const LabelCardList = ({
-    labels, // CAMBIO: drivers -> labels
+    labels,
     loading,
     t,
-    handleOpenEditLabel, // CAMBIO: Driver -> Label
-    handleToggleLabelStatus, // CAMBIO: Driver -> Label
+    handleOpenEditLabel,
+    handleToggleLabelStatus,
     handleOpenDeleteConfirmation,
-    setSelectedLabel // CAMBIO: Driver -> Label
+    setSelectedLabel
 }) => {
 
     const MobileLabelCard = ({ label }) => (
@@ -28,7 +28,6 @@ const LabelCardList = ({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 1,
-                // Resalta la tarjeta según si está activo o no
                 borderLeft: label.isActive ? '4px solid green' : '4px solid grey'
             }}
         >
@@ -36,9 +35,6 @@ const LabelCardList = ({
                 <Box>
                     <Typography variant="body1" component="div" sx={{ fontWeight: 'bold' }}>
                         {label.description}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        ID: {label.idLabel}
                     </Typography>
                 </Box>
                 <Box>
@@ -58,7 +54,11 @@ const LabelCardList = ({
                     </Tooltip>
                 </Box>
             </Box>
-
+            <Box>
+                <Typography variant="caption" color="text.secondary">
+                    {t('types')}: {label.labelTypes?.length || 0}
+                </Typography>
+            </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography variant="body2" color="text.secondary">
                     {t('status')}: {label.isActive ? t('active') : t('disabled')}
@@ -71,11 +71,6 @@ const LabelCardList = ({
                         color="primary"
                     />
                 </Tooltip>
-            </Box>
-            <Box>
-                <Typography variant="caption" color="text.secondary">
-                    {t('types')}: {label.labelTypes?.length || 0}
-                </Typography>
             </Box>
         </Paper>
     );

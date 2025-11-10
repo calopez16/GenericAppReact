@@ -39,7 +39,6 @@ function Index() {
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [shippingCompanyToDelete, setShippingCompanyToDelete] = useState(null);
 
-    // ESTADO DE ANIMACIÓN
     const [deletingId, setDeletingId] = useState(null);
     const ANIMATION_DURATION = 500;
 
@@ -130,7 +129,6 @@ function Index() {
         const idToDelete = shippingCompanyToDelete.idShippingCompany;
 
         try {
-            // Activar animación de eliminación
             setDeletingId(idToDelete);
 
             const dataResult = await shippingCompanyDataService.deleteData(idToDelete);
@@ -138,7 +136,6 @@ function Index() {
             if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
 
-                // Esperar a que la animación termine antes de remover del estado.
                 setTimeout(() => {
                     setShippingCompanies(prevShippingCompanies => prevShippingCompanies.filter(c => c.idShippingCompany !== idToDelete));
                     setDeletingId(null);
@@ -188,7 +185,6 @@ function Index() {
         handleToggleShippingCompanyStatus,
         handleOpenDeleteConfirmation,
         setSelectedShippingCompany,
-        // PASAR EL ESTADO DE ANIMACIÓN
         deletingId
     };
 
@@ -267,7 +263,7 @@ function Index() {
                 open={isConfirmDeleteModalOpen}
                 onClose={handleCloseDeleteConfirmation}
                 onConfirm={handleDeleteShippingCompany}
-                title={t('deleteShippingCompany')}
+                title={t('shippingCompanies_delete')}
                 message={t('question_areYouSureDeleteShippingCompany', { shippingCompanyName: shippingCompanyToDelete?.name || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}

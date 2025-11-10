@@ -25,19 +25,16 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { DataAPILabelsService } from '@data/Labels/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
-import LabelTypeModal from './LabelTypeModal'; // Nuevo modal importado
+import LabelTypeModal from '@views/Labels/LabelTypeModal';
 
 const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const { t } = useTranslation();
-    // CAMBIO: Servicio para Labels
     const dataService = DataAPILabelsService();
-
     const descriptionRef = useRef(null);
-
     const [formData, setFormData] = useState({
         idLabel: 0,
-        description: '', // CAMBIO: Usamos 'description'
-        labelTypes: [],  // NUEVO: Lista de LabelTypes
+        description: '',
+        labelTypes: [],
     });
 
     const [isLoading, setIsLoading] = useState(false);
@@ -47,19 +44,17 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     });
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-    // ESTADOS PARA GESTIÓN DE LABEL TYPES
     const [isLabelTypeModalOpen, setIsLabelTypeModalOpen] = useState(false);
     const [selectedLabelType, setSelectedLabelType] = useState(null);
     const [isLabelTypeEditing, setIsLabelTypeEditing] = useState(false);
 
-    // --- Lógica de Inicialización ---
     useEffect(() => {
         if (open) {
             if (isEditing && data) {
                 setFormData({
                     idLabel: data.idLabel || 0,
                     description: data.description || '',
-                    labelTypes: data.labelTypes || [], // Inicializa con datos existentes
+                    labelTypes: data.labelTypes || [],
                 });
             } else {
                 setFormData({
@@ -81,7 +76,6 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     }, [open]);
 
-    // --- Manejo de Cambios del Formulario Principal ---
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -97,7 +91,6 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    // --- Validación del Formulario Principal ---
     const validateForm = () => {
         const errors = {
             description: !formData.description.trim(),
@@ -108,28 +101,24 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         return !errors.description;
     };
 
-    // --- Envío del Formulario Principal ---
     const handleSubmit = async (event) => {
         if (event) event.preventDefault();
 
         setHasAttemptedSubmit(true);
 
         if (!validateForm()) {
-            ShowMessage(t('FillRequiredFields') || 'Por favor, rellene todos los campos obligatorios.', 'warning');
+            ShowMessage(t('emptyFields'), 'warning');
             return;
         }
 
         try {
             setIsLoading(true);
 
-            // Ajuste del payload
             const labelPayload = {
                 idLabel: formData.idLabel || 0,
                 description: formData.description,
-                // Asegurar que LabelTypes está en el payload
                 labelTypes: formData.labelTypes.map(lt => ({
                     ...lt,
-                    // Si es nuevo (idLabelType negativo), se envía como 0
                     idLabelType: lt.idLabelType > 0 ? lt.idLabelType : 0,
                     idLabel: formData.idLabel || 0, // En edición, se pasa el IdLabel
                     isActive: lt.isActive === undefined ? true : lt.isActive,
@@ -147,16 +136,16 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             }
 
             if (response.responseCode === 409) {
-                ShowMessage(t('daraAlreadyExists') + ": " + response.conflict, 'warning');
+                ShowMessage(t('dataAlreadyExists') + ": " + response.conflict, 'warning');
                 return;
             }
 
             if (response.success) {
                 const updatedLabel = {
                     ...labelPayload,
-                    idLabel: response.data.idLabel, // ID real si es nuevo
+                    idLabel: response.data.idLabel,
                     isActive: response.data.isActive,
-                    labelTypes: response.data.labelTypes // Recibir la data fresca del backend
+                    labelTypes: response.data.labelTypes
                 };
 
                 if (isEditing) {
@@ -180,8 +169,6 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    // --- Gestión de LabelTypes ---
-
     const handleOpenAddLabelType = () => {
         setSelectedLabelType(null);
         setIsLabelTypeEditing(false);
@@ -204,7 +191,6 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const handleSaveLabelType = (newLabelTypeData, isEditingType) => {
         setFormData(prev => {
             if (isEditingType) {
-                // Editar existente
                 return {
                     ...prev,
                     labelTypes: prev.labelTypes.map(lt =>
@@ -212,7 +198,6 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     )
                 };
             } else {
-                // Agregar nuevo
                 return {
                     ...prev,
                     labelTypes: [...prev.labelTypes, { ...newLabelTypeData, isActive: true, idLabel: prev.idLabel || 0 }]
@@ -221,13 +206,11 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         });
     };
 
-    const requiredErrorText = t('ThisFieldIsRequired') || 'Este campo es obligatorio.';
-
     return (
         <>
             <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
                 <DialogTitle>
-                    {isEditing ? t('editLabel') : t('addLabel')}
+                    {isEditing ? t('label_edit') : t('label_add')}
                 </DialogTitle>
                 <Box component="form" onSubmit={handleSubmit} noValidate>
                     <DialogContent>
@@ -250,12 +233,12 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 onChange={handleChange}
                                 inputRef={descriptionRef}
                                 error={validationErrors.description}
-                                helperText={validationErrors.description ? requiredErrorText : ''}
+                                helperText={validationErrors.description ? t('requiredField') : ''}
                             />
                         </Box>
 
                         <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
-                            {t('LabelTypes')}
+                            {t('labelTypes')}
                         </Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
                             <Button
@@ -264,7 +247,7 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 onClick={handleOpenAddLabelType}
                                 size="small"
                             >
-                                {t('addLabelType')}
+                                {t('labelType_add')}
                             </Button>
                         </Box>
 
@@ -273,8 +256,7 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 <TableHead>
                                     <TableRow>
                                         <TableCell>{t('description')}</TableCell>
-                                        <TableCell align="center">{t('maxBoxQuantity')}</TableCell>
-                                        <TableCell align="center">{t('active')}</TableCell>
+                                        <TableCell align="center">{t('labelType_maxBoxQuantity')}</TableCell>
                                         <TableCell align="right">{t('actions')}</TableCell>
                                     </TableRow>
                                 </TableHead>
@@ -282,7 +264,7 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                     {(formData.labelTypes?.length ?? 0) === 0 ? (
                                         <TableRow>
                                             <TableCell colSpan={4} align="center">
-                                                {t('noLabelTypes')}
+                                                {t('labelTypes_noRecords')}
                                             </TableCell>
                                         </TableRow>
                                     ) : (
@@ -290,7 +272,6 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                             <TableRow key={lt.idLabelType}>
                                                 <TableCell>{lt.description}</TableCell>
                                                 <TableCell align="center">{lt.maxBoxQuantity}</TableCell>
-                                                <TableCell align="center">{lt.isActive ? t('yes') : t('no')}</TableCell>
                                                 <TableCell align="right">
                                                     <IconButton size="small" color="primary" onClick={() => handleOpenEditLabelType(lt)}>
                                                         <EditIcon fontSize="inherit" />
@@ -328,7 +309,7 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 onClick={handleClose}
                                 sx={{ mr: { xs: 0, sm: 1 } }}
                             >
-                                {(t('cancel') || 'Cancelar')}
+                                {t('cancel')}
                             </Button>
                             <Button
                                 type="submit"
@@ -337,7 +318,7 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
                                 disabled={isLoading}
                             >
-                                {(isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar'))}
+                                {(isEditing ? t('save') : t('add'))}
                             </Button>
                         </Box>
                     </DialogActions>

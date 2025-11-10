@@ -16,12 +16,10 @@ const ClientCardList = ({
     t,
     handleOpenEditClient,
     handleToggleClientStatus,
-    // **CORRECCIÓN: Asegúrate de desestructurar la nueva prop**
     handleOpenDeleteConfirmation,
-    setSelectedClient // Esta prop se mantiene sin cambios
+    setSelectedClient
 }) => {
 
-    // Componente interno para cada tarjeta de usuario
     const MobileClientCard = ({ client }) => (
         <Paper
             sx={{
@@ -30,13 +28,11 @@ const ClientCardList = ({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 1,
-                // Usar client.isActive
                 borderLeft: client.isActive ? '4px solid green' : '4px solid grey'
             }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="body1" component="div" sx={{ fontWeight: 'bold' }}>
-                    {/* Usar client.name */}
                     {client.name}
                 </Typography>
                 <Box>
@@ -45,7 +41,6 @@ const ClientCardList = ({
                             <EditIcon />
                         </IconButton>
                     </Tooltip>
-                    {/* Uso de handleOpenDeleteConfirmation */}
                     <Tooltip title={t('delete')}>
                         <IconButton
                             size="small"
@@ -57,16 +52,14 @@ const ClientCardList = ({
                     </Tooltip>
                 </Box>
             </Box>
-            {/* Mostrar campos del ClientDTO */}
             <Typography variant="body2" color="text.secondary">
-                {t('Rfc')}: {client.rfc}
+                {t('rfc')}: {client.rfc}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-                {t('Phone')}: {client.phone}
+                {t('phone')}: {client.phone}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography variant="body2" color="text.secondary">
-                    {/* Usar client.isActive */}
                     {t('status')}: {client.isActive ? t('active') : t('disabled')}
                 </Typography>
                 <Tooltip title={client.isActive ? t('disable') : t('enable')}>

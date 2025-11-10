@@ -94,7 +94,7 @@ const DriverFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         setHasAttemptedSubmit(true);
 
         if (!validateForm()) {
-            ShowMessage(t('FillRequiredFields') || 'Por favor, rellene todos los campos obligatorios.', 'warning');
+            ShowMessage(t('emptyFields'), 'warning');
             return;
         }
 
@@ -117,7 +117,7 @@ const DriverFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             }
 
             if (response.responseCode === 409) {
-                ShowMessage(t('daraAlreadyExists') + ": " + response.conflict, 'warning');
+                ShowMessage(t('dataAlreadyExists') + ": " + response.conflict, 'warning');
                 return;
             }
 
@@ -137,7 +137,6 @@ const DriverFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                         )
                     );
                 } else {
-                    // Lógica original: Añadir al final del listado
                     setData(prevData => [...prevData, newOrUpdatedDriver]);
                 }
             }
@@ -152,13 +151,11 @@ const DriverFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    const requiredErrorText = t('ThisFieldIsRequired') || 'Este campo es obligatorio.';
-
     return (
         <>
             <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
                 <DialogTitle>
-                    {isEditing ? t('editDriver') : t('addDriver')}
+                    {isEditing ? t('driver_edit') : t('driver_add')}
                 </DialogTitle>
                 <Box component="form" onSubmit={handleSubmit} noValidate>
                     <DialogContent>
@@ -173,19 +170,18 @@ const DriverFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 gap: 2
                             }}
                         >
-
                             <TextField
                                 margin="normal"
                                 required
                                 fullWidth
-                                label={t('driverName') || t('name')}
+                                label={t('name')}
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
                                 inputRef={nameRef}
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                                 error={validationErrors.name}
-                                helperText={validationErrors.name ? requiredErrorText : ''}
+                                helperText={validationErrors.name ? t('requiredField') : ''}
                             />
 
                         </Box>
@@ -211,7 +207,7 @@ const DriverFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 onClick={handleClose}
                                 sx={{ mr: { xs: 0, sm: 1 } }}
                             >
-                                {(t('cancel') || 'Cancelar')}
+                                {t('cancel')}
                             </Button>
                             <Button
                                 type="submit"
@@ -220,7 +216,7 @@ const DriverFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
                                 disabled={isLoading}
                             >
-                                {(isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar'))}
+                                {(isEditing ? t('save') : t('add'))}
                             </Button>
                         </Box>
                     </DialogActions>

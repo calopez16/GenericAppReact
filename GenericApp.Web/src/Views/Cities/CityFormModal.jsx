@@ -184,7 +184,7 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         setHasAttemptedSubmit(true);
 
         if (!validateForm()) {
-            ShowMessage(t('FillRequiredFields') || 'Por favor, rellene todos los campos obligatorios.', 'warning');
+            ShowMessage(t('emptyFields'), 'warning');
             return;
         }
 
@@ -210,7 +210,7 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             }
 
             if (response.responseCode === 409) {
-                ShowMessage(t('daraAlreadyExists') + ": " + response.conflict, 'warning');
+                ShowMessage(t('dataAlreadyExists') + ": " + response.conflict, 'warning');
                 return;
             }
 
@@ -236,13 +236,11 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    const requiredErrorText = t('ThisFieldIsRequired') || 'Este campo es obligatorio.';
-
     return (
         <>
             <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
                 <DialogTitle>
-                    {isEditing ? t('editCity') : t('addCity')}
+                    {isEditing ? t('city_edit') : t('city_add')}
                 </DialogTitle>
                 <Box component="form" onSubmit={handleSubmit} noValidate>
                     <DialogContent>
@@ -269,7 +267,7 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 inputRef={descriptionRef}
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                                 error={validationErrors.description}
-                                helperText={validationErrors.description ? requiredErrorText : ''}
+                                helperText={validationErrors.description ? t('requiredField') : ''}
                             />
 
 
@@ -291,10 +289,10 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                         margin="normal"
                                         required
                                         fullWidth
-                                        label={t('idState')}
+                                        label={t('state')}
                                         name="idState"
                                         error={validationErrors.idState}
-                                        helperText={validationErrors.idState ? requiredErrorText : ''}
+                                        helperText={validationErrors.idState ? t('requiredField') : ''}
                                     />
                                 )}
                             />
@@ -321,7 +319,7 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 onClick={handleClose}
                                 sx={{ mr: { xs: 0, sm: 1 } }}
                             >
-                                {(t('cancel') || 'Cancelar')}
+                                {t('cancel')}
                             </Button>
                             <Button
                                 type="submit"
@@ -330,7 +328,7 @@ const CityFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
                                 disabled={isLoading || isStatesLoading}
                             >
-                                {(isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar'))}
+                                {(isEditing ? t('save') : t('add'))}
                             </Button>
                         </Box>
                     </DialogActions>

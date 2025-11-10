@@ -36,9 +36,6 @@ const ShippingCompanyCardList = ({
                     <Typography variant="body1" component="div" sx={{ fontWeight: 'bold' }}>
                         {shippingCompany.name}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        ID: {shippingCompany.idShippingCompany}
-                    </Typography>
                 </Box>
                 <Box>
                     <Tooltip title={t('edit')}>

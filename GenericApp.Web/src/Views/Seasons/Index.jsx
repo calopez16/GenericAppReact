@@ -267,7 +267,7 @@ function Index() {
                 open={isConfirmDeleteModalOpen}
                 onClose={handleCloseDeleteConfirmation}
                 onConfirm={handleDeleteSeason}
-                title={t('deleteSeason')}
+                title={t('season_delete')}
                 message={t('question_areYouSureDeleteSeason', { seasonName: seasonToDelete?.description || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}

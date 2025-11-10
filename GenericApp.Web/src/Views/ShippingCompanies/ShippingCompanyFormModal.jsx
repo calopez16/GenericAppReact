@@ -91,7 +91,7 @@ const ShippingCompanyFormModal = ({ open, handleClose, data, isEditing, setData 
         setHasAttemptedSubmit(true);
 
         if (!validateForm()) {
-            ShowMessage(t('FillRequiredFields') || 'Por favor, rellene todos los campos obligatorios.', 'warning');
+            ShowMessage(t('emptyFields') || 'Por favor, rellene todos los campos obligatorios.', 'warning');
             return;
         }
 
@@ -114,7 +114,7 @@ const ShippingCompanyFormModal = ({ open, handleClose, data, isEditing, setData 
             }
 
             if (response.responseCode === 409) {
-                ShowMessage(t('daraAlreadyExists') + ": " + response.conflict, 'warning');
+                ShowMessage(t('dataAlreadyExists') + ": " + response.conflict, 'warning');
                 return;
             }
 
@@ -142,14 +142,12 @@ const ShippingCompanyFormModal = ({ open, handleClose, data, isEditing, setData 
         }
     };
 
-    const requiredErrorText = t('ThisFieldIsRequired') || 'Este campo es obligatorio.';
 
     return (
         <>
-            {/* Se asegura que onClose={handleClose} esté presente en Dialog */}
             <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
                 <DialogTitle>
-                    {isEditing ? t('editShippingCompany') : t('addShippingCompany')}
+                    {isEditing ? t('shippingCompanies_edit') : t('shippingCompanies_add')}
                 </DialogTitle>
                 <Box component="form" onSubmit={handleSubmit} noValidate>
                     <DialogContent>
@@ -168,14 +166,14 @@ const ShippingCompanyFormModal = ({ open, handleClose, data, isEditing, setData 
                                 margin="normal"
                                 required
                                 fullWidth
-                                label={t('shippingCompanyName') || t('name')}
+                                label={t('name')}
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
                                 inputRef={nameRef}
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                                 error={validationErrors.name}
-                                helperText={validationErrors.name ? requiredErrorText : ''}
+                                helperText={validationErrors.name ? t('requiredField') : ''}
                             />
                         </Box>
                     </DialogContent>
@@ -209,7 +207,7 @@ const ShippingCompanyFormModal = ({ open, handleClose, data, isEditing, setData 
                                 endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
                                 disabled={isLoading}
                             >
-                                {(isEditing ? (t('save') || 'Guardar') : (t('add') || 'Agregar'))}
+                                {(isEditing ? t('save') : t('add'))}
                             </Button>
                         </Box>
                     </DialogActions>

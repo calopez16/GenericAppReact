@@ -20,7 +20,6 @@ import DriverFormModal from '@views/Drivers/DriverFormModal';
 import DriverCardList from '@views/Drivers/DriverCardList';
 import DriverListTable from '@views/Drivers/DriverTableList';
 
-
 function Index() {
     const { t } = useTranslation();
     const driverDataService = DataAPIDriversService();
@@ -40,7 +39,6 @@ function Index() {
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [driverToDelete, setDriverToDelete] = useState(null);
 
-    // Mantenemos solo el estado de eliminación
     const [deletingId, setDeletingId] = useState(null);
     const ANIMATION_DURATION = 500;
 
@@ -131,7 +129,6 @@ function Index() {
         const idToDelete = driverToDelete.idDriver;
 
         try {
-            // Activar animación de eliminación
             setDeletingId(idToDelete);
 
             const dataResult = await driverDataService.deleteData(idToDelete);
@@ -139,7 +136,6 @@ function Index() {
             if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
 
-                // Esperar a que la animación termine antes de remover del estado.
                 setTimeout(() => {
                     setDrivers(prevDrivers => prevDrivers.filter(c => c.idDriver !== idToDelete));
                     setDeletingId(null);
@@ -148,7 +144,7 @@ function Index() {
 
             } else {
                 ShowMessage(dataResult.message || t('errorDeletingRecord'), 'error');
-                setDeletingId(null); // Detener animación si falla
+                setDeletingId(null);
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
@@ -181,7 +177,6 @@ function Index() {
         setIsModalOpen(false);
     };
 
-    // Función de actualización original (sin lógica de adición/animación)
     const handleSetDrivers = (data) => {
         setDrivers(data);
     };
@@ -194,7 +189,6 @@ function Index() {
         handleToggleDriverStatus,
         handleOpenDeleteConfirmation,
         setSelectedDriver,
-        // Mantenemos solo deletingId
         deletingId
     };
 
@@ -266,14 +260,14 @@ function Index() {
                 handleClose={handleCloseModal}
                 data={selectedDriver}
                 isEditing={isEditing}
-                setData={setDrivers} // Usar setDrivers original
+                setData={setDrivers}
             />
 
             <ConfirmationModal
                 open={isConfirmDeleteModalOpen}
                 onClose={handleCloseDeleteConfirmation}
                 onConfirm={handleDeleteDriver}
-                title={t('deleteDriver')}
+                title={t('driver_delete')}
                 message={t('question_areYouSureDeleteDriver', { driverName: driverToDelete?.name || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
