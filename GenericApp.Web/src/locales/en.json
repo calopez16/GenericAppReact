@@ -66,7 +66,7 @@
   "labels_description": "Module to manage system labels",
   "labelType_add": "Add Label Type",
   "labelType_edit": "Edit Label Type",
-  "labelType_maxBoxQuantity": "Max Box Quantity",
+  "label_maxBoxQuantity": "Max Box Quantity",
   "labelTypes": "Label Types",
   "labelTypes_noRecords": "No label types registered",
   "language_current": "Spanish",

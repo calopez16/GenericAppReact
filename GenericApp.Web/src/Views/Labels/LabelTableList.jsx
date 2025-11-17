@@ -53,6 +53,7 @@ const LabelListTable = ({
                     <TableRow>
                         <TableCell>{t('active')}</TableCell>
                         <TableCell>{t('description')}</TableCell>
+                        <TableCell>{t('label_maxBoxQuantity')}</TableCell> {/* ¡NUEVA COLUMNA! */}
                         <TableCell>{t('types')}</TableCell>
                         <TableCell align="right">{t('actions')}</TableCell>
                     </TableRow>
@@ -60,13 +61,13 @@ const LabelListTable = ({
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={4} align="center">
+                            <TableCell colSpan={5} align="center"> {/* Colspan ajustado a 5 */}
                                 {t('loading')}...
                             </TableCell>
                         </TableRow>
                     ) : (labels?.length ?? 0) === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={4} align="center"> {t('records_notFound')}.</TableCell>
+                            <TableCell colSpan={5} align="center"> {t('records_notFound')}.</TableCell> {/* Colspan ajustado a 5 */}
                         </TableRow>
                     ) : (
                         labels.map((label) => {
@@ -93,6 +94,9 @@ const LabelListTable = ({
                                         <Tooltip title={`ID: ${label.idLabel}`}>
                                             <Typography>{label.description}</Typography>
                                         </Tooltip>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography>{label.maxBoxQuantity}</Typography> {/* ¡NUEVO VALOR! */}
                                     </TableCell>
                                     <TableCell>
                                         <Typography>{label.labelTypes?.length || 0}</Typography>

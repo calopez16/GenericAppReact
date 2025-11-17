@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251117064130_ShipmentAndManifestStatus")]
+    partial class ShipmentAndManifestStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -364,9 +366,6 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
-                    b.Property<int>("DriverNavigationIdDriver")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("ExitDate")
                         .HasColumnType("date");
 
@@ -385,15 +384,6 @@ namespace GenericApp.Data.Migrations
                     b.Property<int>("IdShippingCompany")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("ManifestStatusNavigationIdManifestStatus")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ShipmentNavigationIdShipment")
-                        .HasColumnType("int");
-
                     b.Property<decimal?>("TemperatureTrailerBoxC")
                         .HasColumnType("decimal(18,2)");
 
@@ -410,8 +400,6 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdManifest");
 
-                    b.HasIndex("DriverNavigationIdDriver");
-
                     b.HasIndex("IdDriver");
 
                     b.HasIndex("IdManifestStatus");
@@ -421,10 +409,6 @@ namespace GenericApp.Data.Migrations
                     b.HasIndex("IdShipment");
 
                     b.HasIndex("IdShippingCompany");
-
-                    b.HasIndex("ManifestStatusNavigationIdManifestStatus");
-
-                    b.HasIndex("ShipmentNavigationIdShipment");
 
                     b.ToTable("Manifests");
                 });
@@ -450,15 +434,6 @@ namespace GenericApp.Data.Migrations
                     b.Property<int>("IdShipment")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("LabelNavigationIdLabel")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ManifestNavigationIdManifest")
-                        .HasColumnType("int");
-
                     b.Property<decimal?>("MaxBoxQuantity")
                         .HasColumnType("decimal(18,2)");
 
@@ -478,10 +453,6 @@ namespace GenericApp.Data.Migrations
                     b.HasIndex("IdManifest");
 
                     b.HasIndex("IdShipment");
-
-                    b.HasIndex("LabelNavigationIdLabel");
-
-                    b.HasIndex("ManifestNavigationIdManifest");
 
                     b.ToTable("ManifestPallets");
                 });
@@ -513,15 +484,6 @@ namespace GenericApp.Data.Migrations
                     b.Property<int>("IdShipment")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("LabelTypeNavigationIdLabelType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ManifestPalletNavigationIdManifestPallet")
-                        .HasColumnType("int");
-
                     b.HasKey("IdManifestPalletLoading");
 
                     b.HasIndex("IdLabelType");
@@ -531,10 +493,6 @@ namespace GenericApp.Data.Migrations
                     b.HasIndex("IdManifestPallet");
 
                     b.HasIndex("IdShipment");
-
-                    b.HasIndex("LabelTypeNavigationIdLabelType");
-
-                    b.HasIndex("ManifestPalletNavigationIdManifestPallet");
 
                     b.ToTable("ManifestPalletLoadings");
                 });
@@ -705,13 +663,7 @@ namespace GenericApp.Data.Migrations
                     b.Property<int?>("IdCity")
                         .HasColumnType("int");
 
-                    b.Property<int>("IdCityNavigationIdCity")
-                        .HasColumnType("int");
-
                     b.Property<int>("IdClient")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdClientNavigationIdClient")
                         .HasColumnType("int");
 
                     b.Property<int>("IdShipmentStatus")
@@ -721,30 +673,18 @@ namespace GenericApp.Data.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<bool?>("Mixed")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int>("ShipmentStatusNavigationIdShipmentStatus")
-                        .HasColumnType("int");
-
                     b.HasKey("IdShipment");
 
                     b.HasIndex("IdCity");
 
-                    b.HasIndex("IdCityNavigationIdCity");
-
                     b.HasIndex("IdClient");
 
-                    b.HasIndex("IdClientNavigationIdClient");
-
                     b.HasIndex("IdShipmentStatus");
-
-                    b.HasIndex("ShipmentStatusNavigationIdShipmentStatus");
 
                     b.ToTable("Shipments");
                 });
@@ -984,7 +924,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEA5ViY4iBLpfIYDXIaZHV7jF024utzzE+8vktPoRVvfZNWKXbTNMVtYbvhAk9rnr0A==",
+                            PasswordHash = "AQAAAAEAACcQAAAAELqpxh6QsckSfG6pYumBGLRpINcJOdhgNKC6/07S42O/sk2kn4PwACsEyVxSWM1orw==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
@@ -1147,12 +1087,6 @@ namespace GenericApp.Data.Migrations
 
             modelBuilder.Entity("GenericApp.Data.Models.Manifest", b =>
                 {
-                    b.HasOne("GenericApp.Data.Models.Driver", "DriverNavigation")
-                        .WithMany()
-                        .HasForeignKey("DriverNavigationIdDriver")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("GenericApp.Data.Models.Driver", null)
                         .WithMany()
                         .HasForeignKey("IdDriver")
@@ -1172,7 +1106,7 @@ namespace GenericApp.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("GenericApp.Data.Models.Shipment", null)
-                        .WithMany("Manifests")
+                        .WithMany()
                         .HasForeignKey("IdShipment")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1182,24 +1116,6 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("IdShippingCompany")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.ManifestStatus", "ManifestStatusNavigation")
-                        .WithMany()
-                        .HasForeignKey("ManifestStatusNavigationIdManifestStatus")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Shipment", "ShipmentNavigation")
-                        .WithMany()
-                        .HasForeignKey("ShipmentNavigationIdShipment")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DriverNavigation");
-
-                    b.Navigation("ManifestStatusNavigation");
-
-                    b.Navigation("ShipmentNavigation");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.ManifestPallet", b =>
@@ -1211,7 +1127,7 @@ namespace GenericApp.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("GenericApp.Data.Models.Manifest", null)
-                        .WithMany("ManifestPallets")
+                        .WithMany()
                         .HasForeignKey("IdManifest")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1221,22 +1137,6 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("IdShipment")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Label", "LabelNavigation")
-                        .WithMany()
-                        .HasForeignKey("LabelNavigationIdLabel")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Manifest", "ManifestNavigation")
-                        .WithMany()
-                        .HasForeignKey("ManifestNavigationIdManifest")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("LabelNavigation");
-
-                    b.Navigation("ManifestNavigation");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.ManifestPalletLoading", b =>
@@ -1254,7 +1154,7 @@ namespace GenericApp.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("GenericApp.Data.Models.ManifestPallet", null)
-                        .WithMany("ManifestPalletLoadings")
+                        .WithMany()
                         .HasForeignKey("IdManifestPallet")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1264,22 +1164,6 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("IdShipment")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.LabelType", "LabelTypeNavigation")
-                        .WithMany()
-                        .HasForeignKey("LabelTypeNavigationIdLabelType")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.ManifestPallet", "ManifestPalletNavigation")
-                        .WithMany()
-                        .HasForeignKey("ManifestPalletNavigationIdManifestPallet")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("LabelTypeNavigation");
-
-                    b.Navigation("ManifestPalletNavigation");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Season", b =>
@@ -1298,22 +1182,10 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("IdCity")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("GenericApp.Data.Models.City", "IdCityNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdCityNavigationIdCity")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("GenericApp.Data.Models.Client", null)
                         .WithMany()
                         .HasForeignKey("IdClient")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Client", "IdClientNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdClientNavigationIdClient")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("GenericApp.Data.Models.ShipmentStatus", null)
@@ -1321,18 +1193,6 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("IdShipmentStatus")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.ShipmentStatus", "ShipmentStatusNavigation")
-                        .WithMany()
-                        .HasForeignKey("ShipmentStatusNavigationIdShipmentStatus")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("IdCityNavigation");
-
-                    b.Navigation("IdClientNavigation");
-
-                    b.Navigation("ShipmentStatusNavigation");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.State", b =>
@@ -1410,21 +1270,6 @@ namespace GenericApp.Data.Migrations
             modelBuilder.Entity("GenericApp.Data.Models.Label", b =>
                 {
                     b.Navigation("LabelTypes");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Manifest", b =>
-                {
-                    b.Navigation("ManifestPallets");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.ManifestPallet", b =>
-                {
-                    b.Navigation("ManifestPalletLoadings");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Shipment", b =>
-                {
-                    b.Navigation("Manifests");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.State", b =>

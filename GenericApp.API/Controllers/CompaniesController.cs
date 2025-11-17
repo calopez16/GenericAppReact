@@ -10,6 +10,10 @@ using System.Data;
 
 namespace GenericApp.API.Controllers
 {
+    /// <summary>
+    /// Controlador para gestionar las operaciones CRUD y consultas de la entidad Company.
+    /// Requiere autenticación y el rol de Administrador.
+    /// </summary>
     [ApiController]
     [Route("companies")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
@@ -18,6 +22,11 @@ namespace GenericApp.API.Controllers
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
 
+        /// <summary>
+        /// Inicializa una nueva instancia del controlador CompaniesController.
+        /// </summary>
+        /// <param name="repository">Instancia del repositorio para acceso a datos.</param>
+        /// <param name="mapper">Instancia de AutoMapper para mapeo de DTOs.</param>
         public CompaniesController(
             IRepository repository,
             IMapper mapper)
@@ -26,6 +35,13 @@ namespace GenericApp.API.Controllers
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Obtiene una lista paginada de compañías, permitiendo la búsqueda por nombre o RFC.
+        /// </summary>
+        /// <param name="pageNumber">Número de página a recuperar (por defecto 1).</param>
+        /// <param name="pageSize">Tamaño de la página (por defecto 10).</param>
+        /// <param name="searchTerm">Término de búsqueda para filtrar por nombre o RFC (opcional).</param>
+        /// <returns>Una respuesta paginada con la lista de Company.</returns>
         [HttpGet("pagination")]
         public async Task<ActionResult> GetCompaniesPagination(
             [FromQuery] int pageNumber = 1,
@@ -64,7 +80,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = paginatedResponse });
         }
 
-
+        /// <summary>
+        /// Obtiene una compañía específica por su ID.
+        /// </summary>
+        /// <param name="id">El ID de la compañía a buscar.</param>
+        /// <returns>La CompanyDTO si se encuentra, o NotFound si no existe o está eliminada.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<CompanyDTO>> GetCompanyById(int id)
         {
@@ -76,6 +96,12 @@ namespace GenericApp.API.Controllers
 
             return Ok(new ApiResponse { Data = companyDTO });
         }
+
+        /// <summary>
+        /// Agrega una nueva entidad Company a la base de datos.
+        /// </summary>
+        /// <param name="model">El CompanyDTO con los datos de la compañía a crear.</param>
+        /// <returns>La ApiResponse vacía en caso de éxito, o un conflicto si ya existe una compañía con el mismo nombre o RFC.</returns>
         [HttpPost]
         public async Task<ActionResult> AddCompany([FromBody] CompanyDTO model)
         {
@@ -97,6 +123,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse());
         }
 
+        /// <summary>
+        /// Actualiza una entidad Company existente.
+        /// </summary>
+        /// <param name="model">El CompanyDTO con los datos actualizados.</param>
+        /// <returns>La ApiResponse vacía en caso de éxito, o un conflicto si ya existe otra compañía (no eliminada) con el mismo nombre o RFC.</returns>
         [HttpPut]
         public async Task<ActionResult> UpdateCompany([FromBody] CompanyDTO model)
         {
@@ -118,6 +149,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse());
         }
 
+        /// <summary>
+        /// Deshabilita lógicamente una compañía existente (establece IsActive = false).
+        /// </summary>
+        /// <param name="id">El ID de la compañía a deshabilitar.</param>
+        /// <returns>La CompanyDTO de la entidad actualizada.</returns>
         [HttpPut("disable/{id}")]
         public async Task<ActionResult> DisableCompany(int id)
         {
@@ -133,6 +169,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = companyDTO });
         }
 
+        /// <summary>
+        /// Habilita lógicamente una compañía existente (establece IsActive = true).
+        /// </summary>
+        /// <param name="id">El ID de la compañía a habilitar.</param>
+        /// <returns>La CompanyDTO de la entidad actualizada.</returns>
         [HttpPut("enable/{id}")]
         public async Task<ActionResult> EnableCompany(int id)
         {
@@ -147,6 +188,12 @@ namespace GenericApp.API.Controllers
             var companyDTO = _mapper.Map<CompanyDTO>(company);
             return Ok(new ApiResponse { Data = companyDTO });
         }
+
+        /// <summary>
+        /// Realiza la eliminación lógica de una compañía (establece IsDeleted = true).
+        /// </summary>
+        /// <param name="id">El ID de la compañía a eliminar.</param>
+        /// <returns>La CompanyDTO de la entidad eliminada lógicamente.</returns>
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteCompany(int id)
         {

@@ -34,6 +34,7 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const [formData, setFormData] = useState({
         idLabel: 0,
         description: '',
+        maxBoxQuantity: 120, // ¡NUEVO CAMPO!
         labelTypes: [],
     });
 
@@ -41,6 +42,7 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
     const [validationErrors, setValidationErrors] = useState({
         description: false,
+        maxBoxQuantity: false, // ¡NUEVO CAMPO DE VALIDACIÓN!
     });
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
@@ -54,16 +56,18 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 setFormData({
                     idLabel: data.idLabel || 0,
                     description: data.description || '',
+                    maxBoxQuantity: data.maxBoxQuantity || 120, // Carga el valor
                     labelTypes: data.labelTypes || [],
                 });
             } else {
                 setFormData({
                     idLabel: 0,
                     description: '',
+                    maxBoxQuantity: 0, // Valor inicial
                     labelTypes: [],
                 });
             }
-            setValidationErrors({ description: false });
+            setValidationErrors({ description: false, maxBoxQuantity: false });
             setHasAttemptedSubmit(false);
         }
     }, [open, isEditing, data]);
@@ -78,15 +82,26 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        let processedValue = value;
+        if (name === 'maxBoxQuantity') {
+            // Asegura que sea un número y no negativo. Usa parseFloat para decimal.
+            processedValue = parseFloat(value) || 0;
+            if (processedValue < 0) processedValue = 0;
+        }
+
+
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [name]: processedValue
         }));
 
-        if (hasAttemptedSubmit && name === 'description') {
+        if (hasAttemptedSubmit) {
+            // Solo valida inmediatamente el campo afectado
+            const isError = name === 'description' ? value.trim().length === 0 : name === 'maxBoxQuantity' ? parseFloat(value) <= 0 : false;
             setValidationErrors(prev => ({
                 ...prev,
-                description: value.trim().length === 0
+                [name]: isError
             }));
         }
     };
@@ -94,11 +109,12 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const validateForm = () => {
         const errors = {
             description: !formData.description.trim(),
+            maxBoxQuantity: formData.maxBoxQuantity <= 0, // Debe ser > 0
         };
 
         setValidationErrors(errors);
 
-        return !errors.description;
+        return !errors.description && !errors.maxBoxQuantity;
     };
 
     const handleSubmit = async (event) => {
@@ -117,6 +133,7 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             const labelPayload = {
                 idLabel: formData.idLabel || 0,
                 description: formData.description,
+                maxBoxQuantity: formData.maxBoxQuantity, // ¡NUEVO CAMPO EN EL PAYLOAD!
                 labelTypes: formData.labelTypes.map(lt => ({
                     ...lt,
                     idLabelType: lt.idLabelType > 0 ? lt.idLabelType : 0,
@@ -145,7 +162,8 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     ...labelPayload,
                     idLabel: response.data.idLabel,
                     isActive: response.data.isActive,
-                    labelTypes: response.data.labelTypes
+                    labelTypes: response.data.labelTypes,
+                    maxBoxQuantity: response.data.maxBoxQuantity, // Asegura que se actualice con el valor de retorno
                 };
 
                 if (isEditing) {
@@ -218,7 +236,7 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             sx={{
                                 mt: 2,
                                 display: 'grid',
-                                gridTemplateColumns: '1fr',
+                                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, // Cambio para tener 2 columnas
                                 gap: 2,
                                 mb: 3
                             }}
@@ -234,6 +252,21 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 inputRef={descriptionRef}
                                 error={validationErrors.description}
                                 helperText={validationErrors.description ? t('requiredField') : ''}
+                                sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
+                            />
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                label={t('label_maxBoxQuantity')} // Cambiar key de traducción
+                                name="maxBoxQuantity"
+                                type="number"
+                                value={formData.maxBoxQuantity}
+                                onChange={handleChange}
+                                inputProps={{ min: 0, step: "0.01" }} // Permite decimales
+                                error={validationErrors.maxBoxQuantity}
+                                helperText={validationErrors.maxBoxQuantity ? t('requiredField_greaterThanZero') : ''} // Nueva traducción
+                                sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
                             />
                         </Box>
 
@@ -256,27 +289,25 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 <TableHead>
                                     <TableRow>
                                         <TableCell>{t('description')}</TableCell>
-                                        <TableCell align="center">{t('labelType_maxBoxQuantity')}</TableCell>
-                                        <TableCell align="right">{t('actions')}</TableCell>
+                                        <TableCell align="right">{t('actions')}</TableCell> {/* Quitar la columna MaxBoxQuantity */}
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     {(formData.labelTypes?.length ?? 0) === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={4} align="center">
+                                            <TableCell colSpan={2} align="center"> {/* ColSpan ajustado a 2 */}
                                                 {t('labelTypes_noRecords')}
                                             </TableCell>
                                         </TableRow>
                                     ) : (
                                         formData.labelTypes.map((lt) => (
-                                            <TableRow key={lt.idLabelType}>
+                                            <TableRow key={lt.idLabelType > 0 ? lt.idLabelType : lt.idLabelType * -1}> {/* Ajuste en la key para nuevos registros */}
                                                 <TableCell>{lt.description}</TableCell>
-                                                <TableCell align="center">{lt.maxBoxQuantity}</TableCell>
                                                 <TableCell align="right">
                                                     <IconButton size="small" color="primary" onClick={() => handleOpenEditLabelType(lt)}>
                                                         <EditIcon fontSize="inherit" />
                                                     </IconButton>
-                                                    <IconButton size="small" color="error" onClick={() => handleRemoveLabelType(lt.idLabelType)}>
+                                                    <IconButton size="small" color="error" onClick={() => handleRemoveLabelType(lt.idLabelType > 0 ? lt.idLabelType : lt.idLabelType)}> {/* Ajuste para eliminar nuevos registros */}
                                                         <DeleteIcon fontSize="inherit" />
                                                     </IconButton>
                                                 </TableCell>

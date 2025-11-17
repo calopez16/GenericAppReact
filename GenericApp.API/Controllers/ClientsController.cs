@@ -12,6 +12,10 @@ using System.Data;
 
 namespace GenericApp.API.Controllers
 {
+    /// <summary>
+    /// Controlador para gestionar las operaciones CRUD y consultas de la entidad Client.
+    /// Requiere autenticación y el rol de Administrador.
+    /// </summary>
     [ApiController]
     [Route("clients")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
@@ -20,6 +24,11 @@ namespace GenericApp.API.Controllers
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
 
+        /// <summary>
+        /// Inicializa una nueva instancia del controlador ClientsController.
+        /// </summary>
+        /// <param name="repository">Instancia del repositorio para acceso a datos.</param>
+        /// <param name="mapper">Instancia de AutoMapper para mapeo de DTOs.</param>
         public ClientsController(
             IRepository repository,
             IMapper mapper)
@@ -28,6 +37,13 @@ namespace GenericApp.API.Controllers
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Obtiene una lista paginada de clientes activos, permitiendo la búsqueda por nombre o RFC.
+        /// </summary>
+        /// <param name="pageNumber">Número de página a recuperar (por defecto 1).</param>
+        /// <param name="pageSize">Tamaño de la página (por defecto 10).</param>
+        /// <param name="searchTerm">Término de búsqueda para filtrar por nombre o RFC (opcional).</param>
+        /// <returns>Una respuesta paginada con la lista de ClientDTOs.</returns>
         [HttpGet("pagination")]
         public async Task<ActionResult> GetClientsPagination(
             [FromQuery] int pageNumber = 1,
@@ -79,7 +95,11 @@ namespace GenericApp.API.Controllers
 
         }
 
-
+        /// <summary>
+        /// Obtiene un cliente específico por su ID.
+        /// </summary>
+        /// <param name="id">El ID del cliente a buscar.</param>
+        /// <returns>La ClientDTO si se encuentra, o NotFound si no existe o está eliminado.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<ClientDTO>> GetClientById(int id)
         {
@@ -91,6 +111,12 @@ namespace GenericApp.API.Controllers
 
             return Ok(new ApiResponse { Data = clientDTO });
         }
+
+        /// <summary>
+        /// Agrega una nueva entidad Client a la base de datos.
+        /// </summary>
+        /// <param name="model">El ClientDTO con los datos del cliente a crear.</param>
+        /// <returns>La entidad Client creada o un conflicto si ya existe un cliente con el mismo nombre o RFC.</returns>
         [HttpPost]
         public async Task<ActionResult> AddClient([FromBody] ClientDTO model)
         {
@@ -113,6 +139,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = clientDB });
         }
 
+        /// <summary>
+        /// Actualiza una entidad Client existente.
+        /// </summary>
+        /// <param name="model">El ClientDTO con los datos actualizados.</param>
+        /// <returns>La entidad Client actualizada o un conflicto si ya existe otro cliente con el mismo nombre o RFC.</returns>
         [HttpPut]
         public async Task<ActionResult> UpdateClient([FromBody] ClientDTO model)
         {
@@ -141,6 +172,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = clientDB });
         }
 
+        /// <summary>
+        /// Deshabilita lógicamente un cliente existente (establece IsActive = false).
+        /// </summary>
+        /// <param name="id">El ID del cliente a deshabilitar.</param>
+        /// <returns>La ClientDTO de la entidad actualizada.</returns>
         [HttpPut("disable/{id}")]
         public async Task<ActionResult> DisableClient(int id)
         {
@@ -156,6 +192,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = clientDTO });
         }
 
+        /// <summary>
+        /// Habilita lógicamente un cliente existente (establece IsActive = true).
+        /// </summary>
+        /// <param name="id">El ID del cliente a habilitar.</param>
+        /// <returns>La ClientDTO de la entidad actualizada.</returns>
         [HttpPut("enable/{id}")]
         public async Task<ActionResult> EnableClient(int id)
         {
@@ -170,6 +211,12 @@ namespace GenericApp.API.Controllers
             var clientDTO = _mapper.Map<ClientDTO>(client);
             return Ok(new ApiResponse { Data = clientDTO });
         }
+
+        /// <summary>
+        /// Realiza la eliminación lógica de un cliente (establece IsDeleted = true).
+        /// </summary>
+        /// <param name="id">El ID del cliente a eliminar.</param>
+        /// <returns>La ClientDTO de la entidad eliminada lógicamente.</returns>
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteClient(int id)
         {

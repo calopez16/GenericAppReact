@@ -21,11 +21,11 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
     const [formData, setFormData] = useState({
         idLabelType: 0,
         description: '',
-        maxBoxQuantity: 0,
+        // maxBoxQuantity: 0, // ¡ELIMINADO!
     });
     const [validationErrors, setValidationErrors] = useState({
         description: false,
-        maxBoxQuantity: false,
+        // maxBoxQuantity: false, // ¡ELIMINADO!
     });
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
@@ -35,16 +35,16 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
                 setFormData({
                     idLabelType: data.idLabelType || 0,
                     description: data.description || '',
-                    maxBoxQuantity: data.maxBoxQuantity || 0,
+                    // maxBoxQuantity: data.maxBoxQuantity || 0, // ¡ELIMINADO!
                 });
             } else {
                 setFormData({
                     idLabelType: Date.now() * -1,
                     description: '',
-                    maxBoxQuantity: 0,
+                    // maxBoxQuantity: 0, // ¡ELIMINADO!
                 });
             }
-            setValidationErrors({ description: false, maxBoxQuantity: false });
+            setValidationErrors({ description: false /*, maxBoxQuantity: false*/ }); // ¡ELIMINADO!
             setHasAttemptedSubmit(false);
         }
     }, [open, isEditing, data]);
@@ -60,18 +60,13 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        let processedValue = value;
-        if (name === 'maxBoxQuantity') {
-            processedValue = Math.max(0, parseInt(value) || 0);
-        }
-
         setFormData(prev => ({
             ...prev,
-            [name]: processedValue
+            [name]: value
         }));
 
         if (hasAttemptedSubmit) {
-            validateField(name, processedValue);
+            validateField(name, value);
         }
     };
 
@@ -79,9 +74,10 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
         let isError = false;
         if (name === 'description') {
             isError = value.trim().length === 0;
-        } else if (name === 'maxBoxQuantity') {
-            isError = parseInt(value) <= 0;
         }
+        // else if (name === 'maxBoxQuantity') { // ¡ELIMINADO!
+        //     isError = parseInt(value) <= 0;
+        // }
 
         setValidationErrors(prev => ({
             ...prev,
@@ -92,9 +88,9 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
 
     const validateForm = () => {
         const descValid = validateField('description', formData.description);
-        const maxValid = validateField('maxBoxQuantity', formData.maxBoxQuantity);
+        // const maxValid = validateField('maxBoxQuantity', formData.maxBoxQuantity); // ¡ELIMINADO!
 
-        return descValid && maxValid;
+        return descValid; // Solo chequea descripción
     };
 
 
@@ -129,19 +125,7 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
                         error={validationErrors.description}
                         helperText={validationErrors.description ? t('requiredField') : ''}
                     />
-                    <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        label={t('labelType_maxBoxQuantity')}
-                        name="maxBoxQuantity"
-                        type="number"
-                        value={formData.maxBoxQuantity}
-                        onChange={handleChange}
-                        inputProps={{ min: 0 }}
-                        error={validationErrors.maxBoxQuantity}
-                        helperText={validationErrors.maxBoxQuantity ? t('requiredField') : ''}
-                    />
+                    {/* CAMPO ELIMINADO: maxBoxQuantity */}
                 </DialogContent>
                 <DialogActions>
                     <Button type="button" color="error" variant="outlined" endIcon={<CancelIcon />} onClick={handleClose}>

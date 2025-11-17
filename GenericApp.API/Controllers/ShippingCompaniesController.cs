@@ -11,6 +11,10 @@ using System.Data;
 
 namespace GenericApp.API.Controllers
 {
+    /// <summary>
+    /// Controlador para gestionar las operaciones CRUD y consultas de la entidad ShippingCompany (Compañía de Transporte).
+    /// Requiere autenticación y el rol de Administrador.
+    /// </summary>
     [ApiController]
     [Route("shipping-companies")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
@@ -19,6 +23,11 @@ namespace GenericApp.API.Controllers
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
 
+        /// <summary>
+        /// Inicializa una nueva instancia del controlador ShippingCompaniesController.
+        /// </summary>
+        /// <param name="repository">Instancia del repositorio para acceso a datos.</param>
+        /// <param name="mapper">Instancia de AutoMapper para mapeo de DTOs.</param>
         public ShippingCompaniesController(
             IRepository repository,
             IMapper mapper)
@@ -27,6 +36,14 @@ namespace GenericApp.API.Controllers
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Obtiene una lista paginada de compañías de transporte, permitiendo la búsqueda por término y el filtro por estado activo.
+        /// </summary>
+        /// <param name="pageNumber">Número de página a recuperar (por defecto 1).</param>
+        /// <param name="pageSize">Tamaño de la página (por defecto 10).</param>
+        /// <param name="searchTerm">Término de búsqueda para filtrar por nombre (opcional).</param>
+        /// <param name="active">Filtro por estado activo (opcional).</param>
+        /// <returns>Una respuesta paginada con la lista de ShippingCompanyDTOs.</returns>
         [HttpGet("pagination")]
         public async Task<ActionResult> GetShippingCompaniesPagination(
             [FromQuery] int pageNumber = 1,
@@ -72,6 +89,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = paginatedResponse });
         }
 
+        /// <summary>
+        /// Obtiene una compañía de transporte específica por su ID.
+        /// </summary>
+        /// <param name="id">El ID de la compañía de transporte a buscar.</param>
+        /// <returns>La ShippingCompanyDTO si se encuentra, o NotFound si no existe o está eliminada.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<ShippingCompanyDTO>> GetShippingCompanyById(int id)
         {
@@ -83,6 +105,12 @@ namespace GenericApp.API.Controllers
 
             return Ok(new ApiResponse { Data = shippingCompanyDTO });
         }
+
+        /// <summary>
+        /// Agrega una nueva entidad ShippingCompany a la base de datos.
+        /// </summary>
+        /// <param name="model">El ShippingCompanyDTO con los datos de la compañía a crear.</param>
+        /// <returns>La entidad ShippingCompany creada o un conflicto si ya existe una compañía con el mismo nombre.</returns>
         [HttpPost]
         public async Task<ActionResult> AddShippingCompany([FromBody] ShippingCompanyDTO model)
         {
@@ -105,6 +133,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = shippingCompanyDB });
         }
 
+        /// <summary>
+        /// Actualiza una entidad ShippingCompany existente.
+        /// </summary>
+        /// <param name="model">El ShippingCompanyDTO con los datos actualizados.</param>
+        /// <returns>La entidad ShippingCompany actualizada o un conflicto si ya existe otra compañía con el mismo nombre (no eliminada).</returns>
         [HttpPut]
         public async Task<ActionResult> UpdateShippingCompany([FromBody] ShippingCompanyDTO model)
         {
@@ -127,6 +160,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = shippingCompanyDB });
         }
 
+        /// <summary>
+        /// Deshabilita lógicamente una compañía de transporte existente (establece IsActive = false).
+        /// </summary>
+        /// <param name="id">El ID de la compañía de transporte a deshabilitar.</param>
+        /// <returns>La ShippingCompanyDTO de la entidad actualizada.</returns>
         [HttpPut("disable/{id}")]
         public async Task<ActionResult> DisableShippingCompany(int id)
         {
@@ -142,6 +180,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = shippingCompanyDTO });
         }
 
+        /// <summary>
+        /// Habilita lógicamente una compañía de transporte existente (establece IsActive = true).
+        /// </summary>
+        /// <param name="id">El ID de la compañía de transporte a habilitar.</param>
+        /// <returns>La ShippingCompanyDTO de la entidad actualizada.</returns>
         [HttpPut("enable/{id}")]
         public async Task<ActionResult> EnableShippingCompany(int id)
         {
@@ -156,6 +199,12 @@ namespace GenericApp.API.Controllers
             var shippingCompanyDTO = _mapper.Map<ShippingCompanyDTO>(shippingCompany);
             return Ok(new ApiResponse { Data = shippingCompanyDTO });
         }
+
+        /// <summary>
+        /// Realiza la eliminación lógica de una compañía de transporte (establece IsDeleted = true).
+        /// </summary>
+        /// <param name="id">El ID de la compañía de transporte a eliminar.</param>
+        /// <returns>La ShippingCompanyDTO de la entidad eliminada lógicamente.</returns>
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteShippingCompany(int id)
         {

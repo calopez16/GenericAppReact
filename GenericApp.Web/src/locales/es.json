@@ -66,7 +66,7 @@
   "labels_description": "Módulo para administrar etiquetas del sistema",
   "labelType_add": "Agregar tipo de etiqueta",
   "labelType_edit": "Editar tipo de etiqueta",
-  "labelType_maxBoxQuantity": "Máximo de cajas",
+  "label_maxBoxQuantity": "Máximo de cajas",
   "labelTypes": "Tipos de etiquetas",
   "labelTypes_noRecords": "No hay tipos de etiquetas registrados",
   "language_current": "Español",

@@ -11,6 +11,10 @@ using System.Data;
 
 namespace GenericApp.API.Controllers
 {
+    /// <summary>
+    /// Controlador para gestionar las operaciones CRUD y consultas de la entidad Label, que incluye la colección anidada LabelType.
+    /// Requiere autenticación y el rol de Administrador.
+    /// </summary>
     [ApiController]
     [Route("labels")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
@@ -19,6 +23,11 @@ namespace GenericApp.API.Controllers
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
 
+        /// <summary>
+        /// Inicializa una nueva instancia del controlador LabelsController.
+        /// </summary>
+        /// <param name="repository">Instancia del repositorio para acceso a datos.</param>
+        /// <param name="mapper">Instancia de AutoMapper para mapeo de DTOs.</param>
         public LabelsController(
             IRepository repository,
             IMapper mapper)
@@ -27,6 +36,15 @@ namespace GenericApp.API.Controllers
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Obtiene una lista paginada de etiquetas (Labels), incluyendo sus tipos (LabelTypes),
+        /// permitiendo la búsqueda por término y el filtro por estado activo.
+        /// </summary>
+        /// <param name="pageNumber">Número de página a recuperar (por defecto 1).</param>
+        /// <param name="pageSize">Tamaño de la página (por defecto 10).</param>
+        /// <param name="searchTerm">Término de búsqueda para filtrar por descripción (opcional).</param>
+        /// <param name="active">Filtro por estado activo (opcional).</param>
+        /// <returns>Una respuesta paginada con la lista de LabelDTOs.</returns>
         [HttpGet("pagination")]
         public async Task<ActionResult> GetLabelsPagination(
             [FromQuery] int pageNumber = 1,
@@ -57,6 +75,7 @@ namespace GenericApp.API.Controllers
                     Description = s.Description,
                     IdLabel = s.IdLabel,
                     IsActive = s.IsActive,
+                    MaxBoxQuantity = s.MaxBoxQuantity,
                     LabelTypes = s.LabelTypes.Where(x => !(x.IsDeleted ?? false)).Select(x => new LabelTypeDTO
                     {
                         IdLabelType = x.IdLabelType,
@@ -64,7 +83,6 @@ namespace GenericApp.API.Controllers
                         IdLabel = x.IdLabel,
                         IsActive = x.IsActive,
                         IsDeleted = x.IsDeleted,
-                        MaxBoxQuantity = x.MaxBoxQuantity
                     }).ToList()
                 })
                 .ToListAsync();
@@ -81,6 +99,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = paginatedResponse });
         }
 
+        /// <summary>
+        /// Obtiene una etiqueta específica por su ID.
+        /// </summary>
+        /// <param name="id">El ID de la etiqueta a buscar.</param>
+        /// <returns>La LabelDTO si se encuentra, o NotFound si no existe o está eliminada.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<LabelDTO>> GetLabelById(int id)
         {
@@ -92,11 +115,15 @@ namespace GenericApp.API.Controllers
 
             return Ok(new ApiResponse { Data = labelDTO });
         }
+
+        /// <summary>
+        /// Agrega una nueva entidad Label a la base de datos, incluyendo su colección de LabelTypes.
+        /// </summary>
+        /// <param name="model">El LabelDTO con los datos de la etiqueta y sus tipos a crear.</param>
+        /// <returns>La LabelDTO de la entidad creada o un conflicto si ya existe una etiqueta con la misma descripción.</returns>
         [HttpPost]
         public async Task<ActionResult> AddLabel([FromBody] LabelDTO model)
         {
-            // 1. Validación de unicidad de la Descripción (Description)
-            // Se valida contra registros NO eliminados (IsDeleted == false)
             var labelExists = await _repository.FirstOrDefault<Label>(
                 x => x.Description.ToLower().Equals(model.Description.ToLower()) &&
                      !(x.IsDeleted ?? false)
@@ -106,36 +133,30 @@ namespace GenericApp.API.Controllers
                 return Conflict(
                     new ApiResponse
                     {
-                        // Se simplifica el conflicto retornado
                         Conflict = $"{model.Description}"
                     }
                 );
 
-            // 2. Mapear y configurar la entidad principal (Label)
             var labelDB = _mapper.Map<Label>(model);
             labelDB.IdCompany = 1;
             labelDB.IsActive = true;
-            labelDB.IsDeleted = false; // Nuevo registro, no está eliminado
+            labelDB.IsDeleted = false;
 
-            // 3. Crear entidades LabelType a partir de DTOs
             if (model.LabelTypes != null && model.LabelTypes.Any())
             {
                 labelDB.LabelTypes = model.LabelTypes.Select(ltDto => new LabelType
                 {
                     Description = ltDto.Description,
-                    MaxBoxQuantity = ltDto.MaxBoxQuantity,
                     IsActive = ltDto.IsActive ?? true,
-                    IsDeleted = false // Nuevo LabelType, no está eliminado
+                    IsDeleted = false
                 }).ToList();
             }
 
-            // 4. Guardar la Label (junto con sus LabelTypes)
             var result = await _repository.Add(labelDB);
 
             if (!result)
                 return BadRequest(new ApiResponse());
 
-            // Se recomienda retornar el objeto mapeado a DTO para asegurar la consistencia.
             var resultDTO = _mapper.Map<LabelDTO>(labelDB);
             return Ok(new ApiResponse
             {
@@ -144,23 +165,26 @@ namespace GenericApp.API.Controllers
                     IdLabel = labelDB.IdLabel,
                     Description = labelDB.Description,
                     IsActive = labelDB.IsActive,
+                    MaxBoxQuantity = labelDB.MaxBoxQuantity,
                     LabelTypes = labelDB.LabelTypes.Select(s => new LabelTypeDTO
                     {
                         IdLabelType = s.IdLabelType,
                         Description = s.Description,
                         IdLabel = s.IdLabel,
-                        IsActive = s.IsActive,
-                        MaxBoxQuantity = s.MaxBoxQuantity
+                        IsActive = s.IsActive
                     }).ToList()
                 }
             });
         }
 
+        /// <summary>
+        /// Actualiza una entidad Label existente y sincroniza su colección anidada de LabelTypes.
+        /// </summary>
+        /// <param name="model">El LabelDTO con los datos actualizados.</param>
+        /// <returns>La LabelDTO de la entidad actualizada o un conflicto si ya existe otra etiqueta con el mismo nombre.</returns>
         [HttpPut]
         public async Task<ActionResult> UpdateLabel([FromBody] LabelDTO model)
         {
-            // 1. Validación de unicidad de la Descripción (Description)
-            // Se valida contra registros NO eliminados que NO sean el registro actual.
             var labelExists = await _repository.FirstOrDefault<Label>(
                 x => x.Description.ToLower().Equals(model.Description.ToLower()) &&
                      x.IdLabel != model.IdLabel &&
@@ -175,23 +199,17 @@ namespace GenericApp.API.Controllers
                     }
                 );
 
-            // 2. Obtener la entidad Label principal (incluyendo LabelTypes)
-            // Se asume que el repositorio tiene una sobrecarga para incluir la colección LabelTypes
             var labelDB = await _repository.FirstOrDefault<Label>(x => x.IdLabel == model.IdLabel, x => x.LabelTypes);
 
             if (labelDB == null || (labelDB.IsDeleted ?? false))
                 return NotFound(new ApiResponse());
 
-            // 3. Actualizar propiedades de la Label principal
             labelDB.Description = model.Description;
-
-            // 4. Sincronización de LabelTypes (CRUD dentro de la colección)
+            labelDB.MaxBoxQuantity = model.MaxBoxQuantity;
 
             var incomingLabelTypes = model.LabelTypes ?? new List<LabelTypeDTO>();
             var existingLabelTypes = labelDB.LabelTypes ?? new List<LabelType>();
 
-            // a) Identificar y procesar eliminaciones lógicas (IsDeleted = true)
-            // IDs de LabelTypes activos en DB que NO están en el DTO entrante.
             var idsToRemoveLogically = existingLabelTypes
                 .Where(lt => !(lt.IsDeleted ?? false))
                 .Select(lt => lt.IdLabelType)
@@ -208,28 +226,23 @@ namespace GenericApp.API.Controllers
                 }
             }
 
-            // b) Identificar y procesar adiciones y actualizaciones
             foreach (var ltDto in incomingLabelTypes)
             {
                 if (ltDto.IdLabelType > 0)
                 {
-                    // Actualizar existente
                     var ltDB = existingLabelTypes.FirstOrDefault(lt => lt.IdLabelType == ltDto.IdLabelType);
                     if (ltDB != null)
                     {
                         ltDB.Description = ltDto.Description;
-                        ltDB.MaxBoxQuantity = ltDto.MaxBoxQuantity;
                         ltDB.IsActive = ltDto.IsActive ?? true;
-                        ltDB.IsDeleted = false; // Revivir si estaba previamente eliminado y se envió de nuevo
+                        ltDB.IsDeleted = false;
                     }
                 }
                 else
                 {
-                    // Agregar nuevo (ID <= 0 o ID Temporal)
                     existingLabelTypes.Add(new LabelType
                     {
                         Description = ltDto.Description,
-                        MaxBoxQuantity = ltDto.MaxBoxQuantity,
                         IsActive = ltDto.IsActive ?? true,
                         IsDeleted = false,
                         IdLabel = labelDB.IdLabel
@@ -237,34 +250,36 @@ namespace GenericApp.API.Controllers
                 }
             }
 
-            // 5. Guardar los cambios
             var result = await _repository.Update(labelDB);
 
             if (!result)
                 return BadRequest(new ApiResponse());
 
-            // 6. Construir el DTO de retorno manualmente
             var updatedLabelDTO = new LabelDTO
             {
                 IdLabel = labelDB.IdLabel,
                 Description = labelDB.Description,
                 IsActive = labelDB.IsActive,
+                MaxBoxQuantity = labelDB.MaxBoxQuantity,
                 LabelTypes = existingLabelTypes
-                    .Where(lt => !(lt.IsDeleted ?? false)) // Filtrar tipos eliminados lógicamente
+                    .Where(lt => !(lt.IsDeleted ?? false))
                     .Select(lt => new LabelTypeDTO
                     {
                         IdLabelType = lt.IdLabelType,
                         IdLabel = lt.IdLabel,
                         Description = lt.Description,
-                        MaxBoxQuantity = lt.MaxBoxQuantity,
                         IsActive = lt.IsActive,
-                        // No se incluye IsDeleted para mantener el DTO limpio
                     }).ToList()
             };
 
             return Ok(new ApiResponse { Data = updatedLabelDTO });
         }
 
+        /// <summary>
+        /// Deshabilita lógicamente una etiqueta existente (establece IsActive = false).
+        /// </summary>
+        /// <param name="id">El ID de la etiqueta a deshabilitar.</param>
+        /// <returns>La LabelDTO de la entidad actualizada.</returns>
         [HttpPut("disable/{id}")]
         public async Task<ActionResult> DisableLabel(int id)
         {
@@ -280,6 +295,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = labelDTO });
         }
 
+        /// <summary>
+        /// Habilita lógicamente una etiqueta existente (establece IsActive = true).
+        /// </summary>
+        /// <param name="id">El ID de la etiqueta a habilitar.</param>
+        /// <returns>La LabelDTO de la entidad actualizada.</returns>
         [HttpPut("enable/{id}")]
         public async Task<ActionResult> EnableLabel(int id)
         {
@@ -294,6 +314,12 @@ namespace GenericApp.API.Controllers
             var labelDTO = _mapper.Map<LabelDTO>(label);
             return Ok(new ApiResponse { Data = labelDTO });
         }
+
+        /// <summary>
+        /// Realiza la eliminación lógica de una etiqueta (establece IsDeleted = true).
+        /// </summary>
+        /// <param name="id">El ID de la etiqueta a eliminar.</param>
+        /// <returns>La LabelDTO de la entidad eliminada lógicamente.</returns>
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteLabel(int id)
         {

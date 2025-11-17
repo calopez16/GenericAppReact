@@ -11,6 +11,10 @@ using System.Data;
 
 namespace GenericApp.API.Controllers
 {
+    /// <summary>
+    /// Controlador para gestionar las operaciones CRUD y consultas de la entidad Driver.
+    /// Requiere autenticación y el rol de Administrador.
+    /// </summary>
     [ApiController]
     [Route("drivers")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
@@ -19,6 +23,11 @@ namespace GenericApp.API.Controllers
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
 
+        /// <summary>
+        /// Inicializa una nueva instancia del controlador DriversController.
+        /// </summary>
+        /// <param name="repository">Instancia del repositorio para acceso a datos.</param>
+        /// <param name="mapper">Instancia de AutoMapper para mapeo de DTOs.</param>
         public DriversController(
             IRepository repository,
             IMapper mapper)
@@ -27,6 +36,14 @@ namespace GenericApp.API.Controllers
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Obtiene una lista paginada de conductores, permitiendo la búsqueda por término y el filtro por estado activo.
+        /// </summary>
+        /// <param name="pageNumber">Número de página a recuperar (por defecto 1).</param>
+        /// <param name="pageSize">Tamaño de la página (por defecto 10).</param>
+        /// <param name="searchTerm">Término de búsqueda para filtrar por nombre (opcional).</param>
+        /// <param name="active">Filtro por estado activo (opcional).</param>
+        /// <returns>Una respuesta paginada con la lista de DriverDTOs.</returns>
         [HttpGet("pagination")]
         public async Task<ActionResult> GetDriversPagination(
             [FromQuery] int pageNumber = 1,
@@ -72,6 +89,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = paginatedResponse });
         }
 
+        /// <summary>
+        /// Obtiene un conductor específico por su ID.
+        /// </summary>
+        /// <param name="id">El ID del conductor a buscar.</param>
+        /// <returns>La DriverDTO si se encuentra, o NotFound si no existe o está eliminado.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<DriverDTO>> GetDriverById(int id)
         {
@@ -83,6 +105,12 @@ namespace GenericApp.API.Controllers
 
             return Ok(new ApiResponse { Data = driverDTO });
         }
+
+        /// <summary>
+        /// Agrega una nueva entidad Driver a la base de datos.
+        /// </summary>
+        /// <param name="model">El DriverDTO con los datos del conductor a crear.</param>
+        /// <returns>La entidad Driver creada o un conflicto si ya existe un conductor con el mismo nombre.</returns>
         [HttpPost]
         public async Task<ActionResult> AddDriver([FromBody] DriverDTO model)
         {
@@ -105,6 +133,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = driverDB });
         }
 
+        /// <summary>
+        /// Actualiza una entidad Driver existente.
+        /// </summary>
+        /// <param name="model">El DriverDTO con los datos actualizados.</param>
+        /// <returns>La entidad Driver actualizada o un conflicto si ya existe otro conductor con el mismo nombre.</returns>
         [HttpPut]
         public async Task<ActionResult> UpdateDriver([FromBody] DriverDTO model)
         {
@@ -120,13 +153,18 @@ namespace GenericApp.API.Controllers
             var driverDB = await _repository.GetById<Driver>(model.IdDriver);
             driverDB.Name = model.Name;
             var result = await _repository.Update(driverDB);
-            
+
             if (!result)
                 return BadRequest(new ApiResponse());
 
             return Ok(new ApiResponse { Data = driverDB });
         }
 
+        /// <summary>
+        /// Deshabilita lógicamente un conductor existente (establece IsActive = false).
+        /// </summary>
+        /// <param name="id">El ID del conductor a deshabilitar.</param>
+        /// <returns>La DriverDTO de la entidad actualizada.</returns>
         [HttpPut("disable/{id}")]
         public async Task<ActionResult> DisableDriver(int id)
         {
@@ -142,6 +180,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = driverDTO });
         }
 
+        /// <summary>
+        /// Habilita lógicamente un conductor existente (establece IsActive = true).
+        /// </summary>
+        /// <param name="id">El ID del conductor a habilitar.</param>
+        /// <returns>La DriverDTO de la entidad actualizada.</returns>
         [HttpPut("enable/{id}")]
         public async Task<ActionResult> EnableDriver(int id)
         {
@@ -156,6 +199,12 @@ namespace GenericApp.API.Controllers
             var driverDTO = _mapper.Map<DriverDTO>(driver);
             return Ok(new ApiResponse { Data = driverDTO });
         }
+
+        /// <summary>
+        /// Realiza la eliminación lógica de un conductor (establece IsDeleted = true).
+        /// </summary>
+        /// <param name="id">El ID del conductor a eliminar.</param>
+        /// <returns>La DriverDTO de la entidad eliminada lógicamente.</returns>
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteDriver(int id)
         {

@@ -54,6 +54,14 @@ const LabelCardList = ({
                     </Tooltip>
                 </Box>
             </Box>
+
+            {/* ¡NUEVO CAMPO! MaxBoxQuantity */}
+            <Box>
+                <Typography variant="caption" color="text.secondary">
+                    {t('label_maxBoxQuantity')}: {label.maxBoxQuantity}
+                </Typography>
+            </Box>
+
             <Box>
                 <Typography variant="caption" color="text.secondary">
                     {t('types')}: {label.labelTypes?.length || 0}

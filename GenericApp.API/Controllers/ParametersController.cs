@@ -17,6 +17,10 @@ using System.Threading.Tasks;
 
 namespace GenericApp.API.Controllers
 {
+    /// <summary>
+    /// Controlador para gestionar parámetros de configuración de la aplicación y archivos estáticos (logo, fondo de login).
+    /// Requiere autenticación y el rol de Administrador.
+    /// </summary>
     [ApiController]
     [Route("parameters")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
@@ -25,6 +29,11 @@ namespace GenericApp.API.Controllers
         private readonly IRepository _repository;
         private readonly IWebHostEnvironment _environment;
 
+        /// <summary>
+        /// Inicializa una nueva instancia del controlador ParametersController.
+        /// </summary>
+        /// <param name="environment">Proporciona información sobre el entorno de alojamiento web.</param>
+        /// <param name="repository">Instancia del repositorio para acceso a datos.</param>
         public ParametersController(
             IWebHostEnvironment environment,
             IRepository repository)
@@ -33,6 +42,11 @@ namespace GenericApp.API.Controllers
             _environment = environment;
         }
 
+        /// <summary>
+        /// Actualiza el valor y la descripción de un parámetro de configuración existente.
+        /// </summary>
+        /// <param name="model">El ParameterDTO con el código y el nuevo valor/descripción.</param>
+        /// <returns>Una ApiResponse vacía en caso de éxito, o NotFound/BadRequest si el parámetro no existe o la actualización falla.</returns>
         [HttpPut]
         public async Task<ActionResult> UpdateParameter([FromBody] ParameterDTO model)
         {
@@ -53,6 +67,11 @@ namespace GenericApp.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Obtiene un parámetro de configuración específico usando su código.
+        /// </summary>
+        /// <param name="parameterCode">El código único del parámetro a buscar.</param>
+        /// <returns>El ParameterDTO si se encuentra, o NotFound si no existe.</returns>
         [HttpGet("code/{parameterCode}")]
         public async Task<ActionResult<ParameterDTO>> GetParameterByCode(string parameterCode)
         {
@@ -71,6 +90,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = parameterResponse });
         }
 
+        /// <summary>
+        /// Sube y reemplaza el archivo de logo de la aplicación ("logo.png") en la carpeta "wwwroot/img".
+        /// </summary>
+        /// <param name="file">El archivo de imagen a subir.</param>
+        /// <returns>Mensaje de éxito o BadRequest si falla la subida.</returns>
         [HttpPost("logo")]
         public async Task<ActionResult> AppLogo(IFormFile file)
         {
@@ -79,16 +103,11 @@ namespace GenericApp.API.Controllers
                 return BadRequest(new ApiResponse { Message = "No se ha enviado ningún archivo." });
             }
 
-            // 1. Definir el nombre de archivo y la ruta
             string fileName = "logo.png";
-            // Combina la ruta de wwwroot con el nombre del archivo.
-            // WebRootPath apunta a la carpeta wwwroot.
-            string fullPath = Path.Combine(_environment.WebRootPath,"img", fileName);
+            string fullPath = Path.Combine(_environment.WebRootPath, "img", fileName);
 
             try
             {
-                // 2. Guardar el archivo
-                // FileMode.Create asegura que si el archivo (logo.png) ya existe, se sobrescriba.
                 using (var stream = new FileStream(fullPath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
@@ -98,11 +117,15 @@ namespace GenericApp.API.Controllers
             }
             catch (Exception ex)
             {
-                // Loggear la excepción real en un entorno real
                 return BadRequest(new ApiResponse { Message = $"Error al guardar el archivo: {ex.Message}" });
             }
         }
 
+        /// <summary>
+        /// Sube y reemplaza el archivo de imagen de fondo del login ("login_background.png") en la carpeta "wwwroot/img".
+        /// </summary>
+        /// <param name="file">El archivo de imagen a subir.</param>
+        /// <returns>ApiResponse vacía en caso de éxito, o BadRequest si falla la subida.</returns>
         [HttpPost("login-background")]
         public async Task<ActionResult> LoginBackground(IFormFile file)
         {
@@ -111,27 +134,21 @@ namespace GenericApp.API.Controllers
                 return BadRequest(new ApiResponse { Message = "No se ha enviado ningún archivo." });
             }
 
-            // 1. Definir el nombre de archivo y la ruta
             string fileName = "login_background.png";
-            // Combina la ruta de wwwroot con el nombre del archivo.
-            // WebRootPath apunta a la carpeta wwwroot.
             string fullPath = Path.Combine(_environment.WebRootPath, "img", fileName);
 
             try
             {
-                // 2. Guardar el archivo
-                // FileMode.Create asegura que si el archivo (logo.png) ya existe, se sobrescriba.
                 using (var stream = new FileStream(fullPath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
                 }
 
-                return Ok(new ApiResponse ());
+                return Ok(new ApiResponse());
             }
             catch (Exception)
             {
-                // Loggear la excepción real en un entorno real
-                return BadRequest(new ApiResponse ());
+                return BadRequest(new ApiResponse());
             }
         }
     }

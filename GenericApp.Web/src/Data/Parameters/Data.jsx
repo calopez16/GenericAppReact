@@ -12,6 +12,7 @@ export const DataAPIParametersService = () => {
 
     return {
         ...genericService,
+        code: (code) => GET(`${moduleSource}/code/${code}`),
         setAppLogo: (image) => POST(`${moduleSource}/logo`, image),
         setLoginBackground: (image) => POST(`${moduleSource}/login-background`, image),
     };

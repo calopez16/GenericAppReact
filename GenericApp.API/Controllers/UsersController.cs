@@ -15,6 +15,10 @@ using System.Threading.Tasks;
 
 namespace GenericApp.API.Controllers
 {
+    /// <summary>
+    /// Controlador para gestionar las operaciones de administración de usuarios y roles (IdentityUsers y IdentityRoles).
+    /// Requiere autenticación y el rol de Administrador.
+    /// </summary>
     [ApiController]
     [Route("users")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
@@ -25,6 +29,13 @@ namespace GenericApp.API.Controllers
         private readonly IConfiguration _configuration;
         private readonly SignInManager<IdentityUser> _signInManager;
 
+        /// <summary>
+        /// Inicializa una nueva instancia del controlador UsersController.
+        /// </summary>
+        /// <param name="userManager">Administrador de usuarios de ASP.NET Core Identity.</param>
+        /// <param name="roleManager">Administrador de roles de ASP.NET Core Identity.</param>
+        /// <param name="configuration">Configuración de la aplicación.</param>
+        /// <param name="signInManager">Administrador de inicio de sesión de ASP.NET Core Identity.</param>
         public UsersController(
             UserManager<IdentityUser> userManager,
             RoleManager<IdentityRole> roleManager,
@@ -37,6 +48,11 @@ namespace GenericApp.API.Controllers
             _signInManager = signInManager;
         }
 
+        /// <summary>
+        /// Agrega un nuevo rol a la base de datos de Identity.
+        /// </summary>
+        /// <param name="roleName">Nombre del rol a crear.</param>
+        /// <returns>Mensaje de éxito o BadRequest si el rol ya existe o la creación falla.</returns>
         [HttpPost("roles")]
         public async Task<ActionResult> AddRole([FromBody] string roleName)
         {
@@ -55,6 +71,10 @@ namespace GenericApp.API.Controllers
             return BadRequest(new ApiResponse { Data = result.Errors });
         }
 
+        /// <summary>
+        /// Obtiene una lista de todos los roles existentes en Identity.
+        /// </summary>
+        /// <returns>Una ApiResponse con la lista de roles.</returns>
         [HttpGet("roles")]
         public ActionResult GetRoles()
         {
@@ -63,6 +83,14 @@ namespace GenericApp.API.Controllers
 
         }
 
+        /// <summary>
+        /// Obtiene una lista paginada de usuarios (excluyendo al usuario 'admin').
+        /// Incluye roles y el estado de deshabilitado de cada usuario.
+        /// </summary>
+        /// <param name="pageNumber">Número de página a recuperar (por defecto 1).</param>
+        /// <param name="pageSize">Tamaño de la página (por defecto 10).</param>
+        /// <param name="searchTerm">Término de búsqueda para filtrar por nombre de usuario o email (opcional).</param>
+        /// <returns>Una respuesta paginada con la lista de UserDTOs.</returns>
         [HttpGet("pagination")]
         public async Task<ActionResult> GetUsersPagination(
             [FromQuery] int pageNumber = 1,
@@ -115,6 +143,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = paginatedResponse });
         }
 
+        /// <summary>
+        /// Crea un nuevo usuario con una contraseña temporal ("Nuevo123!"), le asigna el claim de cambio de contraseña forzoso y los roles especificados.
+        /// </summary>
+        /// <param name="model">El UserDTO con el nombre de usuario, email y roles.</param>
+        /// <returns>Mensaje de éxito con la contraseña temporal o conflicto si el usuario/email ya existe.</returns>
         [HttpPost]
         public async Task<ActionResult> AddUser([FromBody] UserDTO model)
         {
@@ -138,7 +171,6 @@ namespace GenericApp.API.Controllers
                 var user = await _userManager.FindByNameAsync(model.UserName);
                 await _userManager.AddClaimAsync(user, new Claim(nameof(AppPolicies.IsChangePasswordNeeded), "1"));
 
-                // Asignar roles al usuario
                 if (model.Roles != null && model.Roles.Any())
                 {
                     foreach (var roleName in model.Roles)
@@ -155,6 +187,11 @@ namespace GenericApp.API.Controllers
             return BadRequest(new ApiResponse { Data = result.Errors });
         }
 
+        /// <summary>
+        /// Actualiza el nombre de usuario, email y la asignación de roles de un usuario existente.
+        /// </summary>
+        /// <param name="model">El UserDTO con los datos actualizados. Utiliza UserNameId para identificar al usuario.</param>
+        /// <returns>ApiResponse vacía en caso de éxito, NotFound si el usuario no existe, o Conflict si el nuevo username/email ya está en uso.</returns>
         [HttpPut]
         public async Task<ActionResult> UpdateUser([FromBody] UserDTO model)
         {
@@ -195,6 +232,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse());
         }
 
+        /// <summary>
+        /// Obtiene los detalles de un usuario específico por su nombre de usuario.
+        /// </summary>
+        /// <param name="username">El nombre de usuario a buscar.</param>
+        /// <returns>El UserDTO con los detalles del usuario, o NotFound si no existe.</returns>
         [HttpGet("username/{username}")]
         public async Task<ActionResult<UserDTO>> GetUserByUsername(string username)
         {
@@ -215,6 +257,12 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = userResponse });
         }
 
+        /// <summary>
+        /// Restablece la contraseña de un usuario a un valor predeterminado ("Nuevo123!").
+        /// Forzará el cambio de contraseña en el próximo login (añade el claim IsChangePasswordNeeded y remueve el claim User).
+        /// </summary>
+        /// <param name="userName">El nombre de usuario cuya contraseña será restablecida.</param>
+        /// <returns>Mensaje de éxito con la nueva contraseña temporal o NotFound/BadRequest si falla.</returns>
         [HttpPost("reset-password")]
         public async Task<ActionResult> ResetPassword([FromBody] string userName)
         {
@@ -231,8 +279,6 @@ namespace GenericApp.API.Controllers
             var isUserClaim = currentClaims.Any(c => c.Type == nameof(AppPolicies.User));
             var isChangePasswordNeededClaim = currentClaims.Any(c => c.Type == nameof(AppPolicies.IsChangePasswordNeeded));
 
-            //if (isDisabledClaim)
-            //    await _userManager.RemoveClaimAsync(user, new System.Security.Claims.Claim(AppClaims.IsDisabled, "1"));
             if (isUserClaim)
                 await _userManager.RemoveClaimAsync(user, new System.Security.Claims.Claim(nameof(AppPolicies.User), "1"));
             if (!isChangePasswordNeededClaim)
@@ -245,6 +291,11 @@ namespace GenericApp.API.Controllers
         }
 
 
+        /// <summary>
+        /// Deshabilita un usuario agregando el claim 'IsDisabled'.
+        /// </summary>
+        /// <param name="userName">El nombre de usuario a deshabilitar.</param>
+        /// <returns>ApiResponse vacía en caso de éxito o NotFound si el usuario no existe.</returns>
         [HttpPost("{userName}/disable")]
         public async Task<ActionResult> DisableUser(string userName)
         {
@@ -261,6 +312,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse());
         }
 
+        /// <summary>
+        /// Habilita un usuario eliminando el claim 'IsDisabled'.
+        /// </summary>
+        /// <param name="userName">El nombre de usuario a habilitar.</param>
+        /// <returns>ApiResponse vacía en caso de éxito o NotFound si el usuario no existe.</returns>
         [HttpPost("{userName}/enable")]
         public async Task<ActionResult> EnableUser(string userName)
         {

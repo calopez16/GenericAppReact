@@ -11,6 +11,9 @@ using System.Data;
 
 namespace GenericApp.API.Controllers
 {
+    /// <summary>
+    /// Gestiona las operaciones CRUD y de consulta relacionadas con las entidades City y sus relaciones (State, Country).
+    /// </summary>
     [ApiController]
     [Route("cities")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
@@ -19,6 +22,11 @@ namespace GenericApp.API.Controllers
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
 
+        /// <summary>
+        /// Inicializa una nueva instancia del controlador de ciudades con el repositorio y el mapeador.
+        /// </summary>
+        /// <param name="repository">Instancia del repositorio para acceso a datos.</param>
+        /// <param name="mapper">Instancia de AutoMapper para mapeo de DTOs.</param>
         public CitiesController(
             IRepository repository,
             IMapper mapper)
@@ -27,6 +35,14 @@ namespace GenericApp.API.Controllers
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Obtiene una lista paginada de ciudades, permitiendo filtrado por término de búsqueda y estado activo.
+        /// </summary>
+        /// <param name="pageNumber">Número de página a recuperar (por defecto 1).</param>
+        /// <param name="pageSize">Tamaño de la página (por defecto 10).</param>
+        /// <param name="searchTerm">Término de búsqueda para filtrar por descripción (opcional).</param>
+        /// <param name="active">Filtro por estado activo (opcional).</param>
+        /// <returns>Una respuesta paginada con la lista de CityDTOs.</returns>
         [HttpGet("pagination")]
         public async Task<ActionResult> GetCitiesPagination(
             [FromQuery] int pageNumber = 1,
@@ -84,6 +100,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = paginatedResponse });
         }
 
+        /// <summary>
+        /// Obtiene una ciudad específica por su ID.
+        /// </summary>
+        /// <param name="id">El ID de la ciudad a buscar.</param>
+        /// <returns>La CityDTO si se encuentra, o NotFound si no existe.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<CityDTO>> GetCityById(int id)
         {
@@ -95,6 +116,12 @@ namespace GenericApp.API.Controllers
 
             return Ok(new ApiResponse { Data = cityDTO });
         }
+
+        /// <summary>
+        /// Agrega una nueva entidad City a la base de datos, realizando validación de conflictos.
+        /// </summary>
+        /// <param name="model">El CityDTO con los datos de la ciudad a crear.</param>
+        /// <returns>La entidad City creada o un conflicto si ya existe.</returns>
         [HttpPost]
         public async Task<ActionResult> AddCity([FromBody] CityDTO model)
         {
@@ -127,6 +154,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = cityDB });
         }
 
+        /// <summary>
+        /// Actualiza una entidad City existente, incluyendo la validación de conflictos por descripción.
+        /// </summary>
+        /// <param name="model">El CityDTO con los datos actualizados.</param>
+        /// <returns>La entidad City actualizada o un BadRequest/NotFound si falla.</returns>
         [HttpPut]
         public async Task<ActionResult> UpdateCity([FromBody] CityDTO model)
         {
@@ -159,6 +191,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = cityDB });
         }
 
+        /// <summary>
+        /// Deshabilita lógicamente una ciudad existente (establece IsActive = false).
+        /// </summary>
+        /// <param name="id">El ID de la ciudad a deshabilitar.</param>
+        /// <returns>La CityDTO de la ciudad actualizada.</returns>
         [HttpPut("disable/{id}")]
         public async Task<ActionResult> DisableCity(int id)
         {
@@ -174,6 +211,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = cityDTO });
         }
 
+        /// <summary>
+        /// Habilita lógicamente una ciudad existente (establece IsActive = true).
+        /// </summary>
+        /// <param name="id">El ID de la ciudad a habilitar.</param>
+        /// <returns>La CityDTO de la ciudad actualizada.</returns>
         [HttpPut("enable/{id}")]
         public async Task<ActionResult> EnableCity(int id)
         {
@@ -188,6 +230,12 @@ namespace GenericApp.API.Controllers
             var cityDTO = _mapper.Map<CityDTO>(city);
             return Ok(new ApiResponse { Data = cityDTO });
         }
+
+        /// <summary>
+        /// Realiza la eliminación lógica de una ciudad (establece IsDeleted = true).
+        /// </summary>
+        /// <param name="id">El ID de la ciudad a eliminar.</param>
+        /// <returns>La CityDTO de la ciudad eliminada lógicamente.</returns>
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteCity(int id)
         {
@@ -203,6 +251,11 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = cityDTO });
         }
 
+        /// <summary>
+        /// Obtiene una lista de estados activos, filtrada opcionalmente por país.
+        /// </summary>
+        /// <param name="idCountry">El ID del país para filtrar (opcional).</param>
+        /// <returns>Una colección de StateDTOs.</returns>
         [HttpGet("states")]
         public async Task<ActionResult<StateDTO>> GetStatesByCountry([FromQuery] int? idCountry = null)
         {
@@ -223,6 +276,14 @@ namespace GenericApp.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Obtiene una lista paginada de estados, permitiendo filtrar por término de búsqueda y país.
+        /// </summary>
+        /// <param name="pageNumber">Número de página a recuperar (por defecto 1).</param>
+        /// <param name="pageSize">Tamaño de la página (por defecto 10).</param>
+        /// <param name="searchTerm">Término de búsqueda para filtrar por descripción (opcional).</param>
+        /// <param name="idCountry">Filtro por ID de país (opcional).</param>
+        /// <returns>Una respuesta paginada con la lista de StateDTOs.</returns>
         [HttpGet("pagination-states")]
         public async Task<ActionResult> GetStatesPagination(
             [FromQuery] int pageNumber = 1,
@@ -275,6 +336,10 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = paginatedResponse });
         }
 
+        /// <summary>
+        /// Obtiene una lista de países.
+        /// </summary>
+        /// <returns>Una colección de CountryDTOs.</returns>
         [HttpGet("countries")]
         public async Task<ActionResult<CountryDTO>> GetCountries()
         {

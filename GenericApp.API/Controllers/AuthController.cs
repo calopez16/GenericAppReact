@@ -4,16 +4,10 @@ using GenericApp.Data.Models;
 using GenericApp.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.VisualBasic;
-using System.Drawing;
 using System.IdentityModel.Tokens.Jwt;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.Serialization;
 using System.Security.Claims;
 using System.Text;
 
@@ -40,6 +34,11 @@ namespace GenericApp.Controllers
             _repository = repository;
         }
 
+        /// <summary>
+        /// Realiza el login del usuario, valida credenciales y genera tokens de acceso y refresco.
+        /// </summary>
+        /// <param name="loginDTO">Objeto que contiene el email y la contraseña del usuario.</param>
+        /// <returns>Un token de acceso y un token de refresco (si es necesario), o Unauthorized si las credenciales son inválidas o el usuario está deshabilitado.</returns>
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO loginDTO)
         {
@@ -99,6 +98,10 @@ namespace GenericApp.Controllers
             });
         }
 
+        /// <summary>
+        /// Renueva el token de acceso (AccessToken) utilizando un token de refresco (RefreshToken) válido contenido en el header de autorización.
+        /// </summary>
+        /// <returns>Un nuevo token de acceso si el RefreshToken es válido, o Unauthorized si el token no es válido o ha expirado.</returns>
         [HttpGet("refresh-token")]
         public async Task<IActionResult> RefreshToken()
         {
@@ -137,6 +140,11 @@ namespace GenericApp.Controllers
             return Unauthorized();
         }
 
+        /// <summary>
+        /// Permite a un usuario forzado a cambiar su contraseña (Policy: IsChangePasswordNeeded) establecer una nueva contraseña.
+        /// </summary>
+        /// <param name="newPassword">La nueva contraseña a establecer.</param>
+        /// <returns>Un nuevo token de acceso si el cambio fue exitoso, o Unauthorized si no hay token de usuario o la operación falla.</returns>
         [HttpPost("pass-restart")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.IsChangePasswordNeeded))]
         public async Task<ActionResult<LoginResponseDTO>> RestartPassword([FromBody] string newPassword)
@@ -185,6 +193,12 @@ namespace GenericApp.Controllers
             return Unauthorized();
         }
 
+        /// <summary>
+        /// Genera un token JWT (Access Token o Refresh Token) para el usuario.
+        /// </summary>
+        /// <param name="loginDTO">Información de login utilizada para obtener los claims del usuario.</param>
+        /// <param name="refreshToken">Indica si se debe generar un Refresh Token (true) o un Access Token (false). Por defecto es false.</param>
+        /// <returns>El token JWT generado como string, o null en caso de error.</returns>
         private async Task<string> GenerateToken(LoginDTO loginDTO, bool refreshToken = false)
         {
             try

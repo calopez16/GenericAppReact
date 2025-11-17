@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251117073838_AddNavigations")]
+    partial class AddNavigations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -450,9 +452,6 @@ namespace GenericApp.Data.Migrations
                     b.Property<int>("IdShipment")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<int>("LabelNavigationIdLabel")
                         .HasColumnType("int");
 
@@ -512,9 +511,6 @@ namespace GenericApp.Data.Migrations
 
                     b.Property<int>("IdShipment")
                         .HasColumnType("int");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
 
                     b.Property<int>("LabelTypeNavigationIdLabelType")
                         .HasColumnType("int");
@@ -984,7 +980,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEA5ViY4iBLpfIYDXIaZHV7jF024utzzE+8vktPoRVvfZNWKXbTNMVtYbvhAk9rnr0A==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEPc8RBuiaBvdQIah0qZbO9f9oyoLrtU50t0AAZEGEM7D36cl6Ns2yODd6vlFKHEfZA==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,

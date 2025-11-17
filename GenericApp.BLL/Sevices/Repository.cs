@@ -18,20 +18,29 @@ namespace GenericApp.BLL.Sevices
                 _context.Dispose();
         }
 
-        // Modificado: Devuelve Task<bool>
         public async Task<bool> Add<T>(T entity) where T : class
         {
             try
             {
                 await _context.Set<T>().AddAsync(entity);
-                // Si SaveChangesAsync es exitoso, devuelve true (o el número de filas afectadas > 0)
                 return await _context.SaveChangesAsync() > 0;
             }
             catch (Exception ex)
             {
-                // TODO: Registrar la excepción (log the exception)
-                // Console.WriteLine(ex.Message); 
-                return false; // Error al agregar/guardar
+                return false;
+            }
+        }
+
+        public async Task<bool> AddRange<T>(IEnumerable<T> entities) where T : class
+        {
+            try
+            {
+                await _context.Set<T>().AddRangeAsync(entities);
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                return false;
             }
         }
 
@@ -48,16 +57,14 @@ namespace GenericApp.BLL.Sevices
                 if (includes != null)
                 {
                     query = includes.Aggregate(query,
-                                     (current, include) => current.Include(include));
+                                   (current, include) => current.Include(include));
                 }
 
                 return await query.AnyAsync();
             }
             catch (Exception ex)
             {
-                // TODO: Registrar la excepción (log the exception)
-                // Console.WriteLine(ex.Message);
-                return default; // default para bool es false
+                return default;
             }
         }
 
@@ -74,7 +81,7 @@ namespace GenericApp.BLL.Sevices
                 if (includes != null)
                 {
                     query = includes.Aggregate(query,
-                                     (current, include) => current.Include(include));
+                                   (current, include) => current.Include(include));
                 }
 
                 if (orderby != null)
@@ -85,9 +92,7 @@ namespace GenericApp.BLL.Sevices
             }
             catch (Exception ex)
             {
-                // TODO: Registrar la excepción (log the exception)
-                // Console.WriteLine(ex.Message);
-                return default; // default para IEnumerable<T> es null
+                return default;
             }
         }
 
@@ -104,15 +109,13 @@ namespace GenericApp.BLL.Sevices
                 if (includes != null)
                 {
                     query = includes.Aggregate(query,
-                                     (current, include) => current.Include(include));
+                                   (current, include) => current.Include(include));
                 }
                 return await query.FirstOrDefaultAsync();
             }
             catch (Exception ex)
             {
-                // TODO: Registrar la excepción (log the exception)
-                // Console.WriteLine(ex.Message);
-                return default; // default para T es null (porque T: class)
+                return default;
             }
         }
 
@@ -124,8 +127,6 @@ namespace GenericApp.BLL.Sevices
             }
             catch (Exception ex)
             {
-                // TODO: Registrar la excepción (log the exception)
-                // Console.WriteLine(ex.Message);
                 return default;
             }
         }
@@ -138,8 +139,6 @@ namespace GenericApp.BLL.Sevices
             }
             catch (Exception ex)
             {
-                // TODO: Registrar la excepción (log the exception)
-                // Console.WriteLine(ex.Message);
                 return default;
             }
         }
@@ -152,62 +151,7 @@ namespace GenericApp.BLL.Sevices
             }
             catch (Exception ex)
             {
-                // TODO: Registrar la excepción (log the exception)
-                // Console.WriteLine(ex.Message);
                 return null;
-            }
-        }
-
-        // Modificado: Devuelve Task<bool>
-        public async Task<bool> Remove<T>(T entity) where T : class
-        {
-            try
-            {
-                _context.Set<T>().Remove(entity);
-                return await _context.SaveChangesAsync() > 0;
-            }
-            catch (Exception ex)
-            {
-                // TODO: Registrar la excepción (log the exception)
-                // Console.WriteLine(ex.Message);
-                return false; // Error al eliminar/guardar
-            }
-        }
-
-        // Modificado: Devuelve Task<bool>
-        public async Task<bool> RemoveById<T>(int id) where T : class
-        {
-            try
-            {
-                var entity = await _context.Set<T>().FindAsync(id);
-                if (entity != null)
-                {
-                    _context.Set<T>().Remove(entity);
-                    return await _context.SaveChangesAsync() > 0;
-                }
-                return false; // No se encontró la entidad para eliminar
-            }
-            catch (Exception ex)
-            {
-                // TODO: Registrar la excepción (log the exception)
-                // Console.WriteLine(ex.Message);
-                return false; // Error al eliminar/guardar
-            }
-        }
-
-        // Modificado: Devuelve Task<bool>
-        public async Task<bool> Update<T>(T entity) where T : class
-        {
-            try
-            {
-                _context.Entry(entity).State = EntityState.Modified;
-                return await _context.SaveChangesAsync() > 0;
-            }
-            catch (Exception ex)
-            {
-                // TODO: Registrar la excepción (log the exception)
-                // Console.WriteLine(ex.Message);
-                return false; // Error al actualizar/guardar
             }
         }
 
@@ -219,33 +163,84 @@ namespace GenericApp.BLL.Sevices
             }
             catch (Exception ex)
             {
-                // TODO: Registrar la excepción (log the exception)
-                // Console.WriteLine(ex.Message);
                 return null;
             }
         }
 
-        // Modifica la firma para recibir los includes:
         public async Task<IQueryable<T>> Query<T>(params Expression<Func<T, object>>[] includes) where T : class
         {
             try
             {
-                IQueryable<T> query = _context.Set<T>(); // Inicializa el IQueryable
+                IQueryable<T> query = _context.Set<T>();
 
-                // Aplica los includes si existen
                 if (includes != null && includes.Any())
                 {
                     query = includes.Aggregate(query,
-                                               (current, include) => current.Include(include));
+                                   (current, include) => current.Include(include));
                 }
 
                 return query;
             }
             catch (Exception ex)
             {
-                // TODO: Registrar la excepción (log the exception)
-                // Console.WriteLine(ex.Message);
                 return null;
+            }
+        }
+
+        public async Task<bool> Update<T>(T entity) where T : class
+        {
+            try
+            {
+                _context.Entry(entity).State = EntityState.Modified;
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> Remove<T>(T entity) where T : class
+        {
+            try
+            {
+                _context.Set<T>().Remove(entity);
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> RemoveRange<T>(IEnumerable<T> entities) where T : class
+        {
+            try
+            {
+                _context.Set<T>().RemoveRange(entities);
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> RemoveById<T>(int id) where T : class
+        {
+            try
+            {
+                var entity = await _context.Set<T>().FindAsync(id);
+                if (entity != null)
+                {
+                    _context.Set<T>().Remove(entity);
+                    return await _context.SaveChangesAsync() > 0;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                return false;
             }
         }
     }
