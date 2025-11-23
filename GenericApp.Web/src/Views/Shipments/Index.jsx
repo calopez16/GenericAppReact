@@ -16,8 +16,8 @@ import AddIcon from '@mui/icons-material/Add';
 import { DataAPIEmbarquesService } from '@data/Embarques/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
-import EmbarqueCardList from './EmbarqueCardList';
-import EmbarqueListTable from './EmbarqueTableList';
+import EmbarqueCardList from './ShipmentCardList';
+import EmbarqueListTable from './ShipmentTableList';
 
 
 function Index() {

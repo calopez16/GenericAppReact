@@ -31,7 +31,7 @@ function App() {
                 <Route path="/labels" element={<LabelsPage />} />
 
                 
-                <Route path="/embarques">                   
+                <Route path="/shipments">                   
                     <Route index element={<EmbarquesList />} />
                     <Route path="add" element={<EmbarqueAddOrEdit isEditing={false} />} />
                     <Route path="edit/:id" element={<EmbarqueAddOrEdit isEditing={true} />} />

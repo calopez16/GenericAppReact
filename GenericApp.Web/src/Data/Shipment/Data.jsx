@@ -1,7 +1,7 @@
 import createApiMethodsService from '@data/GenericApiMethods';
 import { GET, POST, PUT } from '@data/GenericApiCalls';
 
-const moduleSource = "embarques";
+const moduleSource = "shipments";
 
 const dataMapper = (i, rowData) => {
     return rowData;
