@@ -17,9 +17,10 @@ namespace GenericApp.Data.Models
         public string? Description { get; set; }
         public decimal? BoxQuantity { get; set; }
         public bool? IsDeleted { get; set; }
-        [NotMapped]
-        public ManifestPallet ManifestPalletNavigation { get; set; }
-        [NotMapped]
-        public LabelType LabelTypeNavigation { get; set; }
+        
+        public virtual ManifestPallet? IdManifestPalletNavigation { get; set; }
+        public virtual Manifest? IdManifestNavigation { get; set; }
+        public virtual Shipment? IdShipmentNavigation { get; set; }
+        public virtual LabelType? IdLabelTypeNavigation { get; set; }
     }
 }

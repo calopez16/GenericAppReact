@@ -10,10 +10,9 @@ namespace GenericApp.Data.Models
     public class Country
     {
         public int IdCountry { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
-        [NotMapped]
-        public ICollection<State> States { get; set; } = new List<State>();
+        public virtual ICollection<State> States { get; set; } = new List<State>();
     }
 }

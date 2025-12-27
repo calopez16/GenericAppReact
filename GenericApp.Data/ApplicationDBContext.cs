@@ -64,9 +64,9 @@ namespace GenericApp.Data
             modelBuilder.Entity<Parameter>(b =>
             {
                 b.HasKey(x => x.IdParameter);
-                b.Property(x => x.ParameterCode).HasMaxLength(5);
-                b.Property(x => x.Description).HasMaxLength(150);
-                b.Property(x => x.Value).HasMaxLength(250);
+                b.Property(x => x.ParameterCode).HasMaxLength(5).IsRequired();
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.Value).HasMaxLength(250).IsRequired();
             });
 
             modelBuilder.Entity<Company>(b =>
@@ -90,113 +90,6 @@ namespace GenericApp.Data
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
             });
-            modelBuilder.Entity<State>(b =>
-            {
-                b.HasKey(x => x.IdState);
-                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne(s => s.IdCountryNavigation)
-                    .WithMany(c => c.States)
-                    .HasForeignKey(s => s.IdCountry)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<City>(b =>
-            {
-                b.HasKey(x => x.IdCity);
-                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne(s => s.IdStateNavigation)
-                     .WithMany(c => c.Cities)
-                     .HasForeignKey(s => s.IdState)
-                     .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<Client>(b =>
-            {
-                b.HasKey(x => x.IdClient);
-                b.Property(x => x.Name).HasMaxLength(150).IsRequired();
-                b.Property(x => x.Rfc).HasMaxLength(13);
-                b.Property(x => x.Address).HasMaxLength(250);
-                b.Property(x => x.PostalCode).HasMaxLength(50);
-                b.Property(x => x.Phone).HasMaxLength(25);
-                b.Property(x => x.Notes).HasMaxLength(250);
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne<Company>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdCompany)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(lt => lt.IdCityNavigation)
-                .WithMany(l => l.Clients)
-                .HasForeignKey(x => x.IdCity)
-                .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<Driver>(b =>
-            {
-                b.HasKey(x => x.IdDriver);
-                b.Property(x => x.Name).HasMaxLength(150);
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne<Company>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdCompany)
-                   .OnDelete(DeleteBehavior.Restrict)
-                   .IsRequired();
-            });
-
-            modelBuilder.Entity<Label>(b =>
-            {
-                b.HasKey(x => x.IdLabel);
-                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
-                b.Property(x => x.MaxBoxQuantity).HasColumnType("decimal(18,2)").IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne<Company>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdCompany)
-                   .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<LabelType>(b =>
-            {
-                b.HasKey(x => x.IdLabelType);
-                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne(lt => lt.IdLabelNavigation)
-                    .WithMany(l => l.LabelTypes)
-                    .HasForeignKey(x => x.IdLabel)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<Season>(b =>
-            {
-                b.HasKey(x => x.IdSeason);
-                b.Property(x => x.Name).HasMaxLength(150);
-                b.Property(x => x.Description).HasMaxLength(250);
-                b.Property(x => x.InitialDate).HasColumnType("date");
-                b.Property(x => x.EndDate).HasColumnType("date");
-                b.Property(x => x.IsClosed).HasDefaultValue(false);
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne<Company>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdCompany)
-                   .OnDelete(DeleteBehavior.Restrict);
-            });
 
             modelBuilder.Entity<ShippingCompany>(b =>
             {
@@ -219,6 +112,131 @@ namespace GenericApp.Data
                 b.Property(x => x.Details2).HasMaxLength(500);
             });
 
+            modelBuilder.Entity<ShipmentStatus>(b =>
+            {
+                b.HasKey(x => x.IdShipmentStatus);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            });
+
+            modelBuilder.Entity<ManifestStatus>(b =>
+            {
+                b.HasKey(x => x.IdManifestStatus);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            });
+
+
+            modelBuilder.Entity<State>(b =>
+            {
+                b.HasKey(x => x.IdState);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(s => s.IdCountryNavigation)
+                    .WithMany(c => c.States)
+                    .HasForeignKey(s => s.IdCountry)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<City>(b =>
+            {
+                b.HasKey(x => x.IdCity);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(s => s.IdStateNavigation)
+                      .WithMany(c => c.Cities)
+                      .HasForeignKey(s => s.IdState)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Client>(b =>
+            {
+                b.HasKey(x => x.IdClient);
+                b.Property(x => x.Name).HasMaxLength(150).IsRequired();
+                b.Property(x => x.Rfc).HasMaxLength(13);
+                b.Property(x => x.Address).HasMaxLength(250);
+                b.Property(x => x.PostalCode).HasMaxLength(50);
+                b.Property(x => x.Phone).HasMaxLength(25);
+                b.Property(x => x.Notes).HasMaxLength(250);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(c => c.IdCompanyNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdCompany)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(lt => lt.IdCityNavigation)
+                    .WithMany(l => l.Clients)
+                    .HasForeignKey(x => x.IdCity)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Driver>(b =>
+            {
+                b.HasKey(x => x.IdDriver);
+                b.Property(x => x.Name).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(d => d.IdCompanyNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdCompany)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
+            modelBuilder.Entity<Label>(b =>
+            {
+                b.HasKey(x => x.IdLabel);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.MaxBoxQuantity).HasColumnType("decimal(18,2)").IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(l => l.IdCompanyNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdCompany)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<LabelType>(b =>
+            {
+                b.HasKey(x => x.IdLabelType);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(lt => lt.IdLabelNavigation)
+                    .WithMany(l => l.LabelTypes)
+                    .HasForeignKey(x => x.IdLabel)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Season>(b =>
+            {
+                b.HasKey(x => x.IdSeason);
+                b.Property(x => x.Name).HasMaxLength(150).IsRequired();
+                b.Property(x => x.Description).HasMaxLength(250);
+                b.Property(x => x.InitialDate).HasColumnType("date").IsRequired();
+                b.Property(x => x.EndDate).HasColumnType("date").IsRequired();
+                b.Property(x => x.IsClosed).HasDefaultValue(false);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(s => s.IdCompanyNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdCompany)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
             modelBuilder.Entity<Shipment>(b =>
             {
                 b.HasKey(x => x.IdShipment);
@@ -230,36 +248,33 @@ namespace GenericApp.Data
                 b.Property(x => x.Mixed).HasDefaultValue(false);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
 
-                b.HasOne<Client>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdClient)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(s => s.IdClientNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdClient)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<City>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdCity)
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(s => s.IdCityNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdCity)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<ShipmentStatus>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdShipmentStatus)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(s => s.IdShipmentStatusNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdShipmentStatus)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<Company>()
+                b.HasOne(s => s.IdCompanyNavigation)
                   .WithMany()
                   .HasForeignKey(x => x.IdCompany)
                   .IsRequired()
                   .OnDelete(DeleteBehavior.Restrict);
-            });
 
-            modelBuilder.Entity<ShipmentStatus>(b =>
-            {
-                b.HasKey(x => x.IdShipmentStatus);
-                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+                b.HasOne(s => s.IdUserNavigation)      
+                  .WithMany()                          
+                  .HasForeignKey(s => s.IdUser)        
+                  .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Manifest>(b =>
@@ -274,50 +289,42 @@ namespace GenericApp.Data
                 b.Property(x => x.Comments).HasMaxLength(500);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
 
+                // CORREGIDO
+                b.HasOne(m => m.IdShipmentNavigation)
+                    .WithMany(s => s.Manifests)
+                    .HasForeignKey(x => x.IdShipment)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<Shipment>()
-                   .WithMany(s => s.Manifests)
-                   .HasForeignKey(x => x.IdShipment)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(m => m.IdSeasonNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdSeason)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<Season>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdSeason)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(m => m.IdDriverNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdDriver)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<Driver>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdDriver)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(m => m.IdShippingCompanyNavigation)
+                     .WithMany()
+                     .HasForeignKey(x => x.IdShippingCompany)
+                     .IsRequired()
+                     .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<ShippingCompany>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdShippingCompany)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(m => m.IdManifestStatusNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdManifestStatus)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<ManifestStatus>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdManifestStatus)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne<Company>()
+                b.HasOne(m => m.IdCompanyNavigation)
                     .WithMany()
                     .HasForeignKey(x => x.IdCompany)
                     .IsRequired()
                     .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<ManifestStatus>(b =>
-            {
-                b.HasKey(x => x.IdManifestStatus);
-                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
             });
 
             modelBuilder.Entity<ManifestPallet>(b =>
@@ -330,55 +337,55 @@ namespace GenericApp.Data
                 b.Property(x => x.Comments).HasMaxLength(500);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
 
-                b.HasOne<Manifest>()
-                   .WithMany(m => m.ManifestPallets)
-                   .HasForeignKey(x => x.IdManifest)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(mp => mp.IdManifestNavigation)
+                    .WithMany(m => m.ManifestPallets)
+                    .HasForeignKey(x => x.IdManifest)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<Shipment>()
+                b.HasOne(mp => mp.IdShipmentNavigation)
                    .WithMany()
                    .HasForeignKey(x => x.IdShipment)
                    .IsRequired()
                    .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<Label>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdLabel)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(mp => mp.IdLabelNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdLabel)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<ManifestPalletLoading>(b =>
             {
                 b.HasKey(x => x.IdManifestPalletLoading);
-                b.Property(x => x.Description).HasMaxLength(250);
+                b.Property(x => x.Description).HasMaxLength(250).IsRequired();
                 b.Property(x => x.BoxQuantity).HasColumnType("decimal(18,2)");
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
 
-                b.HasOne<ManifestPallet>()
-                   .WithMany(p => p.ManifestPalletLoadings)
-                   .HasForeignKey(x => x.IdManifestPallet)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(mpl => mpl.IdManifestPalletNavigation)
+                    .WithMany(p => p.ManifestPalletLoadings)
+                    .HasForeignKey(x => x.IdManifestPallet)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<Manifest>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdManifest)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(mpl => mpl.IdManifestNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdManifest)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<Shipment>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdShipment)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(mpl => mpl.IdShipmentNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdShipment)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne<LabelType>()
-                   .WithMany()
-                   .HasForeignKey(x => x.IdLabelType)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(mpl => mpl.IdLabelTypeNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdLabelType)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
 

@@ -25,15 +25,12 @@ namespace GenericApp.Data.Models
         public bool? IsDeleted { get; set; }
         public int? IdCompany { get; set; }
 
-        [NotMapped]
-        public Company CompanyNavigation { get; set; }
-        [NotMapped]
-        public Shipment ShipmentNavigation { get; set; }
-        [NotMapped]
-        public Driver DriverNavigation { get; set; }
-        [NotMapped]
-        public ManifestStatus ManifestStatusNavigation { get; set; }
-        [NotMapped]
-        public ICollection<ManifestPallet> ManifestPallets { get; set; } = new List<ManifestPallet>();
+        public virtual Company? IdCompanyNavigation { get; set; }
+        public virtual Shipment? IdShipmentNavigation { get; set; }
+        public virtual ShippingCompany? IdShippingCompanyNavigation { get; set; }
+        public virtual Season? IdSeasonNavigation { get; set; }
+        public virtual Driver? IdDriverNavigation { get; set; }
+        public virtual ManifestStatus? IdManifestStatusNavigation { get; set; }
+        public virtual ICollection<ManifestPallet> ManifestPallets { get; set; } = new List<ManifestPallet>();
     }
 }

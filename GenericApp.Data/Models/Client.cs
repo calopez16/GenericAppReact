@@ -20,7 +20,7 @@ namespace GenericApp.Data.Models
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
         public int IdCompany { get; set; }
-        [NotMapped]
-        public City IdCityNavigation { get; set; }
+        public virtual Company? IdCompanyNavigation { get; set; }
+        public virtual City? IdCityNavigation { get; set; }
     }
 }

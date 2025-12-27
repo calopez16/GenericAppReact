@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -22,15 +23,11 @@ namespace GenericApp.Data.Models
         public bool? IsDeleted { get; set; }
         public int? IdCompany { get; set; }
 
-        [NotMapped]
-        public Company CompanyNavigation { get; set; }
-        [NotMapped]
-        public Client IdClientNavigation { get; set; }
-        [NotMapped]
-        public City IdCityNavigation { get; set; }
-        [NotMapped]
-        public ShipmentStatus ShipmentStatusNavigation { get; set; }
-        [NotMapped]
-        public ICollection<Manifest> Manifests { get; set; } = new List<Manifest>();
+        public virtual IdentityUser? IdUserNavigation { get; set; }
+        public virtual Company? IdCompanyNavigation { get; set; }
+        public virtual Client? IdClientNavigation { get; set; }
+        public virtual City? IdCityNavigation { get; set; }
+        public virtual ShipmentStatus? IdShipmentStatusNavigation { get; set; }
+        public virtual ICollection<Manifest> Manifests { get; set; } = new List<Manifest>();
     }
 }

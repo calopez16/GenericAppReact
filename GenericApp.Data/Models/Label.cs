@@ -15,7 +15,7 @@ namespace GenericApp.Data.Models
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
         public int IdCompany { get; set; }
-        [NotMapped]
-        public ICollection<LabelType> LabelTypes { get; set; } = new List<LabelType>();
+        public virtual Company? IdCompanyNavigation { get; set; }
+        public virtual ICollection<LabelType> LabelTypes { get; set; } = new List<LabelType>();
     }
 }

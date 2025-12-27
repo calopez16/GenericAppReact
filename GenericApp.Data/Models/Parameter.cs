@@ -10,8 +10,8 @@ namespace GenericApp.Data.Models
     public class Parameter
     {
         public int IdParameter { get; set; }
-        public string ParameterCode { get; set; }
-        public string Description { get; set; }
-        public string Value { get; set; }
+        public string? ParameterCode { get; set; }
+        public string? Description { get; set; }
+        public string? Value { get; set; }
     }
 }

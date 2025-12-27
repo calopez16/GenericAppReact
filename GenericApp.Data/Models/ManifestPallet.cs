@@ -19,11 +19,9 @@ namespace GenericApp.Data.Models
         public decimal? TemperatureC { get; set; }
         public string? Comments { get; set; }
         public bool? IsDeleted { get; set; }
-        [NotMapped]
-        public Manifest ManifestNavigation { get; set; }
-        [NotMapped]
-        public Label LabelNavigation { get; set; }
-        [NotMapped]
-        public ICollection<ManifestPalletLoading> ManifestPalletLoadings { get; set; } = new List<ManifestPalletLoading>();
+        public virtual Shipment? IdShipmentNavigation { get; set; }
+        public virtual Manifest? IdManifestNavigation { get; set; }
+        public virtual Label? IdLabelNavigation { get; set; }
+        public virtual ICollection<ManifestPalletLoading> ManifestPalletLoadings { get; set; } = new List<ManifestPalletLoading>();
     }
 }

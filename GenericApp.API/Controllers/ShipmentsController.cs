@@ -35,42 +35,52 @@ namespace GenericApp.API.Controllers
             [FromQuery] bool? active = null
             )
         {
-            if (pageNumber < 1) pageNumber = 1;
-            if (pageSize < 1) pageSize = 10;
-
-            var query = await _repository.Query<Shipment>();
-
-            query = query.Include(s => s.ShipmentStatusNavigation!)
-                         .Include(s => s.IdCityNavigation!);
-
-            query = query.Where(x => !(x.IsDeleted ?? false));
-
-            if (!string.IsNullOrWhiteSpace(searchTerm))
+            try
             {
-                query = query.Where(s =>
-                    s.Address!.Contains(searchTerm) ||
-                    s.IdShipment.ToString().Contains(searchTerm));
+
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                var query = await _repository.Query<Shipment>();
+
+                query = query.Include(s => s.IdShipmentStatusNavigation)
+                             .Include(s => s.IdCityNavigation);
+
+                query = query.Where(x => !(x.IsDeleted ?? false));
+
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    query = query.Where(s =>
+                        s.Address!.Contains(searchTerm) ||
+                        s.IdShipment.ToString().Contains(searchTerm));
+                }
+
+                var totalRows = await query.CountAsync();
+                var data = await query
+                    .OrderByDescending(s => s.CreationDate)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var dataDTO = _mapper.Map<IEnumerable<ShipmentDTO>>(data);
+
+                var paginatedResponse = new
+                {
+                    TotalCount = totalRows,
+                    PageSize = pageSize,
+                    CurrentPage = pageNumber,
+                    TotalPages = (int)System.Math.Ceiling((double)totalRows / pageSize),
+                    Data = dataDTO
+                };
+
+                return Ok(new ApiResponse { Data = paginatedResponse });
             }
-
-            var totalRows = await query.CountAsync();
-            var data = await query
-                .OrderByDescending(s => s.CreationDate)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            var dataDTO = _mapper.Map<IEnumerable<ShipmentDTO>>(data);
-
-            var paginatedResponse = new
+            catch (Exception ex)
             {
-                TotalCount = totalRows,
-                PageSize = pageSize,
-                CurrentPage = pageNumber,
-                TotalPages = (int)System.Math.Ceiling((double)totalRows / pageSize),
-                Data = dataDTO
-            };
 
-            return Ok(new ApiResponse { Data = paginatedResponse });
+                throw;
+            }
         }
 
         [HttpGet("{id}")]
@@ -80,9 +90,9 @@ namespace GenericApp.API.Controllers
 
             var shipment = await shipmentQuery
             .Include(s => s.IdCityNavigation)
-            .Include(s => s.ShipmentStatusNavigation)
+            .Include(s => s.IdShipmentStatusNavigation)
             .Include(s => s.Manifests!)
-                .ThenInclude(m => m.ManifestStatusNavigation)
+                .ThenInclude(m => m.IdManifestStatusNavigation)
             .FirstOrDefaultAsync(x => x.IdShipment == id && !(x.IsDeleted ?? false));
 
             if (shipment == null)
@@ -148,7 +158,7 @@ namespace GenericApp.API.Controllers
             .Include(s => s.Manifests!)
                 .ThenInclude(m => m.ManifestPallets!)
                     .ThenInclude(p => p.ManifestPalletLoadings)
-            .Include(s => s.ShipmentStatusNavigation)
+            .Include(s => s.IdShipmentStatusNavigation)
             .FirstOrDefaultAsync(s => s.IdShipment == shipmentDB.IdShipment);
 
             var resultDTO = _mapper.Map<ShipmentDTO>(createdShipment);
