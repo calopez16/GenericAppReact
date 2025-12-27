@@ -7,22 +7,50 @@ export const AppContextProvider = ({ children }) => {
     // El estado inicial se lee directamente del helper.
     const [userName, setUserName] = useState(() => localStorage.getItem("userName"));
     const [accessToken, setAccessToken] = useState(() => AuthHelper.getAccessToken());
-    const [userRole, setUserRole] = useState(() => localStorage.getItem("userRole"));
+    const [companySelected, setCompanySelected] = useState(() => {
+        try {
+            const storedCompany = localStorage.getItem("company");
+            // Si existe, lo convertimos de texto a Objeto JS. Si no, devolvemos null.
+            return storedCompany ? JSON.parse(storedCompany) : null;
+        } catch (error) {
+            console.error("Error al leer la compañía del storage:", error);
+            return null;
+        }
+    });
+    const [userRoles, setUserRoles] = useState(() => localStorage.getItem("userRoles"));
     const [themeMode, setThemeMode] = useState(() => localStorage.getItem("themeMode") || "light");
     const [loading, setLoading] = useState(false);
+
+    const canSelectCompany = userRoles?.includes('MultiEmpresa') || userRoles?.includes('Administrator');;
 
     // useEffect para guardar userName y userRole. El token ya se maneja con el helper.
     useEffect(() => {
         if (userName) localStorage.setItem("userName", userName);
-        if (userRole) localStorage.setItem("userRole", userRole);
-    }, [userName, userRole]);
+        if (userRoles) localStorage.setItem("userRoles", userRoles);
+    }, [userName, userRoles]);
+
+    useEffect(() => {
+        if (companySelected) {
+            // Convertimos el objeto a texto JSON antes de guardar
+            localStorage.setItem("company", JSON.stringify(companySelected));
+        } else {
+            // Si es null o undefined, limpiamos la clave
+            localStorage.removeItem("company");
+        }
+    }, [companySelected]);
 
     // Este efecto escucha cambios en el storage para actualizar el estado del contexto.
     useEffect(() => {
         const handleStorageChange = () => {
             setAccessToken(AuthHelper.getAccessToken());
             setUserName(localStorage.getItem("userName"));
-            setUserRole(localStorage.getItem("userRole"));
+            setUserRoles(localStorage.getItem("userRoles"));
+            const companyData = localStorage.getItem("company");
+            try {
+                setCompanySelected(companyData ? JSON.parse(companyData) : null);
+            } catch (e) {
+                setCompanySelected(null);
+            }
         };
 
         window.addEventListener('storage', handleStorageChange);
@@ -40,13 +68,16 @@ export const AppContextProvider = ({ children }) => {
         userName,
         setUserName,
         accessToken,
+        companySelected,
+        setCompanySelected,
+        canSelectCompany,
         // setAccessToken ahora usa el helper para que el cambio sea global.
         setAccessToken: (token) => {
             AuthHelper.setAccessToken(token);
             setAccessToken(token); // Actualiza también el estado local del contexto.
         },
-        userRole,
-        setUserRole,
+        userRoles,
+        setUserRoles,
         // Agregamos una función de logout al contexto.
         logout: AuthHelper.logout,
         themeMode,

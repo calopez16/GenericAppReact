@@ -20,7 +20,7 @@ import Check from '@mui/icons-material/Check';
 
 function LoginPage() {
     const { t, i18n } = useTranslation();
-    const { setAccessToken, setUserRole, setUserName } = useContext(AppContext);
+    const { setAccessToken, setUserRoles, setUserName, setCompanySelected } = useContext(AppContext);
     const navigate = useNavigate();
 
     const [email, setEmail] = useState('');
@@ -79,7 +79,7 @@ function LoginPage() {
             const response = await authService.authenticate({ email, password });
 
             if (response && response.success) {
-                const { token, roleName, userName, isChangePasswordNeeded } = response.data;
+                const { token, roles, userName, isChangePasswordNeeded, company } = response.data;
 
                 if (isChangePasswordNeeded) {
                     setAccessToken(token);
@@ -89,8 +89,9 @@ function LoginPage() {
                     ShowMessage(t('changePasswordNeeded'), 'info');
                 } else {
                     setAccessToken(token);
-                    setUserRole(roleName);
+                    setUserRoles(roles);
                     setUserName(userName);
+                    setCompanySelected(company);
                     navigate('/');
                 }
             } else {
@@ -123,10 +124,11 @@ function LoginPage() {
             const response = await authService.passwordRestart(newPassword);
 
             if (response && response.success) {
-                const { token, roleName, userName } = response.data;
+                const { token, roles, userName, company } = response.data;
                 setAccessToken(token);
-                setUserRole(roleName);
+                setUserRoles(roles);
                 setUserName(userName);
+                setCompanySelected(company);
                 ShowMessage(t('passwordChanged'), 'success');
                 navigate('/');
             } else {

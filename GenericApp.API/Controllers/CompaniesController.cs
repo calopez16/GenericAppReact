@@ -16,11 +16,12 @@ namespace GenericApp.API.Controllers
     /// </summary>
     [ApiController]
     [Route("companies")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator) + "," + nameof(AppRoles.MultiEmpresa))]
     public class CompaniesController : ControllerBase
     {
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IWebHostEnvironment _env; // 1. Nueva dependencia
 
         /// <summary>
         /// Inicializa una nueva instancia del controlador CompaniesController.
@@ -29,10 +30,12 @@ namespace GenericApp.API.Controllers
         /// <param name="mapper">Instancia de AutoMapper para mapeo de DTOs.</param>
         public CompaniesController(
             IRepository repository,
-            IMapper mapper)
+            IMapper mapper,
+            IWebHostEnvironment env)
         {
             _repository = repository;
             _mapper = mapper;
+            _env = env;
         }
 
         /// <summary>
@@ -43,6 +46,7 @@ namespace GenericApp.API.Controllers
         /// <param name="searchTerm">Término de búsqueda para filtrar por nombre o RFC (opcional).</param>
         /// <returns>Una respuesta paginada con la lista de Company.</returns>
         [HttpGet("pagination")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> GetCompaniesPagination(
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
@@ -81,11 +85,30 @@ namespace GenericApp.API.Controllers
         }
 
         /// <summary>
+        /// Obtiene las compañías  activas.
+        /// </summary>
+        /// <param name="id">El ID de la compañía a buscar.</param>
+        /// <returns>La CompanyDTO si se encuentra, o NotFound si no existe o está eliminada.</returns>
+        [HttpGet("active")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator) + "," + nameof(AppRoles.MultiEmpresa))]
+        public async Task<ActionResult<CompanyDTO>> GetActiveCompany()
+        {
+            var company = await _repository.FindBy<Company>(x => (x.IsActive ?? false) && !(x.IsDeleted ?? false));
+            if (company == null)
+                return NotFound(new ApiResponse());
+
+            var companyDTO = _mapper.Map<List<CompanyDTO>>(company);
+
+            return Ok(new ApiResponse { Data = companyDTO });
+        }
+
+        /// <summary>
         /// Obtiene una compañía específica por su ID.
         /// </summary>
         /// <param name="id">El ID de la compañía a buscar.</param>
         /// <returns>La CompanyDTO si se encuentra, o NotFound si no existe o está eliminada.</returns>
         [HttpGet("{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult<CompanyDTO>> GetCompanyById(int id)
         {
             var company = await _repository.FindBy<Company>(x => x.IdCompany == id && !(x.IsDeleted ?? false));
@@ -103,22 +126,27 @@ namespace GenericApp.API.Controllers
         /// <param name="model">El CompanyDTO con los datos de la compañía a crear.</param>
         /// <returns>La ApiResponse vacía en caso de éxito, o un conflicto si ya existe una compañía con el mismo nombre o RFC.</returns>
         [HttpPost]
-        public async Task<ActionResult> AddCompany([FromBody] CompanyDTO model)
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+        public async Task<ActionResult> AddCompany([FromForm] CompanyDTO model) // 2. Cambiar a [FromForm]
         {
+            // Validaciones de existencia (Tu lógica original)
             var companyExists = await _repository.FirstOrDefault<Company>(x => (x.Name.ToLower().Equals(model.Name.ToLower()) || x.Rfc.ToLower().Equals(model.Rfc.ToLower())) && !(x.IsDeleted ?? false));
+
             if (companyExists != null)
-                return Conflict(
-                    new ApiResponse
-                    {
-                        Conflict = $"{(companyExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}, {(companyExists.Rfc.ToLower().Equals(model.Rfc.ToLower()) ? model.Rfc : "")}"
-                    }
-                );
+                return Conflict(new ApiResponse { Conflict = $"{(companyExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}, {(companyExists.Rfc.ToLower().Equals(model.Rfc.ToLower()) ? model.Rfc : "")}" });
 
             var companyDB = _mapper.Map<Company>(model);
+
+            // 3. Lógica para guardar la imagen
+            //if (model.Logo != null)
+            //{
+            //    // Asumiendo que tu entidad Company tiene una propiedad string llamada 'Logo' o 'LogoPath'
+            //    companyDB.LogoName = await GuardarLogo(model.Logo);
+            //}
+
             var result = await _repository.Add(companyDB);
 
-            if (!result)
-                return BadRequest(new ApiResponse());
+            if (!result) return BadRequest(new ApiResponse());
 
             return Ok(new ApiResponse());
         }
@@ -129,6 +157,7 @@ namespace GenericApp.API.Controllers
         /// <param name="model">El CompanyDTO con los datos actualizados.</param>
         /// <returns>La ApiResponse vacía en caso de éxito, o un conflicto si ya existe otra compañía (no eliminada) con el mismo nombre o RFC.</returns>
         [HttpPut]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> UpdateCompany([FromBody] CompanyDTO model)
         {
             var companyExists = await _repository.FirstOrDefault<Company>(x => (x.Name.ToLower().Equals(model.Name.ToLower()) || x.Rfc.ToLower().Equals(model.Rfc.ToLower())) && (x.IsDeleted ?? false));
@@ -149,12 +178,38 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse());
         }
 
+        private async Task<string> GuardarLogo(IFormFile logo)
+        {
+            // Definir la ruta: wwwroot/img/logos
+            string carpeta = Path.Combine(_env.WebRootPath, "img", "logos");
+
+            // Crear directorio si no existe
+            if (!Directory.Exists(carpeta))
+            {
+                Directory.CreateDirectory(carpeta);
+            }
+
+            // Generar nombre único para evitar colisiones (Guid + extensión original)
+            string nombreArchivo = $"{Guid.NewGuid()}{Path.GetExtension(logo.FileName)}";
+            string rutaCompleta = Path.Combine(carpeta, nombreArchivo);
+
+            // Guardar el archivo físicamente
+            using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+            {
+                await logo.CopyToAsync(stream);
+            }
+
+            // Retornar el nombre del archivo (o la ruta relativa) para guardar en BD
+            return nombreArchivo;
+        }
+
         /// <summary>
         /// Deshabilita lógicamente una compañía existente (establece IsActive = false).
         /// </summary>
         /// <param name="id">El ID de la compañía a deshabilitar.</param>
         /// <returns>La CompanyDTO de la entidad actualizada.</returns>
         [HttpPut("disable/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DisableCompany(int id)
         {
             var company = await _repository.GetById<Company>(id);
@@ -175,6 +230,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID de la compañía a habilitar.</param>
         /// <returns>La CompanyDTO de la entidad actualizada.</returns>
         [HttpPut("enable/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> EnableCompany(int id)
         {
             var company = await _repository.FirstOrDefault<Company>(x => x.IdCompany == id && !(x.IsDeleted ?? false));
@@ -195,6 +251,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID de la compañía a eliminar.</param>
         /// <returns>La CompanyDTO de la entidad eliminada lógicamente.</returns>
         [HttpDelete("{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DeleteCompany(int id)
         {
             var company = await _repository.FirstOrDefault<Company>(x => x.IdCompany == id && !(x.IsDeleted ?? false));

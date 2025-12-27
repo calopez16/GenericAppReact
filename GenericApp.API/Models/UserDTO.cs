@@ -8,6 +8,7 @@
         public string? RoleName { get; set; }
         public string? NewPassword { get; set; }
         public bool? IsDisabled { get; set; }
+        public int? IdCompany { get; set; }
         public List<UserClaimDTO>? Claims { get; set; }
         public List<string>? Roles { get; set; }
     }

@@ -10,7 +10,7 @@ const createApiMethodsService = (moduleSource, rowMapper) => ({
     getDataPagination: (pageNumber = 1, pageSize = 10, searchTerm = "", active = null) => GET(`${moduleSource}/pagination?pageNumber=${pageNumber}&pageSize=${pageSize}&searchTerm=${searchTerm}` + (active ? `&active=${active}` : '')),
     disableData: (dataId) => PUT(`${moduleSource}/disable/${dataId}`),
     enableData: (dataId) => PUT(`${moduleSource}/enable/${dataId}`)
-
+    
 });
 
 export default createApiMethodsService;

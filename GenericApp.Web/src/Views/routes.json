@@ -8,10 +8,10 @@
     "exact": true
   },
   {
-    "id": "embarques",
-    "path": "/embarques",
-    "i18nKey": "embarques",
-    "i18nKeyDescription": "embarques_description",
+    "id": "shipments",
+    "path": "/shipments",
+    "i18nKey": "shipments",
+    "i18nKeyDescription": "shipments_description",
     "icon": "TruckIcon",
     "exact": true
   },

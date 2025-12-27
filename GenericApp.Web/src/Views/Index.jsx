@@ -12,8 +12,8 @@ import SeasonsPage from '@views/Seasons'
 import LabelsPage from '@views/Labels'
 import NotFoundPage from '@views/Pages/NotFound'
 import Parameters from '@views/Parameters'
-import EmbarquesList from '@views/Embarques/Index';
-import EmbarqueAddOrEdit from '@views/Embarques/EmbarqueAddOrEdit';
+import ShipmentsPage from '@views/Shipments/Index';
+import EmbarqueAddOrEdit from '@views/Shipments/ShipmentAddOrEdit';
 
 function App() {
     return (
@@ -32,7 +32,7 @@ function App() {
 
                 
                 <Route path="/shipments">                   
-                    <Route index element={<EmbarquesList />} />
+                    <Route index element={<ShipmentsPage />} />
                     <Route path="add" element={<EmbarqueAddOrEdit isEditing={false} />} />
                     <Route path="edit/:id" element={<EmbarqueAddOrEdit isEditing={true} />} />
                 </Route>

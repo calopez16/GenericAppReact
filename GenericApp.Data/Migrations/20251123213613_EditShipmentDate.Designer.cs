@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251123213613_EditShipmentDate")]
+    partial class EditShipmentDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -104,96 +106,6 @@ namespace GenericApp.Data.Migrations
                     b.HasIndex("IdState");
 
                     b.ToTable("Cities");
-
-                    b.HasData(
-                        new
-                        {
-                            IdCity = 1,
-                            Description = "Tijuana",
-                            IdState = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdCity = 2,
-                            Description = "Mexicali",
-                            IdState = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdCity = 3,
-                            Description = "Ensenada",
-                            IdState = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdCity = 4,
-                            Description = "Playas de Rosarito",
-                            IdState = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdCity = 5,
-                            Description = "Tecate",
-                            IdState = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdCity = 6,
-                            Description = "San Quintín",
-                            IdState = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdCity = 7,
-                            Description = "San Felipe",
-                            IdState = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdCity = 8,
-                            Description = "Los Angeles",
-                            IdState = 37,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdCity = 9,
-                            Description = "San Diego",
-                            IdState = 37,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdCity = 10,
-                            Description = "San Jose",
-                            IdState = 37,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdCity = 11,
-                            Description = "Calexico",
-                            IdState = 37,
-                            IsActive = true,
-                            IsDeleted = false
-                        });
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Client", b =>
@@ -276,9 +188,6 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<string>("LogoName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -307,15 +216,6 @@ namespace GenericApp.Data.Migrations
                     b.HasKey("IdCompany");
 
                     b.ToTable("Companies");
-
-                    b.HasData(
-                        new
-                        {
-                            IdCompany = 1,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Mision"
-                        });
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Country", b =>
@@ -344,22 +244,6 @@ namespace GenericApp.Data.Migrations
                     b.HasKey("IdCountry");
 
                     b.ToTable("Countries");
-
-                    b.HasData(
-                        new
-                        {
-                            IdCountry = 1,
-                            Description = "México",
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdCountry = 2,
-                            Description = "Estados Unidos",
-                            IsActive = true,
-                            IsDeleted = false
-                        });
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Driver", b =>
@@ -485,10 +369,6 @@ namespace GenericApp.Data.Migrations
                     b.Property<DateTime>("ExitDate")
                         .HasColumnType("date");
 
-                    b.Property<int?>("IdCompany")
-                        .IsRequired()
-                        .HasColumnType("int");
-
                     b.Property<int>("IdDriver")
                         .HasColumnType("int");
 
@@ -524,8 +404,6 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("IdManifest");
-
-                    b.HasIndex("IdCompany");
 
                     b.HasIndex("IdDriver");
 
@@ -800,10 +678,6 @@ namespace GenericApp.Data.Migrations
                     b.Property<int>("IdClient")
                         .HasColumnType("int");
 
-                    b.Property<int?>("IdCompany")
-                        .IsRequired()
-                        .HasColumnType("int");
-
                     b.Property<int>("IdShipmentStatus")
                         .HasColumnType("int");
 
@@ -829,8 +703,6 @@ namespace GenericApp.Data.Migrations
                     b.HasIndex("IdCity");
 
                     b.HasIndex("IdClient");
-
-                    b.HasIndex("IdCompany");
 
                     b.HasIndex("IdShipmentStatus");
 
@@ -927,694 +799,6 @@ namespace GenericApp.Data.Migrations
                     b.HasIndex("IdCountry");
 
                     b.ToTable("States");
-
-                    b.HasData(
-                        new
-                        {
-                            IdState = 1,
-                            Description = "Aguascalientes",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 2,
-                            Description = "Baja California",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 3,
-                            Description = "Baja California Sur",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 4,
-                            Description = "Campeche",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 5,
-                            Description = "Coahuila",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 6,
-                            Description = "Colima",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 7,
-                            Description = "Chiapas",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 8,
-                            Description = "Chihuahua",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 9,
-                            Description = "Ciudad de México",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 10,
-                            Description = "Durango",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 11,
-                            Description = "Guanajuato",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 12,
-                            Description = "Guerrero",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 13,
-                            Description = "Hidalgo",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 14,
-                            Description = "Jalisco",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 15,
-                            Description = "Estado de México",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 16,
-                            Description = "Michoacán",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 17,
-                            Description = "Morelos",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 18,
-                            Description = "Nayarit",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 19,
-                            Description = "Nuevo León",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 20,
-                            Description = "Oaxaca",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 21,
-                            Description = "Puebla",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 22,
-                            Description = "Querétaro",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 23,
-                            Description = "Quintana Roo",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 24,
-                            Description = "San Luis Potosí",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 25,
-                            Description = "Sinaloa",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 26,
-                            Description = "Sonora",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 27,
-                            Description = "Tabasco",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 28,
-                            Description = "Tamaulipas",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 29,
-                            Description = "Tlaxcala",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 30,
-                            Description = "Veracruz",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 31,
-                            Description = "Yucatán",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 32,
-                            Description = "Zacatecas",
-                            IdCountry = 1,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 33,
-                            Description = "Alabama",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 34,
-                            Description = "Alaska",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 35,
-                            Description = "Arizona",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 36,
-                            Description = "Arkansas",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 37,
-                            Description = "California",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 38,
-                            Description = "Colorado",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 39,
-                            Description = "Connecticut",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 40,
-                            Description = "Delaware",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 41,
-                            Description = "Florida",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 42,
-                            Description = "Georgia",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 43,
-                            Description = "Hawaii",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 44,
-                            Description = "Idaho",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 45,
-                            Description = "Illinois",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 46,
-                            Description = "Indiana",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 47,
-                            Description = "Iowa",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 48,
-                            Description = "Kansas",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 49,
-                            Description = "Kentucky",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 50,
-                            Description = "Louisiana",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 51,
-                            Description = "Maine",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 52,
-                            Description = "Maryland",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 53,
-                            Description = "Massachusetts",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 54,
-                            Description = "Michigan",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 55,
-                            Description = "Minnesota",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 56,
-                            Description = "Mississippi",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 57,
-                            Description = "Missouri",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 58,
-                            Description = "Montana",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 59,
-                            Description = "Nebraska",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 60,
-                            Description = "Nevada",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 61,
-                            Description = "New Hampshire",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 62,
-                            Description = "New Jersey",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 63,
-                            Description = "New Mexico",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 64,
-                            Description = "New York",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 65,
-                            Description = "North Carolina",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 66,
-                            Description = "North Dakota",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 67,
-                            Description = "Ohio",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 68,
-                            Description = "Oklahoma",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 69,
-                            Description = "Oregon",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 70,
-                            Description = "Pennsylvania",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 71,
-                            Description = "Rhode Island",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 72,
-                            Description = "South Carolina",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 73,
-                            Description = "South Dakota",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 74,
-                            Description = "Tennessee",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 75,
-                            Description = "Texas",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 76,
-                            Description = "Utah",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 77,
-                            Description = "Vermont",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 78,
-                            Description = "Virginia",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 79,
-                            Description = "Washington",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 80,
-                            Description = "West Virginia",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 81,
-                            Description = "Wisconsin",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdState = 82,
-                            Description = "Wyoming",
-                            IdCountry = 2,
-                            IsActive = true,
-                            IsDeleted = false
-                        });
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.UserDetail", b =>
-                {
-                    b.Property<int>("IdUserDetail")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUserDetail"), 1L, 1);
-
-                    b.Property<int?>("IdCompany")
-                        .IsRequired()
-                        .HasColumnType("int");
-
-                    b.Property<string>("IdUser")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("IdUserDetail");
-
-                    b.ToTable("UserDetails");
-
-                    b.HasData(
-                        new
-                        {
-                            IdUserDetail = 1,
-                            IdCompany = 1,
-                            IdUser = "a18be9c0-aa65-4af8-bd17-00bd9344e577"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -1657,13 +841,6 @@ namespace GenericApp.Data.Migrations
                             ConcurrencyStamp = "a18be9c0-aa65-4af8-bd17-00bd9344e576",
                             Name = "User",
                             NormalizedName = "USER"
-                        },
-                        new
-                        {
-                            Id = "a18be9c0-aa65-4af8-bd17-00bd9344e578",
-                            ConcurrencyStamp = "a18be9c0-aa65-4af8-bd17-00bd9344e578",
-                            Name = "MultiEmpresa",
-                            NormalizedName = "MULTIEMPRESA"
                         });
                 });
 
@@ -1767,7 +944,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEC/D6UrfsdH1SE8zcIoFxA9nJ5dymXcXH+NPsSqqjj/RxeX3629nles9niZ8pbGmDA==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEF7I9h0DzUvMgFx2O9gRuqDir46sWI8RaY097koTrx9iwwrTRxKBWr/zrUFU3oIuWg==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
@@ -1930,12 +1107,6 @@ namespace GenericApp.Data.Migrations
 
             modelBuilder.Entity("GenericApp.Data.Models.Manifest", b =>
                 {
-                    b.HasOne("GenericApp.Data.Models.Company", null)
-                        .WithMany()
-                        .HasForeignKey("IdCompany")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("GenericApp.Data.Models.Driver", null)
                         .WithMany()
                         .HasForeignKey("IdDriver")
@@ -2034,12 +1205,6 @@ namespace GenericApp.Data.Migrations
                     b.HasOne("GenericApp.Data.Models.Client", null)
                         .WithMany()
                         .HasForeignKey("IdClient")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Company", null)
-                        .WithMany()
-                        .HasForeignKey("IdCompany")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

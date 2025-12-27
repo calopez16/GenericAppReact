@@ -10,7 +10,8 @@
     public enum AppRoles
     {
         Administrator,
-        User
+        User,
+        MultiEmpresa
     }
 
 }

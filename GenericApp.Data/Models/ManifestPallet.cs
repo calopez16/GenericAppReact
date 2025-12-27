@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,8 +19,11 @@ namespace GenericApp.Data.Models
         public decimal? TemperatureC { get; set; }
         public string? Comments { get; set; }
         public bool? IsDeleted { get; set; }
-        public Manifest ManifestNavigation { get; set; } 
-        public Label LabelNavigation { get; set; } 
+        [NotMapped]
+        public Manifest ManifestNavigation { get; set; }
+        [NotMapped]
+        public Label LabelNavigation { get; set; }
+        [NotMapped]
         public ICollection<ManifestPalletLoading> ManifestPalletLoadings { get; set; } = new List<ManifestPalletLoading>();
     }
 }

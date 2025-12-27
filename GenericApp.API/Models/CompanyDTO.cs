@@ -12,5 +12,7 @@
         public string? RegFdaNo { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
+        public IFormFile? Logo { get; set; }
+        public string? LogoName { get; set; }
     }
 }

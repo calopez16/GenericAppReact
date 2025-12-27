@@ -7,7 +7,7 @@ const dataMapper = (i, rowData) => {
     return rowData;
 };
 
-export const DataAPIEmbarquesService = () => {
+export const dataApiShipmentsService = () => {
     const genericService = createApiMethodsService(moduleSource, dataMapper);
 
     return {

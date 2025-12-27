@@ -1,6 +1,7 @@
 ﻿using GenericApp.API.Constants;
 using GenericApp.API.Models;
 using GenericApp.BLL.Sevices.Interface;
+using GenericApp.Data.Models;
 using GenericApp.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -28,6 +29,7 @@ namespace GenericApp.API.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly IRepository _repository;
 
         /// <summary>
         /// Inicializa una nueva instancia del controlador UsersController.
@@ -37,11 +39,13 @@ namespace GenericApp.API.Controllers
         /// <param name="configuration">Configuración de la aplicación.</param>
         /// <param name="signInManager">Administrador de inicio de sesión de ASP.NET Core Identity.</param>
         public UsersController(
+            IRepository repository,
             UserManager<IdentityUser> userManager,
             RoleManager<IdentityRole> roleManager,
             IConfiguration configuration,
             SignInManager<IdentityUser> signInManager)
         {
+            _repository = repository;
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
@@ -121,13 +125,15 @@ namespace GenericApp.API.Controllers
             {
                 var roles = await _userManager.GetRolesAsync(user);
                 var claims = await _userManager.GetClaimsAsync(user);
+                var userDetail = await _repository.FirstOrDefault<UserDetail>(x => x.IdUser.Equals(user.Id));
                 usersWithClaims.Add(new UserDTO
                 {
                     UserNameId = user.UserName,
                     UserName = user.UserName,
                     Email = user.Email,
                     Roles = roles.ToList(),
-                    IsDisabled = claims.Any(x => x.Type == nameof(AppPolicies.IsDisabled))
+                    IsDisabled = claims.Any(x => x.Type == nameof(AppPolicies.IsDisabled)),
+                    IdCompany = userDetail?.IdCompany
                 });
             }
 
@@ -180,7 +186,22 @@ namespace GenericApp.API.Controllers
                             await _userManager.AddToRoleAsync(user, roleName);
                     }
                 }
+                try
+                {
 
+
+                    var userDetail = new UserDetail
+                    {
+                        IdUser = user.Id,
+                        IdCompany = model.IdCompany
+                    };
+
+                    var userDetailResult = await _repository.Add<UserDetail>(userDetail);
+                }
+                catch (Exception ex)
+                {
+
+                }
                 return Ok(new ApiResponse { Data = new { NewPassword = newPassword } });
             }
 
@@ -228,6 +249,24 @@ namespace GenericApp.API.Controllers
             var rolesToRemove = existingRoles.Except(model.Roles).ToList();
             if (rolesToRemove.Any())
                 await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
+
+            var userDetail = await _repository.FirstOrDefault<UserDetail>(x => x.IdUser.Equals(user.Id));
+            if (userDetail != null)
+            {
+                userDetail.IdCompany = model.IdCompany;
+                var userDetailResult = await _repository.Update<UserDetail>(userDetail);
+
+            }
+            else
+            {
+                userDetail = new UserDetail
+                {
+                    IdUser = user.Id,
+                    IdCompany = model.IdCompany
+                };
+
+                var userDetailResult = await _repository.Add<UserDetail>(userDetail);
+            }
 
             return Ok(new ApiResponse());
         }

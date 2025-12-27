@@ -15,6 +15,7 @@ import {
     OutlinedInput,
     Checkbox,
     ListItemText,
+    FormHelperText
 } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
@@ -23,15 +24,21 @@ import { DataAPIUsersService } from '@data/Users/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import PasswordModal from './PasswordModal';
+import { DataAPICompaniesService } from '@data/Companies/Data';
 
 const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const { t } = useTranslation();
     const service = DataAPIUsersService();
+    const cityDataCompanies = DataAPICompaniesService();
+
+    // Estado para almacenar la lista de compañías
+    const [companies, setCompanies] = useState([]);
 
     const [formData, setFormData] = useState({
         userName: '',
         email: '',
         roles: [],
+        idCompany: ''
     });
 
     const [roles, setRoles] = useState([]);
@@ -43,11 +50,23 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         userName: false,
         email: false,
         roles: false,
+        idCompany: false
     });
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-
+    // Carga inicial de datos
     useEffect(() => {
+        const fetchCompanies = async () => {
+            try {
+                const response = await cityDataCompanies.getDataActive();
+                if (response.success && Array.isArray(response.data)) {
+                    setCompanies(response.data);
+                }
+            } catch (error) {
+                console.error("Error al cargar las compañías:", error);
+            }
+        };
+
         const loadRoles = async () => {
             try {
                 const response = await service.getRoles();
@@ -56,9 +75,12 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 console.error(t('error_loadingRoles'), error);
             }
         };
+
+        fetchCompanies();
         loadRoles();
     }, []);
 
+    // Inicialización del formulario
     useEffect(() => {
         if (open) {
             if (isEditing && data) {
@@ -66,19 +88,23 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     userName: data.userName,
                     email: data.email,
                     roles: data.roles?.map(role => role) || [],
+                    idCompany: data.idCompany || '',
                 });
             } else {
                 setFormData({
                     userName: '',
                     email: '',
                     roles: [],
+                    // Seleccionar la primera compañía por defecto si existe
+                    idCompany: companies.length > 0 ? companies[0].id : '',
                 });
             }
-            setValidationErrors({ userName: false, email: false, roles: false });
+            setValidationErrors({ userName: false, email: false, roles: false, idCompany: false });
             setHasAttemptedSubmit(false);
         }
-    }, [open, isEditing, data]);
+    }, [open, isEditing, data, companies]);
 
+    // 1. Manejador para Inputs de Texto (UserName, Email)
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -89,11 +115,28 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         if (hasAttemptedSubmit) {
             setValidationErrors(prev => ({
                 ...prev,
-                [name]: value.length === 0,
+                [name]: value.trim() === '', // Validación simple de texto
             }));
         }
     };
 
+    // 2. Manejador específico para Compañía (Dropdown simple)
+    const handleCompanyChange = (e) => {
+        const { value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            idCompany: value
+        }));
+
+        if (hasAttemptedSubmit) {
+            setValidationErrors(prev => ({
+                ...prev,
+                idCompany: !value, // Error si no hay valor seleccionado
+            }));
+        }
+    };
+
+    // 3. Manejador específico para Roles (Dropdown múltiple)
     const handleRoleChange = (e) => {
         const { value } = e.target;
         const newRoles = typeof value === 'string' ? value.split(',') : value;
@@ -115,11 +158,12 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             userName: !formData.userName.trim(),
             email: !formData.email.trim(),
             roles: formData.roles.length === 0,
+            idCompany: !formData.idCompany,
         };
 
         setValidationErrors(errors);
 
-        return !errors.userName && !errors.email && !errors.roles;
+        return !errors.userName && !errors.email && !errors.roles && !errors.idCompany;
     };
 
     const handleSubmit = async (event) => {
@@ -139,6 +183,7 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 userName: formData.userName,
                 email: formData.email,
                 roles: formData.roles,
+                idCompany: formData.idCompany,
             };
 
             let response;
@@ -162,8 +207,8 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             if (response.success) {
                 if (isEditing) {
                     setData(prevData =>
-                        prevData.map(data =>
-                            data.userNameId === userPayload.userNameId ? { ...data, ...userPayload, userNameId: userPayload.userName } : data
+                        prevData.map(d =>
+                            d.userNameId === userPayload.userNameId ? { ...d, ...userPayload, userNameId: userPayload.userName } : d
                         )
                     );
                 } else {
@@ -223,6 +268,34 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             error={validationErrors.email}
                             helperText={validationErrors.email ? requiredErrorText : ''}
                         />
+
+                        {/* --- DROPDOWN DE COMPAÑÍA --- */}
+                        <FormControl
+                            fullWidth
+                            margin="normal"
+                            required
+                            error={validationErrors.idCompany}
+                        >
+                            <InputLabel id="company-select-label">{t('company') || 'Compañía'}</InputLabel>
+                            <Select
+                                labelId="company-select-label"
+                                id="company-select"
+                                name="idCompany"
+                                value={formData.idCompany ?? ''}
+                                onChange={handleCompanyChange} // <--- USANDO LA NUEVA FUNCIÓN
+                                label={t('company') || 'Compañía'}
+                            >
+                                {companies.map((company) => (
+                                    <MenuItem key={company.idCompany} value={company.idCompany}>
+                                        {company.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                            {validationErrors.idCompany && (
+                                <FormHelperText>{requiredErrorText}</FormHelperText>
+                            )}
+                        </FormControl>
+
                         <FormControl
                             fullWidth
                             margin="normal"

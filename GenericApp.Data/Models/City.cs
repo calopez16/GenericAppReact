@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +14,9 @@ namespace GenericApp.Data.Models
         public int IdState { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
+        [NotMapped]
         public State IdStateNavigation { get; set; }
+        [NotMapped]
         public List<Client> Clients { get; set; }
     }
 }

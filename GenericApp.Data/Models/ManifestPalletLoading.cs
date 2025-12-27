@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,7 +17,9 @@ namespace GenericApp.Data.Models
         public string? Description { get; set; }
         public decimal? BoxQuantity { get; set; }
         public bool? IsDeleted { get; set; }
+        [NotMapped]
         public ManifestPallet ManifestPalletNavigation { get; set; }
+        [NotMapped]
         public LabelType LabelTypeNavigation { get; set; }
     }
 }

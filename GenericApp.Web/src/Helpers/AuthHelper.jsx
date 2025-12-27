@@ -18,6 +18,7 @@ export const AuthHelper = {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('userName');
         localStorage.removeItem('userRole');
+        localStorage.removeItem('company');
         window.dispatchEvent(new Event('storage'));
         if (redirectToLogin)
             // Redirección forzada al login.

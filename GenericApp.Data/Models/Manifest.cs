@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,9 +23,17 @@ namespace GenericApp.Data.Models
         public int IdManifestStatus { get; set; }
         public string? Comments { get; set; }
         public bool? IsDeleted { get; set; }
+        public int? IdCompany { get; set; }
+
+        [NotMapped]
+        public Company CompanyNavigation { get; set; }
+        [NotMapped]
         public Shipment ShipmentNavigation { get; set; }
+        [NotMapped]
         public Driver DriverNavigation { get; set; }
+        [NotMapped]
         public ManifestStatus ManifestStatusNavigation { get; set; }
+        [NotMapped]
         public ICollection<ManifestPallet> ManifestPallets { get; set; } = new List<ManifestPallet>();
     }
 }

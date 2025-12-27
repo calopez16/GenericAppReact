@@ -17,7 +17,7 @@ namespace GenericApp.API.Controllers
     /// Requiere autenticación y el rol de Administrador.
     /// </summary>
     [ApiController]
-    [Route("manifest-status")]
+    [Route("shipment-status")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
     public class ShipmentStatusController : ControllerBase
     {

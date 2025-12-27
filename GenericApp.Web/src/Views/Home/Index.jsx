@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
 import { AppContext } from '@helpers/AppContext';
 import AppLogoImage from '@images/logo.png'
+import { API_BASE_URL } from '@config';
 
 // Importaciones de rutas
 import routes from '@views/routes.json';
@@ -18,6 +19,7 @@ import {
     Button,
     Box,
     Paper,
+    Avatar, // <--- Importación agregada
     Link
 } from '@mui/material';
 
@@ -42,7 +44,16 @@ const iconMap = {
 const WelcomePage = () => {
     // Hook de traducción
     const { t } = useTranslation();
-    const { userName = 'Usuario' } = useContext(AppContext);
+    const { userName = 'Usuario', companySelected } = useContext(AppContext);
+    const hasCompany = companySelected && Object.keys(companySelected).length > 0;
+
+    const displayLogo = hasCompany
+        ? `${API_BASE_URL}/img/logos/${companySelected.logoName}`
+        : AppLogoImage;
+
+    const displayName = hasCompany
+        ? companySelected.name
+        : t('app_name');
 
     return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -59,33 +70,32 @@ const WelcomePage = () => {
                     }}
                 >
                     <Box sx={{ mb: { xs: 2, md: 0 } }}> {/* Contenedor del texto */}
-                        <Typography variant="h4" component="h1" gutterBottom>
-                            {t('welcome_page_title')} {userName} 👋
+                        <Typography variant="h4" component="h2" gutterBottom>
+                            {displayName}  - {t('welcome_page_title')} {userName} 👋
                         </Typography>
                         <Typography variant="body1" color="text.secondary">
                             {t('welcome_page_subtitle')}
                         </Typography>
                     </Box>
 
-                    {/* Logo más grande y circular */}
+                    {/* Logo más grande usando Avatar */}
                     <Box sx={{
                         flexShrink: 0,
                         ml: { md: 4 },
-                        display: 'flex', // Asegura que el contenedor del logo también sea flex para centrar la imagen si es necesario
+                        display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
                     }}>
-                        <img
-                            src={AppLogoImage}
-                            alt="Logo de la Aplicación"
-                            style={{
-                                width: '200px', // Ancho fijo para el círculo
-                                height: '200px', // Alto fijo para el círculo (igual al ancho)
-                                borderRadius: '50%', // Hace la imagen circular
-                                objectFit: 'cover',  // Asegura que la imagen cubra el área sin distorsionarse
-                                border: '2px solid', // Añade un borde sutil
-                                borderColor: 'primary.main', // Color del borde (usando el tema de MUI)
-                                boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)' // Sombra para darle profundidad
+                        <Avatar
+                            src={displayLogo}
+                            alt={displayName}
+                            sx={{
+                                width: 200,  // Ancho del Avatar
+                                height: 200, // Alto del Avatar
+                                border: '2px solid',
+                                borderColor: 'primary.main', // Usa el color primario del tema
+                                boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+                                bgcolor: 'transparent' // Asegura fondo transparente si la imagen es PNG
                             }}
                         />
                     </Box>
@@ -170,15 +180,15 @@ const WelcomePage = () => {
             </Box>
 
             {/*<Box sx={{ mt: 5, textAlign: 'center' }}>*/}
-            {/*    <Paper elevation={1} sx={{ p: 2, display: 'inline-block' }}>*/}
-            {/*        <Typography variant="body2" color="text.secondary">*/}
-            {/*            {t('welcome_page.support_text')} {' '}*/}
-            {/*            <Link href="mailto:soporte@tuempresa.com">*/}
-            {/*                soporte@tuempresa.com*/}
-            {/*            </Link>*/}
-            {/*            .*/}
-            {/*        </Typography>*/}
-            {/*    </Paper>*/}
+            {/* <Paper elevation={1} sx={{ p: 2, display: 'inline-block' }}>*/}
+            {/* <Typography variant="body2" color="text.secondary">*/}
+            {/* {t('welcome_page.support_text')} {' '}*/}
+            {/* <Link href="mailto:soporte@tuempresa.com">*/}
+            {/* soporte@tuempresa.com*/}
+            {/* </Link>*/}
+            {/* .*/}
+            {/* </Typography>*/}
+            {/* </Paper>*/}
             {/*</Box>*/}
 
         </Container>

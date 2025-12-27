@@ -4,6 +4,7 @@ import { AppContext } from '@helpers/AppContext';
 import routes from '@views/routes.json';
 import AppLogoImage from '@images/logo.png';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { API_BASE_URL } from '@config';
 
 import {
     Drawer,
@@ -16,7 +17,8 @@ import {
     Typography,
     Collapse,
     IconButton,
-    Avatar
+    Avatar,
+    Divider 
 } from '@mui/material';
 
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -28,6 +30,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import TruckIcon from '@mui/icons-material/FireTruck';
+import BusinessIcon from '@mui/icons-material/Business';
 
 const drawerWidth = 240;
 
@@ -40,12 +43,10 @@ const iconMap = {
     TruckIcon: TruckIcon
 };
 
-const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath, closeSidebarOnMobile) => {
-
+const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath, closeSidebarOnMobile, companySelected) => {
     return items.map((item) => {
         const IconComponent = iconMap[item.icon];
         const isSubmenuOpen = openSubmenu === item.id;
-
         const isItemSelected = currentPath.startsWith(item.path) && item.path !== '/';
 
         if (item.submenu) {
@@ -59,16 +60,12 @@ const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath, clos
                     >
                         {IconComponent && <ListItemIcon><IconComponent /></ListItemIcon>}
                         <ListItemText primary={t(item.i18nKey)} />
-                        {/* El icono de expansión debe basarse en el estado actual del submenú */}
                         {isSubmenuOpen ? <ExpandLess /> : <ExpandMore />}
                     </ListItemButton>
-                    {/* CRUCIAL: El colapso se mantiene abierto si fue abierto manualmente O si la ruta está activa */}
                     <Collapse in={isSubmenuOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
                             {item.submenu.map((subItem) => {
-                                // Sub-elemento se selecciona si su path coincide
                                 const isSubItemSelected = currentPath.startsWith(subItem.path);
-
                                 return (
                                     <ListItemButton
                                         key={subItem.id}
@@ -106,13 +103,23 @@ const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath, clos
 
 const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
     const { t } = useTranslation();
-    const { themeMode } = useContext(AppContext);
+    const { themeMode, companySelected } = useContext(AppContext);
 
     const location = useLocation();
     const currentPath = location.pathname;
-
-    // Usamos un ref para saber si es la primera carga y si el usuario ya interactuó
     const isFirstRender = useRef(true);
+
+    // --- LÓGICA PARA LOGO Y NOMBRE ---
+    const hasCompany = companySelected && Object.keys(companySelected).length > 0;
+
+    const displayLogo = hasCompany
+        ? `${API_BASE_URL}/img/logos/${companySelected.logoName}`
+        : AppLogoImage;
+
+    const displayName = hasCompany
+        ? companySelected.name
+        : t('app_name');
+    // ---------------------------------
 
     const findParentId = (routes, path) => {
         for (const item of routes) {
@@ -126,15 +133,12 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
         return null;
     };
 
-    // Inicializamos openSubmenu a null (estado cerrado)
     const [openSubmenu, setOpenSubmenu] = useState(null);
 
-    // useEffect para manejar la apertura automática basada en la ruta
     useEffect(() => {
         const activeParentId = findParentId(routes, currentPath);
 
         if (isFirstRender.current) {
-            // En la primera carga, forzar la apertura del submenú activo
             if (activeParentId) {
                 setOpenSubmenu(activeParentId);
             }
@@ -142,21 +146,17 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
             return;
         }
 
-        // Si la ruta activa (activeParentId) es diferente al submenú actualmente abierto,
-        // lo abrimos, respetando el cierre manual si se está en la misma ruta.
         if (activeParentId && openSubmenu !== activeParentId) {
             setOpenSubmenu(activeParentId);
         }
 
-        // Si no hay un padre activo, forzamos el cierre si algo está abierto.
         if (!activeParentId && openSubmenu) {
             setOpenSubmenu(null);
         }
 
-    }, [currentPath]); // Se ejecuta al cambiar de ruta
+    }, [currentPath]);
 
     const toggleSubmenu = (submenuName) => {
-        // La interacción del usuario SIEMPRE debe sobrescribir el estado
         setOpenSubmenu(openSubmenu === submenuName ? null : submenuName);
     };
 
@@ -172,7 +172,24 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
         toggleSubmenu,
         openSubmenu,
         currentPath,
-        closeSidebarOnMobile
+        closeSidebarOnMobile,
+        companySelected
+    );
+
+    // Header reutilizable
+    const SidebarHeader = () => (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar
+                src={displayLogo}
+                alt={displayName}
+                sx={{ mr: 2, width: 40, height: 40 }}
+            >
+                <BusinessIcon />
+            </Avatar>
+            <Typography variant="h6" component="div" noWrap sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                {displayName}
+            </Typography>
+        </Box>
     );
 
     return (
@@ -180,6 +197,7 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
             component="nav"
             sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
         >
+            {/* --- DRAWER MÓVIL --- */}
             <Drawer
                 variant="temporary"
                 open={showSidebar}
@@ -196,19 +214,21 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
                 }}
             >
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar src={AppLogoImage} alt="Logo" sx={{ mr: 2, width: 40, height: 40 }} />
-                        <Typography variant="h6" component="div">{t('app_name')}</Typography>
-                    </Box>
+                    <SidebarHeader />
                     <IconButton onClick={toggleSidebar}>
                         <CloseIcon />
                     </IconButton>
                 </Box>
+
+                {/* SEPARADOR AGREGADO */}
+                <Divider />
+
                 <List>
                     {menuContent}
                 </List>
             </Drawer>
 
+            {/* --- DRAWER DESKTOP --- */}
             <Drawer
                 variant="permanent"
                 sx={{
@@ -222,12 +242,14 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
                 }}
                 open
             >
-                <Box sx={{ p: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Avatar src={AppLogoImage} alt="Logo" sx={{ mr: 2, width: 40, height: 40 }} />
-                        <Typography variant="h6" component="div">{t('app_name')}</Typography>
-                    </Box>
+                {/* Header del drawer */}
+                <Box sx={{ p: 2, minHeight: 64, display: 'flex', alignItems: 'center' }}>
+                    <SidebarHeader />
                 </Box>
+
+                {/* SEPARADOR AGREGADO */}
+                <Divider />
+
                 <List>
                     {menuContent}
                 </List>

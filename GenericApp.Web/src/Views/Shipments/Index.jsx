@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // 👈 IMPORTANTE: Importar useNavigate
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -13,43 +13,46 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
-import { DataAPIEmbarquesService } from '@data/Embarques/Data';
+// Asegúrate de que la ruta de importación sea la correcta según tu estructura
+import { dataApiShipmentsService } from '@data/Shipments/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
-import EmbarqueCardList from './ShipmentCardList';
-import EmbarqueListTable from './ShipmentTableList';
+import ConfirmationModal from '@layout/ConfirmationModal';
 
+// Importamos las vistas de lista (Tabla y Tarjetas)
+import ShipmentCardList from './ShipmentCardList';
+import ShipmentListTable from './ShipmentTableList';
 
-function Index() {
+function ShipmentsIndex() {
     const { t } = useTranslation();
-    const navigate = useNavigate(); // 👈 Inicializar el hook de navegación
-    const embarqueDataService = DataAPIEmbarquesService();
-    const [embarques, setEmbarques] = useState([]);
+    const navigate = useNavigate();
+    const shipmentDataService = dataApiShipmentsService();
+
+    // Estados de Datos y Paginación
+    const [shipments, setShipments] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [totalEmbarques, setTotalEmbarques] = useState(0);
+    const [totalShipments, setTotalShipments] = useState(0);
 
-    // Estados de búsqueda
+    // Estados de Búsqueda
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
+    // Estados de UI y Control
     const [loading, setLoading] = useState(true);
 
-    // ❌ ELIMINAMOS los estados de modal y edición, ya que la navegación los reemplaza.
-    // const [isModalOpen, setIsModalOpen] = useState(false);
-    // const [selectedEmbarque, setSelectedEmbarque] = useState(null);
-    // const [isEditing, setIsEditing] = useState(false);
+    // Estados para Eliminar
+    const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
+    const [shipmentToDelete, setShipmentToDelete] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
 
-    // Mantenemos los estados para las funciones de Reset Password si son modales
-    const [isConfirmResetPasswordModalOpen, setIsConfirmResetPasswordModalOpen] = useState(false);
-    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-    const [assignedPassword, setAssignedPassword] = useState('');
-    const [selectedEmbarque, setSelectedEmbarque] = useState(null); // Necesario para Reset Password
+    const ANIMATION_DURATION = 500;
 
+    // Lógica Responsiva solicitada
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
 
-    // Efectos de Debounce y Carga de Datos (se mantienen sin cambios)
+    // Debounce para la búsqueda
     useEffect(() => {
         const timerId = setTimeout(() => {
             setDebouncedSearchTerm(searchTerm);
@@ -59,25 +62,31 @@ function Index() {
         };
     }, [searchTerm]);
 
+    // Carga de datos
     useEffect(() => {
-        const loadEmbarques = async () => {
+        const loadShipments = async () => {
             try {
                 setLoading(true);
-                const response = await embarqueDataService.getPagination(page + 1, rowsPerPage, debouncedSearchTerm);
-                setEmbarques(response.data.embarques);
-                setTotalEmbarques(response.data.totalCount);
+                // Asumiendo que getPagination acepta (pageNumber, pageSize, searchTerm)
+                const response = await shipmentDataService.getPagination(page + 1, rowsPerPage, debouncedSearchTerm);
+
+                // Ajustar según la estructura de respuesta de tu API (Data.jsx)
+                // Generalmente es response.data.Data para la lista y response.data.TotalCount para el total
+                if (response.data && response.data.Data) {
+                    setShipments(response.data.Data.Data || response.data.Data); // Ajuste por si viene anidado en paginatedResponse
+                    setTotalShipments(response.data.Data.TotalCount || response.data.TotalCount || 0);
+                }
             } catch (error) {
-                console.error("Error loading embarques:", error);
+                console.error("Error loading shipments:", error);
+                ShowMessage(t('error_fetching_data'), 'error');
             } finally {
                 setLoading(false);
             }
         };
 
-        loadEmbarques();
-    }, [page, rowsPerPage, debouncedSearchTerm]);
+        loadShipments();
+    }, [page, rowsPerPage, debouncedSearchTerm, shipmentDataService, t]);
 
-
-    // Handlers de paginación y búsqueda
     const handlePageChange = (event, newPage) => {
         setPage(newPage);
     };
@@ -92,42 +101,104 @@ function Index() {
         setPage(0);
     };
 
-    // Handlers de acciones de datos (se mantienen sin cambios)
-    const handleToggleEmbarqueStatus = async (embarque) => {
+    // Navegación a Crear (diferente a Seasons que usa Modal)
+    const handleOpenAddShipment = () => {
+        navigate('/shipments/add'); // Ajusta la ruta según tu Router
+    };
+
+    // Navegación a Editar (diferente a Seasons que usa Modal)
+    const handleOpenEditShipment = (shipment) => {
+        navigate(`/shipments/edit/${shipment.idShipment}`);
+    };
+
+    // Toggle Status (Activar/Desactivar)
+    const handleToggleShipmentStatus = async (shipment) => {
+        const isActiveNow = shipment.isActive;
+
         try {
-            // ... lógica de toggle status
+            let dataResult;
+            if (isActiveNow) {
+                dataResult = await shipmentDataService.disableData(shipment.idShipment);
+                if (dataResult.isSuccess || dataResult.success) { // Ajuste según tu respuesta API standard
+                    ShowMessage(t('recordDisabled'), 'success');
+                }
+            } else {
+                dataResult = await shipmentDataService.enableData(shipment.idShipment);
+                if (dataResult.isSuccess || dataResult.success) {
+                    ShowMessage(t('recordEnabled'), 'success');
+                }
+            }
+
+            if (dataResult.isSuccess || dataResult.success) {
+                setShipments(prevShipments =>
+                    prevShipments.map(s =>
+                        s.idShipment === shipment.idShipment ? { ...s, isActive: !isActiveNow } : s
+                    )
+                );
+            }
         } catch (error) {
             ShowMessage(t('error'), 'error');
-            console.error("Error toggling embarque status:", error);
+            console.error("Error toggling shipment status:", error);
         }
     };
 
-    const handleResetPassword = async (embarque) => {
-        // ... lógica de reset password
+    // Lógica de Eliminado
+    const handleOpenDeleteConfirmation = (shipment) => {
+        setShipmentToDelete(shipment);
+        setIsConfirmDeleteModalOpen(true);
     };
 
+    const handleDeleteShipment = async () => {
+        setIsConfirmDeleteModalOpen(false);
 
-    // 🚀 NUEVA LÓGICA: Redirigir a la ruta de Agregar
-    const handleOpenAddEmbarque = () => {
-        navigate('/embarques/add');
+        if (!shipmentToDelete) return;
+
+        const idToDelete = shipmentToDelete.idShipment;
+
+        try {
+            setDeletingId(idToDelete);
+
+            const dataResult = await shipmentDataService.deleteData(idToDelete);
+
+            if (dataResult.isSuccess || dataResult.success) {
+                ShowMessage(t('recordDeleted'), 'success');
+
+                setTimeout(() => {
+                    setShipments(prevShipments => prevShipments.filter(s => s.idShipment !== idToDelete));
+                    setDeletingId(null);
+                    // Si borramos el último de la página, regresar una página
+                    if (shipments.length === 1 && page > 0) {
+                        setPage(page - 1);
+                    }
+                }, ANIMATION_DURATION);
+
+            } else {
+                ShowMessage(dataResult.message || t('errorDeletingRecord'), 'error');
+                setDeletingId(null);
+            }
+        } catch (error) {
+            ShowMessage(t('error'), 'error');
+            console.error("Error deleting shipment:", error);
+            setDeletingId(null);
+        } finally {
+            setShipmentToDelete(null);
+        }
     };
 
-    // 🚀 NUEVA LÓGICA: Redirigir a la ruta de Edición con el ID
-    const handleOpenEditEmbarque = (embarque) => {
-        // Asumiendo que 'id' es la propiedad que identifica el embarque
-        navigate(`/embarques/edit/${embarque.id}`);
+    const handleCloseDeleteConfirmation = () => {
+        setIsConfirmDeleteModalOpen(false);
+        setShipmentToDelete(null);
     };
 
-    // ❌ handleCloseModal se elimina.
-
+    // Props comunes para pasar a las vistas hijas
     const commonListProps = {
-        embarques,
+        shipments,
         loading,
         t,
-        handleOpenEditEmbarque, // Pasa la función de navegación
-        handleToggleEmbarqueStatus,
-        setIsConfirmResetPasswordModalOpen,
-        setSelectedEmbarque // Se mantiene para Reset Password
+        handleOpenEditShipment,
+        handleToggleShipmentStatus,
+        handleDeleteShipment: handleOpenDeleteConfirmation, // Pasamos la función que abre el modal
+        deletingId
     };
 
     return (
@@ -141,7 +212,7 @@ function Index() {
                 mb: 2,
             }}>
                 <Typography variant="h4" component="h1">
-                    {t('embarques')}
+                    {t('Shipments')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: isSmallScreen ? 'column' : 'row', gap: 1, flexGrow: 1, justifyContent: 'flex-end' }}>
                     <TextField
@@ -163,7 +234,7 @@ function Index() {
                     <Button
                         variant="contained"
                         endIcon={<AddIcon />}
-                        onClick={handleOpenAddEmbarque} // 👈 Ahora navega a /embarques/add
+                        onClick={handleOpenAddShipment}
                         fullWidth={isSmallScreen}
                     >
                         {t('add')}
@@ -171,19 +242,19 @@ function Index() {
                 </Box>
             </Box>
 
-            {loading && <LinearProgress />}
+            {loading && <LinearProgress sx={{ mb: 2 }} />}
 
-            {/* Renderiza el listado (que ahora solo es el listado, sin el modal) */}
+            {/* Renderizado condicional basado en breakpoints */}
             {isSmallScreen ? (
-                <EmbarqueCardList {...commonListProps} />
+                <ShipmentCardList {...commonListProps} />
             ) : (
-                <EmbarqueListTable {...commonListProps} />
+                <ShipmentListTable {...commonListProps} />
             )}
 
             <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
-                count={totalEmbarques}
+                count={totalShipments}
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={handlePageChange}
@@ -194,9 +265,17 @@ function Index() {
                 }
             />
 
-            {/* Aquí deberías incluir los modales (si son modales) para Reset Password */}
+            <ConfirmationModal
+                open={isConfirmDeleteModalOpen}
+                onClose={handleCloseDeleteConfirmation}
+                onConfirm={handleDeleteShipment}
+                title={t('Delete Shipment')}
+                message={t('question_areYouSureDeleteRecord', { name: shipmentToDelete?.name || shipmentToDelete?.idShipment })}
+                confirmText={t('delete')}
+                cancelText={t('cancel')}
+            />
         </Box>
     );
 }
 
-export default Index;
+export default ShipmentsIndex;

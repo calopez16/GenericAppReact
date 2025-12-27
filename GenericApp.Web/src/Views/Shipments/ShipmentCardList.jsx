@@ -9,19 +9,15 @@ import {
     Grid
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-// ❌ Quitamos VpnKeyIcon
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever'; // 🚀 Añadimos ícono de eliminar
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 
-const EmbarqueCardList = ({
-    embarques,
+const ShipmentCardList = ({
+    shipments,
     loading,
     t,
-    handleOpenEditEmbarque,
-    handleToggleEmbarqueStatus,
-    setIsConfirmResetPasswordModalOpen,
-    setSelectedEmbarque
-    // Asegúrate de pasar handleDeleteEmbarque desde el componente padre
-    // handleDeleteEmbarque
+    handleOpenEditShipment,
+    handleToggleShipmentStatus,
+    handleDeleteShipment,
 }) => {
 
     const formatDate = (dateString) => {
@@ -29,8 +25,7 @@ const EmbarqueCardList = ({
         return new Date(dateString).toLocaleDateString();
     };
 
-    // Componente interno para cada tarjeta de Embarque
-    const MobileEmbarqueCard = ({ embarque }) => (
+    const MobileShipmentCard = ({ shipment }) => (
         <Paper
             sx={{
                 p: 2,
@@ -38,89 +33,70 @@ const EmbarqueCardList = ({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 1,
-                // Indicador visual basado en si es mixto
-                borderLeft: embarque.mixed ? '4px solid orange' : '4px solid #1976D2'
+                // Indicador visual basado en si es activo
+                borderLeft: shipment.isActive ? '4px solid #1976D2' : '4px solid gray'
             }}
         >
-            {/* Sección Superior: Número de Viaje, Fecha y Acciones */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Box>
-                    <Typography variant="caption" color="text.secondary">{t('Trip Number')}</Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', lineHeight: 1 }}>
-                        {embarque.tripNumber}
-                    </Typography>
-                    <Typography variant="body2" color="text.primary">
-                        {t('Date')}: {formatDate(embarque.date)}
-                    </Typography>
-                </Box>
-                <Box>
+            {/* Sección Superior: ID, Nombre y Botones de Acción */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                    {shipment.name || `${t('Shipment')} #${shipment.idShipment}`}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 0.5 }}>
                     <Tooltip title={t('edit')}>
-                        <IconButton size="small" color="primary" onClick={() => handleOpenEditEmbarque(embarque)}>
-                            <EditIcon />
+                        <IconButton size="small" color="primary" onClick={() => handleOpenEditShipment(shipment)}>
+                            <EditIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
-
-                    {/* 🚀 Nuevo botón de Eliminar */}
+                    {/* Botón de Eliminar */}
                     <Tooltip title={t('delete')}>
-                        <IconButton
-                            size="small"
-                            color="error" // Usamos color 'error' para indicar peligro
-                            onClick={() => {
-                                // Aquí deberías llamar a una función como handleDeleteEmbarque(embarque.id)
-                                console.log("Eliminar embarque:", embarque.id);
-                            }}>
-                            <DeleteForeverIcon />
+                        <IconButton size="small" color="error" onClick={() => handleDeleteShipment(shipment)}>
+                            <DeleteForeverIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
                 </Box>
             </Box>
 
-            {/* Grid para los detalles clave */}
+            {/* Detalles del Shipment */}
             <Grid container spacing={1}>
-
-                {/* Driver */}
                 <Grid item xs={12}>
-                    <Typography variant="caption" color="text.secondary">{t('Driver')}:</Typography>
-                    <Typography variant="body2">{embarque.driver}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        {t('ID')}: <Typography component="span" fontWeight="bold">{shipment.idShipment}</Typography>
+                    </Typography>
                 </Grid>
-
-                {/* Placas y Pallets */}
-                <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">{t('Trailer Plates')}:</Typography>
-                    <Typography variant="body2">{embarque.trailerPlates}</Typography>
+                <Grid item xs={12}>
+                    <Typography variant="body2" color="text.secondary">
+                        {t('Client')}: <Typography component="span" fontWeight="bold">{shipment.clientName || '-'}</Typography>
+                    </Typography>
                 </Grid>
-                <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">{t('Pallets')}:</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{embarque.pallets?.length || 0}</Typography>
+                <Grid item xs={12}>
+                    <Typography variant="body2" color="text.secondary">
+                        {t('Status')}: <Typography component="span" fontWeight="bold">{shipment.shipmentStatusDescription || '-'}</Typography>
+                    </Typography>
                 </Grid>
-
-                {/* Ubicación y Temp */}
-                <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">{t('City')}:</Typography>
-                    <Typography variant="body2">{embarque.city}</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">{t('Temperature')}:</Typography>
-                    <Typography variant="body2">{embarque.temperature}°C</Typography>
+                <Grid item xs={12}>
+                    <Typography variant="body2" color="text.secondary">
+                        {t('Creation Date')}: <Typography component="span" fontWeight="bold">{formatDate(shipment.creationDate)}</Typography>
+                    </Typography>
                 </Grid>
             </Grid>
 
-            {/* Estado (Mixed/Mixto) */}
+            {/* Pie de la tarjeta: Estado Activo y Toggle */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 1, mt: 1, borderTop: '1px solid #eee' }}>
                 <Typography variant="body2" color="text.secondary">
-                    {t('Mixed Cargo')}:
-                    <Typography component="span" sx={{ ml: 1, fontWeight: 'bold', color: embarque.mixed ? 'secondary.main' : 'primary.main' }}>
-                        {embarque.mixed ? t('YES') : t('NO')}
+                    {t('Active')}:
+                    <Typography component="span" sx={{ ml: 1, fontWeight: 'bold', color: shipment.isActive ? 'primary.main' : 'error.main' }}>
+                        {shipment.isActive ? t('YES') : t('NO')}
                     </Typography>
                 </Typography>
 
-                {/* Switch de acción, se mantiene la estructura original */}
-                <Tooltip title={t('toggle_shipment_status')}>
+                {/* Switch de acción para Active/Inactive */}
+                <Tooltip title={shipment.isActive ? t('disable') : t('enable')}>
                     <Switch
                         size="small"
-                        checked={embarque.mixed} // Usamos 'mixed' como ejemplo de un estado
-                        onChange={() => handleToggleEmbarqueStatus(embarque)}
-                        color="secondary"
+                        checked={shipment.isActive}
+                        onChange={() => handleToggleShipmentStatus(shipment)}
+                        color="primary"
                     />
                 </Tooltip>
             </Box>
@@ -131,17 +107,18 @@ const EmbarqueCardList = ({
         return <Typography align="center" sx={{ mt: 2 }}>{t('loading')}...</Typography>;
     }
 
-    if (embarques?.length === 0) {
+    // CORRECCIÓN: Verifica si shipments es null/undefined O si su longitud es 0.
+    if (!shipments || shipments.length === 0) {
         return <Typography align="center" sx={{ mt: 2 }}>{t('records_notFound')}.</Typography>;
     }
 
     return (
         <Box>
-            {embarques.map((embarque, index) => (
-                <MobileEmbarqueCard key={embarque.id || index} embarque={embarque} />
+            {shipments.map((shipment, index) => (
+                <MobileShipmentCard key={shipment.idShipment || index} shipment={shipment} />
             ))}
         </Box>
     );
 };
 
-export default EmbarqueCardList;
+export default ShipmentCardList;

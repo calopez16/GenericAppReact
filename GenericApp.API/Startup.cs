@@ -1,7 +1,9 @@
-﻿using GenericApp.API.Constants;
+﻿using AutoMapper;
+using GenericApp.API.Constants;
 using GenericApp.BLL.Sevices;
 using GenericApp.BLL.Sevices.Interface;
 using GenericApp.Data;
+using GenericApp.Data.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +13,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
-using AutoMapper;
 
 namespace GenericApp
 {

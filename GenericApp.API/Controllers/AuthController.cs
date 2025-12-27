@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace GenericApp.Controllers
 {
@@ -86,6 +87,10 @@ namespace GenericApp.Controllers
                 }
             }
 
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var userDetail = await _repository.FirstOrDefault<UserDetail>(x => x.IdUser.Equals(user.Id));
+            var company = await _repository.FirstOrDefault<Company>(x => x.IdCompany.Equals(userDetail.IdCompany));
+
             return Ok(new
             {
                 Data = new LoginResponseDTO
@@ -93,7 +98,15 @@ namespace GenericApp.Controllers
                     Token = accessToken,
                     UserName = user.UserName,
                     FullName = user.UserName,
-                    IsChangePasswordNeeded = isChangePasswordNeeded
+                    IsChangePasswordNeeded = isChangePasswordNeeded,
+                    Roles = userRoles.ToList(),
+                    IdCompany = userDetail?.IdCompany,
+                    Company = new API.Models.CompanyDTO
+                    {
+                        IdCompany = company.IdCompany,
+                        Name = company.Name,
+                        LogoName = company.LogoName
+                    },
                 }
             });
         }
@@ -105,38 +118,45 @@ namespace GenericApp.Controllers
         [HttpGet("refresh-token")]
         public async Task<IActionResult> RefreshToken()
         {
-            var validator = new JwtSecurityTokenHandler();
-            Request.Headers.TryGetValue("Authorization", out var headerAuth);
-            var jwtToken = headerAuth.FirstOrDefault()?.Split(" ").Last();
-            if (jwtToken != null)
+            try
             {
-                var tokenInfo = validator.ReadJwtToken(jwtToken);
-                var emailUser = tokenInfo.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email);
-                var user = await _userManager.FindByNameAsync(emailUser?.Value);
-                var actualRefreshToken = await _repository.FirstOrDefault<RefreshTokenAspNetUser>(x => x.IdUser == user.Id && x.IsActive == true);
-                var tokenValidated = await validator.ValidateTokenAsync(actualRefreshToken.RefreshToken, new TokenValidationParameters
+                var validator = new JwtSecurityTokenHandler();
+                Request.Headers.TryGetValue("Authorization", out var headerAuth);
+                var jwtToken = headerAuth.FirstOrDefault()?.Split(" ").Last();
+                if (jwtToken != null)
                 {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = false,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["jwt:RefreshToken:SecurityKeyJwt"])),
-                    ClockSkew = TimeSpan.Zero
-                });
-                if (tokenValidated.IsValid)
-                {
-                    var newAccessToken = await GenerateToken(new LoginDTO { Email = user.UserName });
-                    return Ok(new
+                    var tokenInfo = validator.ReadJwtToken(jwtToken);
+                    var emailUser = tokenInfo.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email);
+                    var user = await _userManager.FindByNameAsync(emailUser?.Value);
+                    var actualRefreshToken = await _repository.FirstOrDefault<RefreshTokenAspNetUser>(x => x.IdUser == user.Id && x.IsActive == true);
+                    var tokenValidated = await validator.ValidateTokenAsync(actualRefreshToken.RefreshToken, new TokenValidationParameters
                     {
-                        Data = new LoginResponseDTO
-                        {
-                            Token = newAccessToken,
-                            UserName = user.UserName,
-                            FullName = user.UserName
-                        }
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = false,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["jwt:RefreshToken:SecurityKeyJwt"])),
+                        ClockSkew = TimeSpan.Zero
                     });
+                    if (tokenValidated.IsValid)
+                    {
+                        var newAccessToken = await GenerateToken(new LoginDTO { Email = user.UserName });
+                        return Ok(new
+                        {
+                            Data = new LoginResponseDTO
+                            {
+                                Token = newAccessToken,
+                                UserName = user.UserName,
+                                FullName = user.UserName
+                            }
+                        });
+                    }
                 }
             }
+            catch
+            {
+            }
+
             return Unauthorized();
         }
 
@@ -178,6 +198,9 @@ namespace GenericApp.Controllers
                         }
                         await _repository.Add<RefreshTokenAspNetUser>(new RefreshTokenAspNetUser { IdUser = user.Id, RefreshToken = refreshToken, IsActive = true });
 
+                        var userRoles = await _userManager.GetRolesAsync(user);
+                        var userDetail = await _repository.FirstOrDefault<UserDetail>(x => x.IdUser.Equals(user.Id));
+                        var company = await _repository.FirstOrDefault<Company>(x => x.IdCompany.Equals(userDetail.IdCompany));
                         return Ok(new
                         {
                             Data = new LoginResponseDTO
@@ -185,6 +208,14 @@ namespace GenericApp.Controllers
                                 Token = accessToken,
                                 UserName = user.UserName,
                                 FullName = user.UserName,
+                                Roles = userRoles.ToList(),
+                                Company = new API.Models.CompanyDTO
+                                {
+                                    IdCompany = company.IdCompany,
+                                    Name = company.Name,
+                                    LogoName = company.LogoName
+                                },
+                                IdCompany = userDetail?.IdCompany,
                             }
                         });
                     }
