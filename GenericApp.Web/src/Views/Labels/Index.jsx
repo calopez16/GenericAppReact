@@ -25,7 +25,7 @@ function Index() {
     const labelDataService = DataAPILabelsService();
     const [labels, setLabels] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [totalLabels, setTotalLabels] = useState(0);
 
     const [searchTerm, setSearchTerm] = useState('');

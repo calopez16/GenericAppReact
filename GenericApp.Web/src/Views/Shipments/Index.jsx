@@ -31,7 +31,7 @@ function ShipmentsIndex() {
     // Estados de Datos y Paginación
     const [shipments, setShipments] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [totalShipments, setTotalShipments] = useState(0);
 
     // Estados de Búsqueda
