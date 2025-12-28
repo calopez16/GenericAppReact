@@ -27,7 +27,7 @@ function Index() {
     const seasonDataService = DataAPISeasonsService();
     const [seasons, setSeasons] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [totalSeasons, setTotalSeasons] = useState(0);
 
     const [searchTerm, setSearchTerm] = useState('');

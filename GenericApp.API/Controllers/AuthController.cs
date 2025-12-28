@@ -101,12 +101,12 @@ namespace GenericApp.Controllers
                     IsChangePasswordNeeded = isChangePasswordNeeded,
                     Roles = userRoles.ToList(),
                     IdCompany = userDetail?.IdCompany,
-                    Company = new API.Models.CompanyDTO
+                    Company = company != null ? new API.Models.CompanyDTO
                     {
                         IdCompany = company.IdCompany,
                         Name = company.Name,
                         LogoName = company.LogoName
-                    },
+                    } : null,
                 }
             });
         }

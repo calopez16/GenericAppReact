@@ -25,7 +25,7 @@ function Index() {
     const cityDataService = DataAPICitiesService();
     const [cities, setCities] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [totalCities, setTotalCities] = useState(0);
 
     const [searchTerm, setSearchTerm] = useState('');

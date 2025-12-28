@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Net;
 
 namespace GenericApp.API.Controllers
 {
@@ -137,18 +138,14 @@ namespace GenericApp.API.Controllers
 
             var companyDB = _mapper.Map<Company>(model);
 
-            // 3. Lógica para guardar la imagen
-            //if (model.Logo != null)
-            //{
-            //    // Asumiendo que tu entidad Company tiene una propiedad string llamada 'Logo' o 'LogoPath'
-            //    companyDB.LogoName = await GuardarLogo(model.Logo);
-            //}
+            if (model.Logo != null)
+                companyDB.LogoName = await GuardarLogo(model.Logo);
 
             var result = await _repository.Add(companyDB);
 
             if (!result) return BadRequest(new ApiResponse());
 
-            return Ok(new ApiResponse());
+            return Ok(new ApiResponse { Data = companyDB });
         }
 
         /// <summary>
@@ -158,9 +155,9 @@ namespace GenericApp.API.Controllers
         /// <returns>La ApiResponse vacía en caso de éxito, o un conflicto si ya existe otra compañía (no eliminada) con el mismo nombre o RFC.</returns>
         [HttpPut]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
-        public async Task<ActionResult> UpdateCompany([FromBody] CompanyDTO model)
+        public async Task<ActionResult> UpdateCompany([FromForm] CompanyDTO model)
         {
-            var companyExists = await _repository.FirstOrDefault<Company>(x => (x.Name.ToLower().Equals(model.Name.ToLower()) || x.Rfc.ToLower().Equals(model.Rfc.ToLower())) && (x.IsDeleted ?? false));
+            var companyExists = await _repository.FirstOrDefault<Company>(x => (x.Name.ToLower().Equals(model.Name.ToLower()) || x.Rfc.ToLower().Equals(model.Rfc.ToLower())) && (!x.IsDeleted ?? false));
             if (companyExists != null)
                 return Conflict(
                     new ApiResponse
@@ -169,13 +166,31 @@ namespace GenericApp.API.Controllers
                     }
                 );
 
-            var companyDB = _mapper.Map<Company>(model);
+            var companyDB = await _repository.GetById<Company>(model.IdCompany);
+
+            companyDB.Name = model.Name!;
+            companyDB.Rfc = model.Rfc;
+            companyDB.Address = model.Address;
+            companyDB.PostalCode = model.PostalCode;
+            companyDB.Phone = model.Phone;
+            companyDB.Notes = model.Notes;
+            companyDB.RegFdaNo = model.RegFdaNo;
+
+            if (model.Logo != null)
+            {
+                if (!string.IsNullOrEmpty(companyDB.LogoName))
+                {
+                    await DeleteLogo(companyDB.LogoName);
+                }
+                companyDB.LogoName = await GuardarLogo(model.Logo);
+            }
+
             var result = await _repository.Update(companyDB);
 
             if (!result)
                 return BadRequest(new ApiResponse());
 
-            return Ok(new ApiResponse());
+            return Ok(new ApiResponse { Data = companyDB });
         }
 
         private async Task<string> GuardarLogo(IFormFile logo)
@@ -185,9 +200,7 @@ namespace GenericApp.API.Controllers
 
             // Crear directorio si no existe
             if (!Directory.Exists(carpeta))
-            {
                 Directory.CreateDirectory(carpeta);
-            }
 
             // Generar nombre único para evitar colisiones (Guid + extensión original)
             string nombreArchivo = $"{Guid.NewGuid()}{Path.GetExtension(logo.FileName)}";
@@ -198,10 +211,30 @@ namespace GenericApp.API.Controllers
             {
                 await logo.CopyToAsync(stream);
             }
-
-            // Retornar el nombre del archivo (o la ruta relativa) para guardar en BD
             return nombreArchivo;
         }
+
+        private async Task<bool> DeleteLogo(string logoName)
+        {
+            try
+            {
+                string carpeta = Path.Combine(_env.WebRootPath, "img", "logos");
+
+                if (!Directory.Exists(carpeta))
+                    return default;
+
+                string rutaCompleta = Path.Combine(carpeta, logoName);
+
+                if (System.IO.File.Exists(rutaCompleta))
+                    System.IO.File.Delete(rutaCompleta);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            return true;
+        }
+
 
         /// <summary>
         /// Deshabilita lógicamente una compañía existente (establece IsActive = false).

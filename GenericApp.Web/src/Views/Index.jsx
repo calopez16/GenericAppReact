@@ -6,6 +6,7 @@ import HomePage from '@views/Home'
 import UsersPage from '@views/Users'
 import CitiesPage from '@views/Cities'
 import ClientsPage from '@views/Clients'
+import CompaniesPage from '@views/Companies'
 import ShippingCompaniesPage from '@views/ShippingCompanies'
 import DriversPage from '@views/Drivers'
 import SeasonsPage from '@views/Seasons'
@@ -25,12 +26,11 @@ function App() {
                 <Route path="/parameters" element={<Parameters />} />
                 <Route path="/clients" element={<ClientsPage />} />
                 <Route path="/cities" element={<CitiesPage />} />
+                <Route path="/companies" element={<CompaniesPage />} />
                 <Route path="/seasons" element={<SeasonsPage />} />
                 <Route path="/drivers" element={<DriversPage />} />
                 <Route path="/shipping-companies" element={<ShippingCompaniesPage />} />
                 <Route path="/labels" element={<LabelsPage />} />
-
-                
                 <Route path="/shipments">                   
                     <Route index element={<ShipmentsPage />} />
                     <Route path="add" element={<EmbarqueAddOrEdit isEditing={false} />} />

@@ -25,7 +25,7 @@ function Index() {
     const shippingCompanyDataService = DataAPIShippingCompaniesService();
     const [shippingCompanies, setShippingCompanies] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [totalShippingCompanies, setTotalShippingCompanies] = useState(0);
 
     const [searchTerm, setSearchTerm] = useState('');

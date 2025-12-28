@@ -1,5 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -13,46 +12,39 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
-// Asegúrate de que la ruta de importación sea la correcta según tu estructura
-import { dataApiShipmentsService } from '@data/Shipments/Data';
+import { DataAPICompaniesService } from '@data/Companies/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import ConfirmationModal from '@layout/ConfirmationModal';
+import CompanyFormModal from '@views/companies/CompanyFormModal';
+import CompanyCardList from '@views/companies/CompanyCardList';
+import CompanyListTable from '@views/companies/CompanyTableList';
 
-// Importamos las vistas de lista (Tabla y Tarjetas)
-import ShipmentCardList from './ShipmentCardList';
-import ShipmentListTable from './ShipmentTableList';
-
-function ShipmentsIndex() {
+function Index() {
     const { t } = useTranslation();
-    const navigate = useNavigate();
-    const shipmentDataService = dataApiShipmentsService();
-
-    // Estados de Datos y Paginación
-    const [shipments, setShipments] = useState([]);
+    const companyDataService = DataAPICompaniesService();
+    const [companies, setCompanies] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [totalShipments, setTotalShipments] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [totalCompanies, setTotalCompanies] = useState(0);
 
-    // Estados de Búsqueda
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
-    // Estados de UI y Control
     const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedCompany, setSelectedCompany] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
 
-    // Estados para Eliminar
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
-    const [shipmentToDelete, setShipmentToDelete] = useState(null);
-    const [deletingId, setDeletingId] = useState(null);
+    const [companyToDelete, setCompanyToDelete] = useState(null);
 
+    const [deletingId, setDeletingId] = useState(null);
     const ANIMATION_DURATION = 500;
 
-    // Lógica Responsiva solicitada
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
 
-    // Debounce para la búsqueda
     useEffect(() => {
         const timerId = setTimeout(() => {
             setDebouncedSearchTerm(searchTerm);
@@ -62,30 +54,28 @@ function ShipmentsIndex() {
         };
     }, [searchTerm]);
 
-    // Carga de datos
     useEffect(() => {
-        const loadShipments = async () => {
+        const loadCompanies = async () => {
             try {
                 setLoading(true);
-                // Asumiendo que getPagination acepta (pageNumber, pageSize, searchTerm)
-                const response = await shipmentDataService.getPagination(page + 1, rowsPerPage, debouncedSearchTerm);
-
-                // Ajustar según la estructura de respuesta de tu API (Data.jsx)
-                // Generalmente es response.data.Data para la lista y response.data.TotalCount para el total
-                if (response.data && response.data.Data) {
-                    setShipments(response.data.Data.Data || response.data.Data); // Ajuste por si viene anidado en paginatedResponse
-                    setTotalShipments(response.data.Data.TotalCount || response.data.TotalCount || 0);
+                const response = await companyDataService.getDataPagination(page + 1, rowsPerPage, debouncedSearchTerm);
+                if (response.success) {
+                    setCompanies(response.data.data);
+                    setTotalCompanies(response.data.totalCount);
+                } else {
+                    setCompanies([]);
                 }
             } catch (error) {
-                console.error("Error loading shipments:", error);
-                ShowMessage(t('error_fetching_data'), 'error');
+                console.error("Error loading companies:", error);
+                setCompanies([]);
             } finally {
                 setLoading(false);
             }
         };
 
-        loadShipments();
+        loadCompanies();
     }, [page, rowsPerPage, debouncedSearchTerm]);
+
 
     const handlePageChange = (event, newPage) => {
         setPage(newPage);
@@ -101,75 +91,60 @@ function ShipmentsIndex() {
         setPage(0);
     };
 
-    // Navegación a Crear (diferente a Seasons que usa Modal)
-    const handleOpenAddShipment = () => {
-        navigate('/shipments/add'); // Ajusta la ruta según tu Router
-    };
-
-    // Navegación a Editar (diferente a Seasons que usa Modal)
-    const handleOpenEditShipment = (shipment) => {
-        navigate(`/shipments/edit/${shipment.idShipment}`);
-    };
-
-    // Toggle Status (Activar/Desactivar)
-    const handleToggleShipmentStatus = async (shipment) => {
-        const isActiveNow = shipment.isActive;
+    const handleToggleCompanyStatus = async (company) => {
+        const isActiveNow = company.isActive;
 
         try {
             let dataResult;
             if (isActiveNow) {
-                dataResult = await shipmentDataService.disableData(shipment.idShipment);
-                if (dataResult.isSuccess || dataResult.success) { // Ajuste según tu respuesta API standard
+                dataResult = await companyDataService.disableData(company.idCompany);
+                if (dataResult.success) {
                     ShowMessage(t('recordDisabled'), 'success');
                 }
             } else {
-                dataResult = await shipmentDataService.enableData(shipment.idShipment);
-                if (dataResult.isSuccess || dataResult.success) {
+                dataResult = await companyDataService.enableData(company.idCompany);
+                if (dataResult.success) {
                     ShowMessage(t('recordEnabled'), 'success');
                 }
             }
 
-            if (dataResult.isSuccess || dataResult.success) {
-                setShipments(prevShipments =>
-                    prevShipments.map(s =>
-                        s.idShipment === shipment.idShipment ? { ...s, isActive: !isActiveNow } : s
+            if (dataResult.success) {
+                setCompanies(prevCompanies =>
+                    prevCompanies.map(c =>
+                        c.idCompany === company.idCompany ? { ...c, isActive: !isActiveNow } : c
                     )
                 );
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
-            console.error("Error toggling shipment status:", error);
+            console.error("Error toggling company status:", error);
         }
     };
 
-    // Lógica de Eliminado
-    const handleOpenDeleteConfirmation = (shipment) => {
-        setShipmentToDelete(shipment);
+    const handleOpenDeleteConfirmation = (company) => {
+        setCompanyToDelete(company);
         setIsConfirmDeleteModalOpen(true);
     };
 
-    const handleDeleteShipment = async () => {
+    const handleDeleteCompany = async () => {
         setIsConfirmDeleteModalOpen(false);
 
-        if (!shipmentToDelete) return;
+        if (!companyToDelete) return;
 
-        const idToDelete = shipmentToDelete.idShipment;
+        const idToDelete = companyToDelete.idCompany;
 
         try {
             setDeletingId(idToDelete);
 
-            const dataResult = await shipmentDataService.deleteData(idToDelete);
+            const dataResult = await companyDataService.deleteData(idToDelete);
 
-            if (dataResult.isSuccess || dataResult.success) {
+            if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
 
                 setTimeout(() => {
-                    setShipments(prevShipments => prevShipments.filter(s => s.idShipment !== idToDelete));
+                    setCompanies(prevCompanies => prevCompanies.filter(c => c.idCompany !== idToDelete));
                     setDeletingId(null);
-                    // Si borramos el último de la página, regresar una página
-                    if (shipments.length === 1 && page > 0) {
-                        setPage(page - 1);
-                    }
+                    setPage(0);
                 }, ANIMATION_DURATION);
 
             } else {
@@ -178,27 +153,44 @@ function ShipmentsIndex() {
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
-            console.error("Error deleting shipment:", error);
+            console.error("Error deleting company:", error);
             setDeletingId(null);
         } finally {
-            setShipmentToDelete(null);
+            setCompanyToDelete(null);
         }
     };
 
     const handleCloseDeleteConfirmation = () => {
         setIsConfirmDeleteModalOpen(false);
-        setShipmentToDelete(null);
+        setCompanyToDelete(null);
     };
 
-    // Props comunes para pasar a las vistas hijas
+    const handleOpenAddCompany = () => {
+        setSelectedCompany(null);
+        setIsEditing(false);
+        setIsModalOpen(true);
+    };
+
+    const handleOpenEditCompany = (company) => {
+        setSelectedCompany(company);
+        setIsEditing(true);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        // Opcional: Recargar datos aqu� si el modal no actualiza el estado directamente
+    };
+
     const commonListProps = {
-        shipments,
+        companies,
         loading,
         t,
-        handleOpenEditShipment,
-        handleToggleShipmentStatus,
-        handleDeleteShipment: handleOpenDeleteConfirmation, // Pasamos la función que abre el modal
-        deletingId
+        handleOpenEditCompany,
+        handleToggleCompanyStatus,
+        handleOpenDeleteConfirmation,
+        setSelectedCompany,
+        deletingId,
     };
 
     return (
@@ -212,7 +204,7 @@ function ShipmentsIndex() {
                 mb: 2,
             }}>
                 <Typography variant="h4" component="h1">
-                    {t('Shipments')}
+                    {t('companies')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: isSmallScreen ? 'column' : 'row', gap: 1, flexGrow: 1, justifyContent: 'flex-end' }}>
                     <TextField
@@ -234,7 +226,7 @@ function ShipmentsIndex() {
                     <Button
                         variant="contained"
                         endIcon={<AddIcon />}
-                        onClick={handleOpenAddShipment}
+                        onClick={handleOpenAddCompany}
                         fullWidth={isSmallScreen}
                     >
                         {t('add')}
@@ -242,19 +234,18 @@ function ShipmentsIndex() {
                 </Box>
             </Box>
 
-            {loading && <LinearProgress sx={{ mb: 2 }} />}
+            {loading && <LinearProgress />}
 
-            {/* Renderizado condicional basado en breakpoints */}
             {isSmallScreen ? (
-                <ShipmentCardList {...commonListProps} />
+                <CompanyCardList {...commonListProps} />
             ) : (
-                <ShipmentListTable {...commonListProps} />
+                <CompanyListTable {...commonListProps} />
             )}
 
             <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
-                count={totalShipments}
+                count={totalCompanies}
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={handlePageChange}
@@ -265,12 +256,20 @@ function ShipmentsIndex() {
                 }
             />
 
+            <CompanyFormModal
+                open={isModalOpen}
+                handleClose={handleCloseModal}
+                data={selectedCompany}
+                isEditing={isEditing}
+                setData={setCompanies}
+            />
+
             <ConfirmationModal
                 open={isConfirmDeleteModalOpen}
                 onClose={handleCloseDeleteConfirmation}
-                onConfirm={handleDeleteShipment}
-                title={t('Delete Shipment')}
-                message={t('question_areYouSureDeleteRecord', { name: shipmentToDelete?.name || shipmentToDelete?.idShipment })}
+                onConfirm={handleDeleteCompany}
+                title={t('company_delete')}
+                message={t('question_areYouSureDeleteCompany', { companyName: companyToDelete?.name || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
             />
@@ -278,4 +277,4 @@ function ShipmentsIndex() {
     );
 }
 
-export default ShipmentsIndex;
+export default Index;

@@ -26,7 +26,7 @@ function Index() {
     const clientDataService = DataAPIClientsService();
     const [clients, setClients] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [totalClients, setTotalClients] = useState(0);
 
     const [searchTerm, setSearchTerm] = useState('');

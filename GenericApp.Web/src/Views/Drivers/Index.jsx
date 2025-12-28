@@ -25,7 +25,7 @@ function Index() {
     const driverDataService = DataAPIDriversService();
     const [drivers, setDrivers] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [totalDrivers, setTotalDrivers] = useState(0);
 
     const [searchTerm, setSearchTerm] = useState('');

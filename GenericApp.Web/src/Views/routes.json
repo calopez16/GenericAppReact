@@ -37,6 +37,13 @@
         "icon": "TruckIcon"
       },
       {
+        "id": "companies",
+        "path": "/companies",
+        "i18nKey": "companies",
+        "i18nKeyDescription": "companies_description",
+        "icon": "TruckIcon"
+      },
+      {
         "id": "clients",
         "path": "/clients",
         "i18nKey": "clients",

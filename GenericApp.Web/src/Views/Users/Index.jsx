@@ -27,7 +27,7 @@ function Index() {
     const userDataService = DataAPIUsersService();
     const [users, setUsers] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [totalUsers, setTotalUsers] = useState(0);
 
     // 1. Estado para el input inmediato y para el valor "debounced"
