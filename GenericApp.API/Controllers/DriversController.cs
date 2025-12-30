@@ -124,7 +124,6 @@ namespace GenericApp.API.Controllers
                 );
 
             var driverDB = _mapper.Map<Driver>(model);
-            driverDB.IdCompany = 1;
             var result = await _repository.Add(driverDB);
 
             if (!result)

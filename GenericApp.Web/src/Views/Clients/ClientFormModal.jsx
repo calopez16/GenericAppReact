@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -12,6 +12,7 @@ import {
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
+import { AppContext } from '@helpers/AppContext';
 
 import { DataAPIClientsService } from '@data/Clients/Data';
 import { DataAPICitiesService } from '@data/Cities/Data';
@@ -22,6 +23,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const { t } = useTranslation();
     const service = DataAPIClientsService();
     const citiesService = DataAPICitiesService();
+    const { companySelected } = useContext(AppContext);
 
     const nameRef = useRef(null);
 
@@ -34,6 +36,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         postalCode: '',
         phone: '',
         notes: '',
+        idCompany: companySelected?.idCompany ?? null
     });
 
     const [isLoading, setIsLoading] = useState(false);
@@ -89,7 +92,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     idCity: clientData.idCity || null,
                     postalCode: clientData.postalCode || '',
                     phone: clientData.phone || '',
-                    notes: clientData.notes || '',
+                    notes: clientData.notes || ''
                 });
             } else if (!isEditing) {
                 setFormData({
@@ -204,6 +207,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 postalCode: formData.postalCode,
                 phone: formData.phone,
                 notes: formData.notes,
+                idCompany: companySelected?.idCompany ?? 0
             };
 
             let response;
@@ -361,7 +365,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
                                 disabled={isLoading}
                             >
-                                {(isEditing ? t('save') : t('add') )}
+                                {(isEditing ? t('save') : t('add'))}
                             </Button>
                         </Box>
                     </DialogActions>

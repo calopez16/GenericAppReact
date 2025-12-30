@@ -130,7 +130,6 @@ namespace GenericApp.API.Controllers
                 );
 
             var clientDB = _mapper.Map<Client>(model);
-            clientDB.IdCompany = 1;
             var result = await _repository.Add(clientDB);
 
             if (!result)

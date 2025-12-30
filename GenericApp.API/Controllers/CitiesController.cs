@@ -108,11 +108,35 @@ namespace GenericApp.API.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<CityDTO>> GetCityById(int id)
         {
-            var city = await _repository.FindBy<City>(x => x.IdCity == id && !(x.IsDeleted ?? false));
-            if (city == null)
-                return NotFound(new ApiResponse());
+            // Obtenemos la consulta base del repositorio
+            var query = await _repository.Query<City>();
 
-            var cityDTO = _mapper.Map<CityDTO>(city);
+            // Aplicamos los Includes para cargar las navegaciones
+            var city = await query.Include(x => x.IdStateNavigation)
+                    .ThenInclude(s => s.IdCountryNavigation)
+                    .FirstOrDefaultAsync(x => x.IdCity == id && !(x.IsDeleted ?? false));
+
+            if (city == null)
+                return NotFound(new ApiResponse { Message = "Ciudad no encontrada" });
+
+            // El Mapper se encarga de convertir las entidades cargadas al DTO
+            var cityDTO = _mapper.Map<CityDTO>(new CityDTO
+            {
+                Description = city.Description,
+                IdCity = city.IdCity,
+                IdState = city.IdState,
+                IdStateNavigation = new StateDTO
+                {
+                    IdState = city.IdStateNavigation.IdState,
+                    Description = city.IdStateNavigation.Description,
+                    IdCountryNavigation = new CountryDTO
+                    {
+                        Description = city.IdStateNavigation.IdCountryNavigation.Description,
+                        IdCountry = city.IdStateNavigation.IdCountryNavigation.IdCountry
+                    }
+
+                }
+            });
 
             return Ok(new ApiResponse { Data = cityDTO });
         }

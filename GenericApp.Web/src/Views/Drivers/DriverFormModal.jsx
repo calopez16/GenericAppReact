@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -11,6 +11,7 @@ import {
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
+import { AppContext } from '@helpers/AppContext';
 
 import { DataAPIDriversService } from '@data/Drivers/Data';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +20,7 @@ import { ShowMessage } from '@helpers/NotificationService';
 const DriverFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const { t } = useTranslation();
     const dataService = DataAPIDriversService();
+    const { companySelected } = useContext(AppContext);
 
     const nameRef = useRef(null);
 
@@ -104,6 +106,7 @@ const DriverFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             const driverPayload = {
                 idDriver: formData.idDriver || 0,
                 name: formData.name,
+                idCompany: companySelected?.idCompany ?? 0
             };
 
             let response;
