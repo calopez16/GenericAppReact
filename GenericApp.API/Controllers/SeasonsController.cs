@@ -130,7 +130,6 @@ namespace GenericApp.API.Controllers
             var seasonDB = _mapper.Map<Season>(model);
             seasonDB.IsActive = true;
             seasonDB.IsDeleted = false;
-            seasonDB.IdCompany = 1;
             var result = await _repository.Add(seasonDB);
 
             if (!result)

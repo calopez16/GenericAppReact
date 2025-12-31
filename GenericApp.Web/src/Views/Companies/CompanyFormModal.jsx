@@ -7,7 +7,6 @@ import {
     TextField,
     Button,
     Box,
-    Avatar,
     Typography,
     Grid,
     IconButton,
@@ -17,7 +16,6 @@ import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import DeleteIcon from '@mui/icons-material/Delete'; // Para cancelar la edición del logo
 
 import { DataAPICompaniesService } from '@data/Companies/Data';
 import { useTranslation } from 'react-i18next';
@@ -40,6 +38,8 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         phone: '',
         notes: '',
         regFdaNo: '',
+        empaque: '',
+        gnnNumber: '',
         logoName: '',
         logo: null
     };
@@ -48,9 +48,7 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [originalLogoUrl, setOriginalLogoUrl] = useState(null);
     const [newLogoPreview, setNewLogoPreview] = useState(null);
-
     const [validationErrors, setValidationErrors] = useState({ name: false });
-    const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
     useEffect(() => {
         if (open) {
@@ -64,6 +62,8 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     phone: data.phone || '',
                     notes: data.notes || '',
                     regFdaNo: data.regFdaNo || '',
+                    empaque: data.empaque || '',
+                    gnnNumber: data.gnnNumber || '',
                     logoName: data.logoName || '',
                     logo: null
                 });
@@ -74,7 +74,6 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             }
             setNewLogoPreview(null);
             setValidationErrors({ name: false });
-            setHasAttemptedSubmit(false);
             setTimeout(() => { if (nameRef.current) nameRef.current.focus(); }, 100);
         }
     }, [open, isEditing, data]);
@@ -88,7 +87,6 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
-    // Función para cancelar la subida del nuevo logo
     const handleCancelLogoEdit = () => {
         setFormData(prev => ({ ...prev, logo: null }));
         if (newLogoPreview) URL.revokeObjectURL(newLogoPreview);
@@ -98,7 +96,6 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
-        setHasAttemptedSubmit(true);
         if (!formData.name.trim()) {
             setValidationErrors({ name: true });
             ShowMessage(t('emptyFields'), 'warning');
@@ -116,7 +113,7 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 }
             });
 
-            const response = isEditing ? await dataService.editData(dataToSend,true) : await dataService.addData(dataToSend,true);
+            const response = isEditing ? await dataService.editData(dataToSend, true) : await dataService.addData(dataToSend, true);
 
             if (response.success) {
                 if (isEditing) {
@@ -142,53 +139,19 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             <Box sx={{ position: 'relative' }}>
                 <Box
                     sx={{
-                        width: 130,
-                        height: 130,
-                        borderRadius: 2,
-                        overflow: 'hidden',
-                        border: '2px dashed',
-                        borderColor: isNew ? 'primary.main' : 'divider',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        bgcolor: '#f9f9f9',
-                        cursor: isEditable ? 'pointer' : 'default',
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                            borderColor: isEditable ? 'primary.main' : 'divider',
-                            '& .overlay': { opacity: 1 }
-                        }
+                        width: 130, height: 130, borderRadius: 2, overflow: 'hidden', border: '2px dashed',
+                        borderColor: isNew ? 'primary.main' : 'divider', display: 'flex', justifyContent: 'center',
+                        alignItems: 'center', bgcolor: '#f9f9f9', cursor: isEditable ? 'pointer' : 'default',
+                        transition: 'all 0.2s', '&:hover': { borderColor: isEditable ? 'primary.main' : 'divider' }
                     }}
                     onClick={isEditable ? () => fileInputRef.current.click() : undefined}
                 >
-                    {src ? (
-                        <img src={src} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                    ) : (
-                        <Typography variant="caption" sx={{ p: 1, textAlign: 'center' }}>{t('no_logo')}</Typography>
-                    )}
-
-                    {isEditable && (
-                        <Box
-                            className="overlay"
-                            sx={{
-                                position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                                bgcolor: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center',
-                                alignItems: 'center', opacity: 0, transition: 'opacity 0.2s', color: 'white'
-                            }}
-                        >
-                            <EditIcon />
-                        </Box>
-                    )}
+                    {src ? <img src={src} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> :
+                        <Typography variant="caption" sx={{ p: 1, textAlign: 'center' }}>{t('no_logo')}</Typography>}
+                    {isEditable && <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', bgcolor: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', opacity: 0, transition: 'opacity 0.2s', color: 'white', '&:hover': { opacity: 1 } }}><EditIcon /></Box>}
                 </Box>
-
-                {/* Botón para cancelar edición de logo (solo en el nuevo preview) */}
                 {isNew && (
-                    <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(e) => { e.stopPropagation(); handleCancelLogoEdit(); }}
-                        sx={{ position: 'absolute', top: -10, right: -10, bgcolor: 'white', '&:hover': { bgcolor: '#fee' }, boxShadow: 1 }}
-                    >
+                    <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); handleCancelLogoEdit(); }} sx={{ position: 'absolute', top: -10, right: -10, bgcolor: 'white', boxShadow: 1 }}>
                         <CancelIcon fontSize="small" />
                     </IconButton>
                 )}
@@ -199,15 +162,13 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
             <form onSubmit={handleSubmit} noValidate>
-                <DialogTitle>{isEditing ? t('edit_company') : t('add_company')}</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ mt: 2, width: '100%' }}>
-                        <Grid container spacing={3} justifyContent="center">
-
-                            {/* SECCIÓN LOGO CENTRADA */}
-                            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 180 }}>
+                <DialogTitle sx={{ fontWeight: 'bold' }}>{isEditing ? t('edit_company') : t('add_company')}</DialogTitle>
+                <DialogContent dividers>
+                    <Box sx={{ mt: 1 }}>
+                        <Grid container spacing={3}>
+                            {/* LOGO */}
+                            <Grid item size={{ xs: 12 }} sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
                                 <input type="file" accept="image/*" hidden ref={fileInputRef} onChange={handleFileChange} />
-
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, sm: 5 } }}>
                                     {newLogoPreview ? (
                                         <>
@@ -221,54 +182,63 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 </Box>
                             </Grid>
 
-                            <Grid item xs={12}>
-                                <Grid container spacing={2}>
-                                    {/* Nombre - Ancho total siempre */}
-                                    <Grid item xs={12}>
-                                        <TextField
-                                            label={t('name')}
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            fullWidth
-                                            required
-                                            inputRef={nameRef}
-                                            error={validationErrors.name}
-                                            helperText={validationErrors.name ? t('requiredField') : ''}
-                                        />
-                                    </Grid>
-
-                                    {/* Campos en dos columnas en pantallas medianas, una columna en móviles */}
-                                    <Grid item xs={12} sm={6}><TextField label={t('rfc')} name="rfc" value={formData.rfc} onChange={(e) => setFormData({ ...formData, rfc: e.target.value })} fullWidth /></Grid>
-                                    <Grid item xs={12} sm={6}><TextField label={t('phone')} name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} fullWidth /></Grid>
-
-                                    <Grid item xs={12}><TextField label={t('address')} name="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} fullWidth /></Grid>
-
-                                    <Grid item xs={12} sm={6}><TextField label={t('postal_code')} name="postalCode" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} fullWidth /></Grid>
-                                    <Grid item xs={12} sm={6}><TextField label={t('reg_fda_no')} name="regFdaNo" value={formData.regFdaNo} onChange={(e) => setFormData({ ...formData, regFdaNo: e.target.value })} fullWidth /></Grid>
-
-                                    {/* NOTAS - Forzado a ocupar las 12 columnas del Grid */}
-                                    <Grid item xs={12}>
-                                        <TextField
-                                            label={t('notes')}
-                                            name="notes"
-                                            value={formData.notes}
-                                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                            fullWidth
-                                            multiline
-                                            rows={3}
-                                            sx={{ width: '100%' }} // Refuerzo de estilo
-                                        />
-                                    </Grid>
-                                </Grid>
+                            {/* CAMPOS PRINCIPALES */}
+                            <Grid item size={{ xs: 12 }}>
+                                <TextField label={t('name')} name="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    fullWidth required inputRef={nameRef} error={validationErrors.name} helperText={validationErrors.name ? t('requiredField') : ''} />
                             </Grid>
 
+                            <Grid item size={{ xs: 12, md: 6 }}>
+                                <TextField label={t('rfc')} name="rfc" value={formData.rfc} onChange={(e) => setFormData({ ...formData, rfc: e.target.value })} fullWidth />
+                            </Grid>
+
+                            <Grid item size={{ xs: 12, md: 6 }}>
+                                <TextField label={t('phone')} name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} fullWidth />
+                            </Grid>
+
+                            <Grid item size={{ xs: 12 }}>
+                                <TextField label={t('address')} name="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} fullWidth />
+                            </Grid>
+
+                            {/* FILA DE REGISTROS (3 COLUMNAS) */}
+                            <Grid item size={{ xs: 12, md: 4 }}>
+                                <TextField label={t('postal_code')} name="postalCode" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} fullWidth />
+                            </Grid>
+
+                            <Grid item size={{ xs: 12, md: 4 }}>
+                                <TextField label={t('reg_fda_no')} name="regFdaNo" value={formData.regFdaNo} onChange={(e) => setFormData({ ...formData, regFdaNo: e.target.value })} fullWidth />
+                            </Grid>
+
+                            <Grid item size={{ xs: 12, md: 4 }}>
+                                <TextField label={t('empaque')} name="empaque" value={formData.empaque} onChange={(e) => setFormData({ ...formData, empaque: e.target.value })} fullWidth />
+                            </Grid>
+
+                            <Grid item size={{ xs: 12, md: 4 }}>
+                                <TextField label={t('gnn_number')} name="gnnNumber" value={formData.gnnNumber} onChange={(e) => setFormData({ ...formData, gnnNumber: e.target.value })} fullWidth />
+                            </Grid>
+
+                            {/* NOTAS (TEXTAREA MULTILINE) */}
+                            <Grid item size={{ xs: 12 }}>
+                                <TextField
+                                    label={t('notes')}
+                                    name="notes"
+                                    value={formData.notes}
+                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                />
+                            </Grid>
                         </Grid>
                     </Box>
                 </DialogContent>
-                <DialogActions sx={{ p: 3 }}>
-                    <Button color="error" variant="outlined" endIcon={<CancelIcon />} onClick={handleClose}>{t('cancel')}</Button>
-                    <Button type="submit" color="primary" variant="contained" endIcon={isEditing ? <SaveIcon /> : <AddIcon />} disabled={isLoading}>{isEditing ? t('save') : t('add')}</Button>
+                <DialogActions sx={{ p: 3, gap: 1 }}>
+                    <Button color="error" variant="outlined" startIcon={<CancelIcon />} onClick={handleClose}>
+                        {t('cancel')}
+                    </Button>
+                    <Button type="submit" color="primary" variant="contained" startIcon={isEditing ? <SaveIcon /> : <AddIcon />} disabled={isLoading}>
+                        {isEditing ? t('save') : t('add')}
+                    </Button>
                 </DialogActions>
             </form>
         </Dialog>

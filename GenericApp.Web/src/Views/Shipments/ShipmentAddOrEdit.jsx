@@ -1,8 +1,9 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     TextField, Button, Box, Typography, Grid, FormControlLabel, Switch,
-    Paper, CircularProgress, Divider, InputAdornment, Autocomplete
+    Paper, CircularProgress, Divider, InputAdornment, Autocomplete,
+    useTheme, useMediaQuery
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
@@ -16,6 +17,7 @@ import { DataAPIDriversService } from '@data/Drivers/Data';
 import { DataAPIShippingCompaniesService } from '@data/ShippingCompanies/Data';
 
 import { ShowMessage } from '@helpers/NotificationService';
+import { AppContext } from '@helpers/AppContext';
 
 import TrailerGrid from './TrailerGrid';
 import PalletDetailModal from './PalletDetailModal';
@@ -23,7 +25,7 @@ import PalletDetailModal from './PalletDetailModal';
 const initialManifestStructure = {
     idManifest: 0,
     idShipment: 0,
-    exitDate: new Date().toISOString().slice(0, 16),
+    exitDate: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
     temperatureTrailerBoxF: '',
     temperatureTrailerBoxC: '',
     season: new Date().getFullYear(),
@@ -31,8 +33,13 @@ const initialManifestStructure = {
     trailerPlate: '',
     trailerBoxPlate: '',
     idShippingCompany: '',
+    regFdaNo: '',
+    empaque: '',
     idManifestStatus: 1,
     comments: '',
+    chismografo: '',
+    codigorastreo: '',
+    gnnNumber: '',
     manifestPallets: []
 };
 
@@ -57,19 +64,23 @@ function ShipmentAddOrEdit() {
     const { t } = useTranslation();
     const { id } = useParams();
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
     const isEditing = id !== undefined;
     const shipmentDataService = dataApiShipmentsService();
     const citiesService = DataAPICitiesService();
     const clientsService = DataAPIClientsService();
     const driversService = DataAPIDriversService();
     const shippingCompaniesService = DataAPIShippingCompaniesService();
+    const { companySelected } = useContext(AppContext);
 
     const [formData, setFormData] = useState(initialFormData);
     const [isLoading, setIsLoading] = useState(isEditing);
     const [activeTab, setActiveTab] = useState(0);
     const [clients, setClients] = useState([]);
     const [drivers, setDrivers] = useState([]);
-    const [shippingCos, setShippingCos] = useState([]); // Estado para compañías
+    const [shippingCos, setShippingCos] = useState([]);
 
     const fetchClients = async () => {
         const response = await clientsService.getDataPagination(1, 500, "", true);
@@ -87,6 +98,20 @@ function ShipmentAddOrEdit() {
     };
 
     useEffect(() => {
+        if (companySelected && !isEditing) {
+            setFormData(prev => ({
+                ...prev,
+                manifests: prev.manifests.map(m => ({
+                    ...m,
+                    regFdaNo: companySelected.regFdaNo || '',
+                    empaque: companySelected.empaque || '',
+                    gnnNumber: companySelected.gnnNumber|| ''
+                }))
+            }));
+        }
+    }, [companySelected, isEditing]);
+
+    useEffect(() => {
         fetchClients();
         fetchDrivers();
         fetchShippingCompanies();
@@ -100,7 +125,7 @@ function ShipmentAddOrEdit() {
                         if (data.manifests) {
                             data.manifests = data.manifests.map(m => ({
                                 ...m,
-                                exitDate: m.exitDate ? m.exitDate.slice(0, 16) : new Date().toISOString().slice(0, 16)
+                                exitDate: m.exitDate?.includes('T') ? m.exitDate.split('T')[1].slice(0, 5) : m.exitDate
                             }));
                         }
                         setFormData(prev => ({ ...prev, ...data }));
@@ -238,103 +263,237 @@ function ShipmentAddOrEdit() {
     if (isLoading) return <Box sx={{ p: 5, textAlign: 'center' }}><CircularProgress /></Box>;
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h4" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <LocalShippingIcon fontSize="large" color="primary" />
+        <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            {/* Header section (Título solamente) */}
+            <Box sx={{ mb: 3 }}>
+                <Typography variant={isMobile ? "h5" : "h4"} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <LocalShippingIcon fontSize={isMobile ? "medium" : "large"} color="primary" />
                     {isEditing ? `${t('Edit Shipment')} #${formData.idShipment}` : t('New Shipment')}
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button variant="outlined" color="error" startIcon={<CancelIcon />} onClick={() => navigate('/shipments')}>{t('Cancel')}</Button>
-                    <Button variant="contained" color="primary" startIcon={<SaveIcon />} onClick={handleSubmit}>{t('Save Shipment')}</Button>
-                </Box>
             </Box>
 
-            <Paper sx={{ p: 4, borderRadius: 2 }}>
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>{t('General Shipment Data')}</Typography>
+            <Paper sx={{ p: 4, borderRadius: 2, flexGrow: 1 }}>
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'secondary.main', mb: 3 }}>
+                    {t('General Shipment Data')}
+                </Typography>
 
-                <Box sx={{ mt: 2, mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                    <TextField
-                        sx={{ width: { xs: '100%', sm: '250px' } }}
-                        type="date"
-                        label={t('Shipment Date')}
-                        name="shipmentDate"
-                        value={formData.shipmentDate}
-                        onChange={handleGeneralChange}
-                        InputLabelProps={{ shrink: true }}
-                        required
-                    />
-                    <FormControlLabel control={<Switch checked={formData.mixed} onChange={handleGeneralChange} name="mixed" />} label={t('Mixed')} />
-                </Box>
+                <Grid container spacing={3}>
+                    <Grid size={{ xs: 12 }}>
+                        <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            gap: 2,
+                            flexWrap: 'wrap'
+                        }}>
+                            <TextField
+                                sx={{ width: { xs: '100%', sm: '250px' } }}
+                                type="date"
+                                label={t('Shipment Date')}
+                                name="shipmentDate"
+                                value={formData.shipmentDate}
+                                onChange={handleGeneralChange}
+                                InputLabelProps={{ shrink: true }}
+                                required
+                            />
+                            <FormControlLabel
+                                control={<Switch checked={formData.mixed} onChange={handleGeneralChange} name="mixed" />}
+                                label={t('Mixed')}
+                            />
+                        </Box>
+                    </Grid>
 
-                <Box sx={{ mt: 2, mb: 4, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 2 }}>
-                    <Autocomplete
-                        options={clients}
-                        getOptionLabel={(option) => option.name || ""}
-                        value={clients.find(c => c.idClient === parseInt(formData.idClient)) || null}
-                        onChange={handleClientChange}
-                        sx={{ gridColumn: { xs: 'span 1', sm: 'span 3' } }}
-                        renderInput={(params) => <TextField {...params} label={t('Client')} required />}
-                    />
-                    <TextField fullWidth label={t('RFC')} name="rfc" value={formData.rfc || ''} InputProps={{ readOnly: true }} />
+                    <Grid size={{ xs: 12, md: 8 }}>
+                        <Autocomplete
+                            fullWidth
+                            options={clients}
+                            getOptionLabel={(option) => option.name || ""}
+                            value={clients.find(c => c.idClient === parseInt(formData.idClient)) || null}
+                            onChange={handleClientChange}
+                            renderInput={(params) => <TextField {...params} label={t('Client')} required />}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            label={t('RFC')}
+                            name="rfc"
+                            value={formData.rfc || ''}
+                            InputProps={{ readOnly: true }}
+                        />
+                    </Grid>
 
-                    <TextField fullWidth label={t('Address')} name="address" value={formData.address} onChange={handleGeneralChange} sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }} InputProps={{ readOnly: true }} />
-                    <TextField fullWidth label={t('Postal Code')} name="postalCode" value={formData.postalCode} onChange={handleGeneralChange} InputProps={{ readOnly: true }} />
-                    <TextField fullWidth label={t('Phone')} name="phone" value={formData.phone} onChange={handleGeneralChange} InputProps={{ readOnly: true }} />
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <TextField
+                            fullWidth
+                            label={t('Address')}
+                            name="address"
+                            value={formData.address}
+                            InputProps={{ readOnly: true }}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <TextField
+                            fullWidth
+                            label={t('Postal Code')}
+                            name="postalCode"
+                            value={formData.postalCode}
+                            InputProps={{ readOnly: true }}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <TextField
+                            fullWidth
+                            label={t('Phone')}
+                            name="phone"
+                            value={formData.phone}
+                            InputProps={{ readOnly: true }}
+                        />
+                    </Grid>
 
-                    <TextField fullWidth multiline rows={2} label={t('General Comments')} name="comments" value={formData.comments} onChange={handleGeneralChange} sx={{ gridColumn: { xs: 'span 1', sm: 'span 4' } }} />
-                </Box>
+                    <Grid size={{ xs: 12 }}>
+                        <TextField
+                            fullWidth
+                            multiline
+                            rows={2}
+                            label={t('General Comments')}
+                            name="comments"
+                            value={formData.comments}
+                            onChange={handleGeneralChange}
+                        />
+                    </Grid>
+                </Grid>
 
                 <Divider sx={{ my: 4 }} />
 
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'secondary.main' }}>{t('Logistics & Manifests')}</Typography>
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'secondary.main', mb: 3 }}>
+                    {t('Logistics & Manifests')}
+                </Typography>
 
-                <Box sx={{ mt: 2, mb: 4, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 2 }}>
-                    <TextField
-                        fullWidth
-                        type="datetime-local"
-                        label={t('Exit Date')}
-                        name="exitDate"
-                        value={formData.manifests[activeTab]?.exitDate || ''}
-                        onChange={handleManifestChange}
-                        InputLabelProps={{ shrink: true }}
-                    />
-                    <TextField fullWidth type="number" label={t('Season')} name="season" value={formData.manifests[activeTab]?.season || ''} onChange={handleManifestChange} sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }} />
-                    <Autocomplete
-                        options={shippingCos}
-                        getOptionLabel={(option) => option.description || option.name || ""}
-                        value={shippingCos.find(sc => sc.idShippingCompany === parseInt(formData.manifests[activeTab]?.idShippingCompany)) || null}
-                        onChange={handleShippingCompanyChange}
-                        sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
-                        renderInput={(params) => <TextField {...params} label={t('Shipping Company')} />}
+                <Grid container spacing={3}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <TextField fullWidth type="number" label={t('Season')} name="season" value={formData.manifests[activeTab]?.season || ''} onChange={handleManifestChange} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <TextField fullWidth label={t('RegFdaNo')} name="regFdaNo" value={formData.manifests[activeTab]?.regFdaNo || ''} onChange={handleManifestChange} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <TextField fullWidth label={t('Empaque')} name="empaque" value={formData.manifests[activeTab]?.empaque || ''} onChange={handleManifestChange} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Autocomplete
+                            options={shippingCos}
+                            getOptionLabel={(option) => option.description || option.name || ""}
+                            value={shippingCos.find(sc => sc.idShippingCompany === parseInt(formData.manifests[activeTab]?.idShippingCompany)) || null}
+                            onChange={handleShippingCompanyChange}
+                            renderInput={(params) => <TextField {...params} label={t('Shipping Company')} />}
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <Autocomplete
+                            options={drivers}
+                            getOptionLabel={(option) => option.name || ""}
+                            value={drivers.find(d => d.idDriver === parseInt(formData.manifests[activeTab]?.idDriver)) || null}
+                            onChange={handleDriverChange}
+                            renderInput={(params) => <TextField {...params} label={t('Driver')} />}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <TextField fullWidth label={t('Trailer Plate')} name="trailerPlate" value={formData.manifests[activeTab]?.trailerPlate || ''} onChange={handleManifestChange} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 12, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            type="time"
+                            label={t('Exit Time')}
+                            name="exitDate"
+                            value={formData.manifests[activeTab]?.exitDate || ''}
+                            onChange={handleManifestChange}
+                            InputLabelProps={{ shrink: true }}
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <TextField fullWidth label={t('Box Plate')} name="trailerBoxPlate" value={formData.manifests[activeTab]?.trailerBoxPlate || ''} onChange={handleManifestChange} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label={t('Temp °F')}
+                            name="temperatureTrailerBoxF"
+                            value={formData.manifests[activeTab]?.temperatureTrailerBoxF || ''}
+                            onChange={handleManifestChange}
+                            InputProps={{ startAdornment: <InputAdornment position="start"><ThermostatIcon /></InputAdornment> }}
+                        />
+                    </Grid>
+                </Grid>
+
+                <Divider sx={{ my: 4 }} />
+
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'secondary.main', mb: 3 }}>
+                    {t('Rastreo')}
+                </Typography>
+
+                <Grid container spacing={3}>
+                    <Grid size={{ xs: 12, sm: 4, md: 4 }}>
+                        <TextField fullWidth type="number" label={t('CodigodeRastreo')} name="codigorastreo" value={formData.manifests[activeTab]?.codigorastreo || ''} onChange={handleManifestChange} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 4, md: 4 }}>
+                        <TextField fullWidth type="number" label={t('chismografo')} name="chismografo" value={formData.manifests[activeTab]?.chismografo || ''} onChange={handleManifestChange} />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 4, md: 4 }}>
+                        <TextField fullWidth type="number" label={t('GnnNumber')} name="gnnNumber" value={formData.manifests[activeTab]?.gnnNumber || ''} onChange={handleManifestChange} />
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                        <TextField fullWidth multiline rows={2} label={t('Sellos')} name="sellos" value={formData.sellos || ''} onChange={handleGeneralChange} />
+                    </Grid>
+                </Grid>
+
+                <Divider sx={{ my: 4 }} />
+
+                <Box sx={{ overflowX: 'auto', mb: 4 }}>
+                    <TrailerGrid
+                        allManifests={formData.manifests}
+                        currentManifestIndex={activeTab}
+                        onUpdatePallet={handleOpenPalletModal}
+                        onDeletePallet={handleDeletePallet}
+                        t={t}
                     />
                 </Box>
-                <Box sx={{ mt: 2, mb: 4, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 2 }}>
-                    <TextField fullWidth type="number" label={t('Temp °F')} name="temperatureTrailerBoxF" value={formData.manifests[activeTab]?.temperatureTrailerBoxF || ''} onChange={handleManifestChange} InputProps={{ startAdornment: <InputAdornment position="start"><ThermostatIcon /></InputAdornment> }} sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }} />
 
-                    <Autocomplete
-                        options={drivers}
-                        getOptionLabel={(option) => option.name || ""}
-                        value={drivers.find(d => d.idDriver === parseInt(formData.manifests[activeTab]?.idDriver)) || null}
-                        onChange={handleDriverChange}
-                        sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
-                        renderInput={(params) => <TextField {...params} label={t('Driver')} />}
-                    />
-
-                    <TextField fullWidth label={t('Trailer Plate')} name="trailerPlate" value={formData.manifests[activeTab]?.trailerPlate || ''} onChange={handleManifestChange} sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }} />
-                    <TextField fullWidth label={t('Box Plate')} name="trailerBoxPlate" value={formData.manifests[activeTab]?.trailerBoxPlate || ''} onChange={handleManifestChange} sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }} />
-
-
-                    {/*    <TextField fullWidth multiline rows={2} label={t('Manifest Comments')} name="comments" value={formData.manifests[activeTab]?.comments || ''} onChange={handleManifestChange} sx={{ gridColumn: { xs: 'span 1', sm: 'span 4' } }} />*/}
+                {/* Footer section (Botones de Guardar y Cancelar al final) */}
+                <Box sx={{
+                    display: 'flex',
+                    gap: 2,
+                    mt: 3,
+                    pt: 3,
+                    borderTop: `1px solid ${theme.palette.divider}`,
+                    justifyContent: 'flex-end',
+                    flexDirection: { xs: 'column-reverse', sm: 'row' }
+                }}>
+                    <Button
+                        fullWidth={isMobile}
+                        variant="outlined"
+                        color="error"
+                        size="large"
+                        startIcon={<CancelIcon />}
+                        onClick={() => navigate('/shipments')}
+                    >
+                        {t('Cancel')}
+                    </Button>
+                    <Button
+                        fullWidth={isMobile}
+                        variant="contained"
+                        color="primary"
+                        size="large"
+                        startIcon={<SaveIcon />}
+                        onClick={handleSubmit}
+                    >
+                        {t('Save Shipment')}
+                    </Button>
                 </Box>
-
-                <TrailerGrid
-                    allManifests={formData.manifests}
-                    currentManifestIndex={activeTab}
-                    onUpdatePallet={handleOpenPalletModal}
-                    onDeletePallet={handleDeletePallet}
-                    t={t}
-                />
             </Paper>
 
             <PalletDetailModal

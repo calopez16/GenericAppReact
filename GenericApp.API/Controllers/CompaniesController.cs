@@ -157,7 +157,7 @@ namespace GenericApp.API.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> UpdateCompany([FromForm] CompanyDTO model)
         {
-            var companyExists = await _repository.FirstOrDefault<Company>(x => (x.Name.ToLower().Equals(model.Name.ToLower()) || x.Rfc.ToLower().Equals(model.Rfc.ToLower())) && (!x.IsDeleted ?? false));
+            var companyExists = await _repository.FirstOrDefault<Company>(x => x.IdCompany != model.IdCompany && (x.Name.ToLower().Equals(model.Name.ToLower()) || x.Rfc.ToLower().Equals(model.Rfc.ToLower())) && (!x.IsDeleted ?? false));
             if (companyExists != null)
                 return Conflict(
                     new ApiResponse
@@ -175,6 +175,8 @@ namespace GenericApp.API.Controllers
             companyDB.Phone = model.Phone;
             companyDB.Notes = model.Notes;
             companyDB.RegFdaNo = model.RegFdaNo;
+            companyDB.GnnNumber = model.GnnNumber;
+            companyDB.Empaque = model.Empaque;
 
             if (model.Logo != null)
             {

@@ -105,6 +105,9 @@ namespace GenericApp.Controllers
                     {
                         IdCompany = company.IdCompany,
                         Name = company.Name,
+                        RegFdaNo=company.RegFdaNo,
+                        Empaque = company.Empaque,
+                        GnnNumber=company.GnnNumber,
                         LogoName = company.LogoName
                     } : null,
                 }
@@ -213,7 +216,10 @@ namespace GenericApp.Controllers
                                 {
                                     IdCompany = company.IdCompany,
                                     Name = company.Name,
-                                    LogoName = company.LogoName
+                                    LogoName = company.LogoName,
+                                    RegFdaNo = company.RegFdaNo,
+                                    Empaque = company.Empaque,
+                                    GnnNumber = company.GnnNumber,
                                 },
                                 IdCompany = userDetail?.IdCompany,
                             }

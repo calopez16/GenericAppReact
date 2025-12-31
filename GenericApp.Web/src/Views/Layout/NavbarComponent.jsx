@@ -55,14 +55,7 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
     };
 
     const handleSelectCompany = (companyFullData) => {
-        const streamlinedCompany = {
-            idCompany: companyFullData.idCompany,
-            name: companyFullData.name,
-            logoName: companyFullData.logoName
-        };
-
-        setCompanySelected(streamlinedCompany);
-
+        setCompanySelected(companyFullData);
         setIsCompanyModalOpen(false);
     };
 

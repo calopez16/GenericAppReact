@@ -138,7 +138,6 @@ namespace GenericApp.API.Controllers
                 );
 
             var labelDB = _mapper.Map<Label>(model);
-            labelDB.IdCompany = 1;
             labelDB.IsActive = true;
             labelDB.IsDeleted = false;
 

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef,useContext } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -16,6 +16,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { AppContext } from '@helpers/AppContext';
 
 import { DataAPISeasonsService } from '@data/Seasons/Data';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +27,7 @@ dayjs.extend(customParseFormat);
 const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const { t } = useTranslation();
     const dataService = DataAPISeasonsService();
+    const { companySelected } = useContext(AppContext);
 
     const nameRef = useRef(null);
 
@@ -69,7 +71,7 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     endDate: parseDateToDayjs(data.endDate),
                     isClosed: data.isClosed ?? false,
                     isActive: data.isActive ?? true,
-                    idCompany: data.idCompany || 1,
+                    idCompany: companySelected.idCompany || null,
                 });
             } else if (!isEditing) {
                 setFormData({
@@ -80,7 +82,7 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     endDate: dayjs(),
                     isClosed: false,
                     isActive: true,
-                    idCompany: 1,
+                    idCompany: companySelected.idCompany || null,
                 });
             }
             setValidationErrors({ name: false, description: false, initialDate: false, endDate: false });

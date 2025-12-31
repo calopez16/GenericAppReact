@@ -10,6 +10,8 @@
         public string? Phone { get; set; }
         public string? Notes { get; set; }
         public string? RegFdaNo { get; set; }
+        public string? Empaque { get; set; }
+        public string? GnnNumber { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
         public IFormFile? Logo { get; set; }

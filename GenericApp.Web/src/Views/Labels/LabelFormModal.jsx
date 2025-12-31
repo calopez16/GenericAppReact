@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -26,11 +26,14 @@ import { DataAPILabelsService } from '@data/Labels/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import LabelTypeModal from '@views/Labels/LabelTypeModal';
+import { AppContext } from '@helpers/AppContext';
 
 const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const { t } = useTranslation();
     const dataService = DataAPILabelsService();
     const descriptionRef = useRef(null);
+    const { companySelected } = useContext(AppContext);
+
     const [formData, setFormData] = useState({
         idLabel: 0,
         description: '',
@@ -133,7 +136,8 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             const labelPayload = {
                 idLabel: formData.idLabel || 0,
                 description: formData.description,
-                maxBoxQuantity: formData.maxBoxQuantity, // ¡NUEVO CAMPO EN EL PAYLOAD!
+                maxBoxQuantity: formData.maxBoxQuantity,
+                idCompany: companySelected.idCompany,
                 labelTypes: formData.labelTypes.map(lt => ({
                     ...lt,
                     idLabelType: lt.idLabelType > 0 ? lt.idLabelType : 0,
