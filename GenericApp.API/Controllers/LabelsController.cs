@@ -59,7 +59,7 @@ namespace GenericApp.API.Controllers
             var query = await _repository.Query<Label>();
             query = query.Include(x => x.LabelTypes);
             query = query.Where(x => !(x.IsDeleted ?? false) && (!active.HasValue || x.IsActive == active));
-
+            
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 query = query.Where(u =>

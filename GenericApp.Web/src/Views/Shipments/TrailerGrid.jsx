@@ -1,82 +1,42 @@
 ﻿import React, { useState } from 'react';
 import {
-    Box,
-    Paper,
-    Typography,
-    Button,
-    ButtonGroup,
-    useTheme,
-    useMediaQuery
+    Box, Paper, Typography, Button, ButtonGroup, useTheme, useMediaQuery, Divider
 } from '@mui/material';
 import GridViewIcon from '@mui/icons-material/GridView';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import EditIcon from '@mui/icons-material/Edit';
-import InfoIcon from '@mui/icons-material/Info';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 
-// CONFIGURACIÓN GLOBAL
-const MAX_PALLETS = 26;
 const ROWS = 13;
 
-const TrailerGrid = ({
-    allManifests,
-    currentManifestIndex,
-    onUpdatePallet,
-    onMovePallet,
-    onCopyPallet,
-    onDeletePallet, // Asegúrate de recibir esta prop si la usas
-    t
-}) => {
-    // --- LÓGICA DE DETECCIÓN DE PANTALLA ---
+const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMovePallet, onCopyPallet, t }) => {
     const theme = useTheme();
-    // Usamos 'md' como punto de quiebre para el camión porque es ancho
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const isTinyScreen = useMediaQuery(theme.breakpoints.down('sm'));
-
-    // Estados de interacción
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [interactionMode, setInteractionMode] = useState('select');
     const [selectedPosition, setSelectedPosition] = useState(null);
 
-    // Helper: Encontrar pallet en una posición
     const getPalletAtPosition = (pos) => {
         if (!allManifests) return null;
         for (let i = 0; i < allManifests.length; i++) {
             const manifest = allManifests[i];
-            // Aseguramos que no esté eliminado (soft delete check)
             const pallet = manifest.manifestPallets?.find(p => p.position === pos && !(p.isDeleted));
             if (pallet) return { pallet, manifestIndex: i };
         }
         return null;
     };
 
+    // --- CÁLCULOS TOTALES DEL CAMIÓN ---
+    const grandTotalBoxes = allManifests?.reduce((total, m) =>
+        total + (m.manifestPallets?.filter(p => !p.isDeleted).reduce((pSum, p) =>
+            pSum + (p.manifestPalletLoadings?.reduce((lSum, l) => lSum + (Number(l.boxQuantity) || 0), 0) || 0), 0) || 0), 0) || 0;
+
+    const totalPallets = allManifests?.reduce((total, m) => total + (m.manifestPallets?.filter(p => !p.isDeleted).length || 0), 0) || 0;
+
     const handleSlotClick = (pos) => {
         const occupiedData = getPalletAtPosition(pos);
-
         if (interactionMode === 'swap') {
-            if (selectedPosition === null) {
-                if (!occupiedData) return;
-                setSelectedPosition(pos);
-            } else {
-                if (selectedPosition !== pos) onMovePallet(selectedPosition, pos);
-                setSelectedPosition(null);
-                setInteractionMode('select');
-            }
-            return;
-        }
-
-        if (interactionMode === 'copy') {
-            if (selectedPosition === null) {
-                if (!occupiedData) return;
-                setSelectedPosition(pos);
-            } else {
-                if (!occupiedData) {
-                    onCopyPallet(selectedPosition, pos);
-                }
-            }
-            return;
-        }
-
-        if (interactionMode === 'select') {
+            if (selectedPosition === null) { if (occupiedData) setSelectedPosition(pos); }
+            else { if (selectedPosition !== pos) onMovePallet(selectedPosition, pos); setSelectedPosition(null); setInteractionMode('select'); }
+        } else if (interactionMode === 'select') {
             if (occupiedData && occupiedData.manifestIndex !== currentManifestIndex) return;
             onUpdatePallet(pos, occupiedData ? occupiedData.pallet : null);
         }
@@ -84,151 +44,63 @@ const TrailerGrid = ({
 
     const renderSlot = (pos) => {
         const occupiedData = getPalletAtPosition(pos);
+        const totalBoxes = occupiedData?.pallet.manifestPalletLoadings?.reduce((acc, curr) => acc + (Number(curr.boxQuantity) || 0), 0) || 0;
         const isOccupied = !!occupiedData;
-        const isCurrentManifest = occupiedData?.manifestIndex === currentManifestIndex;
         const isSelected = selectedPosition === pos;
-
-        let bgColor = '#f5f5f5';
-        let borderColor = '#ddd';
-
-        if (isOccupied) {
-            bgColor = isCurrentManifest ? '#bbdefb' : '#e0e0e0';
-            borderColor = isCurrentManifest ? '#1976d2' : '#9e9e9e';
-        }
-        if (isSelected) {
-            borderColor = '#ff9800';
-            bgColor = '#fff3e0';
-        }
-
-        // AJUSTE RESPONSIVO: Altura dinámica
-        const slotHeight = isTinyScreen ? 50 : 60;
 
         return (
             <Paper
-                key={pos}
-                elevation={isOccupied ? 3 : 0}
-                sx={{
-                    height: slotHeight,
-                    width: '100%',
-                    backgroundColor: bgColor,
-                    border: `2px solid ${borderColor}`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'all 0.2s',
-                    '&:hover': { filter: 'brightness(0.95)' }
-                }}
+                key={pos} elevation={0}
                 onClick={() => handleSlotClick(pos)}
+                sx={{
+                    height: isMobile ? 75 : 85, width: '100%',
+                    backgroundColor: isSelected ? theme.palette.secondary.dark : (isOccupied ? (occupiedData.manifestIndex === currentManifestIndex ? theme.palette.primary.main : '#666') : 'rgba(255, 255, 255, 0.08)'),
+                    border: `1.5px solid ${isSelected ? theme.palette.secondary.main : (isOccupied ? '#fff' : 'rgba(255, 255, 255, 0.2)')}`,
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', position: 'relative', color: '#fff'
+                }}
             >
-                <Typography variant="caption" sx={{ position: 'absolute', top: 1, left: 3, fontWeight: 'bold', color: '#777', fontSize: isTinyScreen ? '0.65rem' : '0.75rem' }}>
-                    {pos}
-                </Typography>
-
-                {isOccupied ? (
-                    <>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexDirection: isTinyScreen ? 'column' : 'row' }}>
-                            {isCurrentManifest ?
-                                <EditIcon sx={{ fontSize: isTinyScreen ? 16 : 20 }} color="primary" /> :
-                                <InfoIcon sx={{ fontSize: isTinyScreen ? 16 : 20 }} color="action" />
-                            }
-                            <Typography variant={isTinyScreen ? "caption" : "body2"} fontWeight="bold" sx={{ lineHeight: 1 }}>
-                                {occupiedData.pallet.manifestPalletLoadings?.length || 0} {isTinyScreen ? '' : 'items'}
-                            </Typography>
-                        </Box>
-                    </>
-                ) : (
-                    interactionMode === 'copy' && selectedPosition ?
-                        <ContentCopyIcon color="disabled" sx={{ opacity: 0.3 }} /> :
-                        (!isTinyScreen && <Typography variant="caption" color="text.secondary">{t('Empty')}</Typography>)
+                <Typography sx={{ position: 'absolute', top: 2, left: 4, fontWeight: 'bold', fontSize: '0.65rem', opacity: 0.6 }}>{pos}</Typography>
+                {isOccupied && (
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="caption" sx={{ fontWeight: 'bold', fontSize: '0.75rem', display: 'block' }}>{totalBoxes} BX</Typography>
+                        {occupiedData.pallet.temperatureF && <Typography variant="caption" sx={{ fontSize: '0.65rem', opacity: 0.9 }}>{occupiedData.pallet.temperatureF}°F</Typography>}
+                    </Box>
                 )}
             </Paper>
         );
     };
 
-    const leftColumn = [];
-    const rightColumn = [];
-
+    const slots = [];
     for (let i = 0; i < ROWS; i++) {
-        const posLeft = (i * 2) + 1;
-        const posRight = (i * 2) + 2;
-        leftColumn.push(renderSlot(posLeft));
-        rightColumn.push(renderSlot(posRight));
+        slots.push(
+            <Box key={i} sx={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: 1, flex: 1, minWidth: isMobile ? '100%' : 65 }}>
+                {renderSlot((i * 2) + 1)}
+                {renderSlot((i * 2) + 2)}
+            </Box>
+        );
     }
 
     return (
-        <Box sx={{ mt: 2 }}>
-            {/* HERRAMIENTAS RESPONSIVAS */}
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
-                <ButtonGroup
-                    variant="contained"
-                    size={isTinyScreen ? "small" : "medium"}
-                    orientation={isTinyScreen ? "vertical" : "horizontal"}
-                    fullWidth={isTinyScreen}
-                    aria-label="pallet tools"
-                >
-                    <Button
-                        color={interactionMode === 'select' ? "primary" : "inherit"}
-                        onClick={() => { setInteractionMode('select'); setSelectedPosition(null); }}
-                        startIcon={<GridViewIcon />}
-                    >
-                        {t('Select / Edit')}
-                    </Button>
-                    <Button
-                        color={interactionMode === 'swap' ? "secondary" : "inherit"}
-                        onClick={() => { setInteractionMode('swap'); setSelectedPosition(null); }}
-                        startIcon={<SwapHorizIcon />}
-                    >
-                        {t('Move / Swap')}
-                    </Button>
-                    <Button
-                        color={interactionMode === 'copy' ? "warning" : "inherit"}
-                        onClick={() => { setInteractionMode('copy'); setSelectedPosition(null); }}
-                        startIcon={<ContentCopyIcon />}
-                    >
-                        {t('Copy')}
-                    </Button>
-                </ButtonGroup>
-            </Box>
-
-            {/* LEYENDA (Ocultar en móviles muy pequeños si molesta, o simplificar) */}
-            {!isTinyScreen && (
-                <Typography align="center" variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {interactionMode === 'select' && t('Click a slot to add/edit details.')}
-                    {interactionMode === 'swap' && (selectedPosition ? t('Select destination slot to swap.') : t('Select a pallet to move.'))}
-                    {interactionMode === 'copy' && (selectedPosition ? t('Select an empty slot to paste.') : t('Select a pallet to copy.'))}
-                </Typography>
-            )}
-
-            {/* TRAILER VISUALIZACIÓN */}
-            <Box sx={{
-                display: 'flex',
-                flexDirection: isMobile ? 'column' : 'row', // APILAR SI ES MOBILE
-                gap: isMobile ? 1 : 4, // MENOS ESPACIO SI ES MOBILE
-                p: isMobile ? 1 : 2,
-                bgcolor: '#eee',
-                borderRadius: 2,
-                border: '4px solid #333',
-                borderTop: 'none',
-                minHeight: isMobile ? 'auto' : 600
-            }}>
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Typography align="center" variant="caption" fontWeight="bold">LEFT SIDE</Typography>
-                    {leftColumn}
+        <Box sx={{ width: '100%', mt: 2 }}>
+            <Paper sx={{ p: 2, mb: 2, display: 'flex', justifyContent: 'space-around', alignItems: 'center', border: '1px solid #333' }}>
+                <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" color="gray">TOTAL CAMIÓN</Typography>
+                    <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold' }}>{grandTotalBoxes} BX</Typography>
                 </Box>
-
-                {/* Divisor visual si se apilan */}
-                {isMobile && <Box sx={{ height: 2, bgcolor: '#ccc', my: 1 }} />}
-
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Typography align="center" variant="caption" fontWeight="bold">RIGHT SIDE</Typography>
-                    {rightColumn}
+                <Divider orientation="vertical" flexItem  />
+                <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" color="gray">PALLETS</Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold'}}>{totalPallets} / 26</Typography>
                 </Box>
+            </Paper>
+
+            <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', p: 2, borderRadius: '10px 40px 40px 10px', border: '3px solid', gap: 2 }}>
+                <Box sx={{ width: isMobile ? '100%' : 80, height: isMobile ? 60 : 'auto', bgcolor: '#111', borderRadius: '8px', display: 'flex', flexDirection: isMobile ? 'row' : 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', gap: 1 }}>
+                    <LocalShippingIcon sx={{ transform: 'scaleX(-1)', fontSize: 32 }} />
+                    <Typography variant="caption" sx={{ fontWeight: 'bold' }}>FRONT</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 1, flexGrow: 1 }}>{slots}</Box>
             </Box>
-            <Box sx={{ height: 10, bgcolor: '#333', width: '100%', mt: 0, borderBottomLeftRadius: 4, borderBottomRightRadius: 4 }} />
-            <Typography align="center" sx={{ mt: 1 }} fontWeight="bold">{t('CABIN FRONT')}</Typography>
         </Box>
     );
 };
