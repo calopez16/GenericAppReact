@@ -22,6 +22,10 @@ namespace GenericApp.API.Models
         public int? SeasonYear { get; set; }
         public string? Empaque { get; set; }
         public string? RegFdaNo { get; set; }
+        public string? TrackingCode { get; set; }
+        public string? Chismografo { get; set; }
+        public string? Stamps { get; set; }
+        public string? GnnNumber { get; set; }
 
         public virtual CompanyDTO? IdCompanyNavigation { get; set; }
         public virtual ShipmentDTO? IdShipmentNavigation { get; set; }

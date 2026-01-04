@@ -26,6 +26,10 @@ namespace GenericApp.Data.Models
         public int? IdCompany { get; set; }
         public string? Empaque { get; set; }
         public string? RegFdaNo { get; set; }
+        public string? TrackingCode { get; set; }
+        public string? Chismografo { get; set; }
+        public string? Stamps { get; set; }
+        public string? GnnNumber { get; set; }
 
         public virtual Company? IdCompanyNavigation { get; set; }
         public virtual Shipment? IdShipmentNavigation { get; set; }

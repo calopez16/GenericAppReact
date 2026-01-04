@@ -114,6 +114,11 @@ namespace GenericApp.API.Controllers
                     IdShippingCompany = m.IdShippingCompany,
                     Comments = m.Comments,
                     Empaque = m.Empaque,
+                    ExitDate = m.ExitDate.ToString("HH:mm"),
+                    TrackingCode = m.TrackingCode,
+                    Stamps = m.Stamps,
+                    Chismografo = m.Chismografo,
+                    GnnNumber = m.GnnNumber,
                     ManifestPallets = m.ManifestPallets.Select(p => new ManifestPalletDTO
                     {
                         IdManifestPallet = p.IdManifestPallet,
@@ -192,12 +197,12 @@ namespace GenericApp.API.Controllers
                             manifestDB.IdSeason = season.IdSeason;
                             manifestDB.IdManifestStatus = (int)ManifestStatusEnum.Activa;
                             manifestDB.IsDeleted = false;
+                            manifestDB.ExitDate = DateTime.ParseExact(manifestDto.ExitDate, "HH:mm", null);
                             if (manifestDto.ManifestPallets != null)
                             {
                                 manifestDB.ManifestPallets = manifestDto.ManifestPallets.Select(palletDto =>
                                 {
                                     var palletDB = _mapper.Map<ManifestPallet>(palletDto);
-
                                     if (palletDto.ManifestPalletLoadings != null)
                                     {
                                         palletDB.ManifestPalletLoadings = palletDto.ManifestPalletLoadings.Select(loadDto =>
@@ -241,6 +246,7 @@ namespace GenericApp.API.Controllers
         [HttpPut]
         public async Task<ActionResult> UpdateShipment([FromBody] ShipmentDTO model)
         {
+            // 1. Obtener el Shipment con toda su jerarquía (Manifests -> Pallets -> Loadings)
             var createdShipmentQuery = await _repository.Query<Shipment>();
             var shipmentDB = await createdShipmentQuery
                 .Include(s => s.Manifests!)
@@ -251,15 +257,22 @@ namespace GenericApp.API.Controllers
             if (shipmentDB == null || (shipmentDB.IsDeleted ?? false))
                 return NotFound(new ApiResponse { Message = "Shipment no encontrado." });
 
+            // 2. Actualizar propiedades escalares del Shipment (evitando colecciones por seguridad)
+            // Nota: Asegúrate de que tu perfil de AutoMapper para Shipment -> Shipment ignore Manifests
+            // o que el mapeo aquí no sobrescriba la colección rastreada por EF.
             _mapper.Map(model, shipmentDB);
 
+            // 3. Manejo de MANIFESTS (Eliminar, Actualizar, Agregar)
             var incomingManifests = model.Manifests ?? new List<ManifestDTO>();
 
+            // 3.1 Eliminar Manifests que ya no vienen en el DTO
             var manifestIdsToKeep = incomingManifests.Where(m => m.IdManifest > 0).Select(m => m.IdManifest).ToList();
             var manifestsToRemove = shipmentDB.Manifests!.Where(m => !manifestIdsToKeep.Contains(m.IdManifest)).ToList();
 
             if (manifestsToRemove.Any())
             {
+                // Opcional: Marcar como borrado lógico si tu DB lo requiere, o eliminar físico:
+                // foreach(var m in manifestsToRemove) m.IsDeleted = true; 
                 _repository.RemoveRange(manifestsToRemove);
             }
 
@@ -267,12 +280,13 @@ namespace GenericApp.API.Controllers
             {
                 var manifestDB = shipmentDB.Manifests!.FirstOrDefault(m => m.IdManifest == manifestDto.IdManifest);
 
+                // A) ACTUALIZAR MANIFEST EXISTENTE
                 if (manifestDB != null)
                 {
                     _mapper.Map(manifestDto, manifestDB);
 
+                    // 4. Manejo de PALLETS (dentro de Manifest existente)
                     var incomingPallets = manifestDto.ManifestPallets ?? new List<ManifestPalletDTO>();
-
                     var palletIdsToKeep = incomingPallets.Where(p => p.IdManifestPallet > 0).Select(p => p.IdManifestPallet).ToList();
                     var palletsToRemove = manifestDB.ManifestPallets!.Where(p => !palletIdsToKeep.Contains(p.IdManifestPallet)).ToList();
 
@@ -285,12 +299,13 @@ namespace GenericApp.API.Controllers
                     {
                         var palletDB = manifestDB.ManifestPallets!.FirstOrDefault(p => p.IdManifestPallet == palletDto.IdManifestPallet);
 
+                        // A.1) ACTUALIZAR PALLET EXISTENTE
                         if (palletDB != null)
                         {
                             _mapper.Map(palletDto, palletDB);
 
+                            // 5. Manejo de LOADINGS (dentro de Pallet existente)
                             var incomingLoadings = palletDto.ManifestPalletLoadings ?? new List<ManifestPalletLoadingDTO>();
-
                             var loadingIdsToKeep = incomingLoadings.Where(l => l.IdManifestPalletLoading > 0).Select(l => l.IdManifestPalletLoading).ToList();
                             var loadingsToRemove = palletDB.ManifestPalletLoadings!.Where(l => !loadingIdsToKeep.Contains(l.IdManifestPalletLoading)).ToList();
 
@@ -305,72 +320,77 @@ namespace GenericApp.API.Controllers
 
                                 if (loadingDB != null)
                                 {
+                                    // Actualizar Loading existente
                                     _mapper.Map(loadDto, loadingDB);
                                 }
                                 else if (loadDto.IdManifestPalletLoading <= 0)
                                 {
+                                    // Nuevo Loading en Pallet existente
                                     var newLoading = _mapper.Map<ManifestPalletLoading>(loadDto);
-                                    newLoading.IdManifest = manifestDB.IdManifest;
-                                    newLoading.IdShipment = shipmentDB.IdShipment;
                                     newLoading.IdManifestPallet = palletDB.IdManifestPallet;
+                                    // Nota: No asignamos IdManifest/IdShipment aquí porque en tu modelo 'ManifestPalletLoading.cs' 
+                                    // no existen esas propiedades como enteros, solo como navegaciones.
                                     palletDB.ManifestPalletLoadings!.Add(newLoading);
                                 }
                             }
                         }
+                        // A.2) AGREGAR NUEVO PALLET (en Manifest existente)
                         else if (palletDto.IdManifestPallet <= 0)
                         {
                             var newPallet = _mapper.Map<ManifestPallet>(palletDto);
-                            newPallet.IdManifest = manifestDB.IdManifest;
-                            newPallet.IdShipment = shipmentDB.IdShipment;
+                            newPallet.IdManifest = manifestDB.IdManifest; // Vincular al padre
 
+                            // Asegurar que los loadings del nuevo pallet se vinculen correctamente
                             if (newPallet.ManifestPalletLoadings != null)
                             {
-                                foreach (var loading in newPallet.ManifestPalletLoadings)
+                                foreach (var load in newPallet.ManifestPalletLoadings)
                                 {
-                                    loading.IdManifest = manifestDB.IdManifest;
-                                    loading.IdShipment = shipmentDB.IdShipment;
+                                    // EF Core manejará el IdManifestPallet automáticamente al agregarlo a la colección
+                                    // pero si hay propiedades adicionales requeridas, asígnalas aquí.
                                 }
                             }
                             manifestDB.ManifestPallets!.Add(newPallet);
                         }
                     }
                 }
-                else if (manifestDto.IdManifest <= 0 && (manifestDto.IdShipment == shipmentDB.IdShipment || manifestDto.IdShipment == 0))
+                // B) AGREGAR NUEVO MANIFEST
+                else if (manifestDto.IdManifest <= 0)
                 {
                     var newManifest = _mapper.Map<Manifest>(manifestDto);
-                    newManifest.IdShipment = shipmentDB.IdShipment;
+                    newManifest.IdShipment = shipmentDB.IdShipment; // Vincular al padre principal
                     newManifest.CreationDate = DateTime.UtcNow;
 
+                    // Al ser un nuevo Manifest completo, AutoMapper debería haber mapeado la jerarquía (Pallets -> Loadings).
+                    // Solo necesitamos agregarlo a la colección del Shipment. EF Core se encargará de insertar 
+                    // el Manifest, luego los Pallets con el nuevo ID del Manifest, etc.
+
+                    // Verificación opcional de integridad si es necesario modificar datos en cascada:
                     if (newManifest.ManifestPallets != null)
                     {
                         foreach (var pallet in newManifest.ManifestPallets)
                         {
-                            pallet.IdShipment = shipmentDB.IdShipment;
-
-                            if (pallet.ManifestPalletLoadings != null)
-                            {
-                                foreach (var loading in pallet.ManifestPalletLoadings)
-                                {
-                                    loading.IdShipment = shipmentDB.IdShipment;
-                                }
-                            }
+                            // pallet.IdManifest será asignado por EF al guardar, no es necesario forzarlo aquí
+                            // si newManifest se agrega a shipmentDB.
                         }
                     }
+
                     shipmentDB.Manifests!.Add(newManifest);
                 }
             }
 
+            // 6. Guardar Cambios
             var result = await _repository.Update(shipmentDB);
 
             if (!result)
                 return BadRequest(new ApiResponse { Message = "Error al actualizar el Shipment y su jerarquía asociada." });
 
+            // 7. Refrescar datos para retornar
             var updatedShipmentQuery = await _repository.Query<Shipment>();
             var updatedShipment = await updatedShipmentQuery
-           .Include(s => s.Manifests!)
-               .ThenInclude(m => m.ManifestPallets!)
-                   .ThenInclude(p => p.ManifestPalletLoadings)
-           .FirstOrDefaultAsync(s => s.IdShipment == model.IdShipment);
+                .Include(s => s.Manifests!)
+                    .ThenInclude(m => m.ManifestPallets!)
+                        .ThenInclude(p => p.ManifestPalletLoadings)
+                .FirstOrDefaultAsync(s => s.IdShipment == model.IdShipment);
 
             var resultDTO = _mapper.Map<ShipmentDTO>(updatedShipment);
 

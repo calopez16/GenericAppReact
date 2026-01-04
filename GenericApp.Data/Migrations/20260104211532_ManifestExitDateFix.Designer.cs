@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260104211532_ManifestExitDateFix")]
+    partial class ManifestExitDateFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -476,9 +478,6 @@ namespace GenericApp.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdManifest"), 1L, 1);
 
-                    b.Property<string>("Chismografo")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Comments")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -493,9 +492,6 @@ namespace GenericApp.Data.Migrations
 
                     b.Property<DateTime>("ExitDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("GnnNumber")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("IdCompany")
                         .IsRequired()
@@ -524,17 +520,11 @@ namespace GenericApp.Data.Migrations
                     b.Property<string>("RegFdaNo")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Stamps")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<decimal?>("TemperatureTrailerBoxC")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("TemperatureTrailerBoxF")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("TrackingCode")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TrailerBoxPlate")
                         .HasMaxLength(50)
@@ -1825,7 +1815,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEBL77DBMRluTI0y4X+K1MYw3+EeJHwPOhFjIe5O/c0HE570dtSQ538DCUzuBRazk0g==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEET6g1btYXCz7ZoYi1UGZmrgbgIE8xL7yjKfTe48cjx42N5kKUHHuO9ONNgv6bD/mw==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,

@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260104212152_AddTrackingFieldsManifest")]
+    partial class AddTrackingFieldsManifest
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -493,9 +495,6 @@ namespace GenericApp.Data.Migrations
 
                     b.Property<DateTime>("ExitDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("GnnNumber")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("IdCompany")
                         .IsRequired()
@@ -1825,7 +1824,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEBL77DBMRluTI0y4X+K1MYw3+EeJHwPOhFjIe5O/c0HE570dtSQ538DCUzuBRazk0g==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEESwY7ioe6QM+guWer49IeQr6wZrOLRX8t+S+oyiEB1KvgvfTH0tLpUAI5L/QxDUsQ==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,

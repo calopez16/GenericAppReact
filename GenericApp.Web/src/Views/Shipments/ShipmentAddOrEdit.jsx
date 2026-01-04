@@ -49,8 +49,9 @@ const initialManifestStructure = {
     idManifestStatus: 1,
     comments: '',
     chismografo: '',
-    codigorastreo: '',
+    trackingCode: '',
     gnnNumber: '',
+    stamps: '',
     idCompany: 0,
     manifestPallets: []
 };
@@ -96,6 +97,9 @@ function ShipmentAddOrEdit() {
     const [drivers, setDrivers] = useState([]);
     const [shippingCos, setShippingCos] = useState([]);
 
+    // Estado para manejar los errores de validación
+    const [errors, setErrors] = useState({});
+
     const fetchClients = async () => {
         const response = await clientsService.getDataPagination(1, 500, "", true);
         if (response.success) setClients(response.data.data || []);
@@ -131,7 +135,10 @@ function ShipmentAddOrEdit() {
         fetchClients();
         fetchDrivers();
         fetchShippingCompanies();
-        if (isEditing) {
+    }, []);
+
+    useEffect(() => {
+        if (isEditing && clients.length > 0) {
             const fetchShipment = async () => {
                 try {
                     const response = await shipmentDataService.getDataById(id);
@@ -163,7 +170,7 @@ function ShipmentAddOrEdit() {
                                         fullAddress = `${fullAddress} - ${locationStr}`.trim();
                                     }
                                 } catch (error) {
-                                    console.error("Error fetching city details in edit mode", error);
+                                    console.error("Error fetching city details", error);
                                 }
                             }
                             data.address = fullAddress;
@@ -177,15 +184,17 @@ function ShipmentAddOrEdit() {
                     setIsLoading(false);
                 }
             };
-
-            if (clients.length > 0) {
-                fetchShipment();
-            }
+            fetchShipment();
         }
-    }, [id, clients]);
+    }, [id, isEditing, clients.length]);
 
     const handleGeneralChange = (e) => {
         const { name, value, checked, type } = e.target;
+
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: false }));
+        }
+
         setFormData(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value,
@@ -193,6 +202,10 @@ function ShipmentAddOrEdit() {
     };
 
     const handleClientChange = async (event, newValue) => {
+        if (errors.idClient && newValue) {
+            setErrors(prev => ({ ...prev, idClient: false }));
+        }
+
         if (newValue) {
             let fullAddress = newValue.address || '';
             if (newValue.idCity) {
@@ -223,6 +236,12 @@ function ShipmentAddOrEdit() {
 
     const handleManifestChange = (e) => {
         const { name, value } = e.target;
+
+        // Limpiar error si existe en el campo modificado
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: false }));
+        }
+
         const newManifests = [...formData.manifests];
         let updatedManifest = { ...newManifests[activeTab], [name]: value };
         if (name === 'temperatureTrailerBoxF' && value !== '') {
@@ -235,6 +254,9 @@ function ShipmentAddOrEdit() {
     };
 
     const handleDriverChange = (event, newValue) => {
+        if (errors.idDriver && newValue) {
+            setErrors(prev => ({ ...prev, idDriver: false }));
+        }
         const newManifests = [...formData.manifests];
         newManifests[activeTab] = {
             ...newManifests[activeTab],
@@ -244,6 +266,9 @@ function ShipmentAddOrEdit() {
     };
 
     const handleShippingCompanyChange = (event, newValue) => {
+        if (errors.idShippingCompany && newValue) {
+            setErrors(prev => ({ ...prev, idShippingCompany: false }));
+        }
         const newManifests = [...formData.manifests];
         newManifests[activeTab] = {
             ...newManifests[activeTab],
@@ -253,6 +278,26 @@ function ShipmentAddOrEdit() {
     };
 
     const handleSubmit = async () => {
+        // Validación de campos requeridos
+        const newErrors = {};
+        const currentManifest = formData.manifests[activeTab];
+
+        if (!formData.shipmentDate) newErrors.shipmentDate = true;
+        if (!formData.idClient) newErrors.idClient = true;
+
+        // Validar campos requeridos dentro del manifiesto actual
+        if (!currentManifest.idShippingCompany) newErrors.idShippingCompany = true;
+        if (!currentManifest.idDriver) newErrors.idDriver = true;
+        if (!currentManifest.exitDate) newErrors.exitDate = true;
+        // Nuevo campo requerido: Temperatura F
+        if (!currentManifest.temperatureTrailerBoxF) newErrors.temperatureTrailerBoxF = true;
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            ShowMessage(t('campos_requeridos_incompletos'), 'error');
+            return;
+        }
+
         setIsLoading(true);
         try {
             const method = isEditing ? shipmentDataService.editData : shipmentDataService.addData;
@@ -332,6 +377,7 @@ function ShipmentAddOrEdit() {
                                 onChange={handleGeneralChange}
                                 InputLabelProps={{ shrink: true }}
                                 required
+                                error={!!errors.shipmentDate}
                             />
                             <FormControlLabel
                                 control={<Switch checked={formData.mixed} onChange={handleGeneralChange} name="mixed" />}
@@ -347,7 +393,14 @@ function ShipmentAddOrEdit() {
                             getOptionLabel={(option) => option.name || ""}
                             value={clients.find(c => c.idClient === parseInt(formData.idClient)) || null}
                             onChange={handleClientChange}
-                            renderInput={(params) => <TextField {...params} label={t('Client')} required />}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label={t('Client')}
+                                    required
+                                    error={!!errors.idClient}
+                                />
+                            )}
                         />
                     </Grid>
                     <Grid size={{ xs: 12, md: 4 }}>
@@ -423,7 +476,14 @@ function ShipmentAddOrEdit() {
                             getOptionLabel={(option) => option.description || option.name || ""}
                             value={shippingCos.find(sc => sc.idShippingCompany === parseInt(formData.manifests[activeTab]?.idShippingCompany)) || null}
                             onChange={handleShippingCompanyChange}
-                            renderInput={(params) => <TextField {...params} label={t('Shipping Company')} />}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label={t('Shipping Company')}
+                                    required
+                                    error={!!errors.idShippingCompany}
+                                />
+                            )}
                         />
                     </Grid>
 
@@ -433,7 +493,14 @@ function ShipmentAddOrEdit() {
                             getOptionLabel={(option) => option.name || ""}
                             value={drivers.find(d => d.idDriver === parseInt(formData.manifests[activeTab]?.idDriver)) || null}
                             onChange={handleDriverChange}
-                            renderInput={(params) => <TextField {...params} label={t('Driver')} />}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label={t('Driver')}
+                                    required
+                                    error={!!errors.idDriver}
+                                />
+                            )}
                         />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -448,6 +515,8 @@ function ShipmentAddOrEdit() {
                             value={formData.manifests[activeTab]?.exitDate || ''}
                             onChange={handleManifestChange}
                             InputLabelProps={{ shrink: true }}
+                            required
+                            error={!!errors.exitDate}
                         />
                     </Grid>
 
@@ -462,6 +531,8 @@ function ShipmentAddOrEdit() {
                             name="temperatureTrailerBoxF"
                             value={formData.manifests[activeTab]?.temperatureTrailerBoxF || ''}
                             onChange={handleManifestChange}
+                            required
+                            error={!!errors.temperatureTrailerBoxF}
                             slotProps={{ input: { startAdornment: <InputAdornment position="start"><ThermostatIcon /></InputAdornment> } }}
                         />
                     </Grid>
@@ -475,7 +546,7 @@ function ShipmentAddOrEdit() {
 
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12, sm: 4, md: 4 }}>
-                        <TextField fullWidth label={t('CodigodeRastreo')} name="codigorastreo" value={formData.manifests[activeTab]?.codigorastreo || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth label={t('CodigodeRastreo')} name="trackingCode" value={formData.manifests[activeTab]?.trackingCode || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4, md: 4 }}>
                         <TextField fullWidth label={t('chismografo')} name="chismografo" value={formData.manifests[activeTab]?.chismografo || ''} onChange={handleManifestChange} />
@@ -484,7 +555,7 @@ function ShipmentAddOrEdit() {
                         <TextField fullWidth label={t('GnnNumber')} name="gnnNumber" value={formData.manifests[activeTab]?.gnnNumber || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12 }}>
-                        <TextField fullWidth multiline rows={2} label={t('Sellos')} name="sellos" value={formData.sellos || ''} onChange={handleGeneralChange} />
+                        <TextField fullWidth multiline rows={5} label={t('Sellos')} name="stamps" value={formData.manifests[activeTab]?.stamps || ''} onChange={handleManifestChange} />
                     </Grid>
                 </Grid>
 

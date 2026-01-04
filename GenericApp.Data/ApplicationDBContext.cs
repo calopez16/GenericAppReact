@@ -281,7 +281,7 @@ namespace GenericApp.Data
             {
                 b.HasKey(x => x.IdManifest);
                 b.Property(x => x.CreationDate).HasDefaultValueSql("GETDATE()").IsRequired();
-                b.Property(x => x.ExitDate).HasColumnType("date");
+                b.Property(x => x.ExitDate).IsRequired();
                 b.Property(x => x.TemperatureTrailerBoxF).HasColumnType("decimal(18,2)");
                 b.Property(x => x.TemperatureTrailerBoxC).HasColumnType("decimal(18,2)");
                 b.Property(x => x.TrailerPlate).HasMaxLength(50);
@@ -341,13 +341,7 @@ namespace GenericApp.Data
                     .WithMany(m => m.ManifestPallets)
                     .HasForeignKey(x => x.IdManifest)
                     .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(mp => mp.IdShipmentNavigation)
-                   .WithMany()
-                   .HasForeignKey(x => x.IdShipment)
-                   .IsRequired()
-                   .OnDelete(DeleteBehavior.Restrict);
+                    .OnDelete(DeleteBehavior.Restrict);           
 
                 b.HasOne(mp => mp.IdLabelNavigation)
                     .WithMany()
@@ -366,18 +360,6 @@ namespace GenericApp.Data
                 b.HasOne(mpl => mpl.IdManifestPalletNavigation)
                     .WithMany(p => p.ManifestPalletLoadings)
                     .HasForeignKey(x => x.IdManifestPallet)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(mpl => mpl.IdManifestNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdManifest)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(mpl => mpl.IdShipmentNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdShipment)
                     .IsRequired()
                     .OnDelete(DeleteBehavior.Restrict);
 

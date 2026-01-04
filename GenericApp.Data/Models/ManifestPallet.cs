@@ -11,7 +11,6 @@ namespace GenericApp.Data.Models
     {
         public int IdManifestPallet { get; set; }
         public int IdManifest { get; set; }
-        public int IdShipment { get; set; }
         public int IdLabel { get; set; }
         public decimal? MaxBoxQuantity { get; set; }
         public int Position { get; set; }
