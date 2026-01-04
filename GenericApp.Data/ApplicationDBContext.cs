@@ -225,8 +225,8 @@ namespace GenericApp.Data
                 b.HasKey(x => x.IdSeason);
                 b.Property(x => x.Name).HasMaxLength(150).IsRequired();
                 b.Property(x => x.Description).HasMaxLength(250);
-                b.Property(x => x.InitialDate).HasColumnType("date").IsRequired();
-                b.Property(x => x.EndDate).HasColumnType("date").IsRequired();
+                b.Property(x => x.InitialDate).HasColumnType("date");
+                b.Property(x => x.EndDate).HasColumnType("date");
                 b.Property(x => x.IsClosed).HasDefaultValue(false);
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
@@ -271,9 +271,9 @@ namespace GenericApp.Data
                   .IsRequired()
                   .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne(s => s.IdUserNavigation)      
-                  .WithMany()                          
-                  .HasForeignKey(s => s.IdUser)        
+                b.HasOne(s => s.IdUserNavigation)
+                  .WithMany()
+                  .HasForeignKey(s => s.IdUser)
                   .OnDelete(DeleteBehavior.Restrict);
             });
 
@@ -523,6 +523,16 @@ namespace GenericApp.Data
                 new City { IdCity = 9, IdState = 37, Description = "San Diego", IsActive = true, IsDeleted = false },
                 new City { IdCity = 10, IdState = 37, Description = "San Jose", IsActive = true, IsDeleted = false },
                 new City { IdCity = 11, IdState = 37, Description = "Calexico", IsActive = true, IsDeleted = false }
+            );
+
+            modelBuilder.Entity<ShipmentStatus>().HasData(
+               new ShipmentStatus { IdShipmentStatus = 1, Description = "Activa", IsActive = true, IsDeleted = false },
+               new ShipmentStatus { IdShipmentStatus = 2, Description = "Concluída", IsActive = true, IsDeleted = false }
+            );
+
+            modelBuilder.Entity<ManifestStatus>().HasData(
+               new ManifestStatus { IdManifestStatus = 1, Description = "Activa", IsActive = true, IsDeleted = false },
+               new ManifestStatus { IdManifestStatus = 2, Description = "Concluída", IsActive = true, IsDeleted = false }
             );
 
             modelBuilder.Entity<IdentityRole>().HasData(

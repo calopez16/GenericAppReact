@@ -113,7 +113,7 @@ namespace GenericApp.Controllers
                 }
             });
         }
-
+        
         /// <summary>
         /// Renueva el token de acceso (AccessToken) utilizando un token de refresco (RefreshToken) válido contenido en el header de autorización.
         /// </summary>

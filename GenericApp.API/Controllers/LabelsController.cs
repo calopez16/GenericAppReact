@@ -212,7 +212,7 @@ namespace GenericApp.API.Controllers
             var idsToRemoveLogically = existingLabelTypes
                 .Where(lt => !(lt.IsDeleted ?? false))
                 .Select(lt => lt.IdLabelType)
-                .Except(incomingLabelTypes.Where(lt => lt.IdLabelType > 0).Select(lt => lt.IdLabelType))
+                .Except(incomingLabelTypes.Where(lt => (lt.IdLabelType??0) > 0).Select(lt => (lt.IdLabelType ?? 0)))
                 .ToList();
 
             foreach (var id in idsToRemoveLogically)

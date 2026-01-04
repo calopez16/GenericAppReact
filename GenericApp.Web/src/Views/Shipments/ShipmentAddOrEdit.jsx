@@ -1,9 +1,20 @@
 ﻿import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    TextField, Button, Box, Typography, Grid, FormControlLabel, Switch,
-    Paper, CircularProgress, Divider, InputAdornment, Autocomplete,
-    useTheme, useMediaQuery
+    TextField,
+    Button,
+    Box,
+    Typography,
+    Grid,
+    FormControlLabel,
+    Switch,
+    Paper,
+    CircularProgress,
+    Divider,
+    InputAdornment,
+    Autocomplete,
+    useTheme,
+    useMediaQuery
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
@@ -11,8 +22,8 @@ import CancelIcon from '@mui/icons-material/Clear';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
 import { useTranslation } from 'react-i18next';
 import { dataApiShipmentsService } from '@data/Shipments/Data';
-import { DataAPIClientsService } from '@data/Clients/Data';
 import { DataAPICitiesService } from '@data/Cities/Data';
+import { DataAPIClientsService } from '@data/Clients/Data';
 import { DataAPIDriversService } from '@data/Drivers/Data';
 import { DataAPIShippingCompaniesService } from '@data/ShippingCompanies/Data';
 
@@ -28,7 +39,7 @@ const initialManifestStructure = {
     exitDate: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
     temperatureTrailerBoxF: '',
     temperatureTrailerBoxC: '',
-    season: new Date().getFullYear(),
+    seasonYear: new Date().getFullYear(),
     idDriver: '',
     trailerPlate: '',
     trailerBoxPlate: '',
@@ -40,12 +51,14 @@ const initialManifestStructure = {
     chismografo: '',
     codigorastreo: '',
     gnnNumber: '',
+    idCompany: 0,
     manifestPallets: []
 };
 
 const initialFormData = {
     idShipment: 0,
     shipmentDate: new Date().toISOString().split('T')[0],
+    seasonYear: new Date().getFullYear(),
     name: '',
     rfc: '',
     address: '',
@@ -57,6 +70,7 @@ const initialFormData = {
     idShipmentStatus: 1,
     isActive: true,
     comments: '',
+    idCompany: 0,
     manifests: [{ ...initialManifestStructure }]
 };
 
@@ -101,11 +115,13 @@ function ShipmentAddOrEdit() {
         if (companySelected && !isEditing) {
             setFormData(prev => ({
                 ...prev,
+                idCompany: companySelected.idCompany || 0,
                 manifests: prev.manifests.map(m => ({
                     ...m,
                     regFdaNo: companySelected.regFdaNo || '',
                     empaque: companySelected.empaque || '',
-                    gnnNumber: companySelected.gnnNumber|| ''
+                    gnnNumber: companySelected.gnnNumber || '',
+                    idCompany: companySelected.idCompany || 0
                 }))
             }));
         }
@@ -119,8 +135,8 @@ function ShipmentAddOrEdit() {
             const fetchShipment = async () => {
                 try {
                     const response = await shipmentDataService.getDataById(id);
-                    if (response.data && response.data.Data) {
-                        const data = response.data.Data;
+                    if (response.data) {
+                        let data = response.data;
                         if (data.shipmentDate) data.shipmentDate = data.shipmentDate.split('T')[0];
                         if (data.manifests) {
                             data.manifests = data.manifests.map(m => ({
@@ -128,17 +144,45 @@ function ShipmentAddOrEdit() {
                                 exitDate: m.exitDate?.includes('T') ? m.exitDate.split('T')[1].slice(0, 5) : m.exitDate
                             }));
                         }
+
+                        const selectedClient = clients.find(c => c.idClient === parseInt(data.idClient));
+
+                        if (selectedClient) {
+                            data.rfc = selectedClient.rfc || '';
+                            data.postalCode = selectedClient.postalCode || '';
+                            data.phone = selectedClient.phone || '';
+
+                            let fullAddress = selectedClient.address || '';
+
+                            if (selectedClient.idCity) {
+                                try {
+                                    const cityRes = await citiesService.getDataById(selectedClient.idCity);
+                                    if (cityRes.success && cityRes.data) {
+                                        const c = cityRes.data;
+                                        const locationStr = `${c.description || ''}, ${c.idStateNavigation?.description || ''}, ${c.idStateNavigation?.idCountryNavigation?.description || ''}`;
+                                        fullAddress = `${fullAddress} - ${locationStr}`.trim();
+                                    }
+                                } catch (error) {
+                                    console.error("Error fetching city details in edit mode", error);
+                                }
+                            }
+                            data.address = fullAddress;
+                        }
+
                         setFormData(prev => ({ ...prev, ...data }));
                     }
                 } catch (e) {
-                    ShowMessage.error(t('error_fetching_details'));
+                    ShowMessage(t('error_fetching_details'), 'error');
                 } finally {
                     setIsLoading(false);
                 }
             };
-            fetchShipment();
+
+            if (clients.length > 0) {
+                fetchShipment();
+            }
         }
-    }, [id]);
+    }, [id, clients]);
 
     const handleGeneralChange = (e) => {
         const { name, value, checked, type } = e.target;
@@ -170,7 +214,7 @@ function ShipmentAddOrEdit() {
                 address: fullAddress,
                 postalCode: newValue.postalCode || '',
                 phone: newValue.phone || '',
-                idCity: newValue.idCity || '',
+                idCity: newValue.idCity || ''
             }));
         } else {
             setFormData(prev => ({ ...prev, idClient: '', rfc: '', address: '', postalCode: '', phone: '', idCity: '' }));
@@ -214,13 +258,13 @@ function ShipmentAddOrEdit() {
             const method = isEditing ? shipmentDataService.editData : shipmentDataService.addData;
             const response = await method(formData, true);
             if (response.isSuccess || response.success) {
-                ShowMessage.success(t('Success'));
+                ShowMessage(t('recordAddedSuccessPlural'), 'success');
                 navigate('/shipments');
             } else {
-                ShowMessage.error(response.message || t('Error'));
+                ShowMessage(response.message || t('error_saving'), 'error');
             }
         } catch (e) {
-            ShowMessage.error(t('Server Error'));
+            ShowMessage(t('error_unexpected'), 'error');
         } finally {
             setIsLoading(false);
         }
@@ -264,7 +308,6 @@ function ShipmentAddOrEdit() {
 
     return (
         <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            {/* Header section (Título solamente) */}
             <Box sx={{ mb: 3 }}>
                 <Typography variant={isMobile ? "h5" : "h4"} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <LocalShippingIcon fontSize={isMobile ? "medium" : "large"} color="primary" />
@@ -279,13 +322,7 @@ function ShipmentAddOrEdit() {
 
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12 }}>
-                        <Box sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            gap: 2,
-                            flexWrap: 'wrap'
-                        }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                             <TextField
                                 sx={{ width: { xs: '100%', sm: '250px' } }}
                                 type="date"
@@ -319,7 +356,7 @@ function ShipmentAddOrEdit() {
                             label={t('RFC')}
                             name="rfc"
                             value={formData.rfc || ''}
-                            InputProps={{ readOnly: true }}
+                            slotProps={{ input: { readOnly: true } }}
                         />
                     </Grid>
 
@@ -328,8 +365,8 @@ function ShipmentAddOrEdit() {
                             fullWidth
                             label={t('Address')}
                             name="address"
-                            value={formData.address}
-                            InputProps={{ readOnly: true }}
+                            value={formData.address || ''}
+                            slotProps={{ input: { readOnly: true } }}
                         />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -338,7 +375,7 @@ function ShipmentAddOrEdit() {
                             label={t('Postal Code')}
                             name="postalCode"
                             value={formData.postalCode}
-                            InputProps={{ readOnly: true }}
+                            slotProps={{ input: { readOnly: true } }}
                         />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -347,7 +384,7 @@ function ShipmentAddOrEdit() {
                             label={t('Phone')}
                             name="phone"
                             value={formData.phone}
-                            InputProps={{ readOnly: true }}
+                            slotProps={{ input: { readOnly: true } }}
                         />
                     </Grid>
 
@@ -372,7 +409,7 @@ function ShipmentAddOrEdit() {
 
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <TextField fullWidth type="number" label={t('Season')} name="season" value={formData.manifests[activeTab]?.season || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth type="number" label={t('Season')} name="season" value={formData.manifests[activeTab]?.seasonYear || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <TextField fullWidth label={t('RegFdaNo')} name="regFdaNo" value={formData.manifests[activeTab]?.regFdaNo || ''} onChange={handleManifestChange} />
@@ -425,7 +462,7 @@ function ShipmentAddOrEdit() {
                             name="temperatureTrailerBoxF"
                             value={formData.manifests[activeTab]?.temperatureTrailerBoxF || ''}
                             onChange={handleManifestChange}
-                            InputProps={{ startAdornment: <InputAdornment position="start"><ThermostatIcon /></InputAdornment> }}
+                            slotProps={{ input: { startAdornment: <InputAdornment position="start"><ThermostatIcon /></InputAdornment> } }}
                         />
                     </Grid>
                 </Grid>
@@ -438,13 +475,13 @@ function ShipmentAddOrEdit() {
 
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12, sm: 4, md: 4 }}>
-                        <TextField fullWidth type="number" label={t('CodigodeRastreo')} name="codigorastreo" value={formData.manifests[activeTab]?.codigorastreo || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth label={t('CodigodeRastreo')} name="codigorastreo" value={formData.manifests[activeTab]?.codigorastreo || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4, md: 4 }}>
-                        <TextField fullWidth type="number" label={t('chismografo')} name="chismografo" value={formData.manifests[activeTab]?.chismografo || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth label={t('chismografo')} name="chismografo" value={formData.manifests[activeTab]?.chismografo || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4, md: 4 }}>
-                        <TextField fullWidth type="number" label={t('GnnNumber')} name="gnnNumber" value={formData.manifests[activeTab]?.gnnNumber || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth label={t('GnnNumber')} name="gnnNumber" value={formData.manifests[activeTab]?.gnnNumber || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12 }}>
                         <TextField fullWidth multiline rows={2} label={t('Sellos')} name="sellos" value={formData.sellos || ''} onChange={handleGeneralChange} />
@@ -463,7 +500,6 @@ function ShipmentAddOrEdit() {
                     />
                 </Box>
 
-                {/* Footer section (Botones de Guardar y Cancelar al final) */}
                 <Box sx={{
                     display: 'flex',
                     gap: 2,
@@ -481,7 +517,7 @@ function ShipmentAddOrEdit() {
                         startIcon={<CancelIcon />}
                         onClick={() => navigate('/shipments')}
                     >
-                        {t('Cancel')}
+                        {t('cancel')}
                     </Button>
                     <Button
                         fullWidth={isMobile}
@@ -491,7 +527,7 @@ function ShipmentAddOrEdit() {
                         startIcon={<SaveIcon />}
                         onClick={handleSubmit}
                     >
-                        {t('Save Shipment')}
+                        {isEditing ? t('save') : t('add')}
                     </Button>
                 </Box>
             </Paper>

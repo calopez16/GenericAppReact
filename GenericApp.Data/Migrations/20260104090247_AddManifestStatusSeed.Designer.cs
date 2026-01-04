@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260104090247_AddManifestStatusSeed")]
+    partial class AddManifestStatusSeed
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -485,9 +487,6 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
-                    b.Property<string>("Empaque")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("ExitDate")
                         .HasColumnType("date");
 
@@ -514,9 +513,6 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
-
-                    b.Property<string>("RegFdaNo")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("TemperatureTrailerBoxC")
                         .HasColumnType("decimal(18,2)");
@@ -1813,7 +1809,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEFrHbd2k2Ds5p4J8fgGpyb97MhMNUeACDJaa3MoTAwS8wPEwMHtFuwWPwZA5DEZt4w==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEIsY7u0lHYx9d/0Ft/z6s6bh29Dab34cwTp4ExKfOl2tSBvCvIuWJ8fm9jaerQL61w==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,

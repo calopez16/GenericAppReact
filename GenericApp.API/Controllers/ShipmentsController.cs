@@ -5,9 +5,13 @@ using GenericApp.BLL.Sevices.Interface;
 using GenericApp.Data.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Drawing.Printing;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace GenericApp.API.Controllers
 {
@@ -18,13 +22,17 @@ namespace GenericApp.API.Controllers
     {
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
+        private readonly UserManager<IdentityUser> _userManager;
 
         public ShipmentsController(
+            UserManager<IdentityUser> userManager,
             IRepository repository,
-            IMapper mapper)
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _mapper = mapper;
+            _userManager = userManager;
         }
 
         [HttpGet("pagination")]
@@ -35,52 +43,45 @@ namespace GenericApp.API.Controllers
             [FromQuery] bool? active = null
             )
         {
-            try
+
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var query = await _repository.Query<Shipment>();
+
+            query = query.Include(s => s.IdShipmentStatusNavigation)
+                         .Include(s => s.IdCityNavigation)
+                         .Include(s => s.Manifests).ThenInclude(s => s.IdDriverNavigation);
+
+            query = query.Where(x => !(x.IsDeleted ?? false));
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-
-
-                if (pageNumber < 1) pageNumber = 1;
-                if (pageSize < 1) pageSize = 10;
-
-                var query = await _repository.Query<Shipment>();
-
-                query = query.Include(s => s.IdShipmentStatusNavigation)
-                             .Include(s => s.IdCityNavigation);
-
-                query = query.Where(x => !(x.IsDeleted ?? false));
-
-                if (!string.IsNullOrWhiteSpace(searchTerm))
-                {
-                    query = query.Where(s =>
-                        s.Address!.Contains(searchTerm) ||
-                        s.IdShipment.ToString().Contains(searchTerm));
-                }
-
-                var totalRows = await query.CountAsync();
-                var data = await query
-                    .OrderByDescending(s => s.CreationDate)
-                    .Skip((pageNumber - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
-
-                var dataDTO = _mapper.Map<IEnumerable<ShipmentDTO>>(data);
-
-                var paginatedResponse = new
-                {
-                    TotalCount = totalRows,
-                    PageSize = pageSize,
-                    CurrentPage = pageNumber,
-                    TotalPages = (int)System.Math.Ceiling((double)totalRows / pageSize),
-                    Data = dataDTO
-                };
-
-                return Ok(new ApiResponse { Data = paginatedResponse });
+                query = query.Where(s =>
+                    s.Address!.Contains(searchTerm) ||
+                    s.IdShipment.ToString().Contains(searchTerm));
             }
-            catch (Exception ex)
+
+            var totalRows = await query.CountAsync();
+            var data = await query
+                .OrderByDescending(s => s.CreationDate)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var dataDTO = _mapper.Map<IEnumerable<ShipmentDTO>>(data);
+
+            var paginatedResponse = new
             {
+                TotalCount = totalRows,
+                PageSize = pageSize,
+                CurrentPage = pageNumber,
+                TotalPages = (int)System.Math.Ceiling((double)totalRows / pageSize),
+                Data = dataDTO
+            };
 
-                throw;
-            }
+            return Ok(new ApiResponse { Data = paginatedResponse });
+
         }
 
         [HttpGet("{id}")]
@@ -88,17 +89,54 @@ namespace GenericApp.API.Controllers
         {
             var shipmentQuery = await _repository.Query<Shipment>();
 
-            var shipment = await shipmentQuery
-            .Include(s => s.IdCityNavigation)
-            .Include(s => s.IdShipmentStatusNavigation)
-            .Include(s => s.Manifests!)
-                .ThenInclude(m => m.IdManifestStatusNavigation)
-            .FirstOrDefaultAsync(x => x.IdShipment == id && !(x.IsDeleted ?? false));
+            var shipmentDTO = await shipmentQuery
+            .Select(s => new ShipmentDTO
+            {
+                IdShipment = s.IdShipment,
+                CreationDate = s.CreationDate,
+                ShipmentDate = s.ShipmentDate,
+                IdClient = s.IdClient,
+                IdCity = s.IdCity,
+                Mixed = s.Mixed,
+                IdShipmentStatus = s.IdShipmentStatus,
+                Comments = s.Comments,
+                Manifests = s.Manifests.Select(m => new ManifestDTO
+                {
+                    IdManifest = m.IdManifest,
+                    TrailerBoxPlate = m.TrailerBoxPlate,
+                    RegFdaNo = m.RegFdaNo,
+                    IdDriver = m.IdDriver,
+                    TemperatureTrailerBoxC = m.TemperatureTrailerBoxC,
+                    TemperatureTrailerBoxF = m.TemperatureTrailerBoxF,
+                    IdSeason = m.IdSeason,
+                    SeasonYear = m.IdSeasonNavigation.SeasonYear,
+                    TrailerPlate = m.TrailerPlate,
+                    IdShippingCompany = m.IdShippingCompany,
+                    Comments = m.Comments,
+                    Empaque = m.Empaque,
+                    ManifestPallets = m.ManifestPallets.Select(p => new ManifestPalletDTO
+                    {
+                        IdManifestPallet = p.IdManifestPallet,
+                        IdLabel = p.IdLabel,
+                        MaxBoxQuantity = p.MaxBoxQuantity,
+                        Position = p.Position,
+                        TemperatureC = p.TemperatureC,
+                        TemperatureF = p.TemperatureF,
+                        Comments = p.Comments,
+                        ManifestPalletLoadings = p.ManifestPalletLoadings.Select(pl => new ManifestPalletLoadingDTO
+                        {
+                            IdManifestPalletLoading = pl.IdManifestPalletLoading,
+                            IdLabelType = pl.IdLabelType,
+                            Description = pl.Description,
+                            BoxQuantity = pl.BoxQuantity
+                        }).ToList()
+                    }).ToList()
+                }).ToList()
+            })
+            .FirstOrDefaultAsync(x => x.IdShipment == id);
 
-            if (shipment == null)
+            if (shipmentDTO == null)
                 return NotFound(new ApiResponse());
-
-            var shipmentDTO = _mapper.Map<ShipmentDTO>(shipment);
 
             return Ok(new ApiResponse { Data = shipmentDTO });
         }
@@ -106,64 +144,98 @@ namespace GenericApp.API.Controllers
         [HttpPost]
         public async Task<ActionResult> AddShipment([FromBody] ShipmentDTO model)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            var shipmentDB = _mapper.Map<Shipment>(model);
-            shipmentDB.CreationDate = DateTime.UtcNow;
-            shipmentDB.IdUser = userId;
-            shipmentDB.IsDeleted = false;
-
-            if (model.Manifests != null && model.Manifests.Any())
+            try
             {
-                shipmentDB.Manifests = new List<Manifest>();
+                var validator = new JwtSecurityTokenHandler();
 
-                foreach (var manifestDto in model.Manifests)
+                Request.Headers.TryGetValue("Authorization", out var headerAuth);
+                var jwtToken = headerAuth.FirstOrDefault()?.Split(" ").Last();
+                var tokenInfo = validator.ReadJwtToken(jwtToken);
+                var emailUser = tokenInfo.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email);
+                var user = await _userManager.FindByNameAsync(emailUser?.Value);
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                var season = await _repository.FirstOrDefault<Season>(x => x.SeasonYear == model.SeasonYear);
+                if (season == null)
                 {
-                    if (manifestDto.IdShipment == 0)
+                    season = new Season
                     {
-                        var manifestDB = _mapper.Map<Manifest>(manifestDto);
+                        Name = model.SeasonYear.ToString(),
+                        SeasonYear = model.SeasonYear,
+                        IdCompany = model.IdCompany ?? 0,
+                        IsActive = true,
+                        IsDeleted = false,
+                        IsClosed = false
+                    };
+                    await _repository.Add(season);
 
-                        manifestDB.CreationDate = DateTime.UtcNow;
+                }
 
-                        if (manifestDto.ManifestPallets != null)
+                var shipmentDB = _mapper.Map<Shipment>(model);
+                shipmentDB.CreationDate = DateTime.UtcNow;
+                shipmentDB.IdUser = user.Id;
+                shipmentDB.IdShipmentStatus = (int)ShipmentsStatus.Activa;
+                shipmentDB.IsDeleted = false;
+
+                if (model.Manifests != null && model.Manifests.Any())
+                {
+                    shipmentDB.Manifests = new List<Manifest>();
+
+                    foreach (var manifestDto in model.Manifests)
+                    {
+                        if (manifestDto.IdShipment == 0)
                         {
-                            manifestDB.ManifestPallets = manifestDto.ManifestPallets.Select(palletDto =>
+                            var manifestDB = _mapper.Map<Manifest>(manifestDto);
+
+                            manifestDB.CreationDate = DateTime.UtcNow;
+                            manifestDB.IdSeason = season.IdSeason;
+                            manifestDB.IdManifestStatus = (int)ManifestStatusEnum.Activa;
+                            manifestDB.IsDeleted = false;
+                            if (manifestDto.ManifestPallets != null)
                             {
-                                var palletDB = _mapper.Map<ManifestPallet>(palletDto);
-
-                                if (palletDto.ManifestPalletLoadings != null)
+                                manifestDB.ManifestPallets = manifestDto.ManifestPallets.Select(palletDto =>
                                 {
-                                    palletDB.ManifestPalletLoadings = palletDto.ManifestPalletLoadings.Select(loadDto =>
-                                    {
-                                        var loadDB = _mapper.Map<ManifestPalletLoading>(loadDto);
-                                        return loadDB;
-                                    }).ToList();
-                                }
-                                return palletDB;
-                            }).ToList();
-                        }
+                                    var palletDB = _mapper.Map<ManifestPallet>(palletDto);
 
-                        shipmentDB.Manifests.Add(manifestDB);
+                                    if (palletDto.ManifestPalletLoadings != null)
+                                    {
+                                        palletDB.ManifestPalletLoadings = palletDto.ManifestPalletLoadings.Select(loadDto =>
+                                        {
+                                            var loadDB = _mapper.Map<ManifestPalletLoading>(loadDto);
+                                            return loadDB;
+                                        }).ToList();
+                                    }
+                                    return palletDB;
+                                }).ToList();
+                            }
+
+                            shipmentDB.Manifests.Add(manifestDB);
+                        }
                     }
                 }
+
+                var result = await _repository.Add(shipmentDB);
+
+                if (!result)
+                    return BadRequest(new ApiResponse { Message = "Error al crear el Shipment y sus objetos asociados." });
+
+                var createdShipmentQuery = await _repository.Query<Shipment>();
+                var createdShipment = await createdShipmentQuery
+                .Include(s => s.Manifests!)
+                    .ThenInclude(m => m.ManifestPallets!)
+                        .ThenInclude(p => p.ManifestPalletLoadings)
+                .Include(s => s.IdShipmentStatusNavigation)
+                .FirstOrDefaultAsync(s => s.IdShipment == shipmentDB.IdShipment);
+
+                var resultDTO = _mapper.Map<ShipmentDTO>(createdShipment);
+                return Ok(new ApiResponse());
             }
+            catch (Exception ex)
+            {
 
-            var result = await _repository.Add(shipmentDB);
-
-            if (!result)
-                return BadRequest(new ApiResponse { Message = "Error al crear el Shipment y sus objetos asociados." });
-
-            var createdShipmentQuery = await _repository.Query<Shipment>();
-            var createdShipment = await createdShipmentQuery
-            .Include(s => s.Manifests!)
-                .ThenInclude(m => m.ManifestPallets!)
-                    .ThenInclude(p => p.ManifestPalletLoadings)
-            .Include(s => s.IdShipmentStatusNavigation)
-            .FirstOrDefaultAsync(s => s.IdShipment == shipmentDB.IdShipment);
-
-            var resultDTO = _mapper.Map<ShipmentDTO>(createdShipment);
-
-            return Ok(new ApiResponse { Data = resultDTO, Message = "Shipment creado exitosamente." });
+                throw;
+            }
         }
 
         [HttpPut]

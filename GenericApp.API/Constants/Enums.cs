@@ -14,4 +14,15 @@
         MultiEmpresa
     }
 
+    public enum ShipmentsStatus
+    {
+        Activa = 1,
+        Concluida = 2
+    }
+
+    public enum ManifestStatusEnum
+    {
+        Activa = 1,
+        Concluida = 2
+    }
 }

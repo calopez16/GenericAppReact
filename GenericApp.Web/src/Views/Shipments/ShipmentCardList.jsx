@@ -1,121 +1,53 @@
 ﻿import React from 'react';
-import {
-    Box,
-    Typography,
-    Paper,
-    Switch,
-    IconButton,
-    Tooltip,
-    Grid
-} from '@mui/material';
+import { Box, Typography, Paper, IconButton, Tooltip, Grid, Divider } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 const ShipmentCardList = ({
     shipments,
     loading,
     t,
     handleOpenEditShipment,
-    handleToggleShipmentStatus,
     handleDeleteShipment,
+    handleViewDetails,
+    handleExportDocument
 }) => {
+    const formatRemision = (id) => id ? id.toString().padStart(4, '0') : '-';
+    const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString() : '-';
 
-    const formatDate = (dateString) => {
-        if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString();
-    };
-
-    const MobileShipmentCard = ({ shipment }) => (
-        <Paper
-            sx={{
-                p: 2,
-                mb: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1,
-                // Indicador visual basado en si es activo
-                borderLeft: shipment.isActive ? '4px solid #1976D2' : '4px solid gray'
-            }}
-        >
-            {/* Sección Superior: ID, Nombre y Botones de Acción */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="subtitle1" fontWeight="bold">
-                    {shipment.name || `${t('Shipment')} #${shipment.idShipment}`}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 0.5 }}>
-                    <Tooltip title={t('edit')}>
-                        <IconButton size="small" color="primary" onClick={() => handleOpenEditShipment(shipment)}>
-                            <EditIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                    {/* Botón de Eliminar */}
-                    <Tooltip title={t('delete')}>
-                        <IconButton size="small" color="error" onClick={() => handleDeleteShipment(shipment)}>
-                            <DeleteForeverIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                </Box>
-            </Box>
-
-            {/* Detalles del Shipment */}
-            <Grid container spacing={1}>
-                <Grid item xs={12}>
-                    <Typography variant="body2" color="text.secondary">
-                        {t('ID')}: <Typography component="span" fontWeight="bold">{shipment.idShipment}</Typography>
-                    </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                    <Typography variant="body2" color="text.secondary">
-                        {t('Client')}: <Typography component="span" fontWeight="bold">{shipment.clientName || '-'}</Typography>
-                    </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                    <Typography variant="body2" color="text.secondary">
-                        {t('Status')}: <Typography component="span" fontWeight="bold">{shipment.shipmentStatusDescription || '-'}</Typography>
-                    </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                    <Typography variant="body2" color="text.secondary">
-                        {t('Creation Date')}: <Typography component="span" fontWeight="bold">{formatDate(shipment.creationDate)}</Typography>
-                    </Typography>
-                </Grid>
-            </Grid>
-
-            {/* Pie de la tarjeta: Estado Activo y Toggle */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 1, mt: 1, borderTop: '1px solid #eee' }}>
-                <Typography variant="body2" color="text.secondary">
-                    {t('Active')}:
-                    <Typography component="span" sx={{ ml: 1, fontWeight: 'bold', color: shipment.isActive ? 'primary.main' : 'error.main' }}>
-                        {shipment.isActive ? t('YES') : t('NO')}
-                    </Typography>
-                </Typography>
-
-                {/* Switch de acción para Active/Inactive */}
-                <Tooltip title={shipment.isActive ? t('disable') : t('enable')}>
-                    <Switch
-                        size="small"
-                        checked={shipment.isActive}
-                        onChange={() => handleToggleShipmentStatus(shipment)}
-                        color="primary"
-                    />
-                </Tooltip>
-            </Box>
-        </Paper>
-    );
-
-    if (loading) {
-        return <Typography align="center" sx={{ mt: 2 }}>{t('loading')}...</Typography>;
-    }
-
-    // CORRECCIÓN: Verifica si shipments es null/undefined O si su longitud es 0.
-    if (!shipments || shipments.length === 0) {
-        return <Typography align="center" sx={{ mt: 2 }}>{t('records_notFound')}.</Typography>;
-    }
+    if (loading) return <Typography align="center" sx={{ mt: 2 }}>{t('loading')}...</Typography>;
+    if (!shipments || shipments.length === 0) return <Typography align="center" sx={{ mt: 2 }}>{t('records_notFound')}.</Typography>;
 
     return (
         <Box>
             {shipments.map((shipment, index) => (
-                <MobileShipmentCard key={shipment.idShipment || index} shipment={shipment} />
+                <Paper key={shipment.idShipment || index} sx={{ p: 2, mb: 2, borderLeft: '4px solid #1976D2' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                        <Box>
+                            <Typography variant="subtitle1" fontWeight="bold">
+                                {t('NoRemision')}: {formatRemision(shipment.idShipmentNavigation?.idShipment)}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {t('NoViaje')}: {shipment.idManifest || '-'}
+                            </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                            <IconButton size="small" color="success" onClick={() => handleExportDocument(shipment)}><FileDownloadIcon fontSize="small" /></IconButton>
+                            <IconButton size="small" color="info" onClick={() => handleViewDetails(shipment)}><VisibilityIcon fontSize="small" /></IconButton>
+                            <IconButton size="small" color="primary" onClick={() => handleOpenEditShipment(shipment)}><EditIcon fontSize="small" /></IconButton>
+                            <IconButton size="small" color="error" onClick={() => handleDeleteShipment(shipment)}><DeleteForeverIcon fontSize="small" /></IconButton>
+                        </Box>
+                    </Box>
+                    <Divider sx={{ my: 1 }} />
+                    <Grid container spacing={1}>
+                        <Grid item xs={6}><Typography variant="caption" color="text.secondary">{t('FDA No')}</Typography><Typography variant="body2">{shipment.regFdaNo || '-'}</Typography></Grid>
+                        <Grid item xs={6}><Typography variant="caption" color="text.secondary">{t('Date')}</Typography><Typography variant="body2">{formatDate(shipment.idShipmentNavigation?.shipmentDate)}</Typography></Grid>
+                        <Grid item xs={12}><Typography variant="caption" color="text.secondary">{t('Driver')}</Typography><Typography variant="body2">{shipment.idDriverNavigation?.name || '-'}</Typography></Grid>
+                        <Grid item xs={12}><Typography variant="caption" color="text.secondary">{t('Plate')}</Typography><Typography variant="body2">{shipment.trailerBoxPlate || '-'}</Typography></Grid>
+                    </Grid>
+                </Paper>
             ))}
         </Box>
     );

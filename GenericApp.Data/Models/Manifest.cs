@@ -24,6 +24,8 @@ namespace GenericApp.Data.Models
         public string? Comments { get; set; }
         public bool? IsDeleted { get; set; }
         public int? IdCompany { get; set; }
+        public string? Empaque { get; set; }
+        public string? RegFdaNo { get; set; }
 
         public virtual Company? IdCompanyNavigation { get; set; }
         public virtual Shipment? IdShipmentNavigation { get; set; }

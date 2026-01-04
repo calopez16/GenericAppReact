@@ -20,6 +20,13 @@ namespace GenericApp.API.Utility
             CreateMap<LabelType, LabelTypeDTO>().ReverseMap();
             CreateMap<Season, SeasonDTO>().ReverseMap();
             CreateMap<ShippingCompany, ShippingCompanyDTO>().ReverseMap();
+            CreateMap<Manifest, ManifestDTO>().ReverseMap();
+            CreateMap<ManifestPallet, ManifestPalletDTO>().ReverseMap();
+            CreateMap<ManifestPalletLoading, ManifestPalletLoadingDTO>().ReverseMap();
+            CreateMap<ManifestStatus, ManifestStatusDTO>().ReverseMap();
+            CreateMap<Shipment, ShipmentDTO>().ReverseMap();
+            CreateMap<ShipmentStatus, ShipmentStatusDTO>().ReverseMap();
+            
         }
     }
 }

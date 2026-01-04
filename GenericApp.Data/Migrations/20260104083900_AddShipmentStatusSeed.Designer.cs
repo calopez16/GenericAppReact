@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260104083900_AddShipmentStatusSeed")]
+    partial class AddShipmentStatusSeed
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -485,9 +487,6 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
-                    b.Property<string>("Empaque")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("ExitDate")
                         .HasColumnType("date");
 
@@ -514,9 +513,6 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
-
-                    b.Property<string>("RegFdaNo")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("TemperatureTrailerBoxC")
                         .HasColumnType("decimal(18,2)");
@@ -670,22 +666,6 @@ namespace GenericApp.Data.Migrations
                     b.HasKey("IdManifestStatus");
 
                     b.ToTable("ManifestStatuses");
-
-                    b.HasData(
-                        new
-                        {
-                            IdManifestStatus = 1,
-                            Description = "Activa",
-                            IsActive = true,
-                            IsDeleted = false
-                        },
-                        new
-                        {
-                            IdManifestStatus = 2,
-                            Description = "Concluída",
-                            IsActive = true,
-                            IsDeleted = false
-                        });
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Parameter", b =>
@@ -790,9 +770,6 @@ namespace GenericApp.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
-
-                    b.Property<int?>("SeasonYear")
-                        .HasColumnType("int");
 
                     b.HasKey("IdSeason");
 
@@ -1813,7 +1790,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEFrHbd2k2Ds5p4J8fgGpyb97MhMNUeACDJaa3MoTAwS8wPEwMHtFuwWPwZA5DEZt4w==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEDoBIVtFaFBsfAfgDiZawI8P8wOojB19pJwPHGOrPjHDBRUydhd1M1SxcxWalOM6Gg==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
