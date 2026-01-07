@@ -81,19 +81,7 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
     }
 
     return (
-        <Box sx={{ width: '100%', mt: 2 }}>
-            <Paper sx={{ p: 2, mb: 2, display: 'flex', justifyContent: 'space-around', alignItems: 'center', border: '1px solid #333' }}>
-                <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="caption" color="gray">TOTAL CAMIÓN</Typography>
-                    <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold' }}>{grandTotalBoxes} BX</Typography>
-                </Box>
-                <Divider orientation="vertical" flexItem  />
-                <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="caption" color="gray">PALLETS</Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold'}}>{totalPallets} / 26</Typography>
-                </Box>
-            </Paper>
-
+        <Box sx={{ width: '100%' }}>
             <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', p: 2, borderRadius: '10px 40px 40px 10px', border: '3px solid', gap: 2 }}>
                 <Box sx={{ width: isMobile ? '100%' : 80, height: isMobile ? 60 : 'auto', bgcolor: '#111', borderRadius: '8px', display: 'flex', flexDirection: isMobile ? 'row' : 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', gap: 1 }}>
                     <LocalShippingIcon sx={{ transform: 'scaleX(-1)', fontSize: 32 }} />
@@ -101,6 +89,17 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 1, flexGrow: 1 }}>{slots}</Box>
             </Box>
+            <Paper sx={{ p: 2, mt: 2, display: 'flex', justifyContent: 'space-around', alignItems: 'center', border: '1px solid #333' }}>
+                <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" color="gray">TOTAL CAMIÓN</Typography>
+                    <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold' }}>{grandTotalBoxes} BX</Typography>
+                </Box>
+                <Divider orientation="vertical" flexItem />
+                <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" color="gray">PALLETS</Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>{totalPallets} / 26</Typography>
+                </Box>
+            </Paper>
         </Box>
     );
 };

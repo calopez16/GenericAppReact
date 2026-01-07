@@ -1,8 +1,8 @@
 ﻿import React from 'react';
 import { Box, Typography, Paper, IconButton, Tooltip, Grid, Divider } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import DeleteForeverIcon from '@mui/icons-material/Delete';
+import FileDownloadIcon from '@mui/icons-material/PictureAsPdf';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
 const ShipmentCardList = ({

@@ -352,7 +352,8 @@ function ShipmentAddOrEdit() {
     if (isLoading) return <Box sx={{ p: 5, textAlign: 'center' }}><CircularProgress /></Box>;
 
     return (
-        <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        // Agregado pb: 10 para evitar superposición con el footer sticky
+        <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', minHeight: '100vh', pb: 10 }}>
             <Box sx={{ mb: 3 }}>
                 <Typography variant={isMobile ? "h5" : "h4"} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <LocalShippingIcon fontSize={isMobile ? "medium" : "large"} color="primary" />
@@ -540,6 +541,18 @@ function ShipmentAddOrEdit() {
 
                 <Divider sx={{ my: 4 }} />
 
+                <Box sx={{ overflowX: 'auto', mb: 4 }}>
+                    <TrailerGrid
+                        allManifests={formData.manifests}
+                        currentManifestIndex={activeTab}
+                        onUpdatePallet={handleOpenPalletModal}
+                        onDeletePallet={handleDeletePallet}
+                        t={t}
+                    />
+                </Box>
+
+                <Divider sx={{ my: 4 }} />
+
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'secondary.main', mb: 3 }}>
                     {t('Rastreo')}
                 </Typography>
@@ -558,49 +571,45 @@ function ShipmentAddOrEdit() {
                         <TextField fullWidth multiline rows={5} label={t('Sellos')} name="stamps" value={formData.manifests[activeTab]?.stamps || ''} onChange={handleManifestChange} />
                     </Grid>
                 </Grid>
+            </Paper>
 
-                <Divider sx={{ my: 4 }} />
-
-                <Box sx={{ overflowX: 'auto', mb: 4 }}>
-                    <TrailerGrid
-                        allManifests={formData.manifests}
-                        currentManifestIndex={activeTab}
-                        onUpdatePallet={handleOpenPalletModal}
-                        onDeletePallet={handleDeletePallet}
-                        t={t}
-                    />
-                </Box>
-
-                <Box sx={{
-                    display: 'flex',
-                    gap: 2,
+            {/* Nuevo Footer Sticky fuera del Paper principal */}
+            <Paper
+                elevation={3}
+                sx={{
+                    position: 'sticky',
+                    bottom: 0,
+                    p: 2,
                     mt: 3,
-                    pt: 3,
+                    backgroundColor: theme.palette.background.paper,
                     borderTop: `1px solid ${theme.palette.divider}`,
+                    display: 'flex',
                     justifyContent: 'flex-end',
+                    gap: 2,
+                    zIndex: 10,
                     flexDirection: { xs: 'column-reverse', sm: 'row' }
-                }}>
-                    <Button
-                        fullWidth={isMobile}
-                        variant="outlined"
-                        color="error"
-                        size="large"
-                        startIcon={<CancelIcon />}
-                        onClick={() => navigate('/shipments')}
-                    >
-                        {t('cancel')}
-                    </Button>
-                    <Button
-                        fullWidth={isMobile}
-                        variant="contained"
-                        color="primary"
-                        size="large"
-                        startIcon={<SaveIcon />}
-                        onClick={handleSubmit}
-                    >
-                        {isEditing ? t('save') : t('add')}
-                    </Button>
-                </Box>
+                }}
+            >
+                <Button
+                    fullWidth={isMobile}
+                    variant="outlined"
+                    color="error"
+                    size="large"
+                    startIcon={<CancelIcon />}
+                    onClick={() => navigate('/shipments')}
+                >
+                    {t('cancel')}
+                </Button>
+                <Button
+                    fullWidth={isMobile}
+                    variant="contained"
+                    color="primary"
+                    size="large"
+                    startIcon={<SaveIcon />}
+                    onClick={handleSubmit}
+                >
+                    {isEditing ? t('save') : t('add')}
+                </Button>
             </Paper>
 
             <PalletDetailModal

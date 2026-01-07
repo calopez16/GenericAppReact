@@ -103,13 +103,14 @@ namespace GenericApp.API.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ClientDTO>> GetClientById(int id)
         {
-            var client = await _repository.FindBy<Client>(x => x.IdClient == id && !(x.IsDeleted ?? false));
+            var client = await _repository.FirstOrDefault<Client>(x => x.IdClient == id && !(x.IsDeleted ?? false));
             if (client == null)
                 return NotFound(new ApiResponse());
 
             var clientDTO = _mapper.Map<ClientDTO>(client);
 
             return Ok(new ApiResponse { Data = clientDTO });
+
         }
 
         /// <summary>

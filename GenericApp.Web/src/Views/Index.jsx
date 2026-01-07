@@ -15,6 +15,7 @@ import NotFoundPage from '@views/Pages/NotFound'
 import Parameters from '@views/Parameters'
 import ShipmentsPage from '@views/Shipments/Index';
 import EmbarqueAddOrEdit from '@views/Shipments/ShipmentAddOrEdit';
+import EmbarqueDetail from '@views/Shipments/ShipmentDetail';
 
 function App() {
     return (
@@ -35,6 +36,7 @@ function App() {
                     <Route index element={<ShipmentsPage />} />
                     <Route path="add" element={<EmbarqueAddOrEdit isEditing={false} />} />
                     <Route path="edit/:id" element={<EmbarqueAddOrEdit isEditing={true} />} />
+                    <Route path="details/:id" element={<EmbarqueDetail />} />
                 </Route>
 
                 <Route path="*" element={<NotFoundPage />} />

@@ -8,7 +8,7 @@
         public string? Description { get; set; }
         public decimal? BoxQuantity { get; set; }
         public bool? IsDeleted { get; set; }
-        public ManifestPalletDTO? ManifestPalletNavigation { get; set; }
-        public LabelTypeDTO? LabelTypeNavigation { get; set; }
+        public ManifestPalletDTO? IdManifestPalletNavigation { get; set; }
+        public LabelTypeDTO? IdLabelTypeNavigation { get; set; }
     }
 }
