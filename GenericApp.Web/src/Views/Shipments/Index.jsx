@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect,useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Box, Typography, TextField, InputAdornment, Button,
@@ -13,12 +13,14 @@ import { ShowMessage } from '@helpers/NotificationService';
 import ConfirmationModal from '@layout/ConfirmationModal';
 import ShipmentCardList from './ShipmentCardList';
 import ShipmentListTable from './ShipmentTableList';
+import { AppContext } from '@helpers/AppContext';
 
 function ShipmentsIndex() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const shipmentDataService = dataApiShipmentsService();
     const manifestDataService = dataApiManifestsService();
+    const { setLoading } = useContext(AppContext);
 
     const [shipments, setShipments] = useState([]);
     const [page, setPage] = useState(0);
@@ -26,7 +28,7 @@ function ShipmentsIndex() {
     const [totalShipments, setTotalShipments] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
-    const [loading, setLoading] = useState(true);
+    const [pageLoading, setPageLoading] = useState(true);
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [shipmentToDelete, setShipmentToDelete] = useState(null);
 
@@ -41,7 +43,7 @@ function ShipmentsIndex() {
     useEffect(() => {
         const loadShipments = async () => {
             try {
-                setLoading(true);
+                setPageLoading(true);
                 const response = await manifestDataService.getDataPagination(page + 1, rowsPerPage, debouncedSearchTerm);
                 if (response.data) {
                     setShipments(response.data.data || []);
@@ -50,17 +52,48 @@ function ShipmentsIndex() {
             } catch (error) {
                 ShowMessage(t('error_fetching_data'), 'error');
             } finally {
-                setLoading(false);
+                setPageLoading(false);
             }
         };
         loadShipments();
     }, [page, rowsPerPage, debouncedSearchTerm]);
 
     const handleViewDetails = (shipment) => navigate(`/shipments/details/${shipment.idShipment}`);
-    const handleExportDocument = (shipment) => {
-        ShowMessage(t('exporting_document'), 'info');
-        // Lógica de exportación aquí
+
+    const handleExportManifest = async (shipment) => {
+        try {
+            setLoading(true);
+            ShowMessage(t('exporting_manifest'), 'info');
+            // 1. Llamada al servicio
+            // Asumimos que getManifestPdfById está configurado en axios con responseType: 'blob' o 'arraybuffer'
+            const response = await shipmentDataService.getManifestPdfById(shipment.idShipment);
+
+            // 2. Validar y Crear el Blob
+            // Algunos servicios devuelven el archivo en 'response.data', otros directamente en 'response'.
+            // Ajusta esto según tu configuración de Axios.
+            const fileData = response.data ? response.data : response;
+
+            const blob = new Blob([fileData], { type: 'application/pdf' });
+
+            // 3. Crear URL temporal y abrir en nueva pestaña
+            const pdfUrl = window.URL.createObjectURL(blob);
+            window.open(pdfUrl, '_blank');
+
+        } catch (error) {
+            console.error("Error exportando manifiesto:", error);
+            ShowMessage(t('error_fetching_data'), 'error');
+        } finally {
+            setLoading(false);
+        }
     };
+
+    const handleExportRemision = (shipment) => {
+        ShowMessage(t('exporting_remission'), 'info');
+        // Lógica para descargar Remisión
+        console.log("Exporting Remission for:", shipment.idShipment);
+    };
+    // ---------------------------------------
+
     const handleOpenAddShipment = () => navigate('/shipments/add');
     const handleOpenEditShipment = (shipment) => navigate(`/shipments/edit/${shipment.idShipment}`);
 
@@ -86,11 +119,13 @@ function ShipmentsIndex() {
     };
 
     const commonListProps = {
-        shipments, loading, t,
+        shipments, pageLoading, t,
         handleOpenEditShipment,
         handleDeleteShipment: handleOpenDeleteConfirmation,
         handleViewDetails,
-        handleExportDocument
+        // Pasamos las dos nuevas funciones en lugar de la genérica
+        handleExportManifest,
+        handleExportRemision
     };
 
     return (
@@ -109,7 +144,7 @@ function ShipmentsIndex() {
                 </Box>
             </Box>
 
-            {loading && <LinearProgress sx={{ mb: 2 }} />}
+            {pageLoading && <LinearProgress sx={{ mb: 2 }} />}
 
             {isSmallScreen ? <ShipmentCardList {...commonListProps} /> : <ShipmentListTable {...commonListProps} />}
 

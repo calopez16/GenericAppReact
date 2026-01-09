@@ -1,9 +1,11 @@
 ﻿import React from 'react';
-import { Box, Typography, Paper, IconButton, Tooltip, Grid, Divider } from '@mui/material';
+import { Box, Typography, Paper, IconButton, Grid, Divider } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/Delete';
-import FileDownloadIcon from '@mui/icons-material/PictureAsPdf';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+// Importamos los iconos
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import DescriptionIcon from '@mui/icons-material/Description';
 
 const ShipmentCardList = ({
     shipments,
@@ -12,7 +14,9 @@ const ShipmentCardList = ({
     handleOpenEditShipment,
     handleDeleteShipment,
     handleViewDetails,
-    handleExportDocument
+    // Recibimos las nuevas funciones
+    handleExportManifest,
+    handleExportRemision
 }) => {
     const formatRemision = (id) => id ? id.toString().padStart(4, '0') : '-';
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString() : '-';
@@ -34,10 +38,24 @@ const ShipmentCardList = ({
                             </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
-                            <IconButton size="small" color="success" onClick={() => handleExportDocument(shipment)}><FileDownloadIcon fontSize="small" /></IconButton>
-                            <IconButton size="small" color="info" onClick={() => handleViewDetails(shipment)}><VisibilityIcon fontSize="small" /></IconButton>
-                            <IconButton size="small" color="primary" onClick={() => handleOpenEditShipment(shipment)}><EditIcon fontSize="small" /></IconButton>
-                            <IconButton size="small" color="error" onClick={() => handleDeleteShipment(shipment)}><DeleteForeverIcon fontSize="small" /></IconButton>
+                            {/* Botón Manifiesto */}
+                            <IconButton size="small" color="secondary" onClick={() => handleExportManifest(shipment)}>
+                                <DescriptionIcon fontSize="small" />
+                            </IconButton>
+                            {/* Botón Remisión */}
+                            <IconButton size="small" color="success" onClick={() => handleExportRemision(shipment)}>
+                                <ReceiptIcon fontSize="small" />
+                            </IconButton>
+
+                            <IconButton size="small" color="info" onClick={() => handleViewDetails(shipment)}>
+                                <VisibilityIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton size="small" color="primary" onClick={() => handleOpenEditShipment(shipment)}>
+                                <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton size="small" color="error" onClick={() => handleDeleteShipment(shipment)}>
+                                <DeleteForeverIcon fontSize="small" />
+                            </IconButton>
                         </Box>
                     </Box>
                     <Divider sx={{ my: 1 }} />

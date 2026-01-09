@@ -1,4 +1,4 @@
-﻿import { AuthHelper } from '@helpers/AuthHelper'; // Asegúrate de que la ruta sea correcta
+﻿import { AuthHelper } from '@helpers/AuthHelper';
 import { API_BASE_URL } from '@config';
 
 const API_ENDPOINT_REFRESH_TOKEN = "Auth/refresh-token";
@@ -19,17 +19,30 @@ const processQueue = (error, token = null) => {
     failedQueue = [];
 };
 
-const handleResponse = async (response, isReturnData) => {
+// MODIFICADO: Agregamos el parámetro responseType = 'json' por defecto
+const handleResponse = async (response, isReturnData, responseType = 'json') => {
     if (!response.ok && response.status !== 409) {
-        // Si el error es 401, el interceptor ya lo habrá manejado.
-        // Aquí manejamos otros errores.
         if (response.status === 401) {
-            // Este error solo debería lanzarse si el refresh token falla.
             throw new Error("Su sesión ha expirado. Por favor, inicie sesión de nuevo.");
         }
+        // Intentamos leer el error como JSON, si falla (porque es blob u otro), devolvemos objeto vacío
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
     }
+
+    // NUEVO: Manejo específico para BLOB (Archivos PDF, Excel, Imagenes)
+    if (responseType === 'blob') {
+        const blobData = await response.blob();
+        return {
+            success: response.ok,
+            data: blobData, // Devolvemos el Blob directamente en 'data'
+            conflict: null,
+            message: null,
+            responseCode: response.status
+        };
+    }
+
+    // Lógica original para JSON
     var dataResponse = isReturnData ? await response.json() : response.ok;
 
     return {
@@ -41,38 +54,47 @@ const handleResponse = async (response, isReturnData) => {
     };
 };
 
-const sendRequest = async (endPoint, method, data = null, isReturnData = false) => {
+// MODIFICADO: El último parámetro ahora se llama 'config' y soporta booleano u objeto
+const sendRequest = async (endPoint, method, data = null, config = false) => {
     const url = `${API_BASE_URL}/${endPoint}`;
-    const token = AuthHelper.getAccessToken(); // Obtenemos el token actual
+    const token = AuthHelper.getAccessToken();
 
-    const isFormData = data instanceof FormData; // ⬅️ Nueva lógica de detección
+    // LÓGICA DE COMPATIBILIDAD:
+    // 1. Si config es booleano, actúa como el antiguo 'isReturnData'.
+    // 2. Si es objeto, extraemos las opciones nuevas (responseType).
+    let isReturnData = false;
+    let responseType = 'json';
+
+    if (typeof config === 'boolean') {
+        isReturnData = config;
+    } else if (typeof config === 'object') {
+        isReturnData = config.isReturnData !== undefined ? config.isReturnData : true;
+        responseType = config.responseType || 'json';
+    }
+
+    const isFormData = data instanceof FormData;
 
     const options = {
-        //credentials: 'include',
         method: method,
         headers: {
             ...(!isFormData && { 'Content-Type': 'application/json' }),
-            // Adjuntamos el token de autorización si existe
             ...(token && { 'Authorization': `Bearer ${token}` })
         },
     };
 
     if (data && ['POST', 'PUT', 'DELETE'].includes(method)) {
-        options.body = isFormData ? data : JSON.stringify(data); 
+        options.body = isFormData ? data : JSON.stringify(data);
     }
 
     try {
         let response = await fetch(url, options);
 
-        //Autorizacion por medio del token, cuando el token no tiene permisos para consultar lanza un 403
         if (response.status === 403) {
             AuthHelper.logout();
             return false;
         }
 
-        // --- Interceptor de respuesta 401 ---
         if (response.status === 401) {
-            // Si la llamada que falla es la de refresh-token, hacemos logout directamente para evitar un bucle infinito.
             if (endPoint.includes(API_ENDPOINT_REFRESH_TOKEN)) {
                 AuthHelper.logout();
                 return Promise.reject(new Error("Refresh token failed"));
@@ -82,27 +104,23 @@ const sendRequest = async (endPoint, method, data = null, isReturnData = false) 
             }
 
             if (isRefreshing) {
-                // Si ya se está refrescando el token, encolamos esta petición.
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
                 })
                     .then(newToken => {
-                        // Reintentamos la petición con el nuevo token
                         options.headers['Authorization'] = `Bearer ${newToken}`;
                         return fetch(url, options);
                     })
-                    .then(newResponse => handleResponse(newResponse, isReturnData));
+                    // MODIFICADO: Pasamos el responseType al reintento
+                    .then(newResponse => handleResponse(newResponse, isReturnData, responseType));
             }
 
             isRefreshing = true;
 
-            // Intentamos obtener un nuevo token
             try {
                 const refreshTokenResponse = await fetch(`${API_BASE_URL}/${API_ENDPOINT_REFRESH_TOKEN}`, {
                     method: 'GET',
-                    headers: {
-                        ...(token && { 'Authorization': `Bearer ${token}` })
-                    },
+                    headers: { ...(token && { 'Authorization': `Bearer ${token}` }) },
                 });
 
                 if (!refreshTokenResponse.ok) {
@@ -110,23 +128,23 @@ const sendRequest = async (endPoint, method, data = null, isReturnData = false) 
                 }
 
                 const authLogin = await refreshTokenResponse.json();
-                AuthHelper.setAccessToken(authLogin.data.token); // Guardamos el nuevo token
-                processQueue(null, authLogin.data.token); // Procesamos la cola de peticiones fallidas
+                AuthHelper.setAccessToken(authLogin.data.token);
+                processQueue(null, authLogin.data.token);
 
-                // Reintentamos la petición original con el nuevo token
                 options.headers['Authorization'] = `Bearer ${authLogin.data.token}`;
                 response = await fetch(url, options);
 
             } catch (refreshError) {
                 processQueue(refreshError, null);
-                AuthHelper.logout(); // Si el refresh falla, cerramos la sesión
+                AuthHelper.logout();
                 return Promise.reject(refreshError);
             } finally {
                 isRefreshing = false;
             }
         }
 
-        return await handleResponse(response, isReturnData);
+        // MODIFICADO: Pasamos el responseType a handleResponse
+        return await handleResponse(response, isReturnData, responseType);
 
     } catch (err) {
         console.error(`API Error (${method} ${url}): ${err.message}`);
@@ -134,9 +152,9 @@ const sendRequest = async (endPoint, method, data = null, isReturnData = false) 
     }
 };
 
-
-// Las exportaciones no cambian
-export const GET = (endPoint, isReturnData = true) => sendRequest(endPoint, 'GET', null, isReturnData);
+// EXPORTACIONES ACTUALIZADAS
+// GET ahora acepta options (que puede ser { responseType: 'blob' } o el booleano true/false)
+export const GET = (endPoint, options = true) => sendRequest(endPoint, 'GET', null, options);
 export const POST = (endPoint, data, isReturnData = false) => sendRequest(endPoint, 'POST', data, isReturnData);
 export const PUT = (endPoint, data, isReturnData = false) => sendRequest(endPoint, 'PUT', data, isReturnData);
 export const DELETE = (endPoint, data = null, isReturnData = false) => sendRequest(endPoint, 'DELETE', data, isReturnData);

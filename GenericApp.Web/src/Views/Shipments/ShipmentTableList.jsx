@@ -1,20 +1,14 @@
 ﻿import React from 'react';
 import {
-    TableContainer,
-    Paper,
-    Table,
-    TableHead,
-    TableRow,
-    TableCell,
-    TableBody,
-    IconButton,
-    Tooltip,
-    Typography
+    TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody,
+    IconButton, Tooltip, Typography
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/Delete';
-import FileDownloadIcon from '@mui/icons-material/Description';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+// Importamos los iconos solicitados
+import DescriptionIcon from '@mui/icons-material/Description';
+import ReceiptIcon from '@mui/icons-material/Receipt';
 
 const ShipmentListTable = ({
     shipments,
@@ -23,18 +17,14 @@ const ShipmentListTable = ({
     handleOpenEditShipment,
     handleDeleteShipment,
     handleViewDetails,
-    handleExportDocument
+    // Recibimos las nuevas funciones
+    handleExportManifest,
+    handleExportRemision
 }) => {
     const minTableWidth = 1200;
 
-    const formatRemision = (id) => {
-        return id ? id.toString().padStart(4, '0') : '-';
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString();
-    };
+    const formatRemision = (id) => id ? id.toString().padStart(4, '0') : '-';
+    const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString() : '-';
 
     return (
         <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
@@ -53,15 +43,11 @@ const ShipmentListTable = ({
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={7} align="center">
-                                <Typography>{t('loading')}...</Typography>
-                            </TableCell>
+                            <TableCell colSpan={7} align="center"><Typography>{t('loading')}...</Typography></TableCell>
                         </TableRow>
                     ) : !shipments || shipments.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={7} align="center">
-                                <Typography>{t('records_notFound')}.</Typography>
-                            </TableCell>
+                            <TableCell colSpan={7} align="center"><Typography>{t('records_notFound')}.</Typography></TableCell>
                         </TableRow>
                     ) : (
                         shipments.map((shipment) => (
@@ -73,11 +59,19 @@ const ShipmentListTable = ({
                                 <TableCell>{shipment.idDriverNavigation?.name || '-'}</TableCell>
                                 <TableCell>{shipment.trailerBoxPlate || '-'}</TableCell>
                                 <TableCell align="center">
-                                    <Tooltip title={t('export')}>
-                                        <IconButton color="success" onClick={() => handleExportDocument(shipment)}>
-                                            <FileDownloadIcon />
+                                    {/* Botón Manifiesto */}
+                                    <Tooltip title={t('Manifiesto')}>
+                                        <IconButton color="secondary" onClick={() => handleExportManifest(shipment)}>
+                                            <DescriptionIcon />
                                         </IconButton>
                                     </Tooltip>
+                                    {/* Botón Remisión */}
+                                    <Tooltip title={t('Remisión')}>
+                                        <IconButton color="success" onClick={() => handleExportRemision(shipment)}>
+                                            <ReceiptIcon />
+                                        </IconButton>
+                                    </Tooltip>
+
                                     <Tooltip title={t('details')}>
                                         <IconButton color="info" onClick={() => handleViewDetails(shipment)}>
                                             <VisibilityIcon />
