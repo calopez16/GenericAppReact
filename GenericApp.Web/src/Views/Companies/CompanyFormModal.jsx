@@ -35,6 +35,7 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         rfc: '',
         address: '',
         postalCode: '',
+        razonSocial: '',
         phone: '',
         notes: '',
         regFdaNo: '',
@@ -58,6 +59,7 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     name: data.name || '',
                     rfc: data.rfc || '',
                     address: data.address || '',
+                    razonSocial: data.razonSocial || '',
                     postalCode: data.postalCode || '',
                     phone: data.phone || '',
                     notes: data.notes || '',
@@ -187,7 +189,9 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 <TextField label={t('name')} name="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     fullWidth required inputRef={nameRef} error={validationErrors.name} helperText={validationErrors.name ? t('requiredField') : ''} />
                             </Grid>
-
+                            <Grid item size={{ xs: 12}}>
+                                <TextField label={t('razonSocial')} name="razonSocial" value={formData.razonSocial} onChange={(e) => setFormData({ ...formData, razonSocial: e.target.value })} fullWidth />
+                            </Grid>
                             <Grid item size={{ xs: 12, md: 6 }}>
                                 <TextField label={t('rfc')} name="rfc" value={formData.rfc} onChange={(e) => setFormData({ ...formData, rfc: e.target.value })} fullWidth />
                             </Grid>

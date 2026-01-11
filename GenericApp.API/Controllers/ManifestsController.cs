@@ -33,8 +33,9 @@ namespace GenericApp.API.Controllers
             _userManager = userManager;
         }
 
-        [HttpGet("pagination")]
+        [HttpGet("{idCompany}/pagination")]
         public async Task<ActionResult> GetManifestsPagination(
+            int idCompany,
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
             [FromQuery] string? searchTerm = null,
@@ -54,6 +55,7 @@ namespace GenericApp.API.Controllers
                     .Include(s => s.IdDriverNavigation);
 
                 query = query.Where(x => !(x.IdShipmentNavigation.IsDeleted ?? false));
+                query = query.Where(x => x.IdCompany == idCompany);
 
                 if (!string.IsNullOrWhiteSpace(searchTerm))
                 {

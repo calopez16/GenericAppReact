@@ -177,6 +177,7 @@ namespace GenericApp.API.Controllers
             companyDB.RegFdaNo = model.RegFdaNo;
             companyDB.GnnNumber = model.GnnNumber;
             companyDB.Empaque = model.Empaque;
+            companyDB.RazonSocial = model.RazonSocial;
 
             if (model.Logo != null)
             {

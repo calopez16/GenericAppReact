@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect,useContext } from 'react';
+﻿import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Box, Typography, TextField, InputAdornment, Button,
@@ -20,7 +20,7 @@ function ShipmentsIndex() {
     const navigate = useNavigate();
     const shipmentDataService = dataApiShipmentsService();
     const manifestDataService = dataApiManifestsService();
-    const { setLoading } = useContext(AppContext);
+    const { setLoading, companySelected } = useContext(AppContext);
 
     const [shipments, setShipments] = useState([]);
     const [page, setPage] = useState(0);
@@ -44,7 +44,7 @@ function ShipmentsIndex() {
         const loadShipments = async () => {
             try {
                 setPageLoading(true);
-                const response = await manifestDataService.getDataPagination(page + 1, rowsPerPage, debouncedSearchTerm);
+                const response = await manifestDataService.getDataCompanyPagination(companySelected.idCompany, page + 1, rowsPerPage, debouncedSearchTerm);
                 if (response.data) {
                     setShipments(response.data.data || []);
                     setTotalShipments(response.data.totalCount || 0);
@@ -56,7 +56,7 @@ function ShipmentsIndex() {
             }
         };
         loadShipments();
-    }, [page, rowsPerPage, debouncedSearchTerm]);
+    }, [page, rowsPerPage, debouncedSearchTerm,companySelected]);
 
     const handleViewDetails = (shipment) => navigate(`/shipments/details/${shipment.idShipment}`);
 
@@ -87,10 +87,31 @@ function ShipmentsIndex() {
         }
     };
 
-    const handleExportRemision = (shipment) => {
-        ShowMessage(t('exporting_remission'), 'info');
-        // Lógica para descargar Remisión
-        console.log("Exporting Remission for:", shipment.idShipment);
+    const handleExportRemision = async (shipment) => {
+        try {
+            setLoading(true);
+            ShowMessage(t('exporting_manifest'), 'info');
+            // 1. Llamada al servicio
+            // Asumimos que getManifestPdfById está configurado en axios con responseType: 'blob' o 'arraybuffer'
+            const response = await shipmentDataService.getRemisionPdfById(shipment.idShipment);
+
+            // 2. Validar y Crear el Blob
+            // Algunos servicios devuelven el archivo en 'response.data', otros directamente en 'response'.
+            // Ajusta esto según tu configuración de Axios.
+            const fileData = response.data ? response.data : response;
+
+            const blob = new Blob([fileData], { type: 'application/pdf' });
+
+            // 3. Crear URL temporal y abrir en nueva pestaña
+            const pdfUrl = window.URL.createObjectURL(blob);
+            window.open(pdfUrl, '_blank');
+
+        } catch (error) {
+            console.error("Error exportando manifiesto:", error);
+            ShowMessage(t('error_fetching_data'), 'error');
+        } finally {
+            setLoading(false);
+        }
     };
     // ---------------------------------------
 

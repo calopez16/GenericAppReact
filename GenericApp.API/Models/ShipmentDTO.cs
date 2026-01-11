@@ -20,6 +20,7 @@ namespace GenericApp.API.Models
 
         public ClientDTO? IdClientNavigation { get; set; }
         public CityDTO? IdCityNavigation { get; set; }
+        public CompanyDTO? IdCompanyNavigation { get; set; }
         public ShipmentStatusDTO? ShipmentStatusNavigation { get; set; }
         public List<ManifestDTO> Manifests { get; set; } = new List<ManifestDTO>();
 

@@ -25,21 +25,25 @@ namespace GenericApp.API.Controllers
     {
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IWebHostEnvironment _env;
         private readonly UserManager<IdentityUser> _userManager;
 
         public ShipmentsController(
             UserManager<IdentityUser> userManager,
             IRepository repository,
             IMapper mapper,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IWebHostEnvironment env)
         {
             _repository = repository;
             _mapper = mapper;
             _userManager = userManager;
+            _env = env;
         }
 
-        [HttpGet("pagination")]
+        [HttpGet("{idCompany}/pagination")]
         public async Task<ActionResult> GetShipmentsPagination(
+            int idCompany,
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
             [FromQuery] string? searchTerm = null,
@@ -57,6 +61,7 @@ namespace GenericApp.API.Controllers
                          .Include(s => s.Manifests).ThenInclude(s => s.IdDriverNavigation);
 
             query = query.Where(x => !(x.IsDeleted ?? false));
+            query = query.Where(x => x.IdCompany == idCompany);
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -170,13 +175,20 @@ namespace GenericApp.API.Controllers
 
             var shipment = await shipmentQuery
             .Select(s => new ShipmentDTO
-
             {
                 IdShipment = s.IdShipment,
                 CreationDate = s.CreationDate,
                 ShipmentDate = s.ShipmentDate,
                 IdClient = s.IdClient,
                 IdCity = s.IdCity,
+                IdCompanyNavigation = new CompanyDTO
+                {
+                    Name = s.IdCompanyNavigation.Name,
+                    Address = $"{s.IdCompanyNavigation.Address}, C.P. {s.IdCompanyNavigation.PostalCode}",
+                    RazonSocial = s.IdCompanyNavigation.RazonSocial,
+                    Empaque = s.IdCompanyNavigation.Empaque,
+                    LogoName = s.IdCompanyNavigation.LogoName
+                },
                 Mixed = s.Mixed,
                 IdShipmentStatus = s.IdShipmentStatus,
                 Comments = s.Comments,
@@ -249,7 +261,7 @@ namespace GenericApp.API.Controllers
                         page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Lato));
 
                         // Header
-                        page.Header().Element(header => ComposeHeader(header, shipment, manifest));
+                        page.Header().Element(header => ComposeHeader(header, shipment, manifest, "Reporte de manifiesto de embarque"));
 
                         // Content
                         page.Content().Element(content =>
@@ -277,63 +289,115 @@ namespace GenericApp.API.Controllers
             return File(stream, "application/pdf", $"Manifiesto_{shipment.IdShipment}.pdf");
         }
 
-        private void ComposeHeader(IContainer container, ShipmentDTO shipment, ManifestDTO manifest)
+        // Agregamos el parámetro 'string documentTitle' al final
+        private void ComposeHeader(IContainer container, ShipmentDTO shipment, ManifestDTO manifest, string documentTitle)
         {
             container.Column(column =>
             {
-                // --- FILA 1: Logos y Títulos ---
+                // 1. ENCABEZADO SUPERIOR
                 column.Item().Row(row =>
                 {
-                    // Izquierda: Datos Fiscales / Logo
-                    row.RelativeItem(4).Column(stack =>
+                    // --- BLOQUE IZQUIERDO: LOGO + DATOS DE LA EMPRESA ---
+                    // Aumenté un poco el espacio relativo (de 5 a 6) para acomodar el logo
+                    row.RelativeItem(4).Row(subRow =>
                     {
-                        stack.Item().Text("MISION DEL BISANI S.A. DE C.V.").Bold().FontSize(14).FontColor(Colors.Blue.Darken2);
-                        stack.Item().Text("HERMENEGILDO GALEANA NO. 106 COL. CENTRO").FontSize(7).FontColor(Colors.Grey.Medium);
-                        stack.Item().Text("CIUDAD CONSTITUCION, B.C.S., MEXICO. C.P. 23600").FontSize(7).FontColor(Colors.Grey.Medium);
+                        // A) LOGO (Si existe)
+                        var logoName = shipment.IdCompanyNavigation?.LogoName;
+                        if (!string.IsNullOrEmpty(logoName))
+                        {
+                            // Lógica para obtener la ruta
+                            string carpeta = Path.Combine(_env.WebRootPath, "img", "logos");
+                            string rutaCompleta = Path.Combine(carpeta, logoName);
+
+                            // Verificamos si el archivo realmente existe para evitar errores
+                            if (System.IO.File.Exists(rutaCompleta))
+                            {
+                                // Renderizamos la imagen
+                                // .FitArea() asegura que la imagen no se deforme
+                                subRow.AutoItem()
+                                      .PaddingRight(10) // Espacio entre logo y texto
+                                      .Height(50)       // Altura fija para el logo
+                                      .Image(rutaCompleta);
+                            }
+                        }
+
+                        // B) DATOS DE LA EMPRESA (Texto)
+                        subRow.RelativeItem().Column(stack =>
+                        {
+                            stack.Item().Text($"EMPAQUE {shipment.IdCompanyNavigation?.Empaque?.ToUpper() ?? "EMPAQUE"}").Bold().FontSize(12).FontColor(Colors.Blue.Darken2);
+                            stack.Item().Text(shipment.IdCompanyNavigation?.RazonSocial?.ToUpper() ?? "").FontSize(7).FontColor(Colors.Grey.Medium);
+                            stack.Item().Text(shipment.IdCompanyNavigation?.Address?.ToUpper() ?? "").FontSize(7).FontColor(Colors.Grey.Medium);
+                        });
                     });
 
-                    // Derecha: Datos del Documento
-                    row.RelativeItem(4).AlignRight().Column(stack =>
+                    // --- BLOQUE DERECHO: TÍTULO DEL DOCUMENTO ---
+                    row.RelativeItem(6).AlignRight().Column(stack =>
                     {
-                        stack.Item().Text("MANIFIESTO DE EMBARQUE").FontSize(16).Bold();
-                        stack.Item().Text($"REMISIÓN: {shipment.IdShipment:D4}").FontSize(12).Bold().FontColor(Colors.Red.Medium);
-                        stack.Item().Text($"FECHA: {shipment.ShipmentDate?.ToString("dd/MM/yyyy") ?? "-"}").FontSize(9);
+                        stack.Item().Text(documentTitle).FontSize(14).Bold();
+                        stack.Item().Text($"Viaje #{shipment.IdShipment}").FontSize(10).Bold().FontColor(Colors.Grey.Darken2);
                     });
                 });
 
-                // --- FILA 2: Tabla de Datos Detallados ---
-                column.Item().PaddingTop(10).Decoration(decoration =>
+                column.Item().PaddingTop(5);
+
+                // 2. GRID DE DATOS REORGANIZADO (Se mantiene igual que la versión anterior)
+                column.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Table(table =>
                 {
-                    decoration.Before().BorderBottom(1).BorderColor(Colors.Grey.Lighten1);
-                    decoration.Content().PaddingVertical(5).Row(row =>
+                    table.ColumnsDefinition(c =>
                     {
-                        // Columna 1
-                        row.RelativeItem().Column(col =>
-                        {
-                            col.Item().Text(t => { t.Span("Viaje #: ").Bold(); t.Span($"{manifest.IdManifest}"); });
-                            col.Item().Text(t => { t.Span("Chofer: ").Bold(); t.Span(manifest.IdDriverNavigation?.Name ?? "-"); });
-                            col.Item().Text(t => { t.Span("FDA No: ").Bold(); t.Span(manifest.RegFdaNo ?? "-"); });
-                            col.Item().Text(t => { t.Span("Temporada: ").Bold(); t.Span($"{manifest.SeasonYear}"); });
-                        });
-
-                        // Columna 2
-                        row.RelativeItem().Column(col =>
-                        {
-                            col.Item().Text(t => { t.Span("Placas Trailer: ").Bold(); t.Span(manifest.TrailerPlate ?? "-"); });
-                            col.Item().Text(t => { t.Span("Placas Caja: ").Bold(); t.Span(manifest.TrailerBoxPlate ?? "-"); });
-                            col.Item().Text(t => { t.Span("Línea: ").Bold(); t.Span(manifest.IdShippingCompanyNavigation?.Name ?? "-"); });
-                            col.Item().Text(t => { t.Span("Empaque: ").Bold(); t.Span(manifest.Empaque ?? "-"); });
-                        });
-
-                        // Columna 3
-                        row.RelativeItem().Column(col =>
-                        {
-                            col.Item().Text(t => { t.Span("Temp: ").Bold(); t.Span($"{manifest.TemperatureTrailerBoxF}°F / {manifest.TemperatureTrailerBoxC}°C"); });
-                            col.Item().Text(t => { t.Span("Hr. Salida: ").Bold(); t.Span(manifest.ExitDate ?? "-"); });
-                            col.Item().Text(t => { t.Span("Mixto: ").Bold(); t.Span(shipment.Mixed == true ? "SÍ" : "NO"); });
-                            col.Item().Text(t => { t.Span("GNN #: ").Bold(); t.Span(manifest.GnnNumber ?? "-"); });
-                        });
+                        c.ConstantColumn(65); c.RelativeColumn();
+                        c.ConstantColumn(65); c.RelativeColumn();
+                        c.ConstantColumn(65); c.RelativeColumn();
                     });
+
+                    // FILA 1
+                    table.Cell().AlignRight().PaddingRight(3).Text("TEMPORADA:").Bold().FontSize(7);
+                    table.Cell().Text($"{manifest.SeasonYear}").FontSize(8);
+
+                    table.Cell().AlignRight().PaddingRight(3).Text("CHOFER:").Bold().FontSize(7);
+                    table.Cell().Text(manifest.IdDriverNavigation?.Name ?? "-").FontSize(7);
+
+                    table.Cell().AlignRight().PaddingRight(3).Text("REMISIÓN:").Bold().FontSize(7);
+                    table.Cell().Text($"{shipment.IdShipment:D4}").FontSize(10).Bold().FontColor(Colors.Red.Medium);
+
+                    // FILA 2
+                    table.Cell().AlignRight().PaddingRight(3).Text("FECHA:").Bold().FontSize(7);
+                    table.Cell().Text($"{shipment.ShipmentDate?.ToString("dd/MM/yyyy") ?? "-"}").FontSize(8);
+
+                    table.Cell().AlignRight().PaddingRight(3).Text("PLACAS T.:").Bold().FontSize(7);
+                    table.Cell().Text(manifest.TrailerPlate ?? "-").FontSize(8);
+
+                    table.Cell().AlignRight().PaddingRight(3).Text("TEMP:").Bold().FontSize(7);
+                    table.Cell().Text($"{manifest.TemperatureTrailerBoxF}°F").FontSize(8);
+
+                    // FILA 3
+                    table.Cell().AlignRight().PaddingRight(3).Text("HR. SALIDA:").Bold().FontSize(7);
+                    table.Cell().Text(manifest.ExitDate ?? "-").FontSize(8);
+
+                    table.Cell().AlignRight().PaddingRight(3).Text("PLACAS C.:").Bold().FontSize(7);
+                    table.Cell().Text(manifest.TrailerBoxPlate ?? "-").FontSize(8);
+
+                    table.Cell().AlignRight().PaddingRight(3).Text("MIXTO:").Bold().FontSize(7);
+                    table.Cell().Text(shipment.Mixed == true ? "SÍ" : "NO").FontSize(8);
+
+                    // FILA 4
+                    table.Cell().AlignRight().PaddingRight(3).Text("No. REG FDA:").Bold().FontSize(7);
+                    table.Cell().Text(manifest.RegFdaNo ?? "-").FontSize(8);
+
+                    table.Cell().AlignRight().PaddingRight(3).Text("LÍNEA:").Bold().FontSize(7);
+                    table.Cell().Text(manifest.IdShippingCompanyNavigation?.Name ?? "-").FontSize(7);
+
+                    table.Cell().AlignRight().PaddingRight(3).Text("VIAJE #:").Bold().FontSize(7);
+                    table.Cell().Text($"{manifest.IdManifest}").FontSize(8);
+
+                    // FILA 5
+                    table.Cell().AlignRight().PaddingRight(3).Text("EMPAQUE:").Bold().FontSize(7);
+                    table.Cell().Text(manifest.Empaque ?? "-").FontSize(8);
+
+                    table.Cell().ColumnSpan(2).Text("");
+
+                    table.Cell().AlignRight().PaddingRight(3).Text("GNN #:").Bold().FontSize(7);
+                    table.Cell().Text(manifest.GnnNumber ?? "-").FontSize(8);
                 });
             });
         }
@@ -487,6 +551,9 @@ namespace GenericApp.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetRemisionPdfById(int id)
         {
+            // -----------------------------------------------------------------------
+            // 1. OBTENCIÓN DE DATOS (Consulta completa igual que en Manifiesto)
+            // -----------------------------------------------------------------------
             var shipmentQuery = await _repository.Query<Shipment>();
 
             var shipment = await shipmentQuery
@@ -497,6 +564,19 @@ namespace GenericApp.API.Controllers
                 CreationDate = s.CreationDate,
                 ShipmentDate = s.ShipmentDate,
                 IdClient = s.IdClient,
+                IdClientNavigation = new ClientDTO
+                {
+                    Name = s.IdClientNavigation.Name,
+                },
+                IdCompanyNavigation = new CompanyDTO
+                {
+                    Name = s.IdCompanyNavigation.Name,
+                    Address = $"{s.IdCompanyNavigation.Address}, C.P. {s.IdCompanyNavigation.PostalCode}",
+                    RazonSocial = s.IdCompanyNavigation.RazonSocial,
+                    Empaque = s.IdCompanyNavigation.Empaque,
+                    LogoName = s.IdCompanyNavigation.LogoName
+                },
+                Address = s.Address,
                 IdCity = s.IdCity,
                 Mixed = s.Mixed,
                 IdShipmentStatus = s.IdShipmentStatus,
@@ -552,151 +632,51 @@ namespace GenericApp.API.Controllers
                 }).ToList()
             }).FirstOrDefaultAsync(x => x.IdShipment == id);
 
-
             if (shipment == null) return NotFound("Shipment not found");
 
+            // -----------------------------------------------------------------------
+            // 2. GENERACIÓN DEL PDF (QuestPDF)
+            // -----------------------------------------------------------------------
             QuestPDF.Settings.License = LicenseType.Community;
 
             var document = Document.Create(container =>
             {
-                // Generamos una página por cada Manifiesto dentro del Shipment
                 foreach (var manifest in shipment.Manifests)
                 {
                     container.Page(page =>
                     {
+                        // Configuración general de la página
                         page.Size(PageSizes.Letter);
                         page.Margin(1, Unit.Centimetre);
                         page.PageColor(Colors.White);
                         page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Lato));
 
-                        // 1. Header (Empresa y Recuadro Remisión)
-                        page.Header().Element(header => ComposeRemisionHeader(header, shipment, manifest));
+                        // A) HEADER: Reutilizamos el mismo diseño que el Manifiesto
+                        // Pasamos "REMISIÓN" como título para diferenciarlo
+                        page.Header().Element(header => ComposeHeader(header, shipment, manifest, "REMISIÓN"));
 
+                        // B) CONTENIDO: Usamos la tabla de lista (específica de remisión)
                         page.Content().Column(col =>
                         {
-                            // 2. Bloque de Info (Cliente/Trailer con fondos azules)
-                            col.Item().Element(e => ComposeRemisionInfoBlock(e, shipment, manifest));
-
-                            // 3. Tabla de Productos
-                            col.Item().Element(e => ComposeRemisionTable(e, manifest));
+                            // Agregamos un pequeño margen superior
+                            col.Item().PaddingTop(10).Element(e => ComposeRemisionTable(e, manifest));
                         });
 
-                        // 4. Footer (Observaciones y Totales)
-                        page.Footer().Element(footer => ComposeRemisionFooter(footer, manifest));
+                        // C) FOOTER: Reutilizamos el footer del Manifiesto (Firmas y Totales)
+                        // para mantener la consistencia visual exacta.
+                        page.Footer().Element(footer => ComposeFooter(footer, manifest));
                     });
                 }
             });
 
+            // -----------------------------------------------------------------------
+            // 3. RETORNO DEL ARCHIVO
+            // -----------------------------------------------------------------------
             var stream = new MemoryStream();
             document.GeneratePdf(stream);
             stream.Position = 0;
 
             return File(stream, "application/pdf", $"Remision_{shipment.IdShipment}.pdf");
-        }
-        private void ComposeRemisionHeader(IContainer container, ShipmentDTO shipment, ManifestDTO manifest)
-        {
-            container.Row(row =>
-            {
-                // IZQUIERDA: Datos de la empresa
-                row.RelativeItem(6).Column(col =>
-                {
-                    col.Item().Text("MISION DEL BISANI S.A. DE C.V.").Bold().FontSize(14).FontColor(Colors.Black);
-                    col.Item().Text("HERMENEGILDO GALEANA NO. 106").FontSize(9);
-                    col.Item().Text("COL. CENTRO, CIUDAD CONSTITUCION").FontSize(9);
-                    col.Item().Text("B.C.S., MEXICO. C.P. 23600").FontSize(9);
-                    col.Item().Text("Email: contacto@misionbisani.com").FontSize(9);
-                });
-
-                // DERECHA: Recuadro "REMISIÓN"
-                row.RelativeItem(4).Border(1).BorderColor(Colors.Blue.Darken4).Column(col =>
-                {
-                    col.Item().Background(Colors.White).AlignCenter().Padding(2)
-                        .Text("REMISIÓN").Bold().FontSize(14).FontColor(Colors.Black);
-
-                    col.Item().Table(table =>
-                    {
-                        table.ColumnsDefinition(c =>
-                        {
-                            c.RelativeColumn(1);
-                            c.RelativeColumn(2);
-                        });
-
-                        // --- CORRECCIÓN 1: Cambiar 'void' por 'IContainer' ---
-                        static IContainer CellStyle(IContainer c) => c.BorderTop(1).BorderColor(Colors.Black).Padding(2);
-                        static IContainer LabelStyle(IContainer c) => c.Background(Colors.Blue.Darken4).Padding(2);
-                        // ----------------------------------------------------
-
-                        // --- CORRECCIÓN 2: Encadenar los métodos ---
-                        // En lugar de llamar a la función y luego al texto en líneas separadas,
-                        // las unimos en una sola línea fluida: LabelStyle(c).Text(...)
-
-                        // 1. FECHA
-                        table.Cell().Element(c => LabelStyle(c).AlignCenter().Text("FECHA").FontColor(Colors.White).Bold());
-                        table.Cell().Element(c => CellStyle(c).AlignCenter().Text($"{shipment.ShipmentDate?.ToString("dd/MM/yyyy") ?? "-"}"));
-
-                        // 2. VIAJE
-                        table.Cell().Element(c => LabelStyle(c).AlignCenter().Text("VIAJE").FontColor(Colors.White).Bold());
-                        table.Cell().Element(c => CellStyle(c).AlignCenter().Text($"{manifest.IdManifest}"));
-
-                        // 3. CHOFER
-                        table.Cell().Element(c => LabelStyle(c).AlignCenter().Text("CHOFER").FontColor(Colors.White).Bold());
-                        table.Cell().Element(c => CellStyle(c).AlignCenter().Text($"{manifest.IdDriverNavigation?.Name ?? "-"}").FontSize(7));
-                    });
-                });
-            });
-        }
-        private void ComposeRemisionInfoBlock(IContainer container, ShipmentDTO shipment, ManifestDTO manifest)
-        {
-            container.PaddingVertical(10).Row(row =>
-            {
-                // --- BLOQUE IZQUIERDO (Cliente) ---
-                row.RelativeItem().PaddingRight(5).Table(table =>
-                {
-                    table.ColumnsDefinition(c =>
-                    {
-                        c.ConstantColumn(70); // Ancho etiqueta
-                        c.RelativeColumn();   // Ancho valor
-                    });
-
-                    // Función local para filas azules
-                    void AddRow(string label, string value)
-                    {
-                        table.Cell().Border(1).BorderColor(Colors.Blue.Darken4).Background(Colors.Blue.Darken4).Padding(2)
-                            .Text(label).FontColor(Colors.White).Bold().FontSize(8);
-
-                        table.Cell().Border(1).BorderColor(Colors.Blue.Darken4).Padding(2)
-                            .Text(value).FontSize(8);
-                    }
-
-                    AddRow("CLIENTE", $"ID: {shipment.IdClient}"); // Ajustar si tienes el Nombre del Cliente
-                    AddRow("DESTINO", shipment.IdCity?.ToString() ?? "-"); // Ajustar con nombre ciudad
-                    AddRow("SICL", "-"); // Campo fijo imagen
-                    AddRow("OMO", "-");  // Campo fijo imagen
-                });
-
-                // --- BLOQUE DERECHO (Trailer) ---
-                row.RelativeItem().PaddingLeft(5).Table(table =>
-                {
-                    table.ColumnsDefinition(c =>
-                    {
-                        c.ConstantColumn(70);
-                        c.RelativeColumn();
-                    });
-
-                    void AddRow(string label, string value)
-                    {
-                        table.Cell().Border(1).BorderColor(Colors.Blue.Darken4).Background(Colors.Blue.Darken4).Padding(2)
-                            .Text(label).FontColor(Colors.White).Bold().FontSize(8);
-
-                        table.Cell().Border(1).BorderColor(Colors.Blue.Darken4).Padding(2)
-                            .Text(value).FontSize(8);
-                    }
-
-                    AddRow("TRAILER", manifest.TrailerPlate ?? "-");
-                    AddRow("CAJA", manifest.TrailerBoxPlate ?? "-");
-                    AddRow("SELLO", manifest.Stamps ?? "-");
-                });
-            });
         }
         private void ComposeRemisionTable(IContainer container, ManifestDTO manifest)
         {
@@ -709,92 +689,54 @@ namespace GenericApp.API.Controllers
 
             container.Table(table =>
             {
-                // Definición de columnas (Imagen: Cant, Descripcion, Peso)
+                // Definición de columnas
                 table.ColumnsDefinition(columns =>
                 {
-                    columns.ConstantColumn(50); // CANT.
-                    columns.RelativeColumn();   // DESCRIPCION
-                    columns.ConstantColumn(80); // PESO (Lbs)
+                    columns.ConstantColumn(50);  // Cantidad
+                    columns.RelativeColumn();    // Descripción
+                    columns.ConstantColumn(100); // Notas/Peso
                 });
 
-                // Header de la tabla
+                // --- HEADER DE LA TABLA (DISEÑO CORREGIDO) ---
+                // Ahora usa bordes grises/negros y fondo claro para coincidir con el Manifiesto
                 table.Header(header =>
                 {
-                    header.Cell().Border(1).BorderColor(Colors.Black).Background(Colors.Blue.Darken4).Padding(2).Text("CANT.").FontColor(Colors.White).Bold().AlignCenter();
-                    header.Cell().Border(1).BorderColor(Colors.Black).Background(Colors.Blue.Darken4).Padding(2).Text("DESCRIPCION").FontColor(Colors.White).Bold().AlignCenter();
-                    header.Cell().Border(1).BorderColor(Colors.Black).Background(Colors.Blue.Darken4).Padding(2).Text("PESO (Lbs)").FontColor(Colors.White).Bold().AlignCenter();
+                    // Estilo unificado para los headers de la tabla
+                    static IContainer HeaderStyle(IContainer c) => c
+                        .Border(1)
+                        .BorderColor(Colors.Grey.Lighten1) // Mismo gris que el Manifiesto
+                        .Background(Colors.Grey.Lighten4)  // Un gris muy suave de fondo para distinguir
+                        .Padding(4)
+                        .AlignMiddle()
+                        .AlignCenter();
+
+                    header.Cell().Element(HeaderStyle).Text("CANT.").FontSize(9).Bold().FontColor(Colors.Black);
+                    header.Cell().Element(HeaderStyle).Text("DESCRIPCIÓN").FontSize(9).Bold().FontColor(Colors.Black);
+                    header.Cell().Element(HeaderStyle).Text("NOTAS / PESO").FontSize(9).Bold().FontColor(Colors.Black);
                 });
 
-                // Filas
+                // --- FILAS DE DATOS ---
                 foreach (var item in allItems)
                 {
-                    table.Cell().Border(1).BorderColor(Colors.Black).Padding(2).Text($"{item.BoxQuantity}").AlignCenter();
-                    table.Cell().Border(1).BorderColor(Colors.Black).Padding(2).Text(item.Description ?? "Sin descripción");
+                    static IContainer CellStyle(IContainer c) => c
+                        .Border(1)
+                        .BorderColor(Colors.Grey.Lighten1) // Borde suave
+                        .Padding(4)
+                        .AlignMiddle();
 
-                    // Nota: No tenemos campo "Peso" en el DTO actual, lo dejo vacío o guión como placeholder
-                    table.Cell().Border(1).BorderColor(Colors.Black).Padding(2).Text("-").AlignCenter();
+                    table.Cell().Element(CellStyle).AlignCenter().Text($"{item.BoxQuantity}").FontSize(9);
+                    table.Cell().Element(CellStyle).Text(item.Description ?? "Sin descripción").FontSize(9);
+                    table.Cell().Element(CellStyle).AlignCenter().Text("-").FontSize(9);
                 }
 
-                // Filas vacías de relleno (para que se vea como la hoja rayada de la imagen)
-                for (int i = 0; i < 10; i++) // Agrega 10 filas vacías de estética
+                // --- FILAS DE RELLENO (Estética) ---
+                // Para que la tabla llegue hasta abajo o tenga líneas vacías para escribir
+                for (int i = 0; i < 15; i++)
                 {
-                    table.Cell().Border(1).BorderColor(Colors.Black).MinHeight(15).Text("");
-                    table.Cell().Border(1).BorderColor(Colors.Black).MinHeight(15).Text("");
-                    table.Cell().Border(1).BorderColor(Colors.Black).MinHeight(15).Text("");
+                    table.Cell().Border(1).BorderColor(Colors.Grey.Lighten1).MinHeight(20).Text("");
+                    table.Cell().Border(1).BorderColor(Colors.Grey.Lighten1).MinHeight(20).Text("");
+                    table.Cell().Border(1).BorderColor(Colors.Grey.Lighten1).MinHeight(20).Text("");
                 }
-            });
-        }
-        private void ComposeRemisionFooter(IContainer container, ManifestDTO manifest)
-        {
-            // Cálculos
-            var totalBoxes = manifest.ManifestPallets?
-                .Where(p => !(p.IsDeleted ?? false))
-                .SelectMany(p => p.ManifestPalletLoadings)
-                .Where(l => !(l.IsDeleted ?? false))
-                .Sum(l => l.BoxQuantity) ?? 0;
-
-            var totalPallets = manifest.ManifestPallets?
-                .Count(p => !(p.IsDeleted ?? false)) ?? 0;
-
-            container.PaddingTop(5).Row(row =>
-            {
-                // IZQUIERDA: Observaciones y Recibió
-                row.RelativeItem(7).PaddingRight(10).Column(col =>
-                {
-                    // Caja Observaciones
-                    col.Item().Border(1).BorderColor(Colors.Blue.Darken4).Column(obs =>
-                    {
-                        obs.Item().Background(Colors.Blue.Darken4).Padding(2).Text("OBSERVACIONES").FontColor(Colors.White).Bold().FontSize(8);
-                        obs.Item().Padding(5).MinHeight(40).Text(manifest.Comments ?? manifest.Chismografo ?? "").FontSize(8);
-                    });
-
-                    // Línea Recibió
-                    col.Item().PaddingTop(30).Row(r =>
-                    {
-                        r.AutoItem().Text("RECIBIÓ: ").Bold();
-                        r.RelativeItem().BorderBottom(1).BorderColor(Colors.Black);
-                    });
-                });
-
-                // DERECHA: Totales
-                row.RelativeItem(3).Border(1).BorderColor(Colors.Black).Column(col =>
-                {
-                    col.Item().Background(Colors.Blue.Darken4).Padding(2).Text("TOTALES").FontColor(Colors.White).Bold().AlignCenter();
-
-                    col.Item().Table(table =>
-                    {
-                        table.ColumnsDefinition(c => { c.RelativeColumn(); c.ConstantColumn(50); });
-
-                        table.Cell().Border(1).Padding(2).Text("PALLETS").FontSize(8).Bold();
-                        table.Cell().Border(1).Padding(2).Text($"{totalPallets}").FontSize(8).AlignCenter();
-
-                        table.Cell().Border(1).Padding(2).Text("BULTOS").FontSize(8).Bold();
-                        table.Cell().Border(1).Padding(2).Text($"{totalBoxes}").FontSize(8).AlignCenter();
-
-                        table.Cell().Border(1).Padding(2).Text("PESO TOTAL (Lbs)").FontSize(8).Bold();
-                        table.Cell().Border(1).Padding(2).Text("-").FontSize(8).AlignCenter();
-                    });
-                });
             });
         }
 

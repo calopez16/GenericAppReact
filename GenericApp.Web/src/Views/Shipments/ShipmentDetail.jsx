@@ -13,6 +13,7 @@ import {
     useMediaQuery,
     IconButton
 } from '@mui/material';
+import { ShowMessage } from '@helpers/NotificationService';
 
 // Iconos
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -29,6 +30,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import ReceiptIcon from '@mui/icons-material/Receipt';
 
 import { useTranslation } from 'react-i18next';
 import { dataApiShipmentsService } from '@data/Shipments/Data';
@@ -166,6 +168,60 @@ const ShipmentDetail = () => {
             ...prev,
             [index]: !prev[index]
         }));
+    };
+
+    const handleExportManifest = async (shipment) => {
+        try {
+            setLoading(true);
+            ShowMessage(t('exporting_manifest'), 'info');
+            // 1. Llamada al servicio
+            // Asumimos que getManifestPdfById está configurado en axios con responseType: 'blob' o 'arraybuffer'
+            const response = await shipmentDataService.getManifestPdfById(shipment.idShipment);
+
+            // 2. Validar y Crear el Blob
+            // Algunos servicios devuelven el archivo en 'response.data', otros directamente en 'response'.
+            // Ajusta esto según tu configuración de Axios.
+            const fileData = response.data ? response.data : response;
+
+            const blob = new Blob([fileData], { type: 'application/pdf' });
+
+            // 3. Crear URL temporal y abrir en nueva pestaña
+            const pdfUrl = window.URL.createObjectURL(blob);
+            window.open(pdfUrl, '_blank');
+
+        } catch (error) {
+            console.error("Error exportando manifiesto:", error);
+            ShowMessage(t('error_fetching_data'), 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleExportRemision = async (shipment) => {
+        try {
+            setLoading(true);
+            ShowMessage(t('exporting_manifest'), 'info');
+            // 1. Llamada al servicio
+            // Asumimos que getManifestPdfById está configurado en axios con responseType: 'blob' o 'arraybuffer'
+            const response = await shipmentDataService.getRemisionPdfById(shipment.idShipment);
+
+            // 2. Validar y Crear el Blob
+            // Algunos servicios devuelven el archivo en 'response.data', otros directamente en 'response'.
+            // Ajusta esto según tu configuración de Axios.
+            const fileData = response.data ? response.data : response;
+
+            const blob = new Blob([fileData], { type: 'application/pdf' });
+
+            // 3. Crear URL temporal y abrir en nueva pestaña
+            const pdfUrl = window.URL.createObjectURL(blob);
+            window.open(pdfUrl, '_blank');
+
+        } catch (error) {
+            console.error("Error exportando manifiesto:", error);
+            ShowMessage(t('error_fetching_data'), 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Helper para renderizar los stamps con saltos de línea
@@ -507,7 +563,7 @@ const ShipmentDetail = () => {
 
             </Paper>
 
-            {/* --- FOOTER: BOTÓN REGRESAR --- */}
+            {/* --- FOOTER: ACCIONES Y NAVEGACIÓN --- */}
             <Paper
                 elevation={3}
                 sx={{
@@ -518,10 +574,36 @@ const ShipmentDetail = () => {
                     backgroundColor: theme.palette.background.paper,
                     borderTop: `1px solid ${theme.palette.divider}`,
                     display: 'flex',
-                    justifyContent: 'flex-end',
-                    zIndex: 10
+                    justifyContent: 'flex-end', // Alinea todo a la derecha
+                    alignItems: 'center',
+                    gap: 2, // Espacio entre los botones
+                    zIndex: 10,
+                    flexWrap: 'wrap' // Para que se ajusten en móviles si no caben
                 }}
             >
+                {/* Botón Imprimir Manifiesto (Color Secondary) */}
+                <Button
+                    variant="contained"
+                    color="secondary"
+                    startIcon={<DescriptionIcon />}
+                    onClick={() => handleExportManifest(shipment)}
+                    sx={{ minWidth: 120 }}
+                >
+                    {t('Manifiesto')}
+                </Button>
+
+                {/* Botón Imprimir Remisión (Color Success) */}
+                <Button
+                    variant="contained"
+                    color="success"
+                    startIcon={<ReceiptIcon />}
+                    onClick={() => handleExportRemision(shipment)}
+                    sx={{ minWidth: 120 }}
+                >
+                    {t('Remisión')}
+                </Button>
+
+                {/* Botón Regresar (Existente) */}
                 <Button
                     variant="contained"
                     color="inherit"
@@ -533,7 +615,6 @@ const ShipmentDetail = () => {
                     {t('back')}
                 </Button>
             </Paper>
-
         </Box>
     );
 };

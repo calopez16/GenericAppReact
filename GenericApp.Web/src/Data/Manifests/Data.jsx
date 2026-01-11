@@ -11,6 +11,8 @@ export const dataApiManifestsService = () => {
     const genericService = createApiMethodsService(moduleSource, dataMapper);
 
     return {
-        ...genericService
+        ...genericService,
+        getDataCompanyPagination: (idCompany, pageNumber = 1, pageSize = 10, searchTerm = "") => GET(`${moduleSource}/${idCompany}/pagination?pageNumber=${pageNumber}&pageSize=${pageSize}&searchTerm=${searchTerm}`),
+
     };
 };

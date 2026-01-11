@@ -166,7 +166,7 @@ function ShipmentAddOrEdit() {
                                     const cityRes = await citiesService.getDataById(selectedClient.idCity);
                                     if (cityRes.success && cityRes.data) {
                                         const c = cityRes.data;
-                                        const locationStr = `${c.description || ''}, ${c.idStateNavigation?.description || ''}, ${c.idStateNavigation?.idCountryNavigation?.description || ''}`;
+                                        const locationStr = `${c.description || ''}, ${c.idStateNavigation?.description || ''}, ${c.idStateNavigation?.idCountryNavigation?.description || ''}, C.P. ${selectedClient.postalCode}`;
                                         fullAddress = `${fullAddress} - ${locationStr}`.trim();
                                     }
                                 } catch (error) {
@@ -213,7 +213,7 @@ function ShipmentAddOrEdit() {
                     const response = await citiesService.getDataById(newValue.idCity);
                     if (response.success && response.data) {
                         const c = response.data;
-                        const locationStr = `${c.description || ''}, ${c.idStateNavigation?.description || ''}, ${c.idStateNavigation?.idCountryNavigation?.description || ''}`;
+                        const locationStr = `${c.description || ''}, ${c.idStateNavigation?.description || ''}, ${c.idStateNavigation?.idCountryNavigation?.description || ''}, C.P. ${newValue.postalCode}`;
                         fullAddress = `${fullAddress} - ${locationStr}`.trim();
                     }
                 } catch (error) {
@@ -414,7 +414,7 @@ function ShipmentAddOrEdit() {
                         />
                     </Grid>
 
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid size={{ xs: 12, md: 8 }}>
                         <TextField
                             fullWidth
                             label={t('Address')}
@@ -423,16 +423,16 @@ function ShipmentAddOrEdit() {
                             slotProps={{ input: { readOnly: true } }}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <TextField
-                            fullWidth
-                            label={t('Postal Code')}
-                            name="postalCode"
-                            value={formData.postalCode}
-                            slotProps={{ input: { readOnly: true } }}
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    {/*<Grid size={{ xs: 12, sm: 6, md: 3 }}>*/}
+                    {/*    <TextField*/}
+                    {/*        fullWidth*/}
+                    {/*        label={t('Postal Code')}*/}
+                    {/*        name="postalCode"*/}
+                    {/*        value={formData.postalCode}*/}
+                    {/*        slotProps={{ input: { readOnly: true } }}*/}
+                    {/*    />*/}
+                    {/*</Grid>*/}
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <TextField
                             fullWidth
                             label={t('Phone')}

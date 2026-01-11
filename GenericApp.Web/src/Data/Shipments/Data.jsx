@@ -12,8 +12,9 @@ export const dataApiShipmentsService = () => {
 
     return {
         ...genericService,
-        getPagination: (pageNumber = 1, pageSize = 10, searchTerm = "") => GET(`${moduleSource}/pagination?pageNumber=${pageNumber}&pageSize=${pageSize}&searchTerm=${searchTerm}`),
+        getDataCompanyPagination: (idCompany, pageNumber = 1, pageSize = 10, searchTerm = "") => GET(`${moduleSource}/${idCompany}/pagination?pageNumber=${pageNumber}&pageSize=${pageSize}&searchTerm=${searchTerm}`),
         getManifestPdfById: (id) => GET(`${moduleSource}/manifest-pdf/${id}`, { responseType: 'blob' }),
+        getRemisionPdfById: (id) => GET(`${moduleSource}/remision-pdf/${id}`, { responseType: 'blob' }),
 
     };
 };
