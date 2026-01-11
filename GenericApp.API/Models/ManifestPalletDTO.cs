@@ -12,6 +12,7 @@ namespace GenericApp.API.Models
         public decimal? TemperatureC { get; set; }
         public string? Comments { get; set; }
         public bool? IsDeleted { get; set; }
+        public bool? Chismografo { get; set; }
         public ManifestDTO? ManifestNavigation { get; set; }
         public LabelDTO? LabelNavigation { get; set; }
         public List<ManifestPalletLoadingDTO> ManifestPalletLoadings { get; set; } = new List<ManifestPalletLoadingDTO>();

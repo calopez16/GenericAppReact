@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260111202556_AddSizeLabelType")]
+    partial class AddSizeLabelType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -574,9 +576,6 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdManifestPallet"), 1L, 1);
-
-                    b.Property<bool?>("Chismografo")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Comments")
                         .HasMaxLength(500)
@@ -1834,7 +1833,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEB5ABrZAt4J/Z0PDafsZ0IE071MdyWQfZMOS2E0qITEjtz3Jdc76NJB7FOprwtbTMQ==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEOTLScu9SAXj1L1Nv1iXQkvVUxFTRw0qoR4QyYdx11EHpxjTZ1/SxSfrl4LtShhgKg==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,

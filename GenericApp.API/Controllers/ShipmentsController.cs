@@ -235,7 +235,8 @@ namespace GenericApp.API.Controllers
                             Description = pl.Description,
                             IdLabelTypeNavigation = new LabelTypeDTO
                             {
-                                Description = pl.IdLabelTypeNavigation.Description
+                                Description = pl.IdLabelTypeNavigation.Description,
+                                Size = pl.IdLabelTypeNavigation.Size
                             },
                             BoxQuantity = pl.BoxQuantity
                         }).ToList()
@@ -325,8 +326,8 @@ namespace GenericApp.API.Controllers
                         subRow.RelativeItem().Column(stack =>
                         {
                             stack.Item().Text($"EMPAQUE {shipment.IdCompanyNavigation?.Empaque?.ToUpper() ?? "EMPAQUE"}").Bold().FontSize(12).FontColor(Colors.Blue.Darken2);
-                            stack.Item().Text(shipment.IdCompanyNavigation?.RazonSocial?.ToUpper() ?? "").FontSize(7).FontColor(Colors.Grey.Medium);
-                            stack.Item().Text(shipment.IdCompanyNavigation?.Address?.ToUpper() ?? "").FontSize(7).FontColor(Colors.Grey.Medium);
+                            stack.Item().Text(shipment.IdCompanyNavigation?.RazonSocial?.ToUpper() ?? "").FontSize(7).FontColor(Colors.Grey.Darken1);
+                            stack.Item().Text(shipment.IdCompanyNavigation?.Address?.ToUpper() ?? "").FontSize(7).FontColor(Colors.Grey.Darken1);
                         });
                     });
 
@@ -451,13 +452,15 @@ namespace GenericApp.API.Controllers
 
                 if (pallet != null)
                 {
-                    int totalBoxesInPallet = 0;
+                    // 1. Obtenemos los items válidos
+                    var validLoadings = pallet.ManifestPalletLoadings
+                                              .Where(l => !(l.IsDeleted ?? false))
+                                              .ToList();
 
-                    // Listado de productos (Loadings)
-                    foreach (var load in pallet.ManifestPalletLoadings.Where(l => !(l.IsDeleted ?? false)))
+                    // 2. Dibujamos la lista de productos (Detalle)
+                    foreach (var load in validLoadings)
                     {
                         var qty = load.BoxQuantity ?? 0;
-                        totalBoxesInPallet += (int)qty;
 
                         stack.Item().PaddingTop(2).Text(t =>
                         {
@@ -466,12 +469,38 @@ namespace GenericApp.API.Controllers
                         });
                     }
 
-                    // Total del Pallet (Texto Verde)
+                    // 3. LOGICA NUEVA: Agrupar por TAMAÑO (Size) para el Footer
+                    var sizeSummary = validLoadings
+                        .GroupBy(l => l.IdLabelTypeNavigation?.Size)
+                        .Select(g => new
+                        {
+                            Size = string.IsNullOrWhiteSpace(g.Key) ? "STD" : g.Key, // Texto default si viene null
+                            Count = g.Sum(l => l.BoxQuantity ?? 0)
+                        })
+                        .OrderBy(x => x.Size) // Opcional: Ordenar alfabéticamente
+                        .ToList();
+
+                    // Calculamos el Gran Total
+                    var grandTotal = sizeSummary.Sum(x => x.Count);
+
+                    // 4. Footer con desglose por tamaños
                     stack.Item().PaddingTop(4)
                         .BorderTop(1, Unit.Point).BorderColor(Colors.Grey.Lighten4)
                         .AlignRight()
-                        .Text($"Total: {totalBoxesInPallet}")
-                        .Bold().FontSize(8).FontColor(Colors.Green.Darken2);
+                        .Text(text =>
+                        {
+                            // Agregamos cada tamaño (Ej: "XL 50   L 20")
+                            foreach (var item in sizeSummary)
+                            {
+                                // Nombre del tamaño pequeño y gris
+                                text.Span($"{item.Size} ").FontSize(6).FontColor(Colors.Grey.Darken1);
+                                // Cantidad del tamaño en negrita
+                                text.Span($"{item.Count}   ").FontSize(7).Bold().FontColor(Colors.Black);
+                            }
+
+                            // Total Final en Verde
+                            text.Span($"TOTAL: {grandTotal}").Bold().FontSize(8).FontColor(Colors.Green.Darken2);
+                        });
                 }
                 else
                 {
@@ -624,7 +653,8 @@ namespace GenericApp.API.Controllers
                             Description = pl.Description,
                             IdLabelTypeNavigation = new LabelTypeDTO
                             {
-                                Description = pl.IdLabelTypeNavigation.Description
+                                Description = pl.IdLabelTypeNavigation.Description,
+                                Size = pl.IdLabelTypeNavigation.Size
                             },
                             BoxQuantity = pl.BoxQuantity
                         }).ToList()

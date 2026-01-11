@@ -59,7 +59,7 @@ namespace GenericApp.API.Controllers
             var query = await _repository.Query<Label>();
             query = query.Include(x => x.LabelTypes);
             query = query.Where(x => !(x.IsDeleted ?? false) && (!active.HasValue || x.IsActive == active));
-            
+
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 query = query.Where(u =>
@@ -147,6 +147,7 @@ namespace GenericApp.API.Controllers
                 {
                     Description = ltDto.Description,
                     IsActive = ltDto.IsActive ?? true,
+                    Size = ltDto.Size ?? "",
                     IsDeleted = false
                 }).ToList();
             }
@@ -169,6 +170,7 @@ namespace GenericApp.API.Controllers
                     {
                         IdLabelType = s.IdLabelType,
                         Description = s.Description,
+                        Size = s.Size,
                         IdLabel = s.IdLabel,
                         IsActive = s.IsActive
                     }).ToList()
@@ -212,7 +214,7 @@ namespace GenericApp.API.Controllers
             var idsToRemoveLogically = existingLabelTypes
                 .Where(lt => !(lt.IsDeleted ?? false))
                 .Select(lt => lt.IdLabelType)
-                .Except(incomingLabelTypes.Where(lt => (lt.IdLabelType??0) > 0).Select(lt => (lt.IdLabelType ?? 0)))
+                .Except(incomingLabelTypes.Where(lt => (lt.IdLabelType ?? 0) > 0).Select(lt => (lt.IdLabelType ?? 0)))
                 .ToList();
 
             foreach (var id in idsToRemoveLogically)
@@ -235,6 +237,7 @@ namespace GenericApp.API.Controllers
                         ltDB.Description = ltDto.Description;
                         ltDB.IsActive = ltDto.IsActive ?? true;
                         ltDB.IsDeleted = false;
+                        ltDB.Size = ltDto.Size;
                     }
                 }
                 else
@@ -243,6 +246,7 @@ namespace GenericApp.API.Controllers
                     {
                         Description = ltDto.Description,
                         IsActive = ltDto.IsActive ?? true,
+                        Size = ltDto.Size,
                         IsDeleted = false,
                         IdLabel = labelDB.IdLabel
                     });
@@ -267,6 +271,7 @@ namespace GenericApp.API.Controllers
                         IdLabelType = lt.IdLabelType,
                         IdLabel = lt.IdLabel,
                         Description = lt.Description,
+                        Size = lt.Size,
                         IsActive = lt.IsActive,
                     }).ToList()
             };

@@ -7,12 +7,15 @@ import {
     TextField,
     Button,
     Box,
-    Typography,
+    MenuItem, // 1. Importamos MenuItem
 } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import { useTranslation } from 'react-i18next';
+
+// Definimos las opciones disponibles
+const sizeOptions = ['SML', 'STD', 'LRG', 'JBO'];
 
 const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
     const { t } = useTranslation();
@@ -21,11 +24,11 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
     const [formData, setFormData] = useState({
         idLabelType: 0,
         description: '',
-        // maxBoxQuantity: 0, // ¡ELIMINADO!
+        size: ''
     });
     const [validationErrors, setValidationErrors] = useState({
         description: false,
-        // maxBoxQuantity: false, // ¡ELIMINADO!
+        size: false
     });
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
@@ -35,16 +38,16 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
                 setFormData({
                     idLabelType: data.idLabelType || 0,
                     description: data.description || '',
-                    // maxBoxQuantity: data.maxBoxQuantity || 0, // ¡ELIMINADO!
+                    size: data.size || ''
                 });
             } else {
                 setFormData({
                     idLabelType: Date.now() * -1,
                     description: '',
-                    // maxBoxQuantity: 0, // ¡ELIMINADO!
+                    size: ''
                 });
             }
-            setValidationErrors({ description: false /*, maxBoxQuantity: false*/ }); // ¡ELIMINADO!
+            setValidationErrors({ description: false, size: false });
             setHasAttemptedSubmit(false);
         }
     }, [open, isEditing, data]);
@@ -72,12 +75,9 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
 
     const validateField = (name, value) => {
         let isError = false;
-        if (name === 'description') {
+        if (name === 'description' || name === 'size') {
             isError = value.trim().length === 0;
         }
-        // else if (name === 'maxBoxQuantity') { // ¡ELIMINADO!
-        //     isError = parseInt(value) <= 0;
-        // }
 
         setValidationErrors(prev => ({
             ...prev,
@@ -88,9 +88,8 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
 
     const validateForm = () => {
         const descValid = validateField('description', formData.description);
-        // const maxValid = validateField('maxBoxQuantity', formData.maxBoxQuantity); // ¡ELIMINADO!
-
-        return descValid; // Solo chequea descripción
+        const sizeValid = validateField('size', formData.size);
+        return (descValid && sizeValid);
     };
 
 
@@ -125,7 +124,27 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
                         error={validationErrors.description}
                         helperText={validationErrors.description ? t('requiredField') : ''}
                     />
-                    {/* CAMPO ELIMINADO: maxBoxQuantity */}
+
+                    {/* CAMBIO REALIZADO AQUÍ: Propiedad select y MenuItems */}
+                    <TextField
+                        select
+                        margin="normal"
+                        required
+                        fullWidth
+                        label={t('size')}
+                        name="size"
+                        value={formData.size}
+                        onChange={handleChange}
+                        error={validationErrors.size}
+                        helperText={validationErrors.size ? t('requiredField') : ''}
+                    >
+                        {sizeOptions.map((option) => (
+                            <MenuItem key={option} value={option}>
+                                {option}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+
                 </DialogContent>
                 <DialogActions>
                     <Button type="button" color="error" variant="outlined" endIcon={<CancelIcon />} onClick={handleClose}>
