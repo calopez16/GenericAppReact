@@ -39,7 +39,7 @@ const ShipmentCardList = ({
                         </Box>
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
                             {/* Botón Manifiesto */}
-                            <IconButton size="small" color="secondary" onClick={() => handleExportManifest(shipment)}>
+                            <IconButton size="small" color="primary" onClick={() => handleExportManifest(shipment)}>
                                 <DescriptionIcon fontSize="small" />
                             </IconButton>
                             {/* Botón Remisión */}

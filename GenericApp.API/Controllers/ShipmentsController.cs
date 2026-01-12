@@ -8,12 +8,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Drawing.Printing;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using System.Drawing.Printing;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace GenericApp.API.Controllers
@@ -144,6 +144,7 @@ namespace GenericApp.API.Controllers
                         TemperatureC = p.TemperatureC,
                         TemperatureF = p.TemperatureF,
                         Comments = p.Comments,
+                        Chismografo = p.Chismografo,
                         ManifestPalletLoadings = p.ManifestPalletLoadings.Where(wm => !(wm.IsDeleted ?? false)).Select(pl => new ManifestPalletLoadingDTO
                         {
                             IdManifestPalletLoading = pl.IdManifestPalletLoading,
@@ -170,7 +171,6 @@ namespace GenericApp.API.Controllers
         [AllowAnonymous] // Opcional, depende de tu seguridad
         public async Task<IActionResult> GetManifestPdfById(int id)
         {
-            Thread.Sleep(2000);
             var shipmentQuery = await _repository.Query<Shipment>();
 
             var shipment = await shipmentQuery
@@ -214,7 +214,7 @@ namespace GenericApp.API.Controllers
                     },
                     Comments = m.Comments,
                     Empaque = m.Empaque,
-                    ExitDate = m.ExitDate.ToString("HH:mm"),
+                    ExitDate = m.ExitDate.ToString("hh:mm tt"),
                     TrackingCode = m.TrackingCode,
                     Stamps = m.Stamps,
                     Chismografo = m.Chismografo,
@@ -228,6 +228,7 @@ namespace GenericApp.API.Controllers
                         TemperatureC = p.TemperatureC,
                         TemperatureF = p.TemperatureF,
                         Comments = p.Comments,
+                        Chismografo = p.Chismografo,
                         ManifestPalletLoadings = p.ManifestPalletLoadings.Where(wm => !(wm.IsDeleted ?? false)).Select(pl => new ManifestPalletLoadingDTO
                         {
                             IdManifestPalletLoading = pl.IdManifestPalletLoading,
@@ -262,7 +263,7 @@ namespace GenericApp.API.Controllers
                         page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Lato));
 
                         // Header
-                        page.Header().Element(header => ComposeHeader(header, shipment, manifest, "Reporte de manifiesto de embarque"));
+                        page.Header().Element(header => ComposeHeader(header, shipment, manifest, "REPORTE DE MANIFIESTO DE EMBARQUE"));
 
                         // Content
                         page.Content().Element(content =>
@@ -335,7 +336,8 @@ namespace GenericApp.API.Controllers
                     row.RelativeItem(6).AlignRight().Column(stack =>
                     {
                         stack.Item().Text(documentTitle).FontSize(14).Bold();
-                        stack.Item().Text($"Viaje #{shipment.IdShipment}").FontSize(10).Bold().FontColor(Colors.Grey.Darken2);
+                        stack.Item().Text($"REMISION #{shipment.IdShipment:D4}").FontSize(12).AlignRight().Bold().FontColor(Colors.Red.Darken2);
+                        stack.Item().Text($"VIAJE #{shipment.IdShipment:D3}").FontSize(12).AlignRight().Bold().FontColor(Colors.Grey.Darken2);
                     });
                 });
 
@@ -358,9 +360,6 @@ namespace GenericApp.API.Controllers
                     table.Cell().AlignRight().PaddingRight(3).Text("CHOFER:").Bold().FontSize(7);
                     table.Cell().Text(manifest.IdDriverNavigation?.Name ?? "-").FontSize(7);
 
-                    table.Cell().AlignRight().PaddingRight(3).Text("REMISIÓN:").Bold().FontSize(7);
-                    table.Cell().Text($"{shipment.IdShipment:D4}").FontSize(10).Bold().FontColor(Colors.Red.Medium);
-
                     // FILA 2
                     table.Cell().AlignRight().PaddingRight(3).Text("FECHA:").Bold().FontSize(7);
                     table.Cell().Text($"{shipment.ShipmentDate?.ToString("dd/MM/yyyy") ?? "-"}").FontSize(8);
@@ -369,7 +368,7 @@ namespace GenericApp.API.Controllers
                     table.Cell().Text(manifest.TrailerPlate ?? "-").FontSize(8);
 
                     table.Cell().AlignRight().PaddingRight(3).Text("TEMP:").Bold().FontSize(7);
-                    table.Cell().Text($"{manifest.TemperatureTrailerBoxF}°F").FontSize(8);
+                    table.Cell().Text($"{manifest.TemperatureTrailerBoxF?.ToString("0")} °F").FontSize(8);
 
                     // FILA 3
                     table.Cell().AlignRight().PaddingRight(3).Text("HR. SALIDA:").Bold().FontSize(7);
@@ -388,17 +387,13 @@ namespace GenericApp.API.Controllers
                     table.Cell().AlignRight().PaddingRight(3).Text("LÍNEA:").Bold().FontSize(7);
                     table.Cell().Text(manifest.IdShippingCompanyNavigation?.Name ?? "-").FontSize(7);
 
-                    table.Cell().AlignRight().PaddingRight(3).Text("VIAJE #:").Bold().FontSize(7);
-                    table.Cell().Text($"{manifest.IdManifest}").FontSize(8);
-
                     // FILA 5
                     table.Cell().AlignRight().PaddingRight(3).Text("EMPAQUE:").Bold().FontSize(7);
                     table.Cell().Text(manifest.Empaque ?? "-").FontSize(8);
 
-                    table.Cell().ColumnSpan(2).Text("");
-
-                    table.Cell().AlignRight().PaddingRight(3).Text("GNN #:").Bold().FontSize(7);
+                    table.Cell().AlignRight().PaddingRight(2).Text("GNN #:").Bold().FontSize(7);
                     table.Cell().Text(manifest.GnnNumber ?? "-").FontSize(8);
+
                 });
             });
         }
@@ -406,7 +401,7 @@ namespace GenericApp.API.Controllers
         {
             container.PaddingVertical(10).Column(column =>
             {
-                column.Item().PaddingBottom(5).Text("DISTRIBUCIÓN DE CARGA (VISTA SUPERIOR)").FontSize(10).Bold().FontColor(Colors.Grey.Darken1);
+                column.Item().PaddingBottom(5).Text("DISTRIBUCIÓN DE CARGA").FontSize(10).Bold().FontColor(Colors.Grey.Darken1);
 
                 // Grid del Trailer (12 filas x 2 lados = 24 posiciones)
                 column.Item().Border(1).BorderColor(Colors.Grey.Lighten1).Table(table =>
@@ -440,22 +435,37 @@ namespace GenericApp.API.Controllers
 
             container.BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(4).Column(stack =>
             {
-                // Header de celda (Num Posición + Temp)
+                // Header de celda (Num Posición + Icono Chismógrafo + Temp)
                 stack.Item().Row(row =>
                 {
+                    // 1. Número de Posición
                     row.AutoItem().Background(Colors.Grey.Lighten2).PaddingHorizontal(4).Text($"{position}").Bold().FontSize(8);
+
+                    // 2. NUEVO: Icono del Chismógrafo (si el pallet existe y tiene el flag activo)
+                    if (pallet != null && (pallet.Chismografo == true)) // <--- AGREGADO
+                    {
+                        row.AutoItem()
+                           .PaddingLeft(2) // Un poco de espacio tras el número
+                           .Text($"Chismógrafo: {manifest.Chismografo}")    // Icono (puedes usar texto si prefieres)
+                           .FontSize(8)
+                           .FontColor(Colors.Blue.Medium);
+                    }
+
+                    // 3. Temperatura (Alineada a la derecha)
                     if (pallet != null)
                     {
-                        row.RelativeItem().AlignRight().Text($"{pallet.TemperatureF}°F").FontSize(7).FontColor(Colors.Blue.Medium);
+                        if (pallet.TemperatureF != null)
+                            row.RelativeItem().AlignRight().Text($"{pallet.TemperatureF?.ToString("0")} °F").FontSize(8).FontColor(Colors.Blue.Darken3);
                     }
                 });
 
+                // Resto del contenido de la celda (Productos)
                 if (pallet != null)
                 {
                     // 1. Obtenemos los items válidos
                     var validLoadings = pallet.ManifestPalletLoadings
-                                              .Where(l => !(l.IsDeleted ?? false))
-                                              .ToList();
+                                                .Where(l => !(l.IsDeleted ?? false))
+                                                .ToList();
 
                     // 2. Dibujamos la lista de productos (Detalle)
                     foreach (var load in validLoadings)
@@ -474,10 +484,10 @@ namespace GenericApp.API.Controllers
                         .GroupBy(l => l.IdLabelTypeNavigation?.Size)
                         .Select(g => new
                         {
-                            Size = string.IsNullOrWhiteSpace(g.Key) ? "STD" : g.Key, // Texto default si viene null
+                            Size = string.IsNullOrWhiteSpace(g.Key) ? "STD" : g.Key,
                             Count = g.Sum(l => l.BoxQuantity ?? 0)
                         })
-                        .OrderBy(x => x.Size) // Opcional: Ordenar alfabéticamente
+                        .OrderBy(x => x.Size)
                         .ToList();
 
                     // Calculamos el Gran Total
@@ -489,12 +499,9 @@ namespace GenericApp.API.Controllers
                         .AlignRight()
                         .Text(text =>
                         {
-                            // Agregamos cada tamaño (Ej: "XL 50   L 20")
                             foreach (var item in sizeSummary)
                             {
-                                // Nombre del tamaño pequeño y gris
                                 text.Span($"{item.Size} ").FontSize(6).FontColor(Colors.Grey.Darken1);
-                                // Cantidad del tamaño en negrita
                                 text.Span($"{item.Count}   ").FontSize(7).Bold().FontColor(Colors.Black);
                             }
 
@@ -523,18 +530,18 @@ namespace GenericApp.API.Controllers
             container.PaddingTop(20).Row(row =>
             {
                 // Firma Chofer
-                row.RelativeItem().Column(col =>
-                {
-                    col.Item().Text("_________________________").AlignCenter();
-                    col.Item().Text("FIRMA CHOFER").AlignCenter().FontSize(8);
-                });
+                //row.RelativeItem().Column(col =>
+                //{
+                //    col.Item().Text("_________________________").AlignCenter();
+                //    col.Item().Text("FIRMA CHOFER").AlignCenter().FontSize(8);
+                //});
 
-                // Firma Despachador
-                row.RelativeItem().Column(col =>
-                {
-                    col.Item().Text("_________________________").AlignCenter();
-                    col.Item().Text("FIRMA DESPACHADOR").AlignCenter().FontSize(8);
-                });
+                //// Firma Despachador
+                //row.RelativeItem().Column(col =>
+                //{
+                //    col.Item().Text("_________________________").AlignCenter();
+                //    col.Item().Text("FIRMA DESPACHADOR").AlignCenter().FontSize(8);
+                //});
 
                 // Cuadro Resumen Total
                 row.RelativeItem().Border(1).BorderColor(Colors.Black).Padding(5).Column(col =>
@@ -560,8 +567,8 @@ namespace GenericApp.API.Controllers
                 // Caja de Comentarios / Chismógrafo
                 row.RelativeItem(1).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Column(col =>
                 {
-                    col.Item().Text("CHISMÓGRAFO / NOTAS:").Bold().FontSize(8);
-                    col.Item().Text(manifest.Chismografo ?? "Sin comentarios.").FontSize(8);
+                    col.Item().Text("COMENTARIOS / NOTAS:").Bold().FontSize(8);
+                    col.Item().Text(manifest.Comments ?? "Sin comentarios.").FontSize(8);
                 });
 
                 row.ConstantItem(10); // Espacio separador
@@ -632,7 +639,7 @@ namespace GenericApp.API.Controllers
                     },
                     Comments = m.Comments,
                     Empaque = m.Empaque,
-                    ExitDate = m.ExitDate.ToString("HH:mm"),
+                    ExitDate = m.ExitDate.ToString("hh:mm tt"),
                     TrackingCode = m.TrackingCode,
                     Stamps = m.Stamps,
                     Chismografo = m.Chismografo,
@@ -646,6 +653,7 @@ namespace GenericApp.API.Controllers
                         TemperatureC = p.TemperatureC,
                         TemperatureF = p.TemperatureF,
                         Comments = p.Comments,
+                        Chismografo = p.Chismografo,
                         ManifestPalletLoadings = p.ManifestPalletLoadings.Where(wm => !(wm.IsDeleted ?? false)).Select(pl => new ManifestPalletLoadingDTO
                         {
                             IdManifestPalletLoading = pl.IdManifestPalletLoading,
@@ -870,123 +878,134 @@ namespace GenericApp.API.Controllers
         [HttpPut]
         public async Task<ActionResult> UpdateShipment([FromBody] ShipmentDTO model)
         {
-            // 1. Obtener la entidad completa de la Base de Datos
-            var shipmentDBQuery = await _repository.Query<Shipment>();
-
-            var shipmentDB = await shipmentDBQuery.Include(s => s.Manifests!)
-                 .ThenInclude(m => m.ManifestPallets!)
-                     .ThenInclude(p => p.ManifestPalletLoadings)
-             .FirstOrDefaultAsync(x => x.IdShipment == model.IdShipment && !(x.IsDeleted ?? false));
-
-            if (shipmentDB == null)
-                return NotFound(new ApiResponse { Message = "Shipment no encontrado." });
-
-            // ---------------------------------------------------------
-            // 2. ACTUALIZACIÓN MANUAL: SHIPMENT (Padre)
-            // ---------------------------------------------------------
-
-            // Solo actualizamos si el dato viene en el DTO (no es null)
-            if (model.ShipmentDate.HasValue) shipmentDB.ShipmentDate = model.ShipmentDate.Value;
-            if (model.IdClient.HasValue) shipmentDB.IdClient = model.IdClient.Value;
-            if (model.Address != null) shipmentDB.Address = model.Address;
-            if (model.IdCity.HasValue) shipmentDB.IdCity = model.IdCity.Value;
-            if (model.Mixed.HasValue) shipmentDB.Mixed = model.Mixed.Value;
-            if (model.Comments != null) shipmentDB.Comments = model.Comments;
-
-            // ---------------------------------------------------------
-            // 3. ACTUALIZACIÓN MANUAL: MANIFESTS (Hijos)
-            // ---------------------------------------------------------
-            var incomingManifests = model.Manifests ?? new List<ManifestDTO>();
-
-            // 3.1 Detectar eliminados (Están en BD pero NO en el JSON entrante) -> IsDeleted = true
-            foreach (var existingManifest in shipmentDB.Manifests)
+            try
             {
-                if (!incomingManifests.Any(m => m.IdManifest == existingManifest.IdManifest))
-                {
-                    existingManifest.IsDeleted = true;
-                }
-            }
 
-            // 3.2 Recorrer los que vienen para Actualizar o Insertar
-            foreach (var mDto in incomingManifests)
-            {
-                var manifestDB = shipmentDB.Manifests.FirstOrDefault(m => m.IdManifest == mDto.IdManifest && m.IdManifest > 0);
 
-                if (manifestDB != null)
+                // 1. Obtener la entidad completa de la Base de Datos
+                var shipmentDBQuery = await _repository.Query<Shipment>();
+
+                var shipmentDB = await shipmentDBQuery.Include(s => s.Manifests!)
+                     .ThenInclude(m => m.ManifestPallets!)
+                         .ThenInclude(p => p.ManifestPalletLoadings)
+                 .FirstOrDefaultAsync(x => x.IdShipment == model.IdShipment && !(x.IsDeleted ?? false));
+
+                if (shipmentDB == null)
+                    return NotFound(new ApiResponse { Message = "Shipment no encontrado." });
+
+                // ---------------------------------------------------------
+                // 2. ACTUALIZACIÓN MANUAL: SHIPMENT (Padre)
+                // ---------------------------------------------------------
+
+                // Solo actualizamos si el dato viene en el DTO (no es null)
+                if (model.ShipmentDate.HasValue) shipmentDB.ShipmentDate = model.ShipmentDate.Value;
+                if (model.IdClient.HasValue) shipmentDB.IdClient = model.IdClient.Value;
+                if (model.Address != null) shipmentDB.Address = model.Address;
+                if (model.IdCity.HasValue) shipmentDB.IdCity = model.IdCity.Value;
+                if (model.Mixed.HasValue) shipmentDB.Mixed = model.Mixed.Value;
+                if (model.Comments != null) shipmentDB.Comments = model.Comments;
+
+                // ---------------------------------------------------------
+                // 3. ACTUALIZACIÓN MANUAL: MANIFESTS (Hijos)
+                // ---------------------------------------------------------
+                var incomingManifests = model.Manifests ?? new List<ManifestDTO>();
+
+                // 3.1 Detectar eliminados (Están en BD pero NO en el JSON entrante) -> IsDeleted = true
+                foreach (var existingManifest in shipmentDB.Manifests)
                 {
-                    // === ACTUALIZAR MANIFEST EXISTENTE ===
-                    // Conversión de fecha (string a DateTime)
-                    if (!string.IsNullOrEmpty(mDto.ExitDate) && DateTime.TryParse(mDto.ExitDate, out DateTime parsedExitDate))
+                    if (!incomingManifests.Any(m => m.IdManifest == existingManifest.IdManifest))
                     {
-                        manifestDB.ExitDate = parsedExitDate;
+                        existingManifest.IsDeleted = true;
                     }
-
-                    if (mDto.TemperatureTrailerBoxC.HasValue) manifestDB.TemperatureTrailerBoxC = mDto.TemperatureTrailerBoxC.Value;
-                    if (mDto.TemperatureTrailerBoxF.HasValue) manifestDB.TemperatureTrailerBoxF = mDto.TemperatureTrailerBoxF.Value;
-                    if (mDto.IdSeason.HasValue) manifestDB.IdSeason = mDto.IdSeason.Value;
-                    if (mDto.IdDriver.HasValue) manifestDB.IdDriver = mDto.IdDriver.Value;
-                    if (mDto.TrailerPlate != null) manifestDB.TrailerPlate = mDto.TrailerPlate;
-                    if (mDto.TrailerBoxPlate != null) manifestDB.TrailerBoxPlate = mDto.TrailerBoxPlate;
-                    if (mDto.IdShippingCompany.HasValue) manifestDB.IdShippingCompany = mDto.IdShippingCompany.Value;
-                    if (mDto.Empaque != null) manifestDB.Empaque = mDto.Empaque;
-                    if (mDto.RegFdaNo != null) manifestDB.RegFdaNo = mDto.RegFdaNo;
-                    if (mDto.TrackingCode != null) manifestDB.TrackingCode = mDto.TrackingCode;
-                    if (mDto.Chismografo != null) manifestDB.Chismografo = mDto.Chismografo;
-                    if (mDto.Stamps != null) manifestDB.Stamps = mDto.Stamps;
-
-                    // Procesar sus Hijos (Pallets)
-                    ProcessPallets(manifestDB, mDto.ManifestPallets);
                 }
-                else
+
+                // 3.2 Recorrer los que vienen para Actualizar o Insertar
+                foreach (var mDto in incomingManifests)
                 {
-                    // === CREAR NUEVO MANIFEST ===
-                    var newManifest = new Manifest
-                    {
-                        // Campos requeridos por tu modelo Manifest.cs (ajustar si tienes valores por defecto)
-                        CreationDate = DateTime.UtcNow,
-                        IdManifestStatus = 1, // Valor por defecto o el que corresponda
-                        IdShipment = shipmentDB.IdShipment,
+                    var manifestDB = shipmentDB.Manifests.FirstOrDefault(m => m.IdManifest == mDto.IdManifest && m.IdManifest > 0);
 
-                        // Campos mapeados manualmente
-                        TemperatureTrailerBoxC = mDto.TemperatureTrailerBoxC,
-                        TemperatureTrailerBoxF = mDto.TemperatureTrailerBoxF,
-                        IdSeason = mDto.IdSeason ?? 0, // Asumiendo int no nullable en BD, usar 0 o valor default
-                        IdDriver = mDto.IdDriver ?? 0,
-                        TrailerPlate = mDto.TrailerPlate,
-                        TrailerBoxPlate = mDto.TrailerBoxPlate,
-                        IdShippingCompany = mDto.IdShippingCompany ?? 0,
-                        Empaque = mDto.Empaque,
-                        RegFdaNo = mDto.RegFdaNo,
-                        TrackingCode = mDto.TrackingCode,
-                        Chismografo = mDto.Chismografo,
-                        Stamps = mDto.Stamps
-                    };
-
-                    // Conversión de fecha para el nuevo
-                    if (!string.IsNullOrEmpty(mDto.ExitDate) && DateTime.TryParse(mDto.ExitDate, out DateTime parsedExit))
+                    if (manifestDB != null)
                     {
-                        newManifest.ExitDate = parsedExit;
+                        // === ACTUALIZAR MANIFEST EXISTENTE ===
+                        // Conversión de fecha (string a DateTime)
+                        if (!string.IsNullOrEmpty(mDto.ExitDate) && DateTime.TryParse(mDto.ExitDate, out DateTime parsedExitDate))
+                        {
+                            manifestDB.ExitDate = parsedExitDate;
+                        }
+
+                        if (mDto.TemperatureTrailerBoxC.HasValue) manifestDB.TemperatureTrailerBoxC = mDto.TemperatureTrailerBoxC.Value;
+                        if (mDto.TemperatureTrailerBoxF.HasValue) manifestDB.TemperatureTrailerBoxF = mDto.TemperatureTrailerBoxF.Value;
+                        if (mDto.IdSeason.HasValue) manifestDB.IdSeason = mDto.IdSeason.Value;
+                        if (mDto.IdDriver.HasValue) manifestDB.IdDriver = mDto.IdDriver.Value;
+                        if (mDto.TrailerPlate != null) manifestDB.TrailerPlate = mDto.TrailerPlate;
+                        if (mDto.TrailerBoxPlate != null) manifestDB.TrailerBoxPlate = mDto.TrailerBoxPlate;
+                        if (mDto.IdShippingCompany.HasValue) manifestDB.IdShippingCompany = mDto.IdShippingCompany.Value;
+                        if (mDto.Empaque != null) manifestDB.Empaque = mDto.Empaque;
+                        if (mDto.RegFdaNo != null) manifestDB.RegFdaNo = mDto.RegFdaNo;
+                        if (mDto.TrackingCode != null) manifestDB.TrackingCode = mDto.TrackingCode;
+                        if (mDto.Chismografo != null) manifestDB.Chismografo = mDto.Chismografo;
+                        if (mDto.Stamps != null) manifestDB.Stamps = mDto.Stamps;
+                        manifestDB.Comments = mDto.Comments;
+
+                        // Procesar sus Hijos (Pallets)
+                        ProcessPallets(manifestDB, mDto.ManifestPallets);
                     }
                     else
                     {
-                        newManifest.ExitDate = DateTime.UtcNow; // Fallback si es requerido
+                        // === CREAR NUEVO MANIFEST ===
+                        var newManifest = new Manifest
+                        {
+                            // Campos requeridos por tu modelo Manifest.cs (ajustar si tienes valores por defecto)
+                            CreationDate = DateTime.UtcNow,
+                            IdManifestStatus = 1, // Valor por defecto o el que corresponda
+                            IdShipment = shipmentDB.IdShipment,
+
+                            // Campos mapeados manualmente
+                            TemperatureTrailerBoxC = mDto.TemperatureTrailerBoxC,
+                            TemperatureTrailerBoxF = mDto.TemperatureTrailerBoxF,
+                            IdSeason = mDto.IdSeason ?? 0, // Asumiendo int no nullable en BD, usar 0 o valor default
+                            IdDriver = mDto.IdDriver ?? 0,
+                            TrailerPlate = mDto.TrailerPlate,
+                            TrailerBoxPlate = mDto.TrailerBoxPlate,
+                            IdShippingCompany = mDto.IdShippingCompany ?? 0,
+                            Empaque = mDto.Empaque,
+                            RegFdaNo = mDto.RegFdaNo,
+                            TrackingCode = mDto.TrackingCode,
+                            Chismografo = mDto.Chismografo,
+                            Stamps = mDto.Stamps
+                        };
+
+                        // Conversión de fecha para el nuevo
+                        if (!string.IsNullOrEmpty(mDto.ExitDate) && DateTime.TryParse(mDto.ExitDate, out DateTime parsedExit))
+                        {
+                            newManifest.ExitDate = parsedExit;
+                        }
+                        else
+                        {
+                            newManifest.ExitDate = DateTime.UtcNow; // Fallback si es requerido
+                        }
+
+                        // Agregar a la colección del padre
+                        shipmentDB.Manifests.Add(newManifest);
+
+                        // Procesar sus Hijos (Pallets) en el nuevo objeto
+                        ProcessPallets(newManifest, mDto.ManifestPallets);
                     }
-
-                    // Agregar a la colección del padre
-                    shipmentDB.Manifests.Add(newManifest);
-
-                    // Procesar sus Hijos (Pallets) en el nuevo objeto
-                    ProcessPallets(newManifest, mDto.ManifestPallets);
                 }
+
+                // 4. Guardar Cambios
+                var result = await _repository.Update(shipmentDB);
+
+                if (!result)
+                    return BadRequest(new ApiResponse { Message = "Error al guardar los cambios." });
+
+                return Ok(new ApiResponse());
             }
+            catch (Exception)
+            {
 
-            // 4. Guardar Cambios
-            var result = await _repository.Update(shipmentDB);
-
-            if (!result)
-                return BadRequest(new ApiResponse { Message = "Error al guardar los cambios." });
-
-            return Ok(new ApiResponse());
+                throw;
+            }
         }
 
         private void ProcessPallets(Manifest manifestDB, List<ManifestPalletDTO>? incomingPallets)
@@ -1019,8 +1038,9 @@ namespace GenericApp.API.Controllers
                     // Update
                     if (pDto.IdLabel.HasValue) palletDB.IdLabel = pDto.IdLabel.Value;
                     if (pDto.Position.HasValue) palletDB.Position = pDto.Position.Value;
-                    if (pDto.TemperatureF.HasValue) palletDB.TemperatureF = pDto.TemperatureF.Value;
-                    if (pDto.TemperatureC.HasValue) palletDB.TemperatureC = pDto.TemperatureC.Value;
+                    palletDB.TemperatureF = pDto.TemperatureF;
+                    palletDB.TemperatureC = pDto.TemperatureC;
+                    if (pDto.Chismografo.HasValue) palletDB.Chismografo = pDto.Chismografo.Value;
 
                     // Procesar Nietos (Loadings)
                     ProcessLoadings(palletDB, pDto.ManifestPalletLoadings);
@@ -1035,6 +1055,7 @@ namespace GenericApp.API.Controllers
                         Position = pDto.Position ?? 0,
                         TemperatureF = pDto.TemperatureF,
                         TemperatureC = pDto.TemperatureC,
+                        Chismografo = pDto.Chismografo,
                         IsDeleted = false
                     };
 

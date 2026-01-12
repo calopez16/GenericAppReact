@@ -15,7 +15,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { useTranslation } from 'react-i18next';
 
 // Definimos las opciones disponibles
-const sizeOptions = ['SML', 'STD', 'LRG', 'JBO'];
+const sizeOptions = ['SML', 'DL', 'STD', 'XL', 'LRG', 'JBO'];
 
 const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
     const { t } = useTranslation();

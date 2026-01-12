@@ -126,3 +126,28 @@
 .pallet-empty.pallet-selected {
     border-color: #4caf50; /* Verde */
 }
+
+/* TrailerGrid.css */
+
+@keyframes pulse-effect {
+    0% {
+        filter: drop-shadow(0 0 0px rgba(41, 182, 246, 0.7));
+        transform: scale(1);
+    }
+
+    50% {
+        filter: drop-shadow(0 0 10px rgba(41, 182, 246, 1));
+        transform: scale(1.15);
+    }
+
+    100% {
+        filter: drop-shadow(0 0 0px rgba(41, 182, 246, 0.7));
+        transform: scale(1);
+    }
+}
+
+.pulse-animation {
+    color: #29b6f6; /* Color azul claro */
+    font-size: 1.2rem !important; /* Ajuste de tamaño (importante para sobreescribir estilos por defecto si es necesario) */
+    animation: pulse-effect 1.5s infinite ease-in-out;
+}

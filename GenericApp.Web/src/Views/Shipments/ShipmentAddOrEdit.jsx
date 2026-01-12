@@ -37,8 +37,8 @@ const initialManifestStructure = {
     idManifest: 0,
     idShipment: 0,
     exitDate: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-    temperatureTrailerBoxF: '',
-    temperatureTrailerBoxC: '',
+    temperatureTrailerBoxF: null,
+    temperatureTrailerBoxC: null,
     seasonYear: new Date().getFullYear(),
     idDriver: '',
     trailerPlate: '',
@@ -326,15 +326,58 @@ function ShipmentAddOrEdit() {
     };
 
     const handleSavePallet = (palletData) => {
-        const newManifests = [...formData.manifests];
-        const currentManifest = { ...newManifests[activeTab] };
-        let newPallets = [...(currentManifest.manifestPallets || [])];
-        const idx = newPallets.findIndex(p => p.position === palletData.position);
-        const palletToSave = { ...palletData, idManifest: currentManifest.idManifest, idShipment: formData.idShipment };
-        idx >= 0 ? newPallets[idx] = palletToSave : newPallets.push(palletToSave);
-        currentManifest.manifestPallets = newPallets;
-        newManifests[activeTab] = currentManifest;
+        // 1. Creamos una copia profunda de los manifiestos para no mutar el estado directamente
+        const newManifests = formData.manifests.map(m => ({
+            ...m,
+            manifestPallets: m.manifestPallets ? m.manifestPallets.map(p => ({ ...p })) : []
+        }));
+
+        // 2. Lógica de exclusividad del Chismógrafo
+        // Si el pallet que estamos guardando tiene el chismógrafo activado...
+        if (palletData.chismografo) {
+            newManifests.forEach(manifest => {
+                if (manifest.manifestPallets) {
+                    manifest.manifestPallets.forEach(p => {
+                        // Si la posición es diferente a la actual, apagamos su chismógrafo
+                        // (Esto aplica para todos los pallets en todos los manifiestos)
+                        if (p.position !== palletData.position) {
+                            p.chismografo = false;
+                        }
+                    });
+                }
+            });
+        }
+
+        // 3. Guardar el Pallet actual en la copia
+        const currentManifest = newManifests[activeTab];
+
+        // Buscamos si ya existe el pallet en esa posición
+        const idx = currentManifest.manifestPallets.findIndex(p => p.position === palletData.position);
+
+        const palletToSave = {
+            ...palletData,
+            idManifest: currentManifest.idManifest,
+            idShipment: formData.idShipment,
+            temperatureF: (palletData.temperatureF === '' || palletData.temperatureF === null || palletData.temperatureF === undefined)
+                ? null
+                : palletData.temperatureF,
+
+            temperatureC: (palletData.temperatureC === '' || palletData.temperatureC === null || palletData.temperatureC === undefined)
+                ? null
+                : palletData.temperatureC,
+        };
+
+        if (idx >= 0) {
+            // Actualizar existente
+            currentManifest.manifestPallets[idx] = palletToSave;
+        } else {
+            // Agregar nuevo
+            currentManifest.manifestPallets.push(palletToSave);
+        }
+
+        // 4. Actualizar el estado y cerrar modal
         setFormData(prev => ({ ...prev, manifests: newManifests }));
+        setIsPalletModalOpen(false);
     };
 
     const handleDeletePallet = (pos) => {
@@ -442,17 +485,17 @@ function ShipmentAddOrEdit() {
                         />
                     </Grid>
 
-                    <Grid size={{ xs: 12 }}>
-                        <TextField
-                            fullWidth
-                            multiline
-                            rows={2}
-                            label={t('General Comments')}
-                            name="comments"
-                            value={formData.comments}
-                            onChange={handleGeneralChange}
-                        />
-                    </Grid>
+                    {/*<Grid size={{ xs: 12 }}>*/}
+                    {/*    <TextField*/}
+                    {/*        fullWidth*/}
+                    {/*        multiline*/}
+                    {/*        rows={2}*/}
+                    {/*        label={t('General Comments')}*/}
+                    {/*        name="comments"*/}
+                    {/*        value={formData.comments}*/}
+                    {/*        onChange={handleGeneralChange}*/}
+                    {/*    />*/}
+                    {/*</Grid>*/}
                 </Grid>
 
                 <Divider sx={{ my: 4 }} />
@@ -530,7 +573,7 @@ function ShipmentAddOrEdit() {
                             type="number"
                             label={t('Temp °F')}
                             name="temperatureTrailerBoxF"
-                            value={formData.manifests[activeTab]?.temperatureTrailerBoxF || ''}
+                            value={formData.manifests[activeTab]?.temperatureTrailerBoxF || null}
                             onChange={handleManifestChange}
                             required
                             error={!!errors.temperatureTrailerBoxF}
@@ -569,6 +612,10 @@ function ShipmentAddOrEdit() {
                     </Grid>
                     <Grid size={{ xs: 12 }}>
                         <TextField fullWidth multiline rows={5} label={t('Sellos')} name="stamps" value={formData.manifests[activeTab]?.stamps || ''} onChange={handleManifestChange} />
+                    </Grid>
+
+                    <Grid size={{ xs: 12 }}>
+                        <TextField fullWidth multiline rows={5} label={t('comments')} name="comments" value={formData.manifests[activeTab]?.comments || ''} onChange={handleManifestChange} />
                     </Grid>
                 </Grid>
             </Paper>

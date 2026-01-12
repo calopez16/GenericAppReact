@@ -61,7 +61,7 @@ const ShipmentListTable = ({
                                 <TableCell align="center">
                                     {/* Botón Manifiesto */}
                                     <Tooltip title={t('Manifiesto')}>
-                                        <IconButton color="secondary" onClick={() => handleExportManifest(shipment)}>
+                                        <IconButton color="primary" onClick={() => handleExportManifest(shipment)}>
                                             <DescriptionIcon />
                                         </IconButton>
                                     </Tooltip>
