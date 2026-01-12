@@ -32,7 +32,7 @@ import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import { grey, red, orange } from '@mui/material/colors';
 
-const PalletDetailModal = ({ open, onClose, onSave, initialData, position }) => {
+const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDelete }) => {
     const { t } = useTranslation();
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const labelService = DataAPILabelsService();
@@ -145,7 +145,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position }) => 
                     </Box>
                 </Box>
             </DialogTitle>
-            
+
 
             <DialogContent sx={{ mt: 3 }}>
                 <Grid container spacing={3}>
@@ -153,7 +153,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position }) => 
                         <TextField fullWidth label="TEMP °F" type="number" size="small"
                             value={palletData.temperatureF || ''}
                             onChange={(e) => setPalletData({ ...palletData, temperatureF: e.target.value })}
-                            />
+                        />
                     </Grid>
                     <Grid size={{ xs: 6 }}>
                         <Paper variant="outlined" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: '5px', borderColor: palletData.chismografo ? '#29b6f6' : grey[700], transition: 'all 0.3s' }}>
@@ -223,13 +223,13 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position }) => 
                                     <TextField label="CANT" type="number" size="small" fullWidth
                                         value={loading.boxQuantity || ''}
                                         onChange={(e) => handleLoadingChange(index, 'boxQuantity', e.target.value)}
-                                         />
+                                    />
                                 </Grid>
                                 <Grid size={{ xs: 9 }}>
                                     <TextField label="DESCRIPCIÓN" fullWidth size="small"
                                         value={loading.description || ''}
                                         onChange={(e) => handleLoadingChange(index, 'description', e.target.value)}
-                                         />
+                                    />
                                 </Grid>
                             </Grid>
                         </Paper>
@@ -238,8 +238,19 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position }) => 
             </DialogContent>
 
             <DialogActions sx={{ p: 3, borderTop: `1px solid ${grey[800]}`, gap: 1 }}>
+                {(palletData.idManifestPallet > 0 || palletData.manifestPalletLoadings?.length > 0) && (
+                    <Button
+                        color="error"
+                        variant="text"
+                        startIcon={<DeleteIcon />}
+                        onClick={() => onDelete(position)} // Llama a handleOpenDeleteConfirmation del padre
+                        sx={{ mr: 'auto' }}
+                    >
+                        {t('delete')}
+                    </Button>
+                )}
                 <Button color="inherit" variant="outlined" startIcon={<CloseIcon />} onClick={onClose}>{t('cancel')}</Button>
-                <Button onClick={handleSavePallet} variant="contained" startIcon={<SaveIcon />} color={isExceeded ? "error" : "primary"} sx={{ fontWeight: 'bold', px: 4 }}>
+                <Button onClick={handleSavePallet} variant="contained" startIcon={<SaveIcon />} color={isExceeded ? "error" : "primary"}>
                     {t('save')}
                 </Button>
             </DialogActions>

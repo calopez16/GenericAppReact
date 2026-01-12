@@ -32,7 +32,7 @@ import { AppContext } from '@helpers/AppContext';
 
 import TrailerGrid from './TrailerGrid';
 import PalletDetailModal from './PalletDetailModal';
-
+import ConfirmationModal from '@layout/ConfirmationModal'; // Importado según tu ejemplo
 const initialManifestStructure = {
     idManifest: 0,
     idShipment: 0,
@@ -96,9 +96,17 @@ function ShipmentAddOrEdit() {
     const [clients, setClients] = useState([]);
     const [drivers, setDrivers] = useState([]);
     const [shippingCos, setShippingCos] = useState([]);
+    const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
+    const [palletToDeletePos, setPalletToDeletePos] = useState(null);
 
     // Estado para manejar los errores de validación
     const [errors, setErrors] = useState({});
+
+    const handleOpenDeleteConfirmation = (pos) => {
+        setPalletToDeletePos(pos);
+        setIsConfirmDeleteModalOpen(true);
+    };
+
 
     const fetchClients = async () => {
         const response = await clientsService.getDataPagination(1, 500, "", true);
@@ -392,6 +400,54 @@ function ShipmentAddOrEdit() {
         setFormData(prev => ({ ...prev, manifests: newManifests }));
     };
 
+    const handleConfirmDelete = () => {
+        const pos = palletToDeletePos;
+        const newManifests = [...formData.manifests];
+        const currentManifest = { ...newManifests[activeTab] };
+        const idx = currentManifest.manifestPallets.findIndex(p => p.position === pos);
+
+        if (idx !== -1) {
+            const pallet = currentManifest.manifestPallets[idx];
+            pallet.idManifestPallet > 0
+                ? (pallet.isDeleted = true)
+                : currentManifest.manifestPallets.splice(idx, 1);
+        }
+
+        setFormData(prev => ({ ...prev, manifests: newManifests }));
+        setIsConfirmDeleteModalOpen(false);
+        setIsPalletModalOpen(false); // Cerramos también el detalle del pallet
+    };
+
+    const handleMovePallet = (fromPos, toPos) => {
+        const newManifests = [...formData.manifests];
+        const currentManifest = { ...newManifests[activeTab] };
+
+        // Buscamos el índice del pallet que se está moviendo
+        const fromIdx = currentManifest.manifestPallets.findIndex(p => p.position === fromPos && !p.isDeleted);
+        // Buscamos si hay un pallet en el destino para intercambiar
+        const toIdx = currentManifest.manifestPallets.findIndex(p => p.position === toPos && !p.isDeleted);
+
+        if (fromIdx !== -1) {
+            const palletFrom = { ...currentManifest.manifestPallets[fromIdx] };
+
+            if (toIdx !== -1) {
+                // INTERCAMBIO: Si el destino está ocupado, cruzamos posiciones
+                const palletTo = { ...currentManifest.manifestPallets[toIdx] };
+                palletFrom.position = toPos;
+                palletTo.position = fromPos;
+                currentManifest.manifestPallets[fromIdx] = palletTo;
+                currentManifest.manifestPallets[toIdx] = palletFrom;
+            } else {
+                // MOVIMIENTO: Si el destino está vacío, solo actualizamos la posición
+                palletFrom.position = toPos;
+                currentManifest.manifestPallets[fromIdx] = palletFrom;
+            }
+
+            newManifests[activeTab] = currentManifest;
+            setFormData(prev => ({ ...prev, manifests: newManifests }));
+        }
+    };
+
     if (isLoading) return <Box sx={{ p: 5, textAlign: 'center' }}><CircularProgress /></Box>;
 
     return (
@@ -590,6 +646,7 @@ function ShipmentAddOrEdit() {
                         currentManifestIndex={activeTab}
                         onUpdatePallet={handleOpenPalletModal}
                         onDeletePallet={handleDeletePallet}
+                        onMovePallet={handleMovePallet} // <-- Solo añade esta línea
                         t={t}
                     />
                 </Box>
@@ -663,12 +720,22 @@ function ShipmentAddOrEdit() {
                 open={isPalletModalOpen}
                 onClose={() => setIsPalletModalOpen(false)}
                 onSave={handleSavePallet}
-                onDelete={handleDeletePallet}
+                onDelete={handleOpenDeleteConfirmation} // Cambiado para abrir confirmación
                 initialData={currentEditingPallet}
                 position={currentEditingPosition}
+            />
+
+            <ConfirmationModal
+                open={isConfirmDeleteModalOpen}
+                onClose={() => setIsConfirmDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title={t('delete_pallet')}
+                message={t('¿Está seguro de que desea eliminar el pallet #{{pos}}?', { pos: palletToDeletePos })}
+                confirmText={t('delete')}
+                cancelText={t('cancel')}
             />
         </Box>
     );
 }
 
-export default ShipmentAddOrEdit;
+export default ShipmentAddOrEdit;    
