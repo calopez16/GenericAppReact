@@ -31,6 +31,8 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ReceiptIcon from '@mui/icons-material/Receipt';
+import SensorsIcon from '@mui/icons-material/Sensors';
+import Tooltip from '@mui/material/Tooltip';
 
 import { useTranslation } from 'react-i18next';
 import { dataApiShipmentsService } from '@data/Shipments/Data';
@@ -353,13 +355,13 @@ const ShipmentDetail = () => {
                             value={getClientAddress()}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12 }}>
-                        <DetailItem
-                            icon={<NotesIcon />}
-                            label={t('General Comments')}
-                            value={shipment.comments}
-                        />
-                    </Grid>
+                    {/*<Grid size={{ xs: 12 }}>*/}
+                    {/*    <DetailItem*/}
+                    {/*        icon={<NotesIcon />}*/}
+                    {/*        label={t('General Comments')}*/}
+                    {/*        value={shipment.comments}*/}
+                    {/*    />*/}
+                    {/*</Grid>*/}
                 </Grid>
 
                 <Divider sx={{ my: 4 }} />
@@ -460,6 +462,22 @@ const ShipmentDetail = () => {
                                                         <InventoryIcon fontSize="small" color="action" />
                                                         {t('Position')} {pallet.position}
                                                     </Typography>
+                                                    {pallet.chismografo && (
+                                                        <Tooltip title={t('chismografo')} arrow>
+                                                            <SensorsIcon
+                                                                color="primary"
+                                                                sx={{
+                                                                    fontSize: 20,
+                                                                    animation: 'pulse 2s infinite ease-in-out',
+                                                                    '@keyframes pulse': {
+                                                                        '0%': { opacity: 1 },
+                                                                        '50%': { opacity: 0.4 },
+                                                                        '100%': { opacity: 1 },
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </Tooltip>
+                                                    )}
                                                 </Box>
 
                                                 <Box sx={{ p: 2, flexGrow: 1 }}>
@@ -550,7 +568,14 @@ const ShipmentDetail = () => {
                                             label={t('Sellos')}
                                             value={renderStamps(manifest.stamps)}
                                         />
-                                    </Grid>
+                                </Grid>
+                                <Grid size={{ xs: 12 }}>
+                                    <DetailItem
+                                        icon={<NotesIcon />}
+                                        label={t('Comments')}
+                                        value={manifest.comments}
+                                    />
+                                </Grid>
                                 </Grid>
                             {/*)}*/}
                         </Box>

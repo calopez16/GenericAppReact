@@ -1,10 +1,12 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState,useEffect } from 'react';
 import {
-    Box, Paper, Typography, useTheme, useMediaQuery, Divider, Tooltip
+    Box, Paper, Typography, useTheme, useMediaQuery, Divider, Tooltip,Button
 } from '@mui/material';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import SensorsIcon from '@mui/icons-material/Sensors';
-
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import DeleteIcon from '@mui/icons-material/Delete';
 // Importaciones de dnd-kit
 import {
     DndContext,
@@ -23,10 +25,10 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 const ROWS = 13;
 
 // Componente para cada Celda (Slot) que puede recibir o ser arrastrado
-const GridSlot = ({ pos, isMobile, theme, occupiedData, isSelected, onClick, children }) => {
+const GridSlot = ({ pos, isMobile, theme, occupiedData, isSelected, isCopyMode, onClick, children }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: `draggable-${pos}`,
-        disabled: !occupiedData, // Solo se puede arrastrar si hay un pallet
+        disabled: !occupiedData || isCopyMode,
         data: { pos }
     });
 
@@ -73,10 +75,35 @@ const GridSlot = ({ pos, isMobile, theme, occupiedData, isSelected, onClick, chi
     );
 };
 
-const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMovePallet, t }) => {
+const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMovePallet, onCopyPallet, t, onDeletePallet, onCopyModeChange }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [selectedPosition, setSelectedPosition] = useState(null);
+    const [copySourcePos, setCopySourcePos] = useState(null);
+    const [selectedDestinations, setSelectedDestinations] = useState([]);
+
+    const isCopyMode = copySourcePos !== null;
+
+    useEffect(() => {
+        if (onCopyModeChange) onCopyModeChange(isCopyMode, copySourcePos, handleConfirmCopy, () => {
+            setCopySourcePos(null);
+            setSelectedDestinations([]);
+        });
+    }, [isCopyMode, copySourcePos, selectedDestinations]);
+
+    const handleStartCopy = (e, pos) => {
+        e.stopPropagation(); // Evita abrir el modal de edición
+        setCopySourcePos(pos);
+        setSelectedDestinations([]);
+    };
+
+    const handleToggleDestination = (pos) => {
+        if (selectedDestinations.includes(pos)) {
+            setSelectedDestinations(prev => prev.filter(p => p !== pos));
+        } else {
+            setSelectedDestinations(prev => [...prev, pos]);
+        }
+    };
 
     // Configuración de sensores para dnd-kit
     const sensors = useSensors(
@@ -120,17 +147,49 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
 
     const totalPallets = allManifests?.reduce((total, m) => total + ((m.manifestPallets || []).filter(p => !p.isDeleted).length || 0), 0) || 0;
 
+    //const handleSlotClick = (pos) => {
+    //    const occupiedData = getPalletAtPosition(pos);
+    //    // Si no se está arrastrando, funciona como el click normal para abrir el modal
+    //    if (occupiedData && occupiedData.manifestIndex !== currentManifestIndex) return;
+    //    onUpdatePallet(pos, occupiedData ? occupiedData.pallet : null);
+    //};
+
     const handleSlotClick = (pos) => {
+        // 1. Verificamos si estamos en modo copiado
+        if (isCopyMode) {
+            const occupiedData = getPalletAtPosition(pos);
+
+            // Solo permitimos seleccionar espacios vacíos como destino 
+            // o el pallet de origen (para desmarcar o cerrar el modo)
+            if (!occupiedData || pos === copySourcePos) {
+                handleToggleDestination(pos);
+            }
+            return; // Bloqueamos la ejecución del resto de la función (no abre modal)
+        }
+
+        // 2. Comportamiento normal (fuera de modo copia)
         const occupiedData = getPalletAtPosition(pos);
-        // Si no se está arrastrando, funciona como el click normal para abrir el modal
         if (occupiedData && occupiedData.manifestIndex !== currentManifestIndex) return;
+
         onUpdatePallet(pos, occupiedData ? occupiedData.pallet : null);
+    };
+
+    const handleConfirmCopy = () => {
+        // Verificamos que existan destinos y que la función prop esté definida
+        if (onCopyPallet && selectedDestinations.length > 0) {
+            onCopyPallet(copySourcePos, selectedDestinations);
+
+            // Limpiamos el modo copia después de ejecutar la acción
+            setCopySourcePos(null);
+            setSelectedDestinations([]);
+        }
     };
 
     const renderSlot = (pos) => {
         const occupiedData = getPalletAtPosition(pos);
         const totalBoxes = occupiedData?.pallet?.manifestPalletLoadings?.reduce((acc, curr) => acc + (Number(curr.boxQuantity) || 0), 0) || 0;
-        const isSelected = selectedPosition === pos;
+        const isSelectedForCopy = selectedDestinations.includes(pos);
+        const isSource = copySourcePos === pos;
 
         return (
             <GridSlot
@@ -139,12 +198,60 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
                 isMobile={isMobile}
                 theme={theme}
                 occupiedData={occupiedData}
-                isSelected={isSelected}
+                isSelected={isSelectedForCopy || isSource}
+                isCopyMode={isCopyMode}
                 onClick={handleSlotClick}
             >
-                <Typography sx={{ position: 'absolute', top: 2, left: 4, fontWeight: 'bold', fontSize: '0.65rem' }}>{pos}</Typography>
+                {/* Posición del pallet (Arriba a la izquierda) */}
+                <Typography sx={{ position: 'absolute', top: 2, left: 4, fontWeight: 'bold', fontSize: '0.65rem' }}>
+                    {pos}
+                </Typography>
+
+                {/* BOTONES DE ACCIÓN (Esquinas inferiores) */}
+                {occupiedData && !isCopyMode && (
+                    <>
+                        {/* Botón Copiar (Abajo a la derecha) */}
+                        <Tooltip title={t('Copiar')}>
+                            <ContentCopyIcon
+                                onClick={(e) => handleStartCopy(e, pos)}
+                                sx={{
+                                    position: 'absolute',
+                                    bottom: 4,
+                                    right: 4,
+                                    fontSize: '1.4rem', // Tamaño incrementado
+                                    cursor: 'pointer',
+                                    zIndex: 10,
+                                    '&:hover': { color: theme.palette.secondary.main }
+                                }}
+                            />
+                        </Tooltip>
+
+                        {/* Botón Eliminar (Abajo a la izquierda) */}
+                        <Tooltip title={t('Eliminar')}>
+                            <DeleteIcon
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    onDeletePallet(pos);
+                                }}
+                                sx={{
+                                    position: 'absolute',
+                                    bottom: 4,
+                                    left: 4,
+                                    fontSize: '1.4rem', // Tamaño incrementado
+                                    cursor: 'pointer',
+                                    zIndex: 10,
+                                    '&:hover': { color: theme.palette.error.main },
+                                    color: 'rgba(255,255,255,0.8)'
+                                }}
+                            />
+                        </Tooltip>
+                    </>
+                )}
+
+                {/* Información Central del Pallet */}
                 {occupiedData && (
-                    <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none' }}>
+                    <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none', mt: -1 }}>
                         <Typography variant="caption" sx={{ fontWeight: 'bold', fontSize: '0.75rem', display: 'block', lineHeight: 1.2 }}>
                             {totalBoxes} BX
                         </Typography>
@@ -155,15 +262,19 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
                         )}
                         {occupiedData.pallet?.chismografo && (
                             <Tooltip title="Chismógrafo Detectado" arrow placement="bottom">
-                                <SensorsIcon className="pulse-animation" sx={{ mt: 1 }} />
+                                <SensorsIcon className="pulse-animation" sx={{ fontSize: '1.1rem' }} />
                             </Tooltip>
                         )}
                     </Box>
                 )}
+
+                {/* Check de Modo Copiado (Central) */}
+                {isCopyMode && !occupiedData && isSelectedForCopy && (
+                    <CheckCircleIcon sx={{ color: theme.palette.primary.main, fontSize: '2rem' }} />
+                )}
             </GridSlot>
         );
     };
-
     const slots = [];
     for (let i = 0; i < ROWS; i++) {
         slots.push(
@@ -181,6 +292,7 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
             onDragEnd={handleDragEnd}
         >
             <Box sx={{ width: '100%' }}>
+
                 <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', p: 2, borderRadius: '10px', border: '3px solid', gap: 2 }}>
                     <Box sx={{ width: isMobile ? '100%' : 80, height: isMobile ? 60 : 'auto', bgcolor: '#111', borderRadius: '8px', display: 'flex', flexDirection: isMobile ? 'row' : 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', gap: 1 }}>
                         <LocalShippingIcon sx={{ transform: 'scaleX(-1)', fontSize: 32 }} />

@@ -57,11 +57,18 @@ namespace GenericApp.API.Controllers
                 query = query.Where(x => !(x.IdShipmentNavigation.IsDeleted ?? false));
                 query = query.Where(x => x.IdCompany == idCompany);
 
-                if (!string.IsNullOrWhiteSpace(searchTerm))
-                {
-                    query = query.Where(s =>
-                        s.IdManifest.ToString().Contains(searchTerm));
-                }
+                //if (!string.IsNullOrWhiteSpace(searchTerm))
+                //{
+                //    searchTerm = searchTerm.ToUpper();
+                //    query = query.Where(s =>
+                //        s.RegFdaNo.ToString().ToUpper().Contains(searchTerm) ||
+                //        s.IdShipmentNavigation.ShipmentDate.ToString("dd/mm/yyyy").Contains(searchTerm) ||
+                //        s.IdDriverNavigation.Name.ToUpper().Contains(searchTerm) ||
+                //        s.TrailerBoxPlate.ToUpper().Contains(searchTerm)||
+                //        s.TrailerPlate.ToUpper().Contains(searchTerm)||
+                //        s.IdShipmentNavigation.IdClientNavigation.Name.ToUpper().Contains(searchTerm)
+                //        );
+                //}
 
                 var totalRows = await query.CountAsync();
                 var data = await query

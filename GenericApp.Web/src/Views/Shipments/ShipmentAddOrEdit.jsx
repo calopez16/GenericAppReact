@@ -20,6 +20,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import CancelIcon from '@mui/icons-material/Clear';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+
 import { useTranslation } from 'react-i18next';
 import { dataApiShipmentsService } from '@data/Shipments/Data';
 import { DataAPICitiesService } from '@data/Cities/Data';
@@ -98,6 +100,11 @@ function ShipmentAddOrEdit() {
     const [shippingCos, setShippingCos] = useState([]);
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [palletToDeletePos, setPalletToDeletePos] = useState(null);
+    const [copyModeInfo, setCopyModeInfo] = useState({ active: false, pos: null, confirm: null, cancel: null });
+
+    const handleCopyModeChange = (isActive, sourcePos, confirmFn, cancelFn) => {
+        setCopyModeInfo({ active: isActive, pos: sourcePos, confirm: confirmFn, cancel: cancelFn });
+    };
 
     // Estado para manejar los errores de validación
     const [errors, setErrors] = useState({});
@@ -388,34 +395,30 @@ function ShipmentAddOrEdit() {
         setIsPalletModalOpen(false);
     };
 
-    const handleDeletePallet = (pos) => {
-        const newManifests = [...formData.manifests];
-        const currentManifest = { ...newManifests[activeTab] };
-        const idx = currentManifest.manifestPallets.findIndex(p => p.position === pos);
-        if (idx !== -1) {
-            const pallet = currentManifest.manifestPallets[idx];
-            pallet.idManifestPallet > 0 ? (pallet.isDeleted = true) : currentManifest.manifestPallets.splice(idx, 1);
-        }
-        newManifests[activeTab] = currentManifest;
-        setFormData(prev => ({ ...prev, manifests: newManifests }));
-    };
 
     const handleConfirmDelete = () => {
         const pos = palletToDeletePos;
         const newManifests = [...formData.manifests];
         const currentManifest = { ...newManifests[activeTab] };
+
+        // Buscamos el índice del pallet por su posición
         const idx = currentManifest.manifestPallets.findIndex(p => p.position === pos);
 
         if (idx !== -1) {
-            const pallet = currentManifest.manifestPallets[idx];
-            pallet.idManifestPallet > 0
-                ? (pallet.isDeleted = true)
-                : currentManifest.manifestPallets.splice(idx, 1);
+            // Eliminamos el pallet físicamente del arreglo
+            // Esto lo quita por completo del objeto que se enviará al API
+            currentManifest.manifestPallets.splice(idx, 1);
         }
 
+        // Actualizamos el estado con el pallet removido
+        newManifests[activeTab] = currentManifest;
         setFormData(prev => ({ ...prev, manifests: newManifests }));
+
+        // Cerramos los modales
         setIsConfirmDeleteModalOpen(false);
-        setIsPalletModalOpen(false); // Cerramos también el detalle del pallet
+        setIsPalletModalOpen(false);
+
+        ShowMessage(t('Pallet eliminado correctamente'), 'success');
     };
 
     const handleMovePallet = (fromPos, toPos) => {
@@ -445,6 +448,38 @@ function ShipmentAddOrEdit() {
 
             newManifests[activeTab] = currentManifest;
             setFormData(prev => ({ ...prev, manifests: newManifests }));
+        }
+    };
+
+
+    const handleCopyPallet = (fromPos, toPositions) => {
+        const newManifests = [...formData.manifests];
+        const currentManifest = { ...newManifests[activeTab] };
+
+        // Encontramos el pallet original
+        const sourcePallet = currentManifest.manifestPallets.find(p => p.position === fromPos && !p.isDeleted);
+
+        if (sourcePallet) {
+            // Creamos copias para cada posición seleccionada
+            const newPallets = toPositions.map(toPos => ({
+                ...sourcePallet,
+                idManifestPallet: 0, // Importante: 0 para que el servidor lo cree como nuevo
+                position: toPos,
+                chismografo: false,
+                // Clonamos los detalles de carga (loadings)
+                manifestPalletLoadings: sourcePallet.manifestPalletLoadings?.map(l => ({
+                    ...l,
+                    idManifestPalletLoading: 0,
+                    idManifestPallet: 0
+                })) || []
+            }));
+
+            // Agregamos todos los nuevos pallets al manifiesto actual
+            currentManifest.manifestPallets = [...currentManifest.manifestPallets, ...newPallets];
+            newManifests[activeTab] = currentManifest;
+
+            setFormData(prev => ({ ...prev, manifests: newManifests }));
+            ShowMessage(t('Pallets copiados correctamente'), 'success');
         }
     };
 
@@ -645,8 +680,10 @@ function ShipmentAddOrEdit() {
                         allManifests={formData.manifests}
                         currentManifestIndex={activeTab}
                         onUpdatePallet={handleOpenPalletModal}
-                        onDeletePallet={handleDeletePallet}
-                        onMovePallet={handleMovePallet} // <-- Solo añade esta línea
+                        onDeletePallet={handleOpenDeleteConfirmation}
+                        onMovePallet={handleMovePallet}
+                        onCopyPallet={handleCopyPallet}
+                        onCopyModeChange={handleCopyModeChange} // Nueva prop
                         t={t}
                     />
                 </Box>
@@ -677,9 +714,8 @@ function ShipmentAddOrEdit() {
                 </Grid>
             </Paper>
 
-            {/* Nuevo Footer Sticky fuera del Paper principal */}
             <Paper
-                elevation={3}
+                elevation={10}
                 sx={{
                     position: 'sticky',
                     bottom: 0,
@@ -688,32 +724,63 @@ function ShipmentAddOrEdit() {
                     backgroundColor: theme.palette.background.paper,
                     borderTop: `1px solid ${theme.palette.divider}`,
                     display: 'flex',
-                    justifyContent: 'flex-end',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
                     gap: 2,
-                    zIndex: 10,
-                    flexDirection: { xs: 'column-reverse', sm: 'row' }
+                    zIndex: 1100,
+                    flexDirection: { xs: 'column', sm: 'row' }
                 }}
             >
-                <Button
-                    fullWidth={isMobile}
-                    variant="outlined"
-                    color="error"
-                    size="large"
-                    startIcon={<CancelIcon />}
-                    onClick={() => navigate('/shipments')}
-                >
-                    {t('cancel')}
-                </Button>
-                <Button
-                    fullWidth={isMobile}
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    startIcon={<SaveIcon />}
-                    onClick={handleSubmit}
-                >
-                    {isEditing ? t('save') : t('add')}
-                </Button>
+                {copyModeInfo.active ? (
+                    <>
+                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'white' }}>
+                            {t('Copiando Pallet #{{pos}}', { pos: copyModeInfo.pos })}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' } }}>
+                            <Button
+                                fullWidth={isMobile}
+                                variant="contained"
+                                color="inherit"
+                                onClick={copyModeInfo.cancel}
+                            >
+                                {t('Cancelar Copia')}
+                            </Button>
+                            <Button
+                                fullWidth={isMobile}
+                                variant="contained"
+                                color="primary"
+                                startIcon={<CheckCircleIcon />}
+                                onClick={copyModeInfo.confirm}
+                            >
+                                {t('Finalizar Copiado')}
+                            </Button>
+                        </Box>
+                    </>
+                ) : (
+                    <>
+                        <Box sx={{ display: { xs: 'none', sm: 'block' } }} /> {/* Espaciador */}
+                        <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' }, ml: 'auto' }}>
+                            <Button
+                                fullWidth={isMobile}
+                                variant="outlined"
+                                color="error"
+                                startIcon={<CancelIcon />}
+                                onClick={() => navigate('/shipments')}
+                            >
+                                {t('cancel')}
+                            </Button>
+                            <Button
+                                fullWidth={isMobile}
+                                variant="contained"
+                                color="primary"
+                                startIcon={<SaveIcon />}
+                                onClick={handleSubmit}
+                            >
+                                {isEditing ? t('save') : t('add')}
+                            </Button>
+                        </Box>
+                    </>
+                )}
             </Paper>
 
             <PalletDetailModal
