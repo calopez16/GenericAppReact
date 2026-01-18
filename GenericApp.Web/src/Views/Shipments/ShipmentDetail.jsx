@@ -228,7 +228,7 @@ const ShipmentDetail = () => {
 
             <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: 2, flexGrow: 1 }} elevation={1}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
-                    {t('manifestDetails')}
+                    {t('manifestInfo')}
                 </Typography>
 
                 <Grid container spacing={1}>
@@ -262,7 +262,6 @@ const ShipmentDetail = () => {
                 <Divider sx={{ my: 4 }} />
 
                 {shipment.manifests && shipment.manifests.map((manifest, index) => {
-                    // LÓGICA DE CÁLCULO DE TOTALES
                     const activePallets = manifest.manifestPallets?.filter(p => !p.isDeleted) || [];
                     const totalPallets = activePallets.length;
                     const grandTotalBoxes = activePallets.reduce((acc, pallet) => {
@@ -274,12 +273,12 @@ const ShipmentDetail = () => {
                         <Box key={manifest.idManifest || index} sx={{ mb: 12 }}>
                             <Box sx={{ mb: 3 }}>
                                 <Typography variant="h6" fontWeight="bold">
-                                    {t('manifest')} #{manifest.idManifest || (index + 1)}
+                                    {t('remision')} #{manifest.idManifest || (index + 1)}
                                 </Typography>
                             </Box>
 
                             <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', mb: 2, textDecoration: 'underline', textDecorationColor: theme.palette.divider }}>
-                                {t('remisionInformation')}
+                                {t('remisionInfo')}
                             </Typography>
 
                             <Grid container spacing={3} sx={{ mb: 4 }}>
