@@ -194,7 +194,7 @@ function ShipmentAddOrEdit() {
                         setFormData(prev => ({ ...prev, ...data }));
                     }
                 } catch (e) {
-                    ShowMessage(t('error_fetching_details'), 'error');
+                    ShowMessage(t('error'), 'error');
                 } finally {
                     setIsLoading(false);
                 }
@@ -309,7 +309,7 @@ function ShipmentAddOrEdit() {
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
-            ShowMessage(t('campos_requeridos_incompletos'), 'error');
+            ShowMessage(t('emptyFields'), 'warning');
             return;
         }
 
@@ -321,10 +321,10 @@ function ShipmentAddOrEdit() {
                 ShowMessage(t('recordAddedSuccessPlural'), 'success');
                 navigate('/shipments');
             } else {
-                ShowMessage(response.message || t('error_saving'), 'error');
+                ShowMessage(response.message || t('error'), 'error');
             }
         } catch (e) {
-            ShowMessage(t('error_unexpected'), 'error');
+            ShowMessage(t('error'), 'error');
         } finally {
             setIsLoading(false);
         }
@@ -341,20 +341,15 @@ function ShipmentAddOrEdit() {
     };
 
     const handleSavePallet = (palletData) => {
-        // 1. Creamos una copia profunda de los manifiestos para no mutar el estado directamente
         const newManifests = formData.manifests.map(m => ({
             ...m,
             manifestPallets: m.manifestPallets ? m.manifestPallets.map(p => ({ ...p })) : []
         }));
 
-        // 2. Lógica de exclusividad del Chismógrafo
-        // Si el pallet que estamos guardando tiene el chismógrafo activado...
         if (palletData.chismografo) {
             newManifests.forEach(manifest => {
                 if (manifest.manifestPallets) {
                     manifest.manifestPallets.forEach(p => {
-                        // Si la posición es diferente a la actual, apagamos su chismógrafo
-                        // (Esto aplica para todos los pallets en todos los manifiestos)
                         if (p.position !== palletData.position) {
                             p.chismografo = false;
                         }
@@ -363,10 +358,8 @@ function ShipmentAddOrEdit() {
             });
         }
 
-        // 3. Guardar el Pallet actual en la copia
         const currentManifest = newManifests[activeTab];
 
-        // Buscamos si ya existe el pallet en esa posición
         const idx = currentManifest.manifestPallets.findIndex(p => p.position === palletData.position);
 
         const palletToSave = {
@@ -383,14 +376,11 @@ function ShipmentAddOrEdit() {
         };
 
         if (idx >= 0) {
-            // Actualizar existente
             currentManifest.manifestPallets[idx] = palletToSave;
         } else {
-            // Agregar nuevo
             currentManifest.manifestPallets.push(palletToSave);
         }
 
-        // 4. Actualizar el estado y cerrar modal
         setFormData(prev => ({ ...prev, manifests: newManifests }));
         setIsPalletModalOpen(false);
     };
@@ -401,47 +391,38 @@ function ShipmentAddOrEdit() {
         const newManifests = [...formData.manifests];
         const currentManifest = { ...newManifests[activeTab] };
 
-        // Buscamos el índice del pallet por su posición
         const idx = currentManifest.manifestPallets.findIndex(p => p.position === pos);
 
         if (idx !== -1) {
-            // Eliminamos el pallet físicamente del arreglo
-            // Esto lo quita por completo del objeto que se enviará al API
             currentManifest.manifestPallets.splice(idx, 1);
         }
 
-        // Actualizamos el estado con el pallet removido
         newManifests[activeTab] = currentManifest;
         setFormData(prev => ({ ...prev, manifests: newManifests }));
 
-        // Cerramos los modales
         setIsConfirmDeleteModalOpen(false);
         setIsPalletModalOpen(false);
 
-        ShowMessage(t('Pallet eliminado correctamente'), 'success');
+        ShowMessage(t('palletDeleted'), 'success');
     };
 
     const handleMovePallet = (fromPos, toPos) => {
         const newManifests = [...formData.manifests];
         const currentManifest = { ...newManifests[activeTab] };
 
-        // Buscamos el índice del pallet que se está moviendo
         const fromIdx = currentManifest.manifestPallets.findIndex(p => p.position === fromPos && !p.isDeleted);
-        // Buscamos si hay un pallet en el destino para intercambiar
         const toIdx = currentManifest.manifestPallets.findIndex(p => p.position === toPos && !p.isDeleted);
 
         if (fromIdx !== -1) {
             const palletFrom = { ...currentManifest.manifestPallets[fromIdx] };
 
             if (toIdx !== -1) {
-                // INTERCAMBIO: Si el destino está ocupado, cruzamos posiciones
                 const palletTo = { ...currentManifest.manifestPallets[toIdx] };
                 palletFrom.position = toPos;
                 palletTo.position = fromPos;
                 currentManifest.manifestPallets[fromIdx] = palletTo;
                 currentManifest.manifestPallets[toIdx] = palletFrom;
             } else {
-                // MOVIMIENTO: Si el destino está vacío, solo actualizamos la posición
                 palletFrom.position = toPos;
                 currentManifest.manifestPallets[fromIdx] = palletFrom;
             }
@@ -456,17 +437,14 @@ function ShipmentAddOrEdit() {
         const newManifests = [...formData.manifests];
         const currentManifest = { ...newManifests[activeTab] };
 
-        // Encontramos el pallet original
         const sourcePallet = currentManifest.manifestPallets.find(p => p.position === fromPos && !p.isDeleted);
 
         if (sourcePallet) {
-            // Creamos copias para cada posición seleccionada
             const newPallets = toPositions.map(toPos => ({
                 ...sourcePallet,
                 idManifestPallet: 0, // Importante: 0 para que el servidor lo cree como nuevo
                 position: toPos,
                 chismografo: false,
-                // Clonamos los detalles de carga (loadings)
                 manifestPalletLoadings: sourcePallet.manifestPalletLoadings?.map(l => ({
                     ...l,
                     idManifestPalletLoading: 0,
@@ -479,7 +457,7 @@ function ShipmentAddOrEdit() {
             newManifests[activeTab] = currentManifest;
 
             setFormData(prev => ({ ...prev, manifests: newManifests }));
-            ShowMessage(t('Pallets copiados correctamente'), 'success');
+            ShowMessage(t('palletCopied'), 'success');
         }
     };
 
@@ -491,13 +469,13 @@ function ShipmentAddOrEdit() {
             <Box sx={{ mb: 3 }}>
                 <Typography variant={isMobile ? "h5" : "h4"} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <LocalShippingIcon fontSize={isMobile ? "medium" : "large"} color="primary" />
-                    {isEditing ? `${t('Edit Shipment')} #${formData.idShipment}` : t('New Shipment')}
+                    {isEditing ? `${t('editManifest')} #${formData.idShipment}` : t('newManifest')}
                 </Typography>
             </Box>
 
             <Paper sx={{ p: 4, borderRadius: 2, flexGrow: 1 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'secondary.main', mb: 3 }}>
-                    {t('General Shipment Data')}
+                    {t('manifestInfo')}
                 </Typography>
 
                 <Grid container spacing={3}>
@@ -506,7 +484,7 @@ function ShipmentAddOrEdit() {
                             <TextField
                                 sx={{ width: { xs: '100%', sm: '250px' } }}
                                 type="date"
-                                label={t('Shipment Date')}
+                                label={t('shipmentDate')}
                                 name="shipmentDate"
                                 value={formData.shipmentDate}
                                 onChange={handleGeneralChange}
@@ -516,7 +494,7 @@ function ShipmentAddOrEdit() {
                             />
                             <FormControlLabel
                                 control={<Switch checked={formData.mixed} onChange={handleGeneralChange} name="mixed" />}
-                                label={t('Mixed')}
+                                label={t('mixed')}
                             />
                         </Box>
                     </Grid>
@@ -531,7 +509,7 @@ function ShipmentAddOrEdit() {
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
-                                    label={t('Client')}
+                                    label={t('client')}
                                     required
                                     error={!!errors.idClient}
                                 />
@@ -541,7 +519,7 @@ function ShipmentAddOrEdit() {
                     <Grid size={{ xs: 12, md: 4 }}>
                         <TextField
                             fullWidth
-                            label={t('RFC')}
+                            label={t('rfc')}
                             name="rfc"
                             value={formData.rfc || ''}
                             slotProps={{ input: { readOnly: true } }}
@@ -551,7 +529,7 @@ function ShipmentAddOrEdit() {
                     <Grid size={{ xs: 12, md: 8 }}>
                         <TextField
                             fullWidth
-                            label={t('Address')}
+                            label={t('address')}
                             name="address"
                             value={formData.address || ''}
                             slotProps={{ input: { readOnly: true } }}
@@ -569,7 +547,7 @@ function ShipmentAddOrEdit() {
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <TextField
                             fullWidth
-                            label={t('Phone')}
+                            label={t('phone')}
                             name="phone"
                             value={formData.phone}
                             slotProps={{ input: { readOnly: true } }}
@@ -592,18 +570,18 @@ function ShipmentAddOrEdit() {
                 <Divider sx={{ my: 4 }} />
 
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'secondary.main', mb: 3 }}>
-                    {t('Logistics & Manifests')}
+                    {t('remisionInfo')}
                 </Typography>
 
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <TextField fullWidth type="number" label={t('Season')} name="season" value={formData.manifests[activeTab]?.seasonYear || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth type="number" label={t('season')} name="season" value={formData.manifests[activeTab]?.seasonYear || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <TextField fullWidth label={t('RegFdaNo')} name="regFdaNo" value={formData.manifests[activeTab]?.regFdaNo || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth label={t('regFdaNo')} name="regFdaNo" value={formData.manifests[activeTab]?.regFdaNo || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <TextField fullWidth label={t('Empaque')} name="empaque" value={formData.manifests[activeTab]?.empaque || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth label={t('empaque')} name="empaque" value={formData.manifests[activeTab]?.empaque || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Autocomplete
@@ -614,7 +592,7 @@ function ShipmentAddOrEdit() {
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
-                                    label={t('Shipping Company')}
+                                    label={t('shippingCompany')}
                                     required
                                     error={!!errors.idShippingCompany}
                                 />
@@ -631,7 +609,7 @@ function ShipmentAddOrEdit() {
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
-                                    label={t('Driver')}
+                                    label={t('driver')}
                                     required
                                     error={!!errors.idDriver}
                                 />
@@ -639,13 +617,13 @@ function ShipmentAddOrEdit() {
                         />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                        <TextField fullWidth label={t('Trailer Plate')} name="trailerPlate" value={formData.manifests[activeTab]?.trailerPlate || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth label={t('trailerPlate')} name="trailerPlate" value={formData.manifests[activeTab]?.trailerPlate || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 12, md: 4 }}>
                         <TextField
                             fullWidth
                             type="time"
-                            label={t('Exit Time')}
+                            label={t('exitTime')}
                             name="exitDate"
                             value={formData.manifests[activeTab]?.exitDate || ''}
                             onChange={handleManifestChange}
@@ -656,13 +634,13 @@ function ShipmentAddOrEdit() {
                     </Grid>
 
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                        <TextField fullWidth label={t('Box Plate')} name="trailerBoxPlate" value={formData.manifests[activeTab]?.trailerBoxPlate || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth label={t('boxPlate')} name="trailerBoxPlate" value={formData.manifests[activeTab]?.trailerBoxPlate || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <TextField
                             fullWidth
                             type="number"
-                            label={t('Temp °F')}
+                            label={t('temperatureF')}
                             name="temperatureTrailerBoxF"
                             value={formData.manifests[activeTab]?.temperatureTrailerBoxF || null}
                             onChange={handleManifestChange}
@@ -691,21 +669,21 @@ function ShipmentAddOrEdit() {
                 <Divider sx={{ my: 4 }} />
 
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'secondary.main', mb: 3 }}>
-                    {t('Rastreo')}
+                    {t('tracking')}
                 </Typography>
 
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12, sm: 4, md: 4 }}>
-                        <TextField fullWidth label={t('CodigodeRastreo')} name="trackingCode" value={formData.manifests[activeTab]?.trackingCode || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth label={t('trackingCode')} name="trackingCode" value={formData.manifests[activeTab]?.trackingCode || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4, md: 4 }}>
                         <TextField fullWidth label={t('chismografo')} name="chismografo" value={formData.manifests[activeTab]?.chismografo || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4, md: 4 }}>
-                        <TextField fullWidth label={t('GnnNumber')} name="gnnNumber" value={formData.manifests[activeTab]?.gnnNumber || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth label={t('gnnNumber')} name="gnnNumber" value={formData.manifests[activeTab]?.gnnNumber || ''} onChange={handleManifestChange} />
                     </Grid>
                     <Grid size={{ xs: 12 }}>
-                        <TextField fullWidth multiline rows={5} label={t('Sellos')} name="stamps" value={formData.manifests[activeTab]?.stamps || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth multiline rows={5} label={t('stamps')} name="stamps" value={formData.manifests[activeTab]?.stamps || ''} onChange={handleManifestChange} />
                     </Grid>
 
                     <Grid size={{ xs: 12 }}>
@@ -734,7 +712,7 @@ function ShipmentAddOrEdit() {
                 {copyModeInfo.active ? (
                     <>
                         <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'white' }}>
-                            {t('Copiando Pallet #{{pos}}', { pos: copyModeInfo.pos })}
+                            {t('copyingPallet', { number: copyModeInfo.pos })}
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' } }}>
                             <Button
@@ -743,7 +721,7 @@ function ShipmentAddOrEdit() {
                                 color="inherit"
                                 onClick={copyModeInfo.cancel}
                             >
-                                {t('Cancelar Copia')}
+                                {t('cancelCopying')}
                             </Button>
                             <Button
                                 fullWidth={isMobile}
@@ -752,7 +730,7 @@ function ShipmentAddOrEdit() {
                                 startIcon={<CheckCircleIcon />}
                                 onClick={copyModeInfo.confirm}
                             >
-                                {t('Finalizar Copiado')}
+                                {t('finishCopying')}
                             </Button>
                         </Box>
                     </>
@@ -796,8 +774,8 @@ function ShipmentAddOrEdit() {
                 open={isConfirmDeleteModalOpen}
                 onClose={() => setIsConfirmDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
-                title={t('delete_pallet')}
-                message={t('¿Está seguro de que desea eliminar el pallet #{{pos}}?', { pos: palletToDeletePos })}
+                title={t('deletePallet')}
+                message={t('question_areYouSureDeletePallet', { position: palletToDeletePos })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
             />

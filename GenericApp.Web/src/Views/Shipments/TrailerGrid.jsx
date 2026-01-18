@@ -211,7 +211,7 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
                 {occupiedData && !isCopyMode && (
                     <>
                         {/* Botón Copiar (Abajo a la derecha) */}
-                        <Tooltip title={t('Copiar')}>
+                        <Tooltip title={t('copy')}>
                             <ContentCopyIcon
                                 onClick={(e) => handleStartCopy(e, pos)}
                                 sx={{
@@ -227,7 +227,7 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
                         </Tooltip>
 
                         {/* Botón Eliminar (Abajo a la izquierda) */}
-                        <Tooltip title={t('Eliminar')}>
+                        <Tooltip title={t('delete')}>
                             <DeleteIcon
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -253,7 +253,7 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
                 {occupiedData && (
                     <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none', mt: -1 }}>
                         <Typography variant="caption" sx={{ fontWeight: 'bold', fontSize: '0.75rem', display: 'block', lineHeight: 1.2 }}>
-                            {totalBoxes} BX
+                            {totalBoxes} {t('boxes') }
                         </Typography>
                         {occupiedData.pallet?.temperatureF && (
                             <Typography variant="caption" sx={{ fontSize: '0.65rem', opacity: 0.9, display: 'block' }}>
@@ -261,7 +261,7 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
                             </Typography>
                         )}
                         {occupiedData.pallet?.chismografo && (
-                            <Tooltip title="Chismógrafo Detectado" arrow placement="bottom">
+                            <Tooltip title={t('chismografo') } arrow placement="bottom">
                                 <SensorsIcon className="pulse-animation" sx={{ fontSize: '1.1rem' }} />
                             </Tooltip>
                         )}
@@ -296,18 +296,18 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
                 <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', p: 2, borderRadius: '10px', border: '3px solid', gap: 2 }}>
                     <Box sx={{ width: isMobile ? '100%' : 80, height: isMobile ? 60 : 'auto', bgcolor: '#111', borderRadius: '8px', display: 'flex', flexDirection: isMobile ? 'row' : 'column', justifyContent: 'center', alignItems: 'center', color: '#fff', gap: 1 }}>
                         <LocalShippingIcon sx={{ transform: 'scaleX(-1)', fontSize: 32 }} />
-                        <Typography variant="caption" sx={{ fontWeight: 'bold' }}>FRONT</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 'bold' }}>{t('front')}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 1, flexGrow: 1 }}>{slots}</Box>
                 </Box>
                 <Paper sx={{ p: 2, mt: 2, display: 'flex', justifyContent: 'space-around', alignItems: 'center', border: '1px solid #333' }}>
                     <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="caption" color="gray">TOTAL CAMIÓN</Typography>
-                        <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold' }}>{grandTotalBoxes} BX</Typography>
+                        <Typography variant="caption" color="gray">{t('totalBultos')}</Typography>
+                        <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold' }}>{grandTotalBoxes.toLocaleString()} {t('boxes')}</Typography>
                     </Box>
                     <Divider orientation="vertical" flexItem />
                     <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="caption" color="gray">PALLETS</Typography>
+                        <Typography variant="caption" color="gray">{t('pallets')}</Typography>
                         <Typography variant="h5" sx={{ fontWeight: 'bold' }}>{totalPallets} / 26</Typography>
                     </Box>
                 </Paper>

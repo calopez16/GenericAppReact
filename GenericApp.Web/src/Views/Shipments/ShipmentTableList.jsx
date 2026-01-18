@@ -31,13 +31,13 @@ const ShipmentListTable = ({
             <Table sx={{ minWidth: minTableWidth }} aria-label="shipments table">
                 <TableHead>
                     <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold' }}>{t('NoRemision')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>{t('NoViaje')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>{t('RegFdaNo')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>{t('Shipment Date')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>{t('Driver')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>{t('Trailer Plate')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>{t('Actions')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('manifestNo')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('remisionNo')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('regFdaNo')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('shipmentDate')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('driver')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('trailerPlate')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>{t('actions')}</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -60,13 +60,13 @@ const ShipmentListTable = ({
                                 <TableCell>{shipment.trailerBoxPlate || '-'}</TableCell>
                                 <TableCell align="center">
                                     {/* Botón Manifiesto */}
-                                    <Tooltip title={t('Manifiesto')}>
+                                    <Tooltip title={t('generateManifest')}>
                                         <IconButton color="primary" onClick={() => handleExportManifest(shipment)}>
                                             <DescriptionIcon />
                                         </IconButton>
                                     </Tooltip>
                                     {/* Botón Remisión */}
-                                    <Tooltip title={t('Remisión')}>
+                                    <Tooltip title={t('generateRemision')}>
                                         <IconButton color="success" onClick={() => handleExportRemision(shipment)}>
                                             <ReceiptIcon />
                                         </IconButton>

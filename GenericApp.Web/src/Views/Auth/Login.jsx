@@ -98,7 +98,7 @@ function LoginPage() {
                 ShowMessage(t('invalidCredentials'), 'error');
             }
         } catch (err) {
-            ShowMessage(t('conectionError'), 'error');
+            ShowMessage(t('error'), 'error');
             console.error('Error de login:', err);
         } finally {
             setIsLoading(false);
@@ -162,7 +162,7 @@ function LoginPage() {
                                     required
                                     fullWidth
                                     id="username"
-                                    label={t('username')}
+                                    label={t('userName')}
                                     name="username"
                                     autoComplete="username"
                                     autoFocus

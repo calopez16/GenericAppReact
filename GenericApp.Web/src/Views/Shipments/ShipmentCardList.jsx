@@ -31,18 +31,16 @@ const ShipmentCardList = ({
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                         <Box>
                             <Typography variant="subtitle1" fontWeight="bold">
-                                {t('NoRemision')}: {formatRemision(shipment.idShipmentNavigation?.idShipment)}
+                                {t('remisionNo')}: {formatRemision(shipment.idShipmentNavigation?.idShipment)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                {t('NoViaje')}: {shipment.idManifest || '-'}
+                                {t('travelNo')}: {shipment.idManifest || '-'}
                             </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
-                            {/* Botón Manifiesto */}
                             <IconButton size="small" color="primary" onClick={() => handleExportManifest(shipment)}>
                                 <DescriptionIcon fontSize="small" />
                             </IconButton>
-                            {/* Botón Remisión */}
                             <IconButton size="small" color="success" onClick={() => handleExportRemision(shipment)}>
                                 <ReceiptIcon fontSize="small" />
                             </IconButton>
@@ -60,10 +58,10 @@ const ShipmentCardList = ({
                     </Box>
                     <Divider sx={{ my: 1 }} />
                     <Grid container spacing={1}>
-                        <Grid item xs={6}><Typography variant="caption" color="text.secondary">{t('FDA No')}</Typography><Typography variant="body2">{shipment.regFdaNo || '-'}</Typography></Grid>
-                        <Grid item xs={6}><Typography variant="caption" color="text.secondary">{t('Date')}</Typography><Typography variant="body2">{formatDate(shipment.idShipmentNavigation?.shipmentDate)}</Typography></Grid>
-                        <Grid item xs={12}><Typography variant="caption" color="text.secondary">{t('Driver')}</Typography><Typography variant="body2">{shipment.idDriverNavigation?.name || '-'}</Typography></Grid>
-                        <Grid item xs={12}><Typography variant="caption" color="text.secondary">{t('Plate')}</Typography><Typography variant="body2">{shipment.trailerBoxPlate || '-'}</Typography></Grid>
+                        <Grid item xs={6}><Typography variant="caption" color="text.secondary">{t('regFdaNo')}</Typography><Typography variant="body2">{shipment.regFdaNo || '-'}</Typography></Grid>
+                        <Grid item xs={6}><Typography variant="caption" color="text.secondary">{t('date')}</Typography><Typography variant="body2">{formatDate(shipment.idShipmentNavigation?.shipmentDate)}</Typography></Grid>
+                        <Grid item xs={12}><Typography variant="caption" color="text.secondary">{t('driver')}</Typography><Typography variant="body2">{shipment.idDriverNavigation?.name || '-'}</Typography></Grid>
+                        <Grid item xs={12}><Typography variant="caption" color="text.secondary">{t('boxPlate')}</Typography><Typography variant="body2">{shipment.trailerBoxPlate || '-'}</Typography></Grid>
                     </Grid>
                 </Paper>
             ))}

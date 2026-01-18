@@ -50,7 +50,7 @@ function ShipmentsIndex() {
                     setTotalShipments(response.data.totalCount || 0);
                 }
             } catch (error) {
-                ShowMessage(t('error_fetching_data'), 'error');
+                ShowMessage(t('error'), 'error');
             } finally {
                 setPageLoading(false);
             }
@@ -63,7 +63,7 @@ function ShipmentsIndex() {
     const handleExportManifest = async (shipment) => {
         try {
             setLoading(true);
-            ShowMessage(t('exporting_manifest'), 'info');
+            ShowMessage(`${t('exportingManifest')}...`, 'info');
             // 1. Llamada al servicio
             // Asumimos que getManifestPdfById está configurado en axios con responseType: 'blob' o 'arraybuffer'
             const response = await shipmentDataService.getManifestPdfById(shipment.idShipment);
@@ -81,7 +81,7 @@ function ShipmentsIndex() {
 
         } catch (error) {
             console.error("Error exportando manifiesto:", error);
-            ShowMessage(t('error_fetching_data'), 'error');
+            ShowMessage(t('error'), 'error');
         } finally {
             setLoading(false);
         }
@@ -90,7 +90,7 @@ function ShipmentsIndex() {
     const handleExportRemision = async (shipment) => {
         try {
             setLoading(true);
-            ShowMessage(t('exporting_manifest'), 'info');
+            ShowMessage(`${t('exportingRemision')}...`, 'info');
             // 1. Llamada al servicio
             // Asumimos que getManifestPdfById está configurado en axios con responseType: 'blob' o 'arraybuffer'
             const response = await shipmentDataService.getRemisionPdfById(shipment.idShipment);
@@ -108,7 +108,7 @@ function ShipmentsIndex() {
 
         } catch (error) {
             console.error("Error exportando manifiesto:", error);
-            ShowMessage(t('error_fetching_data'), 'error');
+            ShowMessage(t('error'), 'error');
         } finally {
             setLoading(false);
         }
@@ -152,7 +152,7 @@ function ShipmentsIndex() {
     return (
         <Box sx={{ p: 3 }}>
             <Box sx={{ display: 'flex', flexDirection: isSmallScreen ? 'column' : 'row', justifyContent: 'space-between', mb: 2, gap: 2 }}>
-                <Typography variant="h4">{t('Shipments')}</Typography>
+                <Typography variant="h4">{t('shipments')}</Typography>
                 <Box sx={{ display: 'flex', gap: 1, flexGrow: 1, justifyContent: 'flex-end' }}>
                     <TextField
                         size="small"
@@ -182,8 +182,8 @@ function ShipmentsIndex() {
                 open={isConfirmDeleteModalOpen}
                 onClose={() => setIsConfirmDeleteModalOpen(false)}
                 onConfirm={handleDeleteShipment}
-                title={t('Delete Shipment')}
-                message={t('question_areYouSureDeleteRecord', { name: shipmentToDelete?.idShipment })}
+                title={t('deleteManifest')}
+                message={t('question_areYouSureDeleteManifest', { manifestNumber: shipmentToDelete?.idShipment })}
             />
         </Box>
     );

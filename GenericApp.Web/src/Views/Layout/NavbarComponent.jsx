@@ -3,6 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
 import { API_BASE_URL } from '@config';
 
+// Importaciones de imágenes para banderas
+import espanishFlag from '@images/lang/es-flag.png';
+import englishFlag from '@images/lang/en-flag.png';
+
 // Componente del Modal
 import CompanySelectionModal from './CompanySelectionModal';
 
@@ -27,28 +31,46 @@ import BusinessIcon from '@mui/icons-material/Business';
 
 
 const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation(); // Añadido i18n
     const { themeMode, setThemeMode, userName = 'Usuario', companySelected, setCompanySelected, canSelectCompany } = useContext(AppContext);
 
     const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
 
-    // Variable derivada para saber si NO hay compañía seleccionada
+    // --- FUNCIONALIDAD DE IDIOMA ---
+    const langFlags = {
+        'es': espanishFlag,
+        'en': englishFlag
+    };
+
+    const [anchorEl, setAnchorEl] = useState(null);
+    const open = Boolean(anchorEl);
+
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const changeLanguage = (lng) => {
+        i18n.changeLanguage(lng);
+    };
+    // -------------------------------
+
     const isNoCompany = !companySelected || (typeof companySelected === 'object' && Object.keys(companySelected).length === 0);
-    // --- EFECTO: ABRIR SI NO HAY COMPAÑÍA ---
+
     useEffect(() => {
         if (isNoCompany && canSelectCompany) {
             setIsCompanyModalOpen(true);
         }
     }, [isNoCompany]);
 
-    // --- HANDLERS ---
     const handleOpenCompanyModal = () => {
         setIsCompanyModalOpen(true);
     };
 
     const handleCloseCompanyModal = () => {
-        // Solo permitimos cerrar si YA hay una compañía seleccionada
-        // (Aunque el modal bloqueará la UI, esta es una seguridad extra)
         if (!isNoCompany) {
             setIsCompanyModalOpen(false);
         }
@@ -63,7 +85,6 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
         setThemeMode(themeMode === 'light' ? 'dark' : 'light');
     };
 
-    // User Menu States...
     const [userAnchorEl, setUserAnchorEl] = useState(null);
     const userMenuOpen = Boolean(userAnchorEl);
     const handleUserMenuClick = (event) => setUserAnchorEl(event.currentTarget);
@@ -105,6 +126,42 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                             </IconButton>
                         </Tooltip>
 
+                        {/* Menú de idioma implementado */}
+                        <Tooltip title={t('select_language')}>
+                            <IconButton
+                                aria-label="language selector"
+                                aria-controls={open ? 'language-menu' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={open ? 'true' : undefined}
+                                onClick={handleClick}
+                                sx={{ mr: 1 }}
+                            >
+                                <Avatar
+                                    src={langFlags[i18n.language]}
+                                    alt={t('current_language')}
+                                    sx={{ width: 30, height: 30 }}
+                                />
+                            </IconButton>
+                        </Tooltip>
+                        <Menu
+                            id="language-menu"
+                            anchorEl={anchorEl}
+                            open={open}
+                            onClose={handleClose}
+                            MenuListProps={{
+                                'aria-labelledby': 'language-selector',
+                            }}
+                        >
+                            <MenuItem onClick={() => { changeLanguage('es'); handleClose(); }}>
+                                <Avatar src={espanishFlag} sx={{ width: 20, height: 20, mr: 1 }} />
+                                {t('language_spanish')}
+                            </MenuItem>
+                            <MenuItem onClick={() => { changeLanguage('en'); handleClose(); }}>
+                                <Avatar src={englishFlag} sx={{ width: 20, height: 20, mr: 1 }} />
+                                {t('language_english')}
+                            </MenuItem>
+                        </Menu>
+
                         <Box sx={{ height: 28, borderLeft: 1, borderColor: 'divider', mx: 2, display: { xs: 'none', md: 'block' } }} />
 
                         {/* Menú Usuario Desktop */}
@@ -117,7 +174,7 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                             </Tooltip>
                         </Box>
 
-                        {/* Menú Usuario Mobile (Simplificado para el ejemplo) */}
+                        {/* Menú Usuario Mobile */}
                         <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
                             <IconButton color="inherit" onClick={handleUserMenuClick}>
                                 <AccountCircle sx={{ fontSize: 30 }} />
@@ -131,13 +188,12 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                 </Toolbar>
             </AppBar>
 
-            {/* --- PASAMOS LA PROP forceSelection --- */}
             <CompanySelectionModal
                 open={isCompanyModalOpen}
                 onClose={handleCloseCompanyModal}
                 onSelectCompany={handleSelectCompany}
                 selectedCompanyId={companySelected?.idCompany}
-                forceSelection={isNoCompany} // <--- NUEVA PROP: True si no hay compañia
+                forceSelection={isNoCompany}
             />
         </>
     );

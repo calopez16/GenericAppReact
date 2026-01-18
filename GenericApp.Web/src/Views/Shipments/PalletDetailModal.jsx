@@ -124,7 +124,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
 
     const handleSavePallet = () => {
         if (isExceeded) {
-            ShowMessage(`Excede el límite de ${maxAllowed} cajas`, 'error');
+            ShowMessage(`${t('maxBoxQuantityExcedeed', { quantity: maxAllowed })}`, 'error');
             return;
         }
         onSave(palletData);
@@ -150,7 +150,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
             <DialogContent sx={{ mt: 3 }}>
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 6 }} sx={{ mt: 1 }}>
-                        <TextField fullWidth label="TEMP °F" type="number" size="small"
+                        <TextField fullWidth label={t('temperatureF')} type="number" size="small"
                             value={palletData.temperatureF || ''}
                             onChange={(e) => setPalletData({ ...palletData, temperatureF: e.target.value })}
                         />
@@ -170,14 +170,14 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                                 }
                                 label={
                                     <Typography variant="body2" sx={{ color: palletData.chismografo ? '#29b6f6' : grey[400], fontWeight: palletData.chismografo ? 'bold' : 'normal' }}>
-                                        Chismógrafo
+                                        {t('chismografo')}
                                     </Typography>
                                 }
                             />
                         </Paper>
                     </Grid>
                     <Grid size={{ xs: 12 }}>
-                        <TextField select fullWidth label="ETIQUETA" size="small"
+                        <TextField select fullWidth label={t('label')} size="small"
                             value={palletData.idLabel || ''}
                             onChange={handleLabelChange}
                         >
@@ -190,7 +190,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
 
                 <Box sx={{ mt: 5, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="subtitle2" sx={{ color: grey[400], fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <InventoryIcon sx={{ fontSize: 18 }} /> CARGAMENTOS
+                        <InventoryIcon sx={{ fontSize: 18 }} /> {t('shipload') }
                         {isExceeded && <WarningAmberIcon sx={{ color: orange[500], fontSize: 20 }} />}
                     </Typography>
                     <Button startIcon={<AddIcon />} onClick={handleAddLoading} variant="contained" size="small">
@@ -204,7 +204,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                             <Grid container spacing={2}>
                                 {/* Fila 1: Tipo + Eliminar */}
                                 <Grid size={{ xs: 10.5 }}>
-                                    <TextField select fullWidth size="small" label="TIPO DE ETIQUETA" variant="filled"
+                                    <TextField select fullWidth size="small" label={t('labelType') } variant="filled"
                                         value={loading.idLabelType || ''}
                                         onChange={(e) => handleLabelTypeChange(index, e.target.value)}
                                         disabled={!palletData.idLabel}
@@ -220,13 +220,13 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
 
                                 {/* Fila 2: Cantidad + Descripción */}
                                 <Grid size={{ xs: 3 }}>
-                                    <TextField label="CANT" type="number" size="small" fullWidth
+                                    <TextField label={t('boxes')} type="number" size="small" fullWidth
                                         value={loading.boxQuantity || ''}
                                         onChange={(e) => handleLoadingChange(index, 'boxQuantity', e.target.value)}
                                     />
                                 </Grid>
                                 <Grid size={{ xs: 9 }}>
-                                    <TextField label="DESCRIPCIÓN" fullWidth size="small"
+                                    <TextField label={t('description')} fullWidth size="small"
                                         value={loading.description || ''}
                                         onChange={(e) => handleLoadingChange(index, 'description', e.target.value)}
                                     />
@@ -243,7 +243,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                         color="error"
                         variant="text"
                         startIcon={<DeleteIcon />}
-                        onClick={() => onDelete(position)} // Llama a handleOpenDeleteConfirmation del padre
+                        onClick={() => onDelete(position)}
                         sx={{ mr: 'auto' }}
                     >
                         {t('delete')}
