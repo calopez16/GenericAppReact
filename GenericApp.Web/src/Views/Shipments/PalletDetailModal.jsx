@@ -141,7 +141,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                         <Typography variant="h6" color={isExceeded ? red[400] : "primary.main"} sx={{ fontWeight: 'bold', lineHeight: 1 }}>
                             {totalBoxes} / {maxAllowed || '--'}
                         </Typography>
-                        <Typography variant="caption" sx={{ color: grey[500], fontWeight: 'bold' }}>MAX. BOXES</Typography>
+                        <Typography variant="caption" sx={{ color: grey[500], fontWeight: 'bold' }}>{t('maxBoxes') }</Typography>
                     </Box>
                 </Box>
             </DialogTitle>
