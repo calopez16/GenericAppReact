@@ -113,6 +113,15 @@ function LoginPage() {
             ShowMessage(t('emptyFields'), 'error');
             return;
         }
+
+        const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+[\]{};':"\\|,.<>/?]).{8,}$/;
+
+        if (!passwordRegex.test(newPassword)) {
+            ShowMessage(t('passwordRequirementsMessage') , 'error');
+            return;
+        }
+        // ---------------------------------------------------
+
         if (newPassword !== confirmNewPassword) {
             ShowMessage(t('passwordsDontMatch'), 'error');
             return;

@@ -230,5 +230,6 @@
   "welcome_page_options_title": "App options",
   "welcome_page_subtitle": "General description of the system where you can perform different tasks",
   "welcome_page_title": "Welcome",
-  "yes": "Yes"
+  "yes": "Yes",
+  "passwordRequirementsMessage": "The password must contain at least one uppercase letter, one number, and one special character"
 }

@@ -230,5 +230,6 @@
   "welcome_page_options_title": "Opciones del sistema",
   "welcome_page_subtitle": "Descripcion generica del sistema donde se pueden hacer diferentes cosas",
   "welcome_page_title": "Bienvenido(a)",
-  "yes": "Sí"
+  "yes": "Sí",
+  "passwordRequirementsMessage": "La contraseña debe tener una mayúscula, un número y un carácter especial"
 }
