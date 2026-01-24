@@ -7,47 +7,53 @@ import {
     TextField,
     Button,
     Box,
-    MenuItem, // 1. Importamos MenuItem
+    MenuItem,
+    Checkbox,
+    ListItemText,
+    OutlinedInput
 } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import { useTranslation } from 'react-i18next';
 
-// Definimos las opciones disponibles
-const sizeOptions = ['SML', 'DL', 'STD', 'XL', 'LRG', 'JBO'];
+// Opciones disponibles para el dropdown
+const sizeOptions = ['SML', 'DL', 'STD', 'XL', 'LRG', 'JBO', 'TIPS', 'L1L2'];
 
 const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
     const { t } = useTranslation();
     const descriptionRef = useRef(null);
 
+    // El estado local maneja 'sizes' como un array para la UI
     const [formData, setFormData] = useState({
         idLabelType: 0,
         description: '',
-        size: ''
+        sizes: []
     });
+
     const [validationErrors, setValidationErrors] = useState({
         description: false,
-        size: false
+        sizes: false
     });
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
     useEffect(() => {
         if (open) {
             if (isEditing && data) {
+                // Si el API envía un objeto con un solo .size, lo convertimos a array para el modal
                 setFormData({
                     idLabelType: data.idLabelType || 0,
                     description: data.description || '',
-                    size: data.size || ''
+                    sizes: data.sizes ? data.sizes : (data.size ? [data.size] : [])
                 });
             } else {
                 setFormData({
                     idLabelType: Date.now() * -1,
                     description: '',
-                    size: ''
+                    sizes: []
                 });
             }
-            setValidationErrors({ description: false, size: false });
+            setValidationErrors({ description: false, sizes: false });
             setHasAttemptedSubmit(false);
         }
     }, [open, isEditing, data]);
@@ -63,20 +69,28 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
+        // Para selects múltiples, MUI devuelve un array en e.target.value
+        const finalValue = name === 'sizes'
+            ? (typeof value === 'string' ? value.split(',') : value)
+            : value;
+
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [name]: finalValue
         }));
 
         if (hasAttemptedSubmit) {
-            validateField(name, value);
+            validateField(name, finalValue);
         }
     };
 
     const validateField = (name, value) => {
         let isError = false;
-        if (name === 'description' || name === 'size') {
+        if (name === 'description') {
             isError = value.trim().length === 0;
+        }
+        if (name === 'sizes') {
+            isError = !value || value.length === 0;
         }
 
         setValidationErrors(prev => ({
@@ -88,20 +102,29 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
 
     const validateForm = () => {
         const descValid = validateField('description', formData.description);
-        const sizeValid = validateField('size', formData.size);
-        return (descValid && sizeValid);
+        const sizesValid = validateField('sizes', formData.sizes);
+        return (descValid && sizesValid);
     };
-
 
     const handleSubmit = (event) => {
         if (event) event.preventDefault();
         setHasAttemptedSubmit(true);
 
-        if (!validateForm()) {
-            return;
-        }
+        if (!validateForm()) return;
 
-        onSave(formData, isEditing);
+        /**
+         * TRANSFORMACIÓN PARA EL BACKEND:
+         * El usuario ve un solo formulario, pero el backend recibe N objetos 
+         * según la cantidad de sizes seleccionados.
+         */
+        const dataToSave = formData.sizes.map(sizeName => ({
+            idLabelType: isEditing ? formData.idLabelType : 0,
+            description: formData.description,
+            size: sizeName
+        }));
+
+        // Se envía el listado de objetos al callback onSave
+        onSave(dataToSave, isEditing);
         handleClose();
     };
 
@@ -125,22 +148,27 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
                         helperText={validationErrors.description ? t('requiredField') : ''}
                     />
 
-                    {/* CAMBIO REALIZADO AQUÍ: Propiedad select y MenuItems */}
                     <TextField
                         select
                         margin="normal"
                         required
                         fullWidth
                         label={t('size')}
-                        name="size"
-                        value={formData.size}
+                        name="sizes"
+                        value={formData.sizes}
                         onChange={handleChange}
-                        error={validationErrors.size}
-                        helperText={validationErrors.size ? t('requiredField') : ''}
+                        error={validationErrors.sizes}
+                        helperText={validationErrors.sizes ? t('requiredField') : ''}
+                        SelectProps={{
+                            multiple: true,
+                            renderValue: (selected) => (selected && selected.length > 0 ? selected.join(', ') : ''),
+                            input: <OutlinedInput label={t('size')} />
+                        }}
                     >
                         {sizeOptions.map((option) => (
                             <MenuItem key={option} value={option}>
-                                {option}
+                                <Checkbox checked={formData.sizes.indexOf(option) > -1} />
+                                <ListItemText primary={option} />
                             </MenuItem>
                         ))}
                     </TextField>

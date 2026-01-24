@@ -16,6 +16,7 @@ import {
     TableBody,
     IconButton,
     Paper,
+    Chip
 } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
@@ -306,7 +307,7 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                     ) : (
                                         formData.labelTypes.map((lt) => (
                                             <TableRow key={lt.idLabelType > 0 ? lt.idLabelType : lt.idLabelType * -1}> {/* Ajuste en la key para nuevos registros */}
-                                                <TableCell>{lt.description}</TableCell>
+                                                <TableCell>{lt.description} <Chip label={lt.size} size="small" /></TableCell>
                                                 <TableCell align="right">
                                                     <IconButton size="small" color="primary" onClick={() => handleOpenEditLabelType(lt)}>
                                                         <EditIcon fontSize="inherit" />

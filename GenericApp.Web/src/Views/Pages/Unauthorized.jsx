@@ -1,22 +1,63 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Layout from '@layout/Layout';
-import LoginPage from '@views/Auth/Login'
-import HomePage from '@views/Home'
-import UsersPage from '@views/Users'
+import { Box, Button, Typography, Container } from '@mui/material';
+import { Link } from 'react-router-dom';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem'; // Un ícono para darle más énfasis visual
+import { useTranslation } from 'react-i18next';
 
-function App() {
+function Unauthorize() {
+
+    const { t } = useTranslation();
+
     return (
-        <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route element={<Layout />}>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/users" element={<UsersPage />} />
-                {/*<Route path="/perfil" element={<ProfilePage />} />*/}
-                {/*<Route path="/configuracion" element={<SettingsPage />} />*/}
-            </Route>
-        </Routes>
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                textAlign: 'center',
+            }}
+        >
+            <ReportProblemIcon sx={{ fontSize: '6rem', color: 'primary.main', mb: 2 }} />
+
+            <Typography
+                variant="h1"
+                component="h1"
+                sx={{
+                    fontWeight: 'bold',
+                    color: 'primary.main',
+                    fontSize: { xs: '6rem', sm: '8rem' } // Tamaño de fuente responsivo
+                }}
+            >
+                403
+            </Typography>
+
+            <Typography
+                variant="h4"
+                component="h2"
+                gutterBottom // Agrega un margen inferior
+            >
+                {t('pageUnauthorized')}
+            </Typography>
+
+            <Typography
+                variant="body1"
+                color="text.secondary" // Usa los colores del tema para consistencia
+                sx={{ mb: 4, maxWidth: '500px' }} // Margen inferior y un ancho máximo
+            >
+                {t('pageUnauthorized_Message')}
+            </Typography>
+
+            <Button
+                variant="contained" // Estilo de botón principal de MUI
+                component={Link}    // Le decimos al botón que se comporte como un Link de React Router
+                to="/"              // La ruta a la que debe navegar
+                size="large"
+            >
+                {t('backToHome')}
+            </Button>
+        </Box>
     );
 }
 
-export default App;
+export default Unauthorize;

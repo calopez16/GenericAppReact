@@ -266,19 +266,31 @@ namespace GenericApp.API.Controllers
                         page.Header().Element(header => ComposeHeader(header, shipment, manifest, "REPORTE DE MANIFIESTO DE EMBARQUE"));
 
                         // Content
-                        page.Content().Element(content =>
+                        page.Content().Column(mainCol =>
                         {
-                            content.Column(col =>
+                            // SEPARADOR: Esta línea dividirá el Header del Contenido
+                            mainCol.Item().PaddingTop(1).PaddingBottom(3).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
+
+                            // Contenedor de las dos columnas
+                            mainCol.Item().Row(row =>
                             {
-                                // Grid del Trailer
-                                col.Item().Element(e => ComposeContent(e, manifest));
-                                // Extras (Sellos y Chismografo) - NUEVO
-                                col.Item().Element(e => ComposeExtras(e, manifest));
+                                // PARTE IZQUIERDA: Distribución de la carga
+                                row.RelativeItem(2).Column(col =>
+                                {
+                                    col.Item().Element(e => ComposeContent(e, manifest));
+                                });
+
+                                row.ConstantItem(8); // Espacio entre columnas
+
+                                // PARTE DERECHA: Datos operativos, Totales, sellos y comentarios
+                                row.RelativeItem(1).Column(col =>
+                                {
+                                    col.Item().Element(e => ComposeRightPanel(e, shipment, manifest));
+                                });
                             });
                         });
 
                         // Footer
-                        page.Footer().Element(footer => ComposeFooter(footer, manifest));
                     });
                 }
             });
@@ -291,39 +303,200 @@ namespace GenericApp.API.Controllers
             return File(stream, "application/pdf", $"Manifiesto_{shipment.IdShipment}.pdf");
         }
 
-        // Agregamos el parámetro 'string documentTitle' al final
+        private void ComposeRightPanel(IContainer container, ShipmentDTO shipment, ManifestDTO manifest)
+        {
+            container.Column(col =>
+            {
+                // Título de sección alineado con el de la izquierda
+                col.Item().PaddingTop(2).PaddingBottom(5).Text(" ").FontSize(10).Bold().FontColor(Colors.Grey.Darken1);
+
+                // --- SECCIÓN: INFORMACIÓN OPERATIVA ---
+                col.Item().PaddingBottom(5).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Column(infoCol =>
+                {
+                    infoCol.Item().Text($"INFORMACIÓN DE REMISION #{shipment.IdShipment:D4}").Bold().FontSize(8).FontColor(Colors.Blue.Medium);
+                    infoCol.Item().PaddingTop(1).PaddingBottom(1).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+
+                    var labelStyle = TextStyle.Default.FontSize(7).Bold();
+                    var valueStyle = TextStyle.Default.FontSize(7);
+
+                    infoCol.Item().PaddingTop(3).Table(t =>
+                    {
+                        t.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn((float)1);
+                            c.RelativeColumn((float)1.5);
+                        });
+
+                        t.Cell().PaddingBottom(1).Text("TEMPORADA:").Style(labelStyle);
+                        t.Cell().Text($"{manifest.SeasonYear}").Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("MIXTO:").Style(labelStyle);
+                        t.Cell().Text(shipment.Mixed == true ? "SÍ" : "NO").Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("EMPAQUE:").Style(labelStyle);
+                        t.Cell().Text(manifest.Empaque ?? "-").Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("FECHA:").Style(labelStyle);
+                        t.Cell().Text($"{shipment.ShipmentDate?.ToString("dd/MM/yyyy") ?? "-"}").Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("SALIDA HR:").Style(labelStyle);
+                        t.Cell().Text(manifest.ExitDate ?? "-").Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("TEMP:").Style(labelStyle);
+                        t.Cell().Text($"{manifest.TemperatureTrailerBoxF?.ToString("0")} °F").Style(valueStyle);
+                        
+                        t.Cell().PaddingBottom(1).Text("").Style(labelStyle);
+                        t.Cell().Text("").Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("PLACAS TRÁILER:").Style(labelStyle);
+                        t.Cell().Text(manifest.TrailerPlate ?? "-").Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("PLACAS CAJA:").Style(labelStyle);
+                        t.Cell().Text(manifest.TrailerBoxPlate ?? "-").Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("LÍNEA:").Style(labelStyle);
+                        t.Cell().Text(manifest.IdShippingCompanyNavigation?.Name ?? "-").Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("CHOFER:").Style(labelStyle);
+                        t.Cell().Text(manifest.IdDriverNavigation?.Name ?? "-").Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("").Style(labelStyle);
+                        t.Cell().Text("").Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("No. REG FDA:").Style(labelStyle);
+                        t.Cell().Text(manifest.RegFdaNo ?? "-").Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("GNN #:").Style(labelStyle);
+                        t.Cell().Text(manifest.GnnNumber ?? "-").Style(valueStyle);
+
+                    });
+                });
+
+                // 2. RESUMEN DE CARGA (Totales)
+                var totalBoxes = manifest.ManifestPallets?
+                    .Where(p => !(p.IsDeleted ?? false))
+                    .SelectMany(p => p.ManifestPalletLoadings)
+                    .Where(l => !(l.IsDeleted ?? false))
+                    .Sum(l => l.BoxQuantity) ?? 0;
+
+                var totalPallets = manifest.ManifestPallets?
+                    .Count(p => !(p.IsDeleted ?? false)) ?? 0;
+
+                col.Item().PaddingBottom(5).Border(1).BorderColor(Colors.Grey.Lighten2).Background(Colors.Grey.Lighten5).Padding(5).Column(totalCol =>
+                {
+                    totalCol.Item().Text("RESUMEN TOTAL").Bold().FontSize(8);
+                    totalCol.Item().PaddingTop(1).PaddingBottom(1).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+                    totalCol.Item().Row(r =>
+                    {
+                        r.RelativeItem().Text("Total de bultos:").FontSize(8);
+                        r.AutoItem().Text($"{totalBoxes:N0}").Bold().FontSize(9);
+                    });
+                    totalCol.Item().Row(r =>
+                    {
+                        r.RelativeItem().Text("Total Pallets:").FontSize(8);
+                        r.AutoItem().Text($"{totalPallets:N0}").Bold().FontSize(9);
+                    });
+                });
+
+                // 3. SELLOS
+                col.Item().PaddingBottom(5).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Column(stampsCol =>
+                {
+                    stampsCol.Item().Text("SELLOS").Bold().FontSize(8);
+                    stampsCol.Item().PaddingTop(1).PaddingBottom(1).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+                    stampsCol.Item().Text(manifest.Stamps ?? "Sin sellos.").FontSize(9).FontColor(Colors.Red.Medium).Bold();
+                });
+
+                // 4. COMENTARIOS
+                col.Item().PaddingBottom(5).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Column(commCol =>
+                {
+                    commCol.Item().Text("COMENTARIOS / NOTAS").Bold().FontSize(8);
+                    commCol.Item().PaddingTop(1).PaddingBottom(1).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+                    commCol.Item().Text(manifest.Comments ?? "Sin comentarios.").FontSize(8);
+                });
+                col.Item().Element(e => ComposeLabelTypeSummary(e, manifest));
+            });
+        }
+
+        private void ComposeLabelTypeSummary(IContainer container, ManifestDTO manifest)
+        {
+            // 1. Agrupar datos: LabelType -> Total y desglose por Size
+            var summary = manifest.ManifestPallets?
+                .Where(p => !(p.IsDeleted ?? false))
+                .SelectMany(p => p.ManifestPalletLoadings)
+                .Where(l => !(l.IsDeleted ?? false))
+                .GroupBy(l => l.IdLabelTypeNavigation?.Description ?? "Sin Descripción")
+                .Select(g => new
+                {
+                    LabelType = g.Key,
+                    Total = g.Sum(x => x.BoxQuantity ?? 0),
+                    Sizes = g.GroupBy(s => s.IdLabelTypeNavigation?.Size ?? "N/A")
+                             .Select(sg => new { Size = sg.Key, Qty = sg.Sum(x => x.BoxQuantity ?? 0) })
+                             .OrderBy(sg => sg.Size)
+                })
+                .OrderBy(x => x.LabelType)
+                .ToList();
+
+            if (summary == null || !summary.Any()) return;
+
+            container.PaddingBottom(5).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Column(col =>
+            {
+                // Encabezado de la sección
+                col.Item().Text("CONCENTRADO POR PRODUCTO").Bold().FontSize(8);
+                col.Item().PaddingTop(1).PaddingBottom(1).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+
+                col.Item().Table(table =>
+                {
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.RelativeColumn(); // LabelType + Sizes
+                        columns.ConstantColumn(40); // Total
+                    });
+
+                    foreach (var item in summary)
+                    {
+                        // Fila de LabelType
+                        table.Cell().Column(c => {
+                            c.Item().Text(item.LabelType).FontSize(7).Bold();
+
+                            // Línea de tamaños (Ej: 24s: 100, 36s: 50)
+                            c.Item().Text(t => {
+                                foreach (var s in item.Sizes)
+                                {
+                                    t.Span($"{s.Size}: ").FontSize(6).FontColor(Colors.Grey.Darken2);
+                                    t.Span($"{s.Qty:N0}   ").FontSize(6).Bold();
+                                }
+                            });
+                        });
+
+                        // Celda de Total
+                        table.Cell().AlignRight().AlignMiddle().PaddingRight(5).Text($"{item.Total:N0}").FontSize(8).Bold().FontColor(Colors.Blue.Medium);
+
+                        // Divisor entre productos
+                        table.Cell().ColumnSpan(2).PaddingVertical(1).LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten3);
+                    }
+                });
+            });
+        }
         private void ComposeHeader(IContainer container, ShipmentDTO shipment, ManifestDTO manifest, string documentTitle)
         {
             container.Column(column =>
             {
-                // 1. ENCABEZADO SUPERIOR
                 column.Item().Row(row =>
                 {
-                    // --- BLOQUE IZQUIERDO: LOGO + DATOS DE LA EMPRESA ---
-                    // Aumenté un poco el espacio relativo (de 5 a 6) para acomodar el logo
+                    // BLOQUE IZQUIERDO: LOGO + DATOS EMPRESA
                     row.RelativeItem(4).Row(subRow =>
                     {
-                        // A) LOGO (Si existe)
                         var logoName = shipment.IdCompanyNavigation?.LogoName;
                         if (!string.IsNullOrEmpty(logoName))
                         {
-                            // Lógica para obtener la ruta
                             string carpeta = Path.Combine(_env.WebRootPath, "img", "logos");
                             string rutaCompleta = Path.Combine(carpeta, logoName);
-
-                            // Verificamos si el archivo realmente existe para evitar errores
                             if (System.IO.File.Exists(rutaCompleta))
                             {
-                                // Renderizamos la imagen
-                                // .FitArea() asegura que la imagen no se deforme
-                                subRow.AutoItem()
-                                      .PaddingRight(10) // Espacio entre logo y texto
-                                      .Height(50)       // Altura fija para el logo
-                                      .Image(rutaCompleta);
+                                subRow.AutoItem().PaddingRight(10).Height(50).Image(rutaCompleta);
                             }
                         }
 
-                        // B) DATOS DE LA EMPRESA (Texto)
                         subRow.RelativeItem().Column(stack =>
                         {
                             stack.Item().Text($"EMPAQUE {shipment.IdCompanyNavigation?.Empaque?.ToUpper() ?? "EMPAQUE"}").Bold().FontSize(12).FontColor(Colors.Blue.Darken2);
@@ -332,7 +505,7 @@ namespace GenericApp.API.Controllers
                         });
                     });
 
-                    // --- BLOQUE DERECHO: TÍTULO DEL DOCUMENTO ---
+                    // BLOQUE DERECHO: TÍTULOS Y FOLIOS
                     row.RelativeItem(6).AlignRight().Column(stack =>
                     {
                         stack.Item().Text(documentTitle).FontSize(14).Bold();
@@ -341,65 +514,13 @@ namespace GenericApp.API.Controllers
                     });
                 });
 
-                column.Item().PaddingTop(5);
-
-                // 2. GRID DE DATOS REORGANIZADO (Se mantiene igual que la versión anterior)
-                column.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Table(table =>
-                {
-                    table.ColumnsDefinition(c =>
-                    {
-                        c.ConstantColumn(65); c.RelativeColumn();
-                        c.ConstantColumn(65); c.RelativeColumn();
-                        c.ConstantColumn(65); c.RelativeColumn();
-                    });
-
-                    // FILA 1
-                    table.Cell().AlignRight().PaddingRight(3).Text("TEMPORADA:").Bold().FontSize(7);
-                    table.Cell().Text($"{manifest.SeasonYear}").FontSize(8);
-
-                    table.Cell().AlignRight().PaddingRight(3).Text("CHOFER:").Bold().FontSize(7);
-                    table.Cell().Text(manifest.IdDriverNavigation?.Name ?? "-").FontSize(7);
-
-                    // FILA 2
-                    table.Cell().AlignRight().PaddingRight(3).Text("FECHA:").Bold().FontSize(7);
-                    table.Cell().Text($"{shipment.ShipmentDate?.ToString("dd/MM/yyyy") ?? "-"}").FontSize(8);
-
-                    table.Cell().AlignRight().PaddingRight(3).Text("PLACAS T.:").Bold().FontSize(7);
-                    table.Cell().Text(manifest.TrailerPlate ?? "-").FontSize(8);
-
-                    table.Cell().AlignRight().PaddingRight(3).Text("TEMP:").Bold().FontSize(7);
-                    table.Cell().Text($"{manifest.TemperatureTrailerBoxF?.ToString("0")} °F").FontSize(8);
-
-                    // FILA 3
-                    table.Cell().AlignRight().PaddingRight(3).Text("HR. SALIDA:").Bold().FontSize(7);
-                    table.Cell().Text(manifest.ExitDate ?? "-").FontSize(8);
-
-                    table.Cell().AlignRight().PaddingRight(3).Text("PLACAS C.:").Bold().FontSize(7);
-                    table.Cell().Text(manifest.TrailerBoxPlate ?? "-").FontSize(8);
-
-                    table.Cell().AlignRight().PaddingRight(3).Text("MIXTO:").Bold().FontSize(7);
-                    table.Cell().Text(shipment.Mixed == true ? "SÍ" : "NO").FontSize(8);
-
-                    // FILA 4
-                    table.Cell().AlignRight().PaddingRight(3).Text("No. REG FDA:").Bold().FontSize(7);
-                    table.Cell().Text(manifest.RegFdaNo ?? "-").FontSize(8);
-
-                    table.Cell().AlignRight().PaddingRight(3).Text("LÍNEA:").Bold().FontSize(7);
-                    table.Cell().Text(manifest.IdShippingCompanyNavigation?.Name ?? "-").FontSize(7);
-
-                    // FILA 5
-                    table.Cell().AlignRight().PaddingRight(3).Text("EMPAQUE:").Bold().FontSize(7);
-                    table.Cell().Text(manifest.Empaque ?? "-").FontSize(8);
-
-                    table.Cell().AlignRight().PaddingRight(2).Text("GNN #:").Bold().FontSize(7);
-                    table.Cell().Text(manifest.GnnNumber ?? "-").FontSize(8);
-
-                });
+                // Espacio pequeño al final del header
+                column.Item().PaddingBottom(5);
             });
         }
         private void ComposeContent(IContainer container, ManifestDTO manifest)
         {
-            container.PaddingVertical(10).Column(column =>
+            container.PaddingTop(2).Column(column =>
             {
                 column.Item().PaddingBottom(5).Text("DISTRIBUCIÓN DE CARGA").FontSize(10).Bold().FontColor(Colors.Grey.Darken1);
 
@@ -413,7 +534,7 @@ namespace GenericApp.API.Controllers
                         columns.RelativeColumn(); // Derecha
                     });
 
-                    int maxPositions = 24;
+                    int maxPositions = 26;
 
                     for (int i = 1; i <= maxPositions; i += 2)
                     {
@@ -550,12 +671,12 @@ namespace GenericApp.API.Controllers
                     col.Item().Row(r =>
                     {
                         r.RelativeItem().Text("Total Cajas:").FontSize(9);
-                        r.AutoItem().Text($"{totalBoxes}").Bold().FontSize(10);
+                        r.AutoItem().Text($"{totalBoxes:N0}").Bold().FontSize(10);
                     });
                     col.Item().Row(r =>
                     {
                         r.RelativeItem().Text("Total Pallets:").FontSize(9);
-                        r.AutoItem().Text($"{totalPallets}").Bold().FontSize(10);
+                        r.AutoItem().Text($"{totalPallets:N0}").Bold().FontSize(10);
                     });
                 });
             });
@@ -718,66 +839,95 @@ namespace GenericApp.API.Controllers
         }
         private void ComposeRemisionTable(IContainer container, ManifestDTO manifest)
         {
-            // Aplanamos la lista: De Pallets -> Loadings -> Lista Simple
-            var allItems = manifest.ManifestPallets?
+            // 1. Aplanamos y AGRUPAMOS los items por Descripción y Tamaño
+            var groupedItems = manifest.ManifestPallets?
                 .Where(p => !(p.IsDeleted ?? false))
                 .SelectMany(p => p.ManifestPalletLoadings)
                 .Where(l => !(l.IsDeleted ?? false))
-                .ToList() ?? new List<ManifestPalletLoadingDTO>();
+                .GroupBy(l => new
+                {
+                    Description = l.IdLabelTypeNavigation?.Description ?? l.Description,
+                    Size = l.IdLabelTypeNavigation?.Size
+                })
+                .Select(g => new
+                {
+                    Description = g.Key.Description,
+                    Size = g.Key.Size,
+                    TotalBoxes = g.Sum(x => x.BoxQuantity ?? 0)
+                })
+                .OrderBy(x => x.Size)
+                .ThenBy(x => x.Description)
+                .ToList();
 
             container.Table(table =>
             {
-                // Definición de columnas
+                // Definición de las 4 columnas solicitadas
                 table.ColumnsDefinition(columns =>
                 {
-                    columns.ConstantColumn(50);  // Cantidad
-                    columns.RelativeColumn();    // Descripción
-                    columns.ConstantColumn(100); // Notas/Peso
+                    columns.ConstantColumn(55);  // CANT.
+                    columns.RelativeColumn();    // DESCRIPCIÓN (Aquí van Size + LabelType)
+                    columns.ConstantColumn(75);  // PRECIO
+                    columns.ConstantColumn(75);  // IMPORTE
                 });
 
-                // --- HEADER DE LA TABLA (DISEÑO CORREGIDO) ---
-                // Ahora usa bordes grises/negros y fondo claro para coincidir con el Manifiesto
+                // --- HEADER DE LA TABLA ---
                 table.Header(header =>
                 {
-                    // Estilo unificado para los headers de la tabla
                     static IContainer HeaderStyle(IContainer c) => c
                         .Border(1)
-                        .BorderColor(Colors.Grey.Lighten1) // Mismo gris que el Manifiesto
-                        .Background(Colors.Grey.Lighten4)  // Un gris muy suave de fondo para distinguir
+                        .BorderColor(Colors.Grey.Lighten1)
+                        .Background(Colors.Grey.Lighten4)
                         .Padding(4)
                         .AlignMiddle()
                         .AlignCenter();
 
-                    header.Cell().Element(HeaderStyle).Text("CANT.").FontSize(9).Bold().FontColor(Colors.Black);
-                    header.Cell().Element(HeaderStyle).Text("DESCRIPCIÓN").FontSize(9).Bold().FontColor(Colors.Black);
-                    header.Cell().Element(HeaderStyle).Text("NOTAS / PESO").FontSize(9).Bold().FontColor(Colors.Black);
+                    header.Cell().Element(HeaderStyle).Text("CANT.").FontSize(9).Bold();
+                    header.Cell().Element(HeaderStyle).Text("DESCRIPCIÓN").FontSize(9).Bold();
+                    header.Cell().Element(HeaderStyle).Text("PRECIO").FontSize(9).Bold();
+                    header.Cell().Element(HeaderStyle).Text("IMPORTE").FontSize(9).Bold();
                 });
 
                 // --- FILAS DE DATOS ---
-                foreach (var item in allItems)
+                foreach (var item in groupedItems)
                 {
                     static IContainer CellStyle(IContainer c) => c
                         .Border(1)
-                        .BorderColor(Colors.Grey.Lighten1) // Borde suave
+                        .BorderColor(Colors.Grey.Lighten1)
                         .Padding(4)
                         .AlignMiddle();
 
-                    table.Cell().Element(CellStyle).AlignCenter().Text($"{item.BoxQuantity}").FontSize(9);
-                    table.Cell().Element(CellStyle).Text(item.Description ?? "Sin descripción").FontSize(9);
-                    table.Cell().Element(CellStyle).AlignCenter().Text("-").FontSize(9);
+                    // 1. Cantidad con comas
+                    table.Cell().Element(CellStyle).AlignCenter().Text($"{item.TotalBoxes:N0}").FontSize(9).Bold();
+
+                    // 2. Descripción (Size Bold + Texto) en la misma celda
+                    table.Cell().Element(CellStyle).Text(t =>
+                    {
+                        if (!string.IsNullOrEmpty(item.Size))
+                        {
+                            t.Span($"{item.Size}").FontSize(9).Bold();
+                            t.Span($" - ").FontSize(9);
+                        }
+                        t.Span($"{item.Description}").FontSize(9);
+                    });
+
+                    // 3. Precio (Blanco)
+                    table.Cell().Element(CellStyle).Text("");
+
+                    // 4. Importe (Blanco)
+                    table.Cell().Element(CellStyle).Text("");
                 }
 
-                // --- FILAS DE RELLENO (Estética) ---
-                // Para que la tabla llegue hasta abajo o tenga líneas vacías para escribir
-                for (int i = 0; i < 15; i++)
+                // --- FILAS DE RELLENO ESTÉTICO ---
+                int emptyRows = 18 - groupedItems.Count;
+                for (int i = 0; i < (emptyRows < 5 ? 5 : emptyRows); i++)
                 {
+                    table.Cell().Border(1).BorderColor(Colors.Grey.Lighten1).MinHeight(20).Text("");
                     table.Cell().Border(1).BorderColor(Colors.Grey.Lighten1).MinHeight(20).Text("");
                     table.Cell().Border(1).BorderColor(Colors.Grey.Lighten1).MinHeight(20).Text("");
                     table.Cell().Border(1).BorderColor(Colors.Grey.Lighten1).MinHeight(20).Text("");
                 }
             });
         }
-
         [HttpPost]
         public async Task<ActionResult> AddShipment([FromBody] ShipmentDTO model)
         {

@@ -24,6 +24,8 @@
   "city_delete": "Eliminar ciudad",
   "city_edit": "Editar ciudad",
   "client": "Cliente",
+  "pageUnauthorized": "No autorizado",
+  "pageUnauthorized_Message": "No tienes permiso para acceder a esta página",
   "clients": "Clientes",
   "clients_add": "Agregar cliente",
   "clients_delete": "Eliminar cliente",

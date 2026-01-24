@@ -132,6 +132,8 @@
   "notes": "Notes",
   "of": "of",
   "open": "Open",
+  "pageUnauthorized": "Unauthorized",
+  "pageUnauthorized_Message": "You don't have permissions to access this page",
   "pageNotFound": "Page not found",
   "pageNotFound_Message": "We're sorry, the page or resource you are trying to access does not exist, has been removed, or the URL has changed",
   "pallet": "Pallet",
@@ -232,4 +234,5 @@
   "welcome_page_title": "Welcome",
   "yes": "Yes",
   "passwordRequirementsMessage": "The password must contain at least one uppercase letter, one number, and one special character"
+
 }

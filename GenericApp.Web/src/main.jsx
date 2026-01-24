@@ -1,7 +1,8 @@
-import { StrictMode, useContext } from 'react';
+import { StrictMode, useContext, Suspense } from 'react'; // <--- Agregado Suspense
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
+import { CircularProgress, Box } from '@mui/material'; // Ejemplo de Loader
 import '@styles/App.css';
 import App from '@views/Index';
 import { AppContextProvider, AppContext } from '@helpers/AppContext';
@@ -9,23 +10,33 @@ import { NotificationContext } from '@helpers/NotificationContext';
 import { lightTheme, darkTheme } from '@helpers/ThemeHelper';
 import '@locales/i18n';
 
+const PageLoader = () => (
+    <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <CircularProgress />
+    </Box>
+);
+
 const AppWithThemeWrapper = () => {
     const { themeMode } = useContext(AppContext);
     const theme = themeMode === 'light' ? lightTheme : darkTheme;
 
     return (
         <ThemeProvider theme={theme}>
-            <App />
+            <Suspense fallback={<PageLoader />}>
+                <App />
+            </Suspense>
         </ThemeProvider>
     );
 };
 
 createRoot(document.getElementById('root')).render(
-    <AppContextProvider>
-        <NotificationContext>
-            <BrowserRouter>
-                <AppWithThemeWrapper />
-            </BrowserRouter>
-        </NotificationContext>
-    </AppContextProvider>
+    <StrictMode>
+        <AppContextProvider>
+            <NotificationContext>
+                <BrowserRouter>
+                    <AppWithThemeWrapper />
+                </BrowserRouter>
+            </NotificationContext>
+        </AppContextProvider>
+    </StrictMode>
 );

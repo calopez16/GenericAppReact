@@ -90,7 +90,7 @@ const sendRequest = async (endPoint, method, data = null, config = false) => {
         let response = await fetch(url, options);
 
         if (response.status === 403) {
-            AuthHelper.logout();
+            window.location.href = '/unauthorized';
             return false;
         }
 

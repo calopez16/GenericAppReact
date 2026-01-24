@@ -83,6 +83,7 @@ namespace GenericApp.API.Controllers
                         IdLabel = x.IdLabel,
                         IsActive = x.IsActive,
                         IsDeleted = x.IsDeleted,
+                        Size = x.Size
                     }).ToList()
                 })
                 .ToListAsync();
