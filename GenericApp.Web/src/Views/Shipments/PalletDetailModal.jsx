@@ -15,7 +15,8 @@ import {
     useMediaQuery,
     FormControlLabel,
     Checkbox,
-    Chip
+    Chip,
+    Autocomplete // Nuevo componente importado
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
@@ -133,8 +134,9 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
 
     const isLabelSelectorDisabled = palletData.manifestPalletLoadings?.length > 0;
 
-    const handleLabelChange = (e) => {
-        const id = e.target.value;
+    // Cambiado para manejar el objeto de Autocomplete
+    const handleLabelChange = (event, newValue) => {
+        const id = newValue ? newValue.idLabel : '';
         const found = labels.find(l => l.idLabel === id);
 
         setLabelTypes(found?.labelTypes || []);
@@ -148,14 +150,12 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
         const typeFound = labelTypes.find(t => t.idLabelType === typeId);
         const newLoadings = [...(palletData.manifestPalletLoadings || [])];
 
-        // Lógica para calcular el remanente de cajas
         const boxesOtherRows = newLoadings.reduce((acc, curr, i) => {
             if (i === index) return acc;
             return acc + (Number(curr.boxQuantity) || 0);
         }, 0);
 
         const remainingSpace = maxAllowed - boxesOtherRows;
-        // Si el espacio restante es negativo, ponemos 0, de lo contrario lo que falte para el máximo
         const defaultQuantity = remainingSpace > 0 ? remainingSpace : 0;
 
         newLoadings[index] = {
@@ -238,31 +238,49 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                         </Paper>
                     </Grid>
                     <Grid size={{ xs: 12 }}>
-                        <TextField
-                            select
+                        <Autocomplete
                             fullWidth
-                            label={t('label')}
                             size="small"
-                            value={palletData.idLabel || ''}
+                            options={Array.isArray(labels) ? labels : []}
+                            // Especificamos qué propiedad usar para el filtrado de texto
+                            getOptionLabel={(option) => option.description || ''}
+                            // Comparamos por ID para mantener la referencia correcta
+                            isOptionEqualToValue={(option, value) => option.idLabel === value.idLabel}
+                            value={labels.find(l => l.idLabel === palletData.idLabel) || null}
                             onChange={handleLabelChange}
                             disabled={isLabelSelectorDisabled}
-                            helperText={isLabelSelectorDisabled ? t('clearLoadsToChangeLabel') : ""}
-                        >
-                            {Array.isArray(labels) && labels.map((l) => (
-                                <MenuItem key={l.idLabel} value={l.idLabel}>
-                                    {l.description}
-                                    {l.isDeleted && (
-                                        <Chip
-                                            label={t('deleted')}
-                                            size="small"
-                                            variant="outlined"
-                                            color="secondary"
-                                            sx={{ marginLeft: 1 }}
-                                        />
-                                    )}
-                                </MenuItem>
-                            ))}
-                        </TextField>
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label={t('label')}
+                                    helperText={isLabelSelectorDisabled ? t('clearLoadsToChangeLabel') : ""}
+                                />
+                            )}
+                            renderOption={(props, option) => {
+                                // Desestructuramos las props para asegurar que Material UI 
+                                // mantenga el control del evento click y el filtrado
+                                const { key, ...optionProps } = props;
+                                return (
+                                    <Box
+                                        component="li"
+                                        key={option.idLabel}
+                                        {...optionProps}
+                                        sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1 }}
+                                    >
+                                        <Typography variant="body2">{option.description}</Typography>
+                                        {option.isDeleted && (
+                                            <Chip
+                                                label={t('deleted')}
+                                                size="small"
+                                                variant="outlined"
+                                                color="secondary"
+                                                sx={{ marginLeft: 1, height: 20, fontSize: '0.65rem' }}
+                                            />
+                                        )}
+                                    </Box>
+                                );
+                            }}
+                        />
                     </Grid>
                 </Grid>
 
@@ -276,23 +294,53 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                     </Button>
                 </Box>
 
+               
                 <Box sx={{ maxHeight: 380, overflowY: 'auto', pr: 0.5 }}>
                     {palletData.manifestPalletLoadings?.map((loading, index) => (
                         <Paper key={index} elevation={0} sx={{ p: 2, mb: 2, border: `1px solid ${isExceeded ? red[700] : ""}`, borderRadius: '8px' }}>
                             <Grid container spacing={2}>
                                 <Grid size={{ xs: 10.5 }}>
-                                    <TextField select fullWidth size="small" label={t('labelType')} variant="filled"
-                                        value={loading.idLabelType || ''}
-                                        onChange={(e) => handleLabelTypeChange(index, e.target.value)}
+                                    <Autocomplete
+                                        fullWidth
+                                        size="small"
+                                        options={labelTypes || []}
+                                        getOptionLabel={(option) => option.description || ''}
+                                        isOptionEqualToValue={(option, value) => option.idLabelType === value.idLabelType}
+                                        // Buscamos el objeto completo basado en el ID guardado
+                                        value={labelTypes.find(t_type => t_type.idLabelType === loading.idLabelType) || null}
+                                        onChange={(event, newValue) => {
+                                            // Extraemos el ID para pasarlo a tu función existente
+                                            handleLabelTypeChange(index, newValue ? newValue.idLabelType : '');
+                                        }}
                                         disabled={!palletData.idLabel}
-                                    >
-                                        {labelTypes.map((t_type) => (
-                                            <MenuItem key={t_type.idLabelType} value={t_type.idLabelType}>
-                                                {t_type.description}
-                                                <Chip label={t_type.size} size="small" variant="filled" color="primary" sx={{ marginLeft: 1 }} />
-                                            </MenuItem>
-                                        ))}
-                                    </TextField>
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label={t('labelType')}
+                                                variant="filled"
+                                            />
+                                        )}
+                                        renderOption={(props, option) => {
+                                            const { key, ...optionProps } = props;
+                                            return (
+                                                <Box
+                                                    component="li"
+                                                    key={option.idLabelType}
+                                                    {...optionProps}
+                                                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1 }}
+                                                >
+                                                    <Typography variant="body2">{option.description}</Typography>
+                                                    <Chip
+                                                        label={option.size}
+                                                        size="small"
+                                                        variant="filled"
+                                                        color="primary"
+                                                        sx={{ ml: 1, height: 20, fontSize: '0.65rem' }}
+                                                    />
+                                                </Box>
+                                            );
+                                        }}
+                                    />
                                 </Grid>
                                 <Grid size={{ xs: 1.5 }} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                     <IconButton color="error" onClick={() => handleRemoveLoading(index)}><DeleteIcon /></IconButton>
