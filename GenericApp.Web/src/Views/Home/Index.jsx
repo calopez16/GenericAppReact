@@ -1,198 +1,220 @@
-﻿import React, { useContext } from 'react';
+﻿import React, { useContext, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link as RouterLink } from 'react-router-dom';
 import { AppContext } from '@helpers/AppContext';
 import AppLogoImage from '@images/logo.png'
 import { API_BASE_URL } from '@config';
+import { DataAPIDashboardService } from '@data/Dashboard/Data';
 
-// Importaciones de rutas
-import routes from '@views/routes.json';
-
-// Importaciones de MUI (estilo unificado)
+// Importaciones de MUI
 import {
-    Container,
-    Typography,
-    Grid,
-    Card,
-    CardContent,
-    CardActions,
-    Button,
-    Box,
-    Paper,
-    Avatar, // <--- Importación agregada
-    Link
+    Container, Typography, Box, Paper, Avatar, Skeleton
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
+
+// Importación de MUI X Charts
+import { LineChart } from '@mui/x-charts/LineChart';
 
 // Importaciones de Iconos
-import HomeIcon from '@mui/icons-material/Home';
-import SettingsIcon from '@mui/icons-material/Settings';
-import PeopleIcon from '@mui/icons-material/People';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import AcUnitIcon from '@mui/icons-material/AcUnit';
+import EventNoteIcon from '@mui/icons-material/EventNote';
 
-// Mapa de iconos
-const iconMap = {
-    HomeIcon: <HomeIcon color="primary" />,
-    SettingsIcon: <SettingsIcon color="primary" />,
-    PeopleIcon: <PeopleIcon color="primary" />,
-    BarChartIcon: <BarChartIcon color="primary" />,
-    DashboardIcon: <DashboardIcon color="primary" />,
-    AttachMoneyIcon: <AttachMoneyIcon color="primary" />
-};
-
-const WelcomePage = () => {
-    // Hook de traducción
+const DashboardPage = () => {
     const { t } = useTranslation();
     const { userName = 'Usuario', companySelected } = useContext(AppContext);
-    const hasCompany = companySelected && Object.keys(companySelected).length > 0;
+    const dashboardService = DataAPIDashboardService();
+    const lastLoadedCompanyId = useRef(null);
 
-    const displayLogo = hasCompany
-        ? `${API_BASE_URL}/img/logos/${companySelected.logoName}`
-        : AppLogoImage;
+    // Estados
+    const [tempData, setTempData] = useState({ value: `0 °F`, trend: '...', loading: true });
+    const [cajasSemana, setCajasSemana] = useState({ value: '0', trend: '...', loading: true });
+    const [ultimoViaje, setUltimoViaje] = useState({ value: `0 ${t('dashboard.units.boxes')}`, trend: '---', loading: true });
+    const [embarquesTemp, setEmbarquesTemp] = useState({ value: '0', trend: '---', loading: true });
+    const [chartData, setChartData] = useState({ months: [], shipments: [], loading: true });
 
-    const displayName = hasCompany
-        ? companySelected.name
-        : t('app_name');
+    const hasCompany = companySelected && companySelected.idCompany > 0;
+
+    // Array de meses traducidos para fallback
+    const fallbackMonths = [
+        t('months.jan'), t('months.feb'), t('months.mar'), t('months.apr'),
+        t('months.may'), t('months.jun'), t('months.jul'), t('months.aug'),
+        t('months.sep'), t('months.oct'), t('months.nov'), t('months.dec')
+    ];
+
+    useEffect(() => {
+        if (!hasCompany || lastLoadedCompanyId.current === companySelected.idCompany) return;
+
+        const id = companySelected.idCompany;
+        lastLoadedCompanyId.current = id;
+
+        setTempData(p => ({ ...p, loading: true }));
+        setCajasSemana(p => ({ ...p, loading: true }));
+        setUltimoViaje(p => ({ ...p, loading: true }));
+        setEmbarquesTemp(p => ({ ...p, loading: true }));
+        setChartData(p => ({ ...p, loading: true }));
+
+        fetchEmbarquesTemporada(id);
+        fetchCajasSemana(id);
+        fetchUltimoViaje(id);
+        fetchTemperaturaPromedio(id);
+        fetchGraficaEmbarques(id);
+
+    }, [companySelected, hasCompany]);
+
+    const fetchGraficaEmbarques = async (id) => {
+        try {
+            const res = await dashboardService.getGraficaEmbarques(id);
+            setChartData({
+                months: res.data?.meses || fallbackMonths,
+                shipments: res.data?.embarques || Array(12).fill(0),
+                loading: false
+            });
+        } catch (e) {
+            console.error("Error en fetchGraficaEmbarques:", e);
+            setChartData({ months: fallbackMonths, shipments: Array(12).fill(0), loading: false });
+        }
+    };
+
+    const fetchEmbarquesTemporada = async (id) => {
+        try {
+            const res = await dashboardService.getEmbarquesTemporada(id);
+            setEmbarquesTemp({
+                value: res.data?.totalEmbarques || '0',
+                trend: res.data?.seasonYear || '---',
+                loading: false
+            });
+        } catch (e) {
+            console.error("Error en fetchEmbarquesTemporada:", e);
+            setEmbarquesTemp({ value: '0', trend: t('dashboard.errors.data'), loading: false });
+        }
+    };
+
+    const fetchCajasSemana = async (id) => {
+        try {
+            const res = await dashboardService.getTotalCajasSemana(id);
+            setCajasSemana({
+                value: (res.data?.totalCajas || 0).toLocaleString(),
+                trend: `${res.data?.totalViajes || 0} ${t('dashboard.units.trips')}`,
+                loading: false
+            });
+        } catch (e) {
+            console.error("Error en fetchCajasSemana:", e);
+            setCajasSemana({ value: '0', trend: `0 ${t('dashboard.units.trips')}`, loading: false });
+        }
+    };
+
+    const fetchUltimoViaje = async (id) => {
+        try {
+            const res = await dashboardService.getUltimoViaje(id);
+            setUltimoViaje({
+                value: `${res.data?.totalCajas || 0} ${t('dashboard.units.boxes')}`,
+                trend: res.data?.numeroViaje ? `${t('dashboard.units.trip')} #${res.data.numeroViaje}` : '---',
+                loading: false
+            });
+        } catch (e) {
+            console.error("Error en fetchUltimoViaje:", e);
+            setUltimoViaje({ value: `0 ${t('dashboard.units.boxes')}`, trend: '---', loading: false });
+        }
+    };
+
+    const fetchTemperaturaPromedio = async (id) => {
+        try {
+            const res = await dashboardService.getTemperaturaPromedio(id);
+            setTempData({
+                value: `${res.data?.temperaturaPromedio || 0} °F`,
+                trend: t('dashboard.trends.global_avg'),
+                loading: false
+            });
+        } catch (e) {
+            console.error("Error en fetchTemperaturaPromedio:", e);
+            setTempData({ value: '0 °F', trend: t('dashboard.errors.data'), loading: false });
+        }
+    };
+
+    const statCards = [
+        { title: t('dashboard.cards.season_shipments'), data: embarquesTemp, icon: <EventNoteIcon color="primary" /> },
+        { title: t('dashboard.cards.week_boxes'), data: cajasSemana, icon: <InventoryIcon color="success" /> },
+        { title: t('dashboard.cards.last_trip'), data: ultimoViaje, icon: <LocalShippingIcon color="info" /> },
+        { title: t('dashboard.cards.avg_temp'), data: tempData, icon: <AcUnitIcon color="warning" /> },
+    ];
+
+    const displayLogo = hasCompany ? `${API_BASE_URL}/img/logos/${companySelected.logoName}` : AppLogoImage;
+    const displayName = hasCompany ? companySelected.name : t('app_name');
 
     return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-            <Paper elevation={3} sx={{ p: 4, borderRadius: 2, mb: 5 }}>
-
-                {/* INICIO: Bloque de Contenido de Bienvenida y Logo (Flexbox) */}
-                <Box
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        flexDirection: { xs: 'column', md: 'row' },
-                        textAlign: { xs: 'center', md: 'left' }
-                    }}
-                >
-                    <Box sx={{ mb: { xs: 2, md: 0 } }}> {/* Contenedor del texto */}
-                        <Typography variant="h4" component="h2" gutterBottom>
-                            {displayName}  - {t('welcome_page_title')} {userName} 👋
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 2, mb: 4 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: { xs: 'column', md: 'row' } }}>
+                    <Box sx={{ mb: { xs: 2, md: 0 } }}>
+                        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                            {displayName} - {t('welcome_page_title')} {userName} 👋
                         </Typography>
-                        <Typography variant="body1" color="text.secondary">
-                            {t('welcome_page_subtitle')}
-                        </Typography>
+                        <Typography variant="body1" color="text.secondary">{t('welcome_page_subtitle')}</Typography>
                     </Box>
-
-                    {/* Logo más grande usando Avatar */}
-                    <Box sx={{
-                        flexShrink: 0,
-                        ml: { md: 4 },
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}>
-                        <Avatar
-                            src={displayLogo}
-                            alt={displayName}
-                            sx={{
-                                width: 200,  // Ancho del Avatar
-                                height: 200, // Alto del Avatar
-                                border: '2px solid',
-                                borderColor: 'primary.main', // Usa el color primario del tema
-                                boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-                                bgcolor: 'transparent' // Asegura fondo transparente si la imagen es PNG
-                            }}
-                        />
-                    </Box>
+                    <Avatar src={displayLogo} sx={{ width: 120, height: 120, border: '2px solid', borderColor: 'primary.main' }} />
                 </Box>
-                {/* FIN: Bloque de Contenido de Bienvenida y Logo */}
-
             </Paper>
 
-            <Box>
-                <Typography variant="h5" component="h2" gutterBottom>
-                    {t('welcome_page_options_title')}
-                </Typography>
-
-                {/* GRID RESPONSIVE - Asegura que no se desborde con muchas opciones */}
-                <Grid container spacing={4}>
-                    {routes.map((route) => (
-                        <Grid
-                            item
-                            key={route.id}
-                            xs={12} // 1 por fila en móvil
-                            sm={6}  // 2 por fila en tablet
-                            md={4}  // 3 por fila en escritorio pequeño
-                            lg={3}  // 4 por fila en escritorio grande
-                            xl={2}  // 6 por fila en escritorio extra grande
-                        >
-                            <Card sx={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                height: '100%',
-                                transition: 'transform 0.3s',
-                                '&:hover': {
-                                    transform: 'translateY(-5px)',
-                                    boxShadow: 6
-                                }
-                            }}>
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                        {iconMap[route.icon] || <SettingsIcon color="primary" />}
-                                        <Typography variant="h6" component="div" sx={{ ml: 2 }}>
-                                            {t(route.i18nKey)}
-                                        </Typography>
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+                {statCards.map((card, index) => (
+                    <Grid key={index} size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Paper sx={{ p: 3, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
+                            <Box sx={{ width: '100%' }}>
+                                <Typography variant="subtitle2" color="text.secondary">{card.title}</Typography>
+                                {card.data.loading ? (
+                                    <Box sx={{ mt: 1 }}>
+                                        <Skeleton width="70%" height={30} />
+                                        <Skeleton width="40%" height={20} />
                                     </Box>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {t(route.i18nKeyDescription)}
-                                    </Typography>
-                                </CardContent>
-                                <CardActions
-                                    sx={{
-                                        flexWrap: 'wrap',
-                                        justifyContent: route.submenu ? 'flex-start' : 'flex-end',
-                                        p: 2,
-                                    }}
-                                >
-                                    {route.submenu ? (
-                                        route.submenu.map(subItem => (
-                                            <Button
-                                                key={subItem.id}
-                                                component={RouterLink}
-                                                to={subItem.path}
-                                                size="small"
-                                                variant="contained"
-                                                sx={{ m: 0.5 }}
-                                            >
-                                                {t('welcome_page_goTo', { page: t(subItem.i18nKey) })}
-                                            </Button>
-                                        ))
-                                    ) : (
-                                        <Button
-                                            component={RouterLink}
-                                            to={route.path}
-                                            size="small"
-                                            variant="contained"
-                                        >
-                                            {t('welcome_page_goTo', { page: t(route.i18nKey) })}
-                                        </Button>
-                                    )}
-                                </CardActions>
-                            </Card>
-                        </Grid>
-                    ))}
+                                ) : (
+                                    <>
+                                        <Typography variant="h5" sx={{ fontWeight: 'bold', my: 0.5 }}>{card.data.value}</Typography>
+                                        <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'text.secondary' }}>{card.data.trend}</Typography>
+                                    </>
+                                )}
+                            </Box>
+                            <Avatar sx={{ bgcolor: 'action.hover', width: 56, height: 56, ml: 1 }}>{card.icon}</Avatar>
+                        </Paper>
+                    </Grid>
+                ))}
+            </Grid>
+
+            <Grid container spacing={3}>
+                <Grid size={{ xs: 12 }}>
+                    <Paper sx={{ p: 3, borderRadius: 2, height: '450px', display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+                            {t('dashboard.charts.monthly_performance')} ({new Date().getFullYear()})
+                        </Typography>
+
+                        {chartData.loading ? (
+                            <Skeleton variant="rectangular" width="100%" height="100%" sx={{ borderRadius: 2 }} />
+                        ) : (
+                            <Box sx={{ width: '100%', height: '100%', flexGrow: 1 }}>
+                                <LineChart
+                                    xAxis={[{
+                                        data: chartData.months,
+                                        scaleType: 'point',
+                                        label: t('dashboard.charts.months_axis')
+                                    }]}
+                                    series={[
+                                        {
+                                            data: chartData.shipments,
+                                            label: t('dashboard.charts.total_shipments'),
+                                            color: '#1976d2',
+                                            area: true,
+                                            connectNulls: false,
+                                        },
+                                    ]}
+                                    margin={{ left: 50, right: 30, top: 20, bottom: 60 }}
+                                />
+                            </Box>
+                        )}
+                    </Paper>
                 </Grid>
-            </Box>
-
-            {/*<Box sx={{ mt: 5, textAlign: 'center' }}>*/}
-            {/* <Paper elevation={1} sx={{ p: 2, display: 'inline-block' }}>*/}
-            {/* <Typography variant="body2" color="text.secondary">*/}
-            {/* {t('welcome_page.support_text')} {' '}*/}
-            {/* <Link href="mailto:soporte@tuempresa.com">*/}
-            {/* soporte@tuempresa.com*/}
-            {/* </Link>*/}
-            {/* .*/}
-            {/* </Typography>*/}
-            {/* </Paper>*/}
-            {/*</Box>*/}
-
+            </Grid>
         </Container>
     );
 };
 
-export default WelcomePage;
+export default DashboardPage;

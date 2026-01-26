@@ -74,7 +74,7 @@ const CompanySelectionModal = ({ open, onClose, onSelectCompany, selectedCompany
             disableEscapeKeyDown={forceSelection} // Deshabilitamos ESC visualmente también
         >
             <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6">
+                <Typography >
                     {t('selectCompany')}
                 </Typography>
 
