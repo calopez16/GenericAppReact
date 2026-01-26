@@ -10,14 +10,12 @@ import {
     Typography,
     Grid,
     IconButton,
-    AppBar,
-    Toolbar,
     Paper,
     MenuItem,
     useMediaQuery,
     FormControlLabel,
     Checkbox,
-    keyframes
+    Chip
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
@@ -49,6 +47,27 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                 try {
                     const res = await labelService.getDataPagination(1, 100, "", true);
                     const dataArray = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+
+                    if (initialData?.idLabel && !dataArray.some(l => l.idLabel === initialData.idLabel)) {
+                        const missingLabel = {
+                            idLabel: initialData.idLabel,
+                            description: initialData.idLabelNavigation?.description || '',
+                            isDeleted: true,
+                            maxBoxQuantity: initialData.idLabelNavigation?.maxBoxQuantity || 0,
+                            // Llenamos labelTypes con los datos de las cargas existentes
+                            labelTypes: initialData.manifestPalletLoadings?.map(loading => ({
+                                idLabelType: loading.idLabelType,
+                                description: loading.idLabelTypeNavigation?.description || '',
+                                size: loading.idLabelTypeNavigation?.size || '',
+                                idLabel: initialData.idLabel
+                            })).filter((value, index, self) =>
+                                // Opcional: Evitar duplicados si hay varias cargas con el mismo tipo
+                                index === self.findIndex((t) => t.idLabelType === value.idLabelType)
+                            ) || []
+                        };
+                        dataArray.push(missingLabel);
+                    }
+
                     setLabels(dataArray);
                 } catch (e) {
                     setLabels([]);
@@ -56,27 +75,46 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
             };
             fetchLabels();
         }
-    }, [open]);
+    }, [open, initialData]);
 
-    // 2. Sincronizar datos iniciales y recuperar tipos si ya existe un IdLabel
+    // Sincronizar data inicial y tipos
     useEffect(() => {
         if (open) {
             const data = initialData || { idManifestPallet: 0, position, temperatureF: '', idLabel: '', chismografo: false, manifestPalletLoadings: [] };
             setPalletData(data);
 
-            // Si el pallet ya tiene una etiqueta guardada, cargamos sus tipos inmediatamente
-            if (data.idLabel && labels.length > 0) {
-                const found = labels.find(l => l.idLabel === data.idLabel);
-                setLabelTypes(found?.labelTypes || []);
+            let currentTypes = [];
+            const found = labels.find(l => l.idLabel === data.idLabel);
+            if (found) {
+                currentTypes = [...(found.labelTypes || [])];
             }
+
+            data.manifestPalletLoadings?.forEach(loading => {
+                if (loading.idLabelTypeNavigation) {
+                    const exists = currentTypes.some(t => t.idLabelType === loading.idLabelType);
+                    if (!exists) {
+                        currentTypes.push({
+                            idLabelType: loading.idLabelType,
+                            description: loading.idLabelTypeNavigation.description,
+                            size: loading.idLabelTypeNavigation.size,
+                            idLabel: data.idLabel
+                        });
+                    }
+                }
+            });
+
+            setLabelTypes(currentTypes);
         }
-    }, [initialData, open, labels]); // Depende de labels para asegurar que ya llegaron los datos de la API
+    }, [open, initialData, labels]);
 
     // Cálculos
     const currentLabel = labels.find(l => l.idLabel === palletData.idLabel);
     const maxAllowed = currentLabel?.maxBoxQuantity || 0;
     const totalBoxes = palletData.manifestPalletLoadings?.reduce((acc, curr) => acc + (Number(curr.boxQuantity) || 0), 0) || 0;
     const isExceeded = maxAllowed > 0 && totalBoxes > maxAllowed;
+
+    // Bloqueo de Dropdown: Si hay elementos en la lista de cargas
+    const isLabelSelectorDisabled = palletData.manifestPalletLoadings?.length > 0;
 
     const handleLabelChange = (e) => {
         const id = e.target.value;
@@ -85,7 +123,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
         setLabelTypes(found?.labelTypes || []);
         setPalletData(prev => ({
             ...prev,
-            idLabel: id // Guardamos el ID en el objeto principal del pallet
+            idLabel: id
         }));
     };
 
@@ -109,6 +147,10 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
     };
 
     const handleAddLoading = () => {
+        if (!palletData.idLabel) {
+            ShowMessage(t('selectLabelFirst'), 'warning');
+            return;
+        }
         setPalletData(prev => ({
             ...prev,
             manifestPalletLoadings: [...(prev.manifestPalletLoadings || []),
@@ -123,17 +165,15 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
     };
 
     const handleSavePallet = () => {
-        if (isExceeded) {
-            ShowMessage(`${t('maxBoxQuantityExcedeed', { quantity: maxAllowed })}`, 'error');
-            return;
-        }
+        //if (isExceeded) {
+        //    ShowMessage(`${t('maxBoxQuantityExcedeed', { quantity: maxAllowed })}`, 'info');
+        //}
         onSave(palletData);
         onClose();
     };
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-
             <DialogTitle sx={{ borderBottom: `1px solid ${grey[800]}`, py: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h6" fontWeight="bold">PALLET #{position}</Typography>
@@ -141,11 +181,10 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                         <Typography variant="h6" color={isExceeded ? red[400] : "primary.main"} sx={{ fontWeight: 'bold', lineHeight: 1 }}>
                             {totalBoxes} / {maxAllowed || '--'}
                         </Typography>
-                        <Typography variant="caption" sx={{ color: grey[500], fontWeight: 'bold' }}>{t('maxBoxes') }</Typography>
+                        <Typography variant="caption" sx={{ color: grey[500], fontWeight: 'bold' }}>{t('maxBoxes')}</Typography>
                     </Box>
                 </Box>
             </DialogTitle>
-
 
             <DialogContent sx={{ mt: 3 }}>
                 <Grid container spacing={3}>
@@ -163,9 +202,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                                         checked={palletData.chismografo || false}
                                         onChange={(e) => setPalletData({ ...palletData, chismografo: e.target.checked })}
                                         icon={<SensorsIcon sx={{ color: grey[500] }} />}
-                                        checkedIcon={
-                                            <SensorsIcon className="pulse-animation" />
-                                        }
+                                        checkedIcon={<SensorsIcon className="pulse-animation" />}
                                     />
                                 }
                                 label={
@@ -177,12 +214,29 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                         </Paper>
                     </Grid>
                     <Grid size={{ xs: 12 }}>
-                        <TextField select fullWidth label={t('label')} size="small"
+                        <TextField
+                            select
+                            fullWidth
+                            label={t('label')}
+                            size="small"
                             value={palletData.idLabel || ''}
                             onChange={handleLabelChange}
+                            disabled={isLabelSelectorDisabled}
+                            helperText={isLabelSelectorDisabled ? t('clearLoadsToChangeLabel') : ""}
                         >
                             {Array.isArray(labels) && labels.map((l) => (
-                                <MenuItem key={l.idLabel} value={l.idLabel}>{l.description}</MenuItem>
+                                <MenuItem key={l.idLabel} value={l.idLabel}>
+                                    {l.description}
+                                    {l.isDeleted && (
+                                        <Chip
+                                            label={t('deleted')}
+                                            size="small"
+                                            variant="outlined"
+                                            color="secondary"
+                                            sx={{ marginLeft: 1 }}
+                                        />
+                                    )}
+                                </MenuItem>
                             ))}
                         </TextField>
                     </Grid>
@@ -190,7 +244,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
 
                 <Box sx={{ mt: 5, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="subtitle2" sx={{ color: grey[400], fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <InventoryIcon sx={{ fontSize: 18 }} /> {t('shipload') }
+                        <InventoryIcon sx={{ fontSize: 18 }} /> {t('shipload')}
                         {isExceeded && <WarningAmberIcon sx={{ color: orange[500], fontSize: 20 }} />}
                     </Typography>
                     <Button startIcon={<AddIcon />} onClick={handleAddLoading} variant="contained" size="small">
@@ -202,15 +256,17 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                     {palletData.manifestPalletLoadings?.map((loading, index) => (
                         <Paper key={index} elevation={0} sx={{ p: 2, mb: 2, border: `1px solid ${isExceeded ? red[700] : ""}`, borderRadius: '8px' }}>
                             <Grid container spacing={2}>
-                                {/* Fila 1: Tipo + Eliminar */}
                                 <Grid size={{ xs: 10.5 }}>
-                                    <TextField select fullWidth size="small" label={t('labelType') } variant="filled"
+                                    <TextField select fullWidth size="small" label={t('labelType')} variant="filled"
                                         value={loading.idLabelType || ''}
                                         onChange={(e) => handleLabelTypeChange(index, e.target.value)}
                                         disabled={!palletData.idLabel}
                                     >
-                                        {labelTypes.map((t) => (
-                                            <MenuItem key={t.idLabelType} value={t.idLabelType}>{t.description}</MenuItem>
+                                        {labelTypes.map((t_type) => (
+                                            <MenuItem key={t_type.idLabelType} value={t_type.idLabelType}>
+                                                {t_type.description}
+                                                <Chip label={t_type.size} size="small" variant="filled" color="primary" sx={{ marginLeft: 1 }} />
+                                            </MenuItem>
                                         ))}
                                     </TextField>
                                 </Grid>
@@ -218,7 +274,6 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                                     <IconButton color="error" onClick={() => handleRemoveLoading(index)}><DeleteIcon /></IconButton>
                                 </Grid>
 
-                                {/* Fila 2: Cantidad + Descripción */}
                                 <Grid size={{ xs: 3 }}>
                                     <TextField label={t('boxes')} type="number" size="small" fullWidth
                                         value={loading.boxQuantity || ''}
@@ -250,7 +305,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                     </Button>
                 )}
                 <Button color="inherit" variant="outlined" startIcon={<CloseIcon />} onClick={onClose}>{t('cancel')}</Button>
-                <Button onClick={handleSavePallet} variant="contained" startIcon={<SaveIcon />} color={isExceeded ? "error" : "primary"}>
+                <Button onClick={handleSavePallet} variant="contained" startIcon={<SaveIcon />} color={"primary"}>
                     {t('save')}
                 </Button>
             </DialogActions>

@@ -116,6 +116,7 @@ namespace GenericApp.API.Controllers
                     IdDriver = m.IdDriver,
                     IdDriverNavigation = new DriverDTO
                     {
+                        IdDriver = m.IdDriver,
                         Name = m.IdDriverNavigation.Name
                     },
                     TemperatureTrailerBoxC = m.TemperatureTrailerBoxC,
@@ -126,6 +127,7 @@ namespace GenericApp.API.Controllers
                     IdShippingCompany = m.IdShippingCompany,
                     IdShippingCompanyNavigation = new ShippingCompanyDTO
                     {
+                        IdShippingCompany = m.IdShippingCompany,
                         Name = m.IdShippingCompanyNavigation.Name
                     },
                     Comments = m.Comments,
@@ -141,18 +143,28 @@ namespace GenericApp.API.Controllers
                         IdLabel = p.IdLabel,
                         MaxBoxQuantity = p.MaxBoxQuantity,
                         Position = p.Position,
+                        IdLabelNavigation = new LabelDTO
+                        {
+                            IdLabel = p.IdLabel,
+                            Description = p.IdLabelNavigation.Description,
+                            MaxBoxQuantity = p.IdLabelNavigation.MaxBoxQuantity
+                        },
                         TemperatureC = p.TemperatureC,
                         TemperatureF = p.TemperatureF,
                         Comments = p.Comments,
                         Chismografo = p.Chismografo,
                         ManifestPalletLoadings = p.ManifestPalletLoadings.Where(wm => !(wm.IsDeleted ?? false)).Select(pl => new ManifestPalletLoadingDTO
                         {
+                            IdManifestPallet = pl.IdManifestPallet,
                             IdManifestPalletLoading = pl.IdManifestPalletLoading,
                             IdLabelType = pl.IdLabelType,
                             Description = pl.Description,
                             IdLabelTypeNavigation = new LabelTypeDTO
                             {
-                                Description = pl.IdLabelTypeNavigation.Description
+                                IdLabel = pl.IdLabelTypeNavigation.IdLabel,
+                                IdLabelType = pl.IdLabelType,
+                                Description = pl.IdLabelTypeNavigation.Description,
+                                Size = pl.IdLabelTypeNavigation.Size
                             },
                             BoxQuantity = pl.BoxQuantity
                         }).ToList()
@@ -313,7 +325,7 @@ namespace GenericApp.API.Controllers
                 // --- SECCIÓN: INFORMACIÓN OPERATIVA ---
                 col.Item().PaddingBottom(5).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Column(infoCol =>
                 {
-                    infoCol.Item().Text($"INFORMACIÓN DE REMISION #{shipment.IdShipment:D4}").Bold().FontSize(8).FontColor(Colors.Blue.Medium);
+                    infoCol.Item().Text($"INFORMACIÓN DE REMISION #{shipment.IdShipment:D4}").Bold().FontSize(8);
                     infoCol.Item().PaddingTop(1).PaddingBottom(1).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
 
                     var labelStyle = TextStyle.Default.FontSize(7).Bold();
@@ -327,50 +339,52 @@ namespace GenericApp.API.Controllers
                             c.RelativeColumn((float)1.5);
                         });
 
-                        t.Cell().PaddingBottom(1).Text("TEMPORADA:").Style(labelStyle);
-                        t.Cell().Text($"{manifest.SeasonYear}").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("TEMPORADA:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text($"{manifest.SeasonYear}").FontSize(7).Style(valueStyle);
 
-                        t.Cell().PaddingBottom(1).Text("MIXTO:").Style(labelStyle);
-                        t.Cell().Text(shipment.Mixed == true ? "SÍ" : "NO").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("MIXTO:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text(shipment.Mixed == true ? "SÍ" : "NO").FontSize(7).Style(valueStyle);
 
-                        t.Cell().PaddingBottom(1).Text("EMPAQUE:").Style(labelStyle);
-                        t.Cell().Text(manifest.Empaque ?? "-").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("EMPAQUE:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text(manifest.Empaque ?? "-").FontSize(7).Style(valueStyle);
 
-                        t.Cell().PaddingBottom(1).Text("FECHA:").Style(labelStyle);
-                        t.Cell().Text($"{shipment.ShipmentDate?.ToString("dd/MM/yyyy") ?? "-"}").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("FECHA:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text($"{shipment.ShipmentDate?.ToString("dd/MM/yyyy") ?? "-"}").FontSize(7).Style(valueStyle);
 
-                        t.Cell().PaddingBottom(1).Text("SALIDA HR:").Style(labelStyle);
-                        t.Cell().Text(manifest.ExitDate ?? "-").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("SALIDA HR:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text(manifest.ExitDate ?? "-").FontSize(7).Style(valueStyle);
 
-                        t.Cell().PaddingBottom(1).Text("TEMP:").Style(labelStyle);
-                        t.Cell().Text($"{manifest.TemperatureTrailerBoxF?.ToString("0")} °F").Style(valueStyle);
-                        
-                        t.Cell().PaddingBottom(1).Text("").Style(labelStyle);
-                        t.Cell().Text("").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("TEMP:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text($"{manifest.TemperatureTrailerBoxF?.ToString("0")} °F").FontSize(7).Style(valueStyle);
 
-                        t.Cell().PaddingBottom(1).Text("PLACAS TRÁILER:").Style(labelStyle);
-                        t.Cell().Text(manifest.TrailerPlate ?? "-").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("").FontSize(8).Style(labelStyle);
+                        t.Cell().Text("").FontSize(7).Style(valueStyle);
 
-                        t.Cell().PaddingBottom(1).Text("PLACAS CAJA:").Style(labelStyle);
-                        t.Cell().Text(manifest.TrailerBoxPlate ?? "-").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("PLACAS TRÁILER:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text(manifest.TrailerPlate ?? "-").FontSize(7).Style(valueStyle);
 
-                        t.Cell().PaddingBottom(1).Text("LÍNEA:").Style(labelStyle);
-                        t.Cell().Text(manifest.IdShippingCompanyNavigation?.Name ?? "-").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("PLACAS CAJA:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text(manifest.TrailerBoxPlate ?? "-").FontSize(7).Style(valueStyle);
 
-                        t.Cell().PaddingBottom(1).Text("CHOFER:").Style(labelStyle);
-                        t.Cell().Text(manifest.IdDriverNavigation?.Name ?? "-").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("LÍNEA:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text(manifest.IdShippingCompanyNavigation?.Name ?? "-").FontSize(7).Style(valueStyle);
 
-                        t.Cell().PaddingBottom(1).Text("").Style(labelStyle);
-                        t.Cell().Text("").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("CHOFER:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text(manifest.IdDriverNavigation?.Name ?? "-").FontSize(7).Style(valueStyle);
 
-                        t.Cell().PaddingBottom(1).Text("No. REG FDA:").Style(labelStyle);
-                        t.Cell().Text(manifest.RegFdaNo ?? "-").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("").FontSize(8).Style(labelStyle);
+                        t.Cell().Text("").FontSize(7).Style(valueStyle);
 
-                        t.Cell().PaddingBottom(1).Text("GNN #:").Style(labelStyle);
-                        t.Cell().Text(manifest.GnnNumber ?? "-").Style(valueStyle);
+                        t.Cell().PaddingBottom(1).Text("No. REG FDA:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text(manifest.RegFdaNo ?? "-").FontSize(7).Style(valueStyle);
+
+                        t.Cell().PaddingBottom(1).Text("GNN #:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text(manifest.GnnNumber ?? "-").FontSize(7).Style(valueStyle);
 
                     });
                 });
+
+                col.Item().Element(e => ComposeLabelTypeSummary(e, manifest));
 
                 // 2. RESUMEN DE CARGA (Totales)
                 var totalBoxes = manifest.ManifestPallets?
@@ -389,12 +403,12 @@ namespace GenericApp.API.Controllers
                     totalCol.Item().Row(r =>
                     {
                         r.RelativeItem().Text("Total de bultos:").FontSize(8);
-                        r.AutoItem().Text($"{totalBoxes:N0}").Bold().FontSize(9);
+                        r.AutoItem().Text($"{totalBoxes:N0}").Bold().FontSize(7);
                     });
                     totalCol.Item().Row(r =>
                     {
                         r.RelativeItem().Text("Total Pallets:").FontSize(8);
-                        r.AutoItem().Text($"{totalPallets:N0}").Bold().FontSize(9);
+                        r.AutoItem().Text($"{totalPallets:N0}").Bold().FontSize(7);
                     });
                 });
 
@@ -403,7 +417,7 @@ namespace GenericApp.API.Controllers
                 {
                     stampsCol.Item().Text("SELLOS").Bold().FontSize(8);
                     stampsCol.Item().PaddingTop(1).PaddingBottom(1).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
-                    stampsCol.Item().Text(manifest.Stamps ?? "Sin sellos.").FontSize(9).FontColor(Colors.Red.Medium).Bold();
+                    stampsCol.Item().Text(manifest.Stamps ?? "Sin sellos.").FontSize(7).FontColor(Colors.Red.Medium).Bold();
                 });
 
                 // 4. COMENTARIOS
@@ -411,9 +425,8 @@ namespace GenericApp.API.Controllers
                 {
                     commCol.Item().Text("COMENTARIOS / NOTAS").Bold().FontSize(8);
                     commCol.Item().PaddingTop(1).PaddingBottom(1).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
-                    commCol.Item().Text(manifest.Comments ?? "Sin comentarios.").FontSize(8);
+                    commCol.Item().Text(manifest.Comments ?? "Sin comentarios.").FontSize(7);
                 });
-                col.Item().Element(e => ComposeLabelTypeSummary(e, manifest));
             });
         }
 
@@ -441,7 +454,7 @@ namespace GenericApp.API.Controllers
             container.PaddingBottom(5).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Column(col =>
             {
                 // Encabezado de la sección
-                col.Item().Text("CONCENTRADO POR PRODUCTO").Bold().FontSize(8);
+                col.Item().Text("CONCENTRADO").Bold().FontSize(8);
                 col.Item().PaddingTop(1).PaddingBottom(1).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
 
                 col.Item().Table(table =>
@@ -455,15 +468,17 @@ namespace GenericApp.API.Controllers
                     foreach (var item in summary)
                     {
                         // Fila de LabelType
-                        table.Cell().Column(c => {
-                            c.Item().Text(item.LabelType).FontSize(7).Bold();
+                        table.Cell().Column(c =>
+                        {
+                            c.Item().Text(item.LabelType).FontSize(8).Bold();
 
                             // Línea de tamaños (Ej: 24s: 100, 36s: 50)
-                            c.Item().Text(t => {
+                            c.Item().Text(t =>
+                            {
                                 foreach (var s in item.Sizes)
                                 {
-                                    t.Span($"{s.Size}: ").FontSize(6).FontColor(Colors.Grey.Darken2);
-                                    t.Span($"{s.Qty:N0}   ").FontSize(6).Bold();
+                                    t.Span($"{s.Size}: ").FontSize(8).FontColor(Colors.Grey.Darken2);
+                                    t.Span($"{s.Qty:N0}   ").FontSize(8).Bold();
                                 }
                             });
                         });
@@ -576,7 +591,7 @@ namespace GenericApp.API.Controllers
                     if (pallet != null)
                     {
                         if (pallet.TemperatureF != null)
-                            row.RelativeItem().AlignRight().Text($"{pallet.TemperatureF?.ToString("0")} °F").FontSize(8).FontColor(Colors.Blue.Darken3);
+                            row.RelativeItem().AlignRight().Text($"{pallet.TemperatureF?.ToString("0.00")} °F").FontSize(8).FontColor(Colors.Blue.Darken3);
                     }
                 });
 
@@ -1151,7 +1166,7 @@ namespace GenericApp.API.Controllers
 
                 return Ok(new ApiResponse());
             }
-            catch (Exception)
+            catch (Exception ex)
             {
 
                 throw;

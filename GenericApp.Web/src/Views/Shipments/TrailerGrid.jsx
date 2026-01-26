@@ -1,6 +1,6 @@
-﻿import React, { useState,useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
-    Box, Paper, Typography, useTheme, useMediaQuery, Divider, Tooltip,Button
+    Box, Paper, Typography, useTheme, useMediaQuery, Divider, Tooltip, Button
 } from '@mui/material';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import SensorsIcon from '@mui/icons-material/Sensors';
@@ -147,13 +147,6 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
 
     const totalPallets = allManifests?.reduce((total, m) => total + ((m.manifestPallets || []).filter(p => !p.isDeleted).length || 0), 0) || 0;
 
-    //const handleSlotClick = (pos) => {
-    //    const occupiedData = getPalletAtPosition(pos);
-    //    // Si no se está arrastrando, funciona como el click normal para abrir el modal
-    //    if (occupiedData && occupiedData.manifestIndex !== currentManifestIndex) return;
-    //    onUpdatePallet(pos, occupiedData ? occupiedData.pallet : null);
-    //};
-
     const handleSlotClick = (pos) => {
         // 1. Verificamos si estamos en modo copiado
         if (isCopyMode) {
@@ -183,6 +176,33 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
             setCopySourcePos(null);
             setSelectedDestinations([]);
         }
+    };
+
+    // Función para generar el desglose de LabelTypes para el Tooltip
+    const getLabelBreakdown = (pallet) => {
+        if (!pallet?.manifestPalletLoadings) return null;
+
+        const summary = pallet.manifestPalletLoadings.reduce((acc, curr) => {
+            const label = curr.description || 'N/A';
+            acc[label] = (acc[label] || 0) + (Number(curr.boxQuantity) || 0);
+            return acc;
+        }, {});
+
+        const total = Object.values(summary).reduce((a, b) => a + b, 0);
+
+        return (
+            <Box sx={{ p: 0.5 }}>
+                {Object.entries(summary).map(([name, qty]) => (
+                    <Typography key={name} variant="caption" display="block">
+                        {name}: <strong>{qty} </strong>{t('boxes')}
+                    </Typography>
+                ))}
+                <Divider sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.3)' }} />
+                <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                    Total: {total} {t('boxes')}
+                </Typography>
+            </Box>
+        );
     };
 
     const renderSlot = (pos) => {
@@ -218,7 +238,7 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
                                     position: 'absolute',
                                     bottom: 4,
                                     right: 4,
-                                    fontSize: '1.4rem', // Tamaño incrementado
+                                    fontSize: '1.4rem',
                                     cursor: 'pointer',
                                     zIndex: 10,
                                     '&:hover': { color: theme.palette.secondary.main }
@@ -238,7 +258,7 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
                                     position: 'absolute',
                                     bottom: 4,
                                     left: 4,
-                                    fontSize: '1.4rem', // Tamaño incrementado
+                                    fontSize: '1.4rem',
                                     cursor: 'pointer',
                                     zIndex: 10,
                                     '&:hover': { color: theme.palette.error.main },
@@ -249,23 +269,34 @@ const TrailerGrid = ({ allManifests, currentManifestIndex, onUpdatePallet, onMov
                     </>
                 )}
 
-                {/* Información Central del Pallet */}
+                {/* Información Central del Pallet con Tooltip Detallado */}
                 {occupiedData && (
-                    <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none', mt: -1 }}>
-                        <Typography variant="caption" sx={{ fontWeight: 'bold', fontSize: '0.75rem', display: 'block', lineHeight: 1.2 }}>
-                            {totalBoxes} {t('boxes') }
-                        </Typography>
-                        {occupiedData.pallet?.temperatureF && (
-                            <Typography variant="caption" sx={{ fontSize: '0.65rem', opacity: 0.9, display: 'block' }}>
-                                {occupiedData.pallet.temperatureF}°F
+                    <Tooltip
+                        title={getLabelBreakdown(occupiedData.pallet)}
+                        arrow
+                        placement="top"
+                    >
+                        <Box sx={{
+                            textAlign: 'center',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            mt: -1,
+                            pointerEvents: 'auto' // Asegura que el tooltip se active al pasar el mouse
+                        }}>
+                            <Typography variant="caption" sx={{ fontWeight: 'bold', fontSize: '0.75rem', display: 'block', lineHeight: 1.2 }}>
+                                {totalBoxes} {t('boxes')}
                             </Typography>
-                        )}
-                        {occupiedData.pallet?.chismografo && (
-                            <Tooltip title={t('chismografo') } arrow placement="bottom">
+                            {occupiedData.pallet?.temperatureF && (
+                                <Typography variant="caption" sx={{ fontSize: '0.65rem', opacity: 0.9, display: 'block' }}>
+                                    {occupiedData.pallet.temperatureF}°F
+                                </Typography>
+                            )}
+                            {occupiedData.pallet?.chismografo && (
                                 <SensorsIcon className="pulse-animation" sx={{ fontSize: '1.1rem' }} />
-                            </Tooltip>
-                        )}
-                    </Box>
+                            )}
+                        </Box>
+                    </Tooltip>
                 )}
 
                 {/* Check de Modo Copiado (Central) */}

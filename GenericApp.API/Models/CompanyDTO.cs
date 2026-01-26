@@ -2,7 +2,7 @@
 {
     public class CompanyDTO
     {
-        public int IdCompany { get; set; }
+        public int? IdCompany { get; set; }
         public string? Name { get; set; }
         public string? RazonSocial { get; set; }
         public string? Rfc { get; set; }

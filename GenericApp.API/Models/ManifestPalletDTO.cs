@@ -14,7 +14,7 @@ namespace GenericApp.API.Models
         public bool? IsDeleted { get; set; }
         public bool? Chismografo { get; set; }
         public ManifestDTO? ManifestNavigation { get; set; }
-        public LabelDTO? LabelNavigation { get; set; }
+        public LabelDTO? IdLabelNavigation { get; set; }
         public List<ManifestPalletLoadingDTO> ManifestPalletLoadings { get; set; } = new List<ManifestPalletLoadingDTO>();
     }
 }

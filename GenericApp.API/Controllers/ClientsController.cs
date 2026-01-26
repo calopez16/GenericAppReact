@@ -156,7 +156,7 @@ namespace GenericApp.API.Controllers
                     }
                 );
 
-            var clientDB = await _repository.GetById<Client>(model.IdClient);
+            var clientDB = await _repository.GetById<Client>(model.IdClient ?? 0);
             clientDB.Name = model.Name;
             clientDB.Rfc = model.Rfc;
             clientDB.Phone = model.Phone;

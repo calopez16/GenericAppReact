@@ -126,57 +126,61 @@ namespace GenericApp.API.Controllers
         public async Task<ActionResult> AddLabel([FromBody] LabelDTO model)
         {
             var labelExists = await _repository.FirstOrDefault<Label>(
-                x => x.Description.ToLower().Equals(model.Description.ToLower()) &&
-                     !(x.IsDeleted ?? false)
+                x => x.Description.ToLower().Equals(model.Description.ToLower()) && !(x.IsDeleted ?? false)
             );
 
             if (labelExists != null)
-                return Conflict(
-                    new ApiResponse
-                    {
-                        Conflict = $"{model.Description}"
-                    }
-                );
+                return Conflict(new ApiResponse { Conflict = $"{model.Description}" });
 
-            var labelDB = _mapper.Map<Label>(model);
-            labelDB.IsActive = true;
-            labelDB.IsDeleted = false;
-
-            if (model.LabelTypes != null && model.LabelTypes.Any())
+            var labelDB = new Label
             {
-                labelDB.LabelTypes = model.LabelTypes.Select(ltDto => new LabelType
+                Description = model.Description,
+                MaxBoxQuantity = model.MaxBoxQuantity,
+                IdCompany = model.IdCompany ?? 0,
+                IsActive = true,
+                IsDeleted = false,
+                LabelTypes = new List<LabelType>()
+            };
+
+            if (model.LabelTypes != null)
+            {
+                foreach (var group in model.LabelTypes)
                 {
-                    Description = ltDto.Description,
-                    IsActive = ltDto.IsActive ?? true,
-                    Size = ltDto.Size ?? "",
-                    IsDeleted = false
-                }).ToList();
+                    // Expandimos el array de tallas en registros individuales
+                    foreach (var s in group.Sizes ?? new List<string>())
+                    {
+                        labelDB.LabelTypes.Add(new LabelType
+                        {
+                            Description = group.Description,
+                            Size = s,
+                            IsActive = true,
+                            IsDeleted = false
+                        });
+                    }
+                }
             }
 
             var result = await _repository.Add(labelDB);
-
-            if (!result)
-                return BadRequest(new ApiResponse());
-
-            var resultDTO = _mapper.Map<LabelDTO>(labelDB);
-            return Ok(new ApiResponse
+            var labelResponse = new LabelDTO
             {
-                Data = new LabelDTO
+                IdLabel = labelDB.IdLabel,
+                Description = labelDB.Description,
+                MaxBoxQuantity = labelDB.MaxBoxQuantity,
+                IdCompany = labelDB.IdCompany,
+                IsActive = true,
+                IsDeleted = false,
+                LabelTypes = labelDB.LabelTypes.Select(x => new LabelTypeDTO
                 {
-                    IdLabel = labelDB.IdLabel,
-                    Description = labelDB.Description,
-                    IsActive = labelDB.IsActive,
-                    MaxBoxQuantity = labelDB.MaxBoxQuantity,
-                    LabelTypes = labelDB.LabelTypes.Select(s => new LabelTypeDTO
-                    {
-                        IdLabelType = s.IdLabelType,
-                        Description = s.Description,
-                        Size = s.Size,
-                        IdLabel = s.IdLabel,
-                        IsActive = s.IsActive
-                    }).ToList()
-                }
-            });
+                    IdLabel = x.IdLabel,
+                    Description = x.Description,
+                    IdLabelType = x.IdLabelType,
+                    IsActive = x.IsActive,
+                    IsDeleted = x.IsDeleted,
+                    Size = x.Size
+                }).ToList()
+            };
+
+            return result ? Ok(new ApiResponse { Data = labelResponse }) : BadRequest();
         }
 
         /// <summary>
@@ -187,97 +191,44 @@ namespace GenericApp.API.Controllers
         [HttpPut]
         public async Task<ActionResult> UpdateLabel([FromBody] LabelDTO model)
         {
-            var labelExists = await _repository.FirstOrDefault<Label>(
-                x => x.Description.ToLower().Equals(model.Description.ToLower()) &&
-                     x.IdLabel != model.IdLabel &&
-                     !(x.IsDeleted ?? false)
-            );
-
-            if (labelExists != null)
-                return Conflict(
-                    new ApiResponse
-                    {
-                        Conflict = $"{model.Description}"
-                    }
-                );
-
             var labelDB = await _repository.FirstOrDefault<Label>(x => x.IdLabel == model.IdLabel, x => x.LabelTypes);
-
-            if (labelDB == null || (labelDB.IsDeleted ?? false))
-                return NotFound(new ApiResponse());
+            if (labelDB == null || (labelDB.IsDeleted ?? false)) return NotFound();
 
             labelDB.Description = model.Description;
             labelDB.MaxBoxQuantity = model.MaxBoxQuantity;
 
-            var incomingLabelTypes = model.LabelTypes ?? new List<LabelTypeDTO>();
+            var incomingGroups = model.LabelTypes ?? new List<LabelTypeDTO>();
             var existingLabelTypes = labelDB.LabelTypes ?? new List<LabelType>();
 
-            var idsToRemoveLogically = existingLabelTypes
-                .Where(lt => !(lt.IsDeleted ?? false))
-                .Select(lt => lt.IdLabelType)
-                .Except(incomingLabelTypes.Where(lt => (lt.IdLabelType ?? 0) > 0).Select(lt => (lt.IdLabelType ?? 0)))
-                .ToList();
-
-            foreach (var id in idsToRemoveLogically)
+            foreach (var group in incomingGroups)
             {
-                var itemToMarkDeleted = existingLabelTypes.FirstOrDefault(lt => lt.IdLabelType == id);
-                if (itemToMarkDeleted != null)
-                {
-                    itemToMarkDeleted.IsDeleted = true;
-                    itemToMarkDeleted.IsActive = false;
-                }
-            }
+                var requestedSizes = group.Sizes ?? new List<string>();
 
-            foreach (var ltDto in incomingLabelTypes)
-            {
-                if (ltDto.IdLabelType > 0)
+                // Borrado lógico de tallas desmarcadas
+                var toRemove = existingLabelTypes
+                    .Where(lt => lt.Description == group.Description && !(lt.IsDeleted ?? false) && !requestedSizes.Contains(lt.Size))
+                    .ToList();
+
+                foreach (var item in toRemove) { item.IsDeleted = true; item.IsActive = false; }
+
+                // Restaurar o Crear
+                foreach (var s in requestedSizes)
                 {
-                    var ltDB = existingLabelTypes.FirstOrDefault(lt => lt.IdLabelType == ltDto.IdLabelType);
-                    if (ltDB != null)
+                    var exists = existingLabelTypes.Any(lt => lt.Description == group.Description && lt.Size == s && !(lt.IsDeleted ?? false));
+                    if (!exists)
                     {
-                        ltDB.Description = ltDto.Description;
-                        ltDB.IsActive = ltDto.IsActive ?? true;
-                        ltDB.IsDeleted = false;
-                        ltDB.Size = ltDto.Size;
+                        var deleted = existingLabelTypes.FirstOrDefault(lt => lt.Description == group.Description && lt.Size == s && (lt.IsDeleted ?? false));
+                        if (deleted != null) { deleted.IsDeleted = false; deleted.IsActive = true; }
+                        else
+                        {
+                            existingLabelTypes.Add(new LabelType { Description = group.Description, Size = s, IdLabel = labelDB.IdLabel, IsActive = true, IsDeleted = false });
+                        }
                     }
-                }
-                else
-                {
-                    existingLabelTypes.Add(new LabelType
-                    {
-                        Description = ltDto.Description,
-                        IsActive = ltDto.IsActive ?? true,
-                        Size = ltDto.Size,
-                        IsDeleted = false,
-                        IdLabel = labelDB.IdLabel
-                    });
                 }
             }
 
             var result = await _repository.Update(labelDB);
-
-            if (!result)
-                return BadRequest(new ApiResponse());
-
-            var updatedLabelDTO = new LabelDTO
-            {
-                IdLabel = labelDB.IdLabel,
-                Description = labelDB.Description,
-                IsActive = labelDB.IsActive,
-                MaxBoxQuantity = labelDB.MaxBoxQuantity,
-                LabelTypes = existingLabelTypes
-                    .Where(lt => !(lt.IsDeleted ?? false))
-                    .Select(lt => new LabelTypeDTO
-                    {
-                        IdLabelType = lt.IdLabelType,
-                        IdLabel = lt.IdLabel,
-                        Description = lt.Description,
-                        Size = lt.Size,
-                        IsActive = lt.IsActive,
-                    }).ToList()
-            };
-
-            return Ok(new ApiResponse { Data = updatedLabelDTO });
+            return result ? Ok(new ApiResponse()) : BadRequest();
         }
 
         /// <summary>

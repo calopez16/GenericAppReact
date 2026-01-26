@@ -1,130 +1,69 @@
 import React from 'react';
-import {
-    TableContainer,
-    Paper,
-    Table,
-    TableHead,
-    TableRow,
-    TableCell,
-    TableBody,
-    Switch,
-    IconButton,
-    Tooltip,
-    Typography
-} from '@mui/material';
+import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Switch, IconButton, Tooltip, Typography, Box, Chip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-const ANIMATION_DURATION = 500;
+const LabelListTable = ({ labels, loading, t, handleOpenEditLabel, handleToggleLabelStatus, handleOpenDeleteConfirmation, deletingId }) => {
 
-const deletingRowStyle = {
-    transition: `all ${ANIMATION_DURATION}ms ease-out`,
-    transform: 'translateX(-100%)',
-    opacity: 0,
-    height: 0,
-    padding: 0,
-    overflow: 'hidden',
-};
+    const renderLabelTypeChips = (labelTypes) => {
+        if (!labelTypes || labelTypes.length === 0) return "-";
 
-const normalRowStyle = {
-    transition: `all ${ANIMATION_DURATION}ms ease-out`,
-    transform: 'translateX(0)',
-    opacity: 1,
-    maxHeight: '1000px',
-};
+        const grouped = labelTypes.reduce((acc, current) => {
+            const existing = acc.find(item => item.description === current.description);
+            if (existing) {
+                if (!existing.sizes.includes(current.size)) existing.sizes.push(current.size);
+            } else {
+                acc.push({ description: current.description, sizes: [current.size] });
+            }
+            return acc;
+        }, []);
 
-const LabelListTable = ({
-    labels,
-    loading,
-    t,
-    handleOpenEditLabel,
-    handleToggleLabelStatus,
-    handleOpenDeleteConfirmation,
-    setSelectedLabel,
-    deletingId
-}) => {
-
-    const minTableWidth = 900;
+        return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                {grouped.map((g, i) => (
+                    <Box key={i} sx={{ mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block' }}>{g.description}</Typography>
+                        {/*<Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>*/}
+                        {/*    {g.sizes.map(s => <Chip key={s} label={s} size="small" variant="outlined" color="primary" />)}*/}
+                        {/*</Box>*/}
+                    </Box>
+                ))}
+            </Box>
+        );
+    };
 
     return (
         <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-            <Table sx={{ minWidth: minTableWidth }}>
+            <Table sx={{ minWidth: 900 }}>
                 <TableHead>
                     <TableRow>
                         <TableCell>{t('active')}</TableCell>
                         <TableCell>{t('description')}</TableCell>
-                        <TableCell>{t('label_maxBoxQuantity')}</TableCell> {/* ¡NUEVA COLUMNA! */}
+                        <TableCell>{t('label_maxBoxQuantity')}</TableCell>
                         <TableCell>{t('types')}</TableCell>
                         <TableCell align="right">{t('actions')}</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {loading ? (
-                        <TableRow>
-                            <TableCell colSpan={5} align="center"> {/* Colspan ajustado a 5 */}
-                                {t('loading')}...
-                            </TableCell>
-                        </TableRow>
+                        <TableRow><TableCell colSpan={5} align="center">{t('loading')}...</TableCell></TableRow>
                     ) : (labels?.length ?? 0) === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={5} align="center"> {t('records_notFound')}.</TableCell> {/* Colspan ajustado a 5 */}
-                        </TableRow>
+                        <TableRow><TableCell colSpan={5} align="center">{t('records_notFound')}</TableCell></TableRow>
                     ) : (
-                        labels.map((label) => {
-                            const isDeleting = label.idLabel === deletingId;
-
-                            const rowCurrentStyle = isDeleting ? deletingRowStyle : normalRowStyle;
-
-                            return (
-                                <TableRow
-                                    key={label.idLabel}
-                                    sx={rowCurrentStyle}
-                                >
-                                    <TableCell>
-                                        <Tooltip title={label.isActive ? t('disable') : t('enable')}>
-                                            <Switch
-                                                checked={label.isActive}
-                                                onChange={() => handleToggleLabelStatus(label)}
-                                                color="primary"
-                                                disabled={isDeleting}
-                                            />
-                                        </Tooltip>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Tooltip title={`ID: ${label.idLabel}`}>
-                                            <Typography>{label.description}</Typography>
-                                        </Tooltip>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography>{label.maxBoxQuantity}</Typography> {/* ¡NUEVO VALOR! */}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography>{label.labelTypes?.length || 0}</Typography>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <Tooltip title={t('edit')}>
-                                            <IconButton
-                                                color="primary"
-                                                onClick={() => handleOpenEditLabel(label)}
-                                                disabled={isDeleting}
-                                            >
-                                                <EditIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title={t('delete')}>
-                                            <IconButton
-                                                color="error"
-                                                onClick={() => handleOpenDeleteConfirmation(label)}
-                                                sx={{ ml: 1 }}
-                                                disabled={isDeleting}
-                                            >
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })
+                        labels.map((label) => (
+                            <TableRow key={label.idLabel}>
+                                <TableCell>
+                                    <Switch checked={label.isActive} onChange={() => handleToggleLabelStatus(label)} color="primary" disabled={label.idLabel === deletingId} />
+                                </TableCell>
+                                <TableCell><Typography>{label.description}</Typography></TableCell>
+                                <TableCell><Typography>{label.maxBoxQuantity}</Typography></TableCell>
+                                <TableCell>{renderLabelTypeChips(label.labelTypes)}</TableCell>
+                                <TableCell align="right">
+                                    <IconButton color="primary" onClick={() => handleOpenEditLabel(label)}><EditIcon /></IconButton>
+                                    <IconButton color="error" onClick={() => handleOpenDeleteConfirmation(label)}><DeleteIcon /></IconButton>
+                                </TableCell>
+                            </TableRow>
+                        ))
                     )}
                 </TableBody>
             </Table>

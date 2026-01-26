@@ -166,7 +166,7 @@ namespace GenericApp.API.Controllers
                     }
                 );
 
-            var companyDB = await _repository.GetById<Company>(model.IdCompany);
+            var companyDB = await _repository.GetById<Company>(model.IdCompany ?? 0);
 
             companyDB.Name = model.Name!;
             companyDB.Rfc = model.Rfc;

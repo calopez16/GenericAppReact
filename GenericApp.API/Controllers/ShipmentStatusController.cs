@@ -150,7 +150,7 @@ namespace GenericApp.API.Controllers
                     }
                 );
 
-            var shipmentStatusDB = await _repository.GetById<ShipmentStatus>(model.IdShipmentStatus);
+            var shipmentStatusDB = await _repository.GetById<ShipmentStatus>(model.IdShipmentStatus ?? 0);
             shipmentStatusDB.Description = model.Description;
             var result = await _repository.Update(shipmentStatusDB);
 

@@ -195,10 +195,10 @@ namespace GenericApp.API.Controllers
                     }
                 );
 
-            var cityDB = await _repository.GetById<City>(model.IdCity);
+            var cityDB = await _repository.GetById<City>(model.IdCity ?? 0);
             cityDB.Description = model.Description;
             var isIdStateChanged = (cityDB.IdState != model.IdState);
-            cityDB.IdState = model.IdState;
+            cityDB.IdState = model.IdState ?? 0;
             var result = await _repository.Update(cityDB);
             var newState = await _repository.FirstOrDefault<State>(x => x.IdState == model.IdState, x => x.IdCountryNavigation);
             cityDB.IdStateNavigation = new State
