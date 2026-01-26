@@ -224,7 +224,7 @@ function ShipmentsIndex() {
                 open={isBitacoraModalOpen}
                 onClose={() => {
                     setIsBitacoraModalOpen(false);
-                    setClosingTimeError(false);
+                    setClosingTimeError(false); // Limpiar error al cerrar
                 }}
                 onConfirm={handleExportBitacora}
                 title={t('generateBitacora')}
