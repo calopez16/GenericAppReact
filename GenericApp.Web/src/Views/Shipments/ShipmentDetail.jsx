@@ -82,6 +82,9 @@ const ShipmentDetail = () => {
     const [clientFullAddress, setClientFullAddress] = useState('');
     const [fetchedClient, setFetchedClient] = useState(null);
 
+    const [isBitacoraModalOpen, setIsBitacoraModalOpen] = useState(false);
+    const [closingTime, setClosingTime] = useState("");
+
     useEffect(() => {
         loadShipmentData();
     }, [id]);
@@ -174,6 +177,23 @@ const ShipmentDetail = () => {
             const blob = new Blob([fileData], { type: 'application/pdf' });
             const pdfUrl = window.URL.createObjectURL(blob);
             window.open(pdfUrl, '_blank');
+        } catch (error) {
+            ShowMessage(t('error'), 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleExportBitacora = async () => {
+        if (!closingTime) return;
+        try {
+            setLoading(true);
+            const response = await shipmentDataService.getBitacoraSellosPdfById(shipment.idShipment, closingTime);
+            const fileData = response.data ? response.data : response;
+            const blob = new Blob([fileData], { type: 'application/pdf' });
+            const pdfUrl = window.URL.createObjectURL(blob);
+            window.open(pdfUrl, '_blank');
+            setIsBitacoraModalOpen(false);
         } catch (error) {
             ShowMessage(t('error'), 'error');
         } finally {
@@ -427,6 +447,9 @@ const ShipmentDetail = () => {
             </Paper>
 
             <Paper elevation={3} sx={{ position: 'sticky', bottom: 0, p: 2, mt: 3, backgroundColor: theme.palette.background.paper, borderTop: `1px solid ${theme.palette.divider}`, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, zIndex: 10, flexWrap: 'wrap' }}>
+                <Button variant="contained" color="warning" startIcon={<FactCheckIcon />} onClick={() => setIsBitacoraModalOpen(true)}>
+                    {t('generateBitacora')}
+                </Button>
                 <Button variant="contained" color="secondary" startIcon={<DescriptionIcon />} onClick={() => handleExportManifest(shipment)} sx={{ minWidth: 120 }}>
                     {t('generateManifest')}
                 </Button>

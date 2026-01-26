@@ -31,6 +31,10 @@ function ShipmentsIndex() {
     const [pageLoading, setPageLoading] = useState(true);
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [shipmentToDelete, setShipmentToDelete] = useState(null);
+    const [isBitacoraModalOpen, setIsBitacoraModalOpen] = useState(false);
+    const [selectedShipmentForBitacora, setSelectedShipmentForBitacora] = useState(null);
+    const [closingTime, setClosingTime] = useState("");
+    const [closingTimeError, setClosingTimeError] = useState(false);
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
@@ -139,6 +143,35 @@ function ShipmentsIndex() {
         }
     };
 
+    const handleExportBitacora = async () => {
+        if (!closingTime) {
+            setClosingTimeError(true);
+            ShowMessage(t('field_required'), 'warning');
+            return;
+        }
+        try {
+            setLoading(true);
+            ShowMessage(`${t('exportingBitacora')}...`, 'info');
+            const response = await shipmentDataService.getBitacoraSellosPdfById(selectedShipmentForBitacora.idShipment, closingTime);
+            const fileData = response.data ? response.data : response;
+            const blob = new Blob([fileData], { type: 'application/pdf' });
+            const pdfUrl = window.URL.createObjectURL(blob);
+            window.open(pdfUrl, '_blank');
+            setIsBitacoraModalOpen(false);
+            setClosingTime("");
+            setClosingTimeError(false);
+        } catch (error) {
+            ShowMessage(t('error'), 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOpenBitacoraModal = (shipment) => {
+        setSelectedShipmentForBitacora(shipment);
+        setIsBitacoraModalOpen(true);
+    };
+
     const commonListProps = {
         shipments, pageLoading, t,
         handleOpenEditShipment,
@@ -146,7 +179,8 @@ function ShipmentsIndex() {
         handleViewDetails,
         // Pasamos las dos nuevas funciones en lugar de la genérica
         handleExportManifest,
-        handleExportRemision
+        handleExportRemision,
+        handleOpenBitacoraModal 
     };
 
     return (
@@ -184,6 +218,38 @@ function ShipmentsIndex() {
                 onConfirm={handleDeleteShipment}
                 title={t('deleteManifest')}
                 message={t('question_areYouSureDeleteManifest', { manifestNumber: shipmentToDelete?.idShipment })}
+            />
+
+            <ConfirmationModal
+                open={isBitacoraModalOpen}
+                onClose={() => {
+                    setIsBitacoraModalOpen(false);
+                    setClosingTimeError(false);
+                }}
+                onConfirm={handleExportBitacora}
+                title={t('generateBitacora')}
+                message={
+                    <Box sx={{ mt: 2 }}>
+                        <Typography variant="body2" sx={{ mb: 2 }}>
+                            {t('enterClosingTimeBitacora')}
+                        </Typography>
+                        <TextField
+                            fullWidth
+                            label={t('closingTime')}
+                            type="time"
+                            value={closingTime}
+                            error={closingTimeError} // Activa el borde rojo
+                            helperText={closingTimeError ? t('field_required') : ''} // Texto descriptivo en rojo
+                            onChange={(e) => {
+                                setClosingTime(e.target.value);
+                                if (e.target.value) setClosingTimeError(false); // Quita el rojo al escribir
+                            }}
+                            InputLabelProps={{ shrink: true }}
+                            inputProps={{ step: 300 }}
+                        />
+                    </Box>
+                }
+                confirmText={t('generate')}
             />
         </Box>
     );

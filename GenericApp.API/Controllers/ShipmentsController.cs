@@ -1006,6 +1006,188 @@ namespace GenericApp.API.Controllers
                 }
             });
         }
+
+        [HttpGet("bitacora-pdf/{id}/{horaCierre}")]
+        [AllowAnonymous]
+        public async Task<ActionResult> GetBitacoraSellosPdf(int id, string horaCierre)
+        {
+            // 1. Obtención de datos
+            var shipment = await _repository.FirstOrDefault<Shipment>(x => x.IdShipment == id && !(x.IsDeleted ?? false), x => x.IdCompanyNavigation);
+
+            // Incluimos IdDriverNavigation para la firma
+            var manifest = await _repository.FirstOrDefault<Manifest>(x => x.IdShipment == id && !(x.IsDeleted ?? false), m => m.IdDriverNavigation);
+
+            if (shipment == null || manifest == null) return NotFound(new ApiResponse());
+
+            // 2. Configuración de recursos
+            string pathimagen = Path.Combine(_env.WebRootPath, "img", "ctpat-logo.jpg");
+            QuestPDF.Settings.License = LicenseType.Community;
+
+            var data = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.Letter);
+                    page.Margin(1, Unit.Centimetre);
+                    page.PageColor(Colors.White);
+                    page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Verdana));
+
+                    // --- HEADER ---
+                    page.Header().PaddingBottom(10).Row(row =>
+                    {
+                        row.RelativeItem().Column(col =>
+                        {
+                            if (System.IO.File.Exists(pathimagen))
+                            {
+                                col.Item().Height(50).Image(pathimagen);
+                            }
+                        });
+
+                        row.RelativeItem().AlignCenter().Column(col =>
+                        {
+                            col.Item().PaddingTop(10).Text("BITÁCORA DE SELLOS").FontSize(14).Bold().FontColor(Colors.Blue.Medium);
+                        });
+
+                        row.RelativeItem().AlignRight().Column(col =>
+                        {
+                            col.Item().PaddingTop(10).Text($"FOLIO: {shipment.IdShipment.ToString("D3")}").FontSize(12).Bold();
+                        });
+                    });
+
+                    // --- CONTENIDO ---
+                    page.Content().Column(col =>
+                    {
+                        // Propósito (Con Subrayado)
+                        col.Item().Text("Propósito de la inspección:").FontSize(11).Bold();
+                        col.Item().PaddingBottom(10).Text($"Asegurar que los embarques con producto provenientes de {shipment.IdCompanyNavigation?.RazonSocial ?? ""} Cumplen con cada una de las disposiciones del programa de seguridad  C-TPAT de acuerdo a los procedimientos establecidos por la empresa con los prestadores de servicios de transporte debidamente establecidos en el procediendo  de carga y transporte, que obra en el expediente correspondiente.").Justify();
+
+                        // Frecuencia
+                        col.Item().Text(t =>
+                        {
+                            t.Justify();
+                            t.Span("Frecuencia de la comunicación de alguna inspección u hallazgo: ").Bold();
+                            t.Span("cuando sea requerido el chofer, se comunicara vía radio o celular con el contacto del empaque durante el transcurso del viaje desde el momento que el camión sale del empaque hasta que llegue a su destino, y cuando ocurriere algún hallazgo o anomalía durante el trayecto del camino, este tendrá que reportar de inmediato al contacto del empaque, dicho suceso quien estará monitoreando el viaje vía satélite, el cual notificara dicho suceso al encargado.");
+                        });
+                        col.Item().Text(t =>
+                        {
+                            t.Justify();
+                            t.Span("Niveles aceptables: ").Bold();
+                            t.Span("Cada cierto tiempo en el trayecto del viaje del chofer, notificara las condiciones presentadas en el viaje y cuando hubiere puntos de inspección de cualquier autoridad ya sea militar, federal, aduanal, etc. Este reportara vía radio, teléfono o quedara grabado en este documento de manera detallada, anotando la hora, autoridad inspectora, violación del candado o sello y tiempos aproximados de duración de inspección.");
+                        });
+                        col.Item().Text(t =>
+                        {
+                            t.Justify();
+                            t.Span("Acciones correctivas: ").Bold();
+                            t.Span("Si por necesidad no previstas de la carga en turno o posibles fallas o imprevistos suscitados, en alguno de los equipos, este procedimiento no fuere posible llevarlo a cabo. Deberá el chofer reportarlo de inmediato y anotar en la presente bitácora en el apartado de comentarios las causas y deberá solicitar instrucciones por parte de la empresa a través  del contacto del empaque o jefe del empaque respectivos, para que ordene una acción correctiva inmediata.");
+                        });
+
+                        col.Item().Text(t =>
+                        {
+                            t.Justify();
+                            t.Span("El chofer deberá anotar, nombre de la persona que autorizo y ordeno instrucciones de modificar el procedimiento, hora y fechas de la llamada de notificación, tiempos aproximados de los posibles hallazgos o anomalías y nombre y firma del chofer en turno el cual es el principal responsable de la carga del producto.");
+                        });
+
+                        col.Item().PaddingVertical(10).LineHorizontal(1f).LineColor(Colors.Grey.Lighten2);
+
+                        // Información del Viaje
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn();
+                                columns.RelativeColumn();
+                            });
+
+                            // Fila 1
+                            table.Cell().Text(t => { t.Span("No. Manifiesto: ").Bold(); t.Span($"{manifest.IdManifest}"); });
+                            table.Cell().Text(t => { t.Span("Línea: ").Bold(); t.Span("CORRECAMINOS"); });
+
+                            // Fila 2
+                            table.Cell().Text(t => { t.Span("Empaque: ").Bold(); t.Span("MISION"); });
+                            table.Cell().Text(t => { t.Span("Destino: ").Bold(); t.Span($"{shipment.Address ?? "CENTRO, CA"}"); });
+
+                            // Fila 3
+                            table.Cell().Text(t => { t.Span("Fecha: ").Bold(); t.Span($"{shipment.ShipmentDate.ToString("dd/MM/yyyy")}"); });
+                            table.Cell().Text(t => { t.Span("Placa Caja: ").Bold(); t.Span($"{manifest.TrailerBoxPlate}"); });
+
+                            // Fila 4
+                            table.Cell().Text(t => { t.Span("Hora de salida: ").Bold(); t.Span($"{manifest.ExitDate:hh:mm tt}"); });
+                        });
+
+                        // Subtítulo centrado antes de la tabla
+                        col.Item().PaddingTop(20).AlignCenter().Text("Bitácora del Operador").FontSize(12).Bold();
+
+                        // Tabla de Sellos (Solo la cantidad existente)
+                        col.Item().PaddingTop(10).Element(e => ComposeBitacoraTable(e, manifest.Stamps, horaCierre));
+
+                        // Espacio para Firma con el Chofer asignado
+                        col.Item().PaddingTop(40).Row(row =>
+                        {
+                            row.RelativeItem();
+                            row.ConstantItem(250).Column(c =>
+                            {
+                                c.Item().BorderTop(1).AlignCenter().Text($"{manifest.IdDriverNavigation?.Name?.ToUpper() ?? "SIN CHOFER ASIGNADO"}").FontSize(9).Bold();
+                                c.Item().AlignCenter().Text("Firma del Chofer").FontSize(8);
+                            });
+                            row.RelativeItem();
+                        });
+                    });
+                });
+            });
+
+            byte[] pdf = data.GeneratePdf();
+            return File(pdf, "application/pdf", $"Bitacora_Sellos_{id}.pdf");
+        }
+
+        private void ComposeBitacoraTable(IContainer container, string? stampsSource, string horaCierre)
+        {
+            var listaSellos = new List<string>();
+            if (!string.IsNullOrWhiteSpace(stampsSource))
+            {
+                listaSellos = stampsSource
+                    .Split(new[] { '\r', '\n', ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim())
+                    .ToList();
+            }
+
+            container.Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.RelativeColumn(2);
+                    columns.RelativeColumn(2);
+                    columns.RelativeColumn(2);
+                    columns.RelativeColumn(3);
+                });
+
+                table.Header(header =>
+                {
+                    static IContainer CellStyle(IContainer container) =>
+                        container.DefaultTextStyle(x => x.Bold())
+                                 .Border(1)
+                                 .Background(Colors.Grey.Lighten4)
+                                 .AlignCenter();
+
+                    header.Cell().Element(CellStyle).Padding(7).Text("NO. DE CANDADO");
+                    header.Cell().Element(CellStyle).Padding(7).Text("CIERRE (HORA)");
+                    header.Cell().Element(CellStyle).Padding(7).Text("APERTURA");
+                    header.Cell().Element(CellStyle).Padding(7).Text("OBSERVACIONES");
+                });
+
+                // Iteración exclusiva sobre los sellos existentes
+                for (int i = 0; i < listaSellos.Count; i++)
+                {
+                    table.Cell().Border(1).Padding(7).AlignCenter().Text(listaSellos[i]).Bold();
+
+                    var horaCierreDate = i == 0 ? !string.IsNullOrEmpty(horaCierre) ? DateTime.ParseExact(horaCierre, "HH:mm", null) : DateTime.Now : DateTime.MinValue;
+                    table.Cell().Border(1).Padding(7).AlignCenter().Text(i == 0 ? horaCierreDate.ToString("hh:mm tt") : "");
+
+                    table.Cell().Border(1).Padding(7).Text(" ");
+                    table.Cell().Border(1).Padding(7).Text(" ");
+                }
+            });
+        }
+
         [HttpPost]
         public async Task<ActionResult> AddShipment([FromBody] ShipmentDTO model)
         {
@@ -1057,7 +1239,7 @@ namespace GenericApp.API.Controllers
                             manifestDB.IdSeason = season.IdSeason;
                             manifestDB.IdManifestStatus = (int)ManifestStatusEnum.Activa;
                             manifestDB.IsDeleted = false;
-                            manifestDB.ExitDate = DateTime.ParseExact(manifestDto.ExitDate, "HH:mm", null);
+                            manifestDB.ExitDate = manifestDto.ExitDate != null ? DateTime.ParseExact(manifestDto.ExitDate, "HH:mm", null) : DateTime.MinValue;
                             if (manifestDto.ManifestPallets != null)
                             {
                                 manifestDB.ManifestPallets = manifestDto.ManifestPallets.Select(palletDto =>

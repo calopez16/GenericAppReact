@@ -6,6 +6,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
 // Importamos los iconos solicitados
 import DescriptionIcon from '@mui/icons-material/Description';
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -19,7 +20,8 @@ const ShipmentListTable = ({
     handleViewDetails,
     // Recibimos las nuevas funciones
     handleExportManifest,
-    handleExportRemision
+    handleExportRemision,
+    handleOpenBitacoraModal
 }) => {
     const minTableWidth = 1200;
 
@@ -59,6 +61,11 @@ const ShipmentListTable = ({
                                 <TableCell>{shipment.idDriverNavigation?.name || '-'}</TableCell>
                                 <TableCell>{shipment.trailerBoxPlate || '-'}</TableCell>
                                 <TableCell align="center">
+                                    <Tooltip title={t('bitacoraSellos')}>
+                                        <IconButton color="primary" onClick={() => handleOpenBitacoraModal(shipment)}>
+                                            <FactCheckIcon />
+                                        </IconButton>
+                                    </Tooltip>
                                     {/* Botón Manifiesto */}
                                     <Tooltip title={t('generateManifest')}>
                                         <IconButton color="primary" onClick={() => handleExportManifest(shipment)}>

@@ -6,6 +6,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 // Importamos los iconos
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import DescriptionIcon from '@mui/icons-material/Description';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
 
 const ShipmentCardList = ({
     shipments,
@@ -16,7 +17,8 @@ const ShipmentCardList = ({
     handleViewDetails,
     // Recibimos las nuevas funciones
     handleExportManifest,
-    handleExportRemision
+    handleExportRemision,
+    handleOpenBitacoraModal
 }) => {
     const formatRemision = (id) => id ? id.toString().padStart(4, '0') : '-';
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString() : '-';
@@ -38,6 +40,9 @@ const ShipmentCardList = ({
                             </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
+                            <IconButton size="small" color="primary" onClick={() => handleOpenBitacoraModal(shipment)}>
+                                <FactCheckIcon fontSize="small" />
+                            </IconButton>
                             <IconButton size="small" color="primary" onClick={() => handleExportManifest(shipment)}>
                                 <DescriptionIcon fontSize="small" />
                             </IconButton>
