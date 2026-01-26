@@ -827,11 +827,12 @@ namespace GenericApp.API.Controllers
 
                         // A) HEADER: Reutilizamos el mismo diseño que el Manifiesto
                         // Pasamos "REMISIÓN" como título para diferenciarlo
-                        page.Header().Element(header => ComposeHeader(header, shipment, manifest, "REMISIÓN"));
+                        page.Header().Element(header => ComposeHeader(header, shipment, manifest, "INFORMACIÓN DE REMISIÓN"));
 
                         // B) CONTENIDO: Usamos la tabla de lista (específica de remisión)
                         page.Content().Column(col =>
                         {
+                            col.Item().PaddingTop(5).Element(e => ComposeRemisionSubHeader(e, shipment, manifest));
                             // Agregamos un pequeño margen superior
                             col.Item().PaddingTop(10).Element(e => ComposeRemisionTable(e, manifest));
                         });
@@ -851,6 +852,68 @@ namespace GenericApp.API.Controllers
             stream.Position = 0;
 
             return File(stream, "application/pdf", $"Remision_{shipment.IdShipment}.pdf");
+        }
+
+        private void ComposeRemisionSubHeader(IContainer container, ShipmentDTO shipment, ManifestDTO manifest)
+        {
+            container.Border(1).BorderColor(Colors.Grey.Lighten2).Padding(8).Column(mainCol =>
+            {
+                // Primera fila: Cliente y Fecha (Alineada a la derecha)
+                mainCol.Item().Row(row =>
+                {
+                    // Cliente
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text("CLIENTE").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                        col.Item().Text($"{shipment.IdClientNavigation?.Name ?? "N/A"}").FontSize(10).Bold();
+                    });
+
+                    // Fecha (Alineada a la derecha)
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Item().AlignRight().Text("FECHA").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                        col.Item().AlignRight().Text($"{shipment.ShipmentDate?.ToString("dd/MM/yyyy") ?? "-"}").FontSize(10).Bold();
+                    });
+                });
+
+                // Separador 1 (Corrección del error)
+                mainCol.Item().PaddingVertical(5).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3);
+
+                // Segunda fila: Dirección
+                mainCol.Item().Column(col =>
+                {
+                    col.Item().Text("DIRECCIÓN").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                    col.Item().Text($"{shipment.Address ?? "DIRECCIÓN NO ESPECIFICADA"}").FontSize(9).Bold();
+                });
+
+                // Separador 2 (Corrección del error)
+                mainCol.Item().PaddingVertical(5).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3);
+
+                // Tercera fila: Chofer y Placas
+                mainCol.Item().Row(row =>
+                {
+                    // Chofer
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text("CHOFER").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                        col.Item().Text($"{manifest.IdDriverNavigation?.Name ?? "N/A"}").FontSize(9).Bold();
+                    });
+
+                    // Placas Trailer
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text("PLACAS TRÁILER").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                        col.Item().Text($"{manifest.TrailerPlate ?? "-"}").FontSize(9).Bold();
+                    });
+
+                    // Placas Caja
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text("PLACAS CAJA").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                        col.Item().Text($"{manifest.TrailerBoxPlate ?? "-"}").FontSize(9).Bold();
+                    });
+                });
+            });
         }
         private void ComposeRemisionTable(IContainer container, ManifestDTO manifest)
         {

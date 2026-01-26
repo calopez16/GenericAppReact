@@ -765,9 +765,11 @@ function ShipmentAddOrEdit() {
                 open={isPalletModalOpen}
                 onClose={() => setIsPalletModalOpen(false)}
                 onSave={handleSavePallet}
-                onDelete={handleOpenDeleteConfirmation} // Cambiado para abrir confirmación
+                onDelete={handleOpenDeleteConfirmation}
                 initialData={currentEditingPallet}
                 position={currentEditingPosition}
+                // PASAMOS EL ARREGLO DE PALLETS DEL MANIFIESTO ACTUAL
+                allPallets={formData.manifests[activeTab]?.manifestPallets || []}
             />
 
             <ConfirmationModal

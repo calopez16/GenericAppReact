@@ -307,7 +307,7 @@ const ShipmentDetail = () => {
                                     <DetailItem label={t('boxPlate')} value={manifest.trailerBoxPlate} />
                                 </Grid>
                                 <Grid size={{ xs: 4, md: 4, xl: 2 }}>
-                                    <DetailItem icon={<ThermostatIcon />} label={`${t('temperatureF')}`} value={manifest.temperatureTrailerBoxF} />
+                                    <DetailItem icon={<ThermostatIcon />} label={`${t('temperatureF')}`} value={`${manifest.temperatureTrailerBoxF} ${t('temperatureSignF')}`} />
                                 </Grid>
                             </Grid>
 
@@ -328,11 +328,26 @@ const ShipmentDetail = () => {
                                                             {t('position')} {pallet.position}
                                                         </Typography>
                                                         {pallet.chismografo && (
+
                                                             <Tooltip title={t('chismografo')} arrow>
                                                                 <SensorsIcon color="primary" sx={{ fontSize: 20, animation: 'pulse 2s infinite ease-in-out', '@keyframes pulse': { '0%': { opacity: 1 }, '50%': { opacity: 0.4 }, '100%': { opacity: 1 } } }} />
                                                             </Tooltip>
                                                         )}
+                                                        <Chip
+                                                            icon={<ThermostatIcon style={{ fontSize: '16px' }} />}
+                                                            label={pallet.temperatureF ? `${pallet.temperatureF} ${t('temperatureSignF')}` : '-'}
+                                                            size="small"
+                                                            color="primary"
+                                                            variant="outlined"
+                                                            sx={{
+                                                                fontWeight: 'bold',
+                                                                height: '24px',
+                                                                '& .MuiChip-label': { px: 1 }
+                                                            }}
+                                                        />
                                                     </Box>
+
+
                                                     <Box sx={{ p: 2, flexGrow: 1 }}>
                                                         {pallet.manifestPalletLoadings?.length > 0 ? (
                                                             pallet.manifestPalletLoadings.map((loading, lIndex) => (
@@ -341,7 +356,7 @@ const ShipmentDetail = () => {
                                                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                                                                         <Chip label={`${t('boxes')}: ${loading.boxQuantity || 0}`} size="small" variant="outlined" />
                                                                         <Typography variant="caption" color="text.secondary">
-                                                                            {loading.idLabelType ? `Type: ${loading.idLabelTypeNavigation?.description || loading.idLabelType}` : '-'}
+                                                                            {loading.idLabelType ? `${loading.idLabelTypeNavigation?.description || loading.idLabelType}` : '-'}
                                                                         </Typography>
                                                                     </Box>
                                                                     {lIndex < pallet.manifestPalletLoadings.length - 1 && <Divider sx={{ my: 1.5, borderStyle: 'dashed' }} />}

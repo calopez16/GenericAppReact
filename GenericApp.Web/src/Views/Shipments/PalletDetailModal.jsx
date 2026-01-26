@@ -30,7 +30,7 @@ import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import { grey, red, orange } from '@mui/material/colors';
 
-const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDelete }) => {
+const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDelete, allPallets = [] }) => {
     const { t } = useTranslation();
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
     const labelService = DataAPILabelsService();
@@ -54,14 +54,12 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                             description: initialData.idLabelNavigation?.description || '',
                             isDeleted: true,
                             maxBoxQuantity: initialData.idLabelNavigation?.maxBoxQuantity || 0,
-                            // Llenamos labelTypes con los datos de las cargas existentes
                             labelTypes: initialData.manifestPalletLoadings?.map(loading => ({
                                 idLabelType: loading.idLabelType,
                                 description: loading.idLabelTypeNavigation?.description || '',
                                 size: loading.idLabelTypeNavigation?.size || '',
                                 idLabel: initialData.idLabel
                             })).filter((value, index, self) =>
-                                // Opcional: Evitar duplicados si hay varias cargas con el mismo tipo
                                 index === self.findIndex((t) => t.idLabelType === value.idLabelType)
                             ) || []
                         };
@@ -77,10 +75,30 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
         }
     }, [open, initialData]);
 
-    // Sincronizar data inicial y tipos
+    // Sincronizar data inicial y lógica de temperatura heredada
     useEffect(() => {
         if (open) {
-            const data = initialData || { idManifestPallet: 0, position, temperatureF: '', idLabel: '', chismografo: false, manifestPalletLoadings: [] };
+            let data = initialData || {
+                idManifestPallet: 0,
+                position,
+                temperatureF: '',
+                idLabel: '',
+                chismografo: false,
+                manifestPalletLoadings: []
+            };
+
+            const isNewPallet = !initialData || initialData.idManifestPallet === 0;
+
+            if (isNewPallet && position > 1 && Array.isArray(allPallets)) {
+                const previousPallet = allPallets.find(p => p.position === position - 1);
+                if (previousPallet && previousPallet.temperatureF) {
+                    data = {
+                        ...data,
+                        temperatureF: previousPallet.temperatureF
+                    };
+                }
+            }
+
             setPalletData(data);
 
             let currentTypes = [];
@@ -105,7 +123,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
 
             setLabelTypes(currentTypes);
         }
-    }, [open, initialData, labels]);
+    }, [open, initialData, labels, position, allPallets]);
 
     // Cálculos
     const currentLabel = labels.find(l => l.idLabel === palletData.idLabel);
@@ -113,7 +131,6 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
     const totalBoxes = palletData.manifestPalletLoadings?.reduce((acc, curr) => acc + (Number(curr.boxQuantity) || 0), 0) || 0;
     const isExceeded = maxAllowed > 0 && totalBoxes > maxAllowed;
 
-    // Bloqueo de Dropdown: Si hay elementos en la lista de cargas
     const isLabelSelectorDisabled = palletData.manifestPalletLoadings?.length > 0;
 
     const handleLabelChange = (e) => {
@@ -131,11 +148,21 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
         const typeFound = labelTypes.find(t => t.idLabelType === typeId);
         const newLoadings = [...(palletData.manifestPalletLoadings || [])];
 
+        // Lógica para calcular el remanente de cajas
+        const boxesOtherRows = newLoadings.reduce((acc, curr, i) => {
+            if (i === index) return acc;
+            return acc + (Number(curr.boxQuantity) || 0);
+        }, 0);
+
+        const remainingSpace = maxAllowed - boxesOtherRows;
+        // Si el espacio restante es negativo, ponemos 0, de lo contrario lo que falte para el máximo
+        const defaultQuantity = remainingSpace > 0 ? remainingSpace : 0;
+
         newLoadings[index] = {
             ...newLoadings[index],
             idLabelType: typeId,
-            boxQuantity: maxAllowed || 0,
-            description: typeFound?.description || ''
+            boxQuantity: defaultQuantity,
+            description: newLoadings[index].description == '' ? typeFound?.description : newLoadings[index].description || ''
         };
         setPalletData(prev => ({ ...prev, manifestPalletLoadings: newLoadings }));
     };
@@ -165,9 +192,6 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
     };
 
     const handleSavePallet = () => {
-        //if (isExceeded) {
-        //    ShowMessage(`${t('maxBoxQuantityExcedeed', { quantity: maxAllowed })}`, 'info');
-        //}
         onSave(palletData);
         onClose();
     };
