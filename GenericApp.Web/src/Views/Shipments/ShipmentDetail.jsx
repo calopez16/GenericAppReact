@@ -11,7 +11,8 @@ import {
     Chip,
     useTheme,
     useMediaQuery,
-    IconButton
+    IconButton,
+    TextField
 } from '@mui/material';
 import { ShowMessage } from '@helpers/NotificationService';
 
@@ -32,7 +33,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import SensorsIcon from '@mui/icons-material/Sensors';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
+
 import Tooltip from '@mui/material/Tooltip';
+import ConfirmationModal from '@layout/ConfirmationModal';
 
 import { useTranslation } from 'react-i18next';
 import { dataApiShipmentsService } from '@data/Shipments/Data';
@@ -81,6 +85,7 @@ const ShipmentDetail = () => {
     const [loading, setLoading] = useState(true);
     const [clientFullAddress, setClientFullAddress] = useState('');
     const [fetchedClient, setFetchedClient] = useState(null);
+    const [closingTimeError, setClosingTimeError] = useState(false);
 
     const [isBitacoraModalOpen, setIsBitacoraModalOpen] = useState(false);
     const [closingTime, setClosingTime] = useState("");
@@ -447,10 +452,10 @@ const ShipmentDetail = () => {
             </Paper>
 
             <Paper elevation={3} sx={{ position: 'sticky', bottom: 0, p: 2, mt: 3, backgroundColor: theme.palette.background.paper, borderTop: `1px solid ${theme.palette.divider}`, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, zIndex: 10, flexWrap: 'wrap' }}>
-                <Button variant="contained" color="warning" startIcon={<FactCheckIcon />} onClick={() => setIsBitacoraModalOpen(true)}>
+                <Button variant="contained" color="primary" startIcon={<FactCheckIcon />} onClick={() => setIsBitacoraModalOpen(true)}>
                     {t('generateBitacora')}
                 </Button>
-                <Button variant="contained" color="secondary" startIcon={<DescriptionIcon />} onClick={() => handleExportManifest(shipment)} sx={{ minWidth: 120 }}>
+                <Button variant="contained" color="primary" startIcon={<DescriptionIcon />} onClick={() => handleExportManifest(shipment)} sx={{ minWidth: 120 }}>
                     {t('generateManifest')}
                 </Button>
                 <Button variant="contained" color="success" startIcon={<ReceiptIcon />} onClick={() => handleExportRemision(shipment)} sx={{ minWidth: 120 }}>
@@ -460,6 +465,38 @@ const ShipmentDetail = () => {
                     {t('back')}
                 </Button>
             </Paper>
+
+            <ConfirmationModal
+                open={isBitacoraModalOpen}
+                onClose={() => {
+                    setIsBitacoraModalOpen(false);
+                    setClosingTimeError(false); // Limpiar error al cerrar
+                }}
+                onConfirm={handleExportBitacora}
+                title={t('generateBitacora')}
+                message={
+                    <Box sx={{ mt: 2 }}>
+                        <Typography variant="body2" sx={{ mb: 2 }}>
+                            {t('enterClosingTimeBitacora')}
+                        </Typography>
+                        <TextField
+                            fullWidth
+                            label={t('closingTime')}
+                            type="time"
+                            value={closingTime}
+                            error={closingTimeError} // Activa el borde rojo
+                            helperText={closingTimeError ? t('field_required') : ''} // Texto descriptivo en rojo
+                            onChange={(e) => {
+                                setClosingTime(e.target.value);
+                                if (e.target.value) setClosingTimeError(false); // Quita el rojo al escribir
+                            }}
+                            InputLabelProps={{ shrink: true }}
+                            inputProps={{ step: 300 }}
+                        />
+                    </Box>
+                }
+                confirmText={t('generate')}
+            />
         </Box>
     );
 };
