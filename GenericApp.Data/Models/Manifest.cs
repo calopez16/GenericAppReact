@@ -10,6 +10,8 @@ namespace GenericApp.Data.Models
     public class Manifest
     {
         public int IdManifest { get; set; }
+        public int? ManifestNo { get; set; }
+        public int? IdCompany { get; set; }
         public int IdShipment { get; set; }
         public DateTime CreationDate { get; set; }
         public DateTime ExitDate { get; set; }
@@ -23,7 +25,6 @@ namespace GenericApp.Data.Models
         public int IdManifestStatus { get; set; }
         public string? Comments { get; set; }
         public bool? IsDeleted { get; set; }
-        public int? IdCompany { get; set; }
         public string? Empaque { get; set; }
         public string? RegFdaNo { get; set; }
         public string? TrackingCode { get; set; }

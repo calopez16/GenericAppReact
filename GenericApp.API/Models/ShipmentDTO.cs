@@ -5,6 +5,7 @@ namespace GenericApp.API.Models
     public class ShipmentDTO
     {
         public int? IdShipment { get; set; }
+        public int? ShipmentNo { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ShipmentDate { get; set; }
         public string? IdUser { get; set; }

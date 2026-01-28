@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260128030017_RemoveUnnecesaryNavigations")]
+    partial class RemoveUnnecesaryNavigations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -527,9 +529,6 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int?>("ManifestNo")
-                        .HasColumnType("int");
-
                     b.Property<string>("RegFdaNo")
                         .HasColumnType("nvarchar(max)");
 
@@ -860,9 +859,6 @@ namespace GenericApp.Data.Migrations
 
                     b.Property<DateTime>("ShipmentDate")
                         .HasColumnType("date");
-
-                    b.Property<int?>("ShipmentNo")
-                        .HasColumnType("int");
 
                     b.HasKey("IdShipment");
 
@@ -1825,7 +1821,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEMz/EVPfOpwen/OPFvEn3BRhQVfbRgCWLWt5m7x6wfRHXFZj0ia2HJDcb9MOi13NUg==",
+                            PasswordHash = "AQAAAAEAACcQAAAAELPhODfdO8XwcWiRtyE/1QLagOMIvNLHRepsA7QKnm6UL7l9uzHay3SC4VjBB5wZ1w==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,

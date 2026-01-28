@@ -6,6 +6,8 @@ namespace GenericApp.API.Models
     public class ManifestDTO
     {
         public int? IdManifest { get; set; }
+        public int? ManifestNo { get; set; }
+        public int? ShipmentNo { get; set; }
         public int? IdShipment { get; set; }
         public DateTime? CreationDate { get; set; }
         public string? ExitDate { get; set; }

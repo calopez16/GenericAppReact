@@ -101,6 +101,7 @@ namespace GenericApp.API.Controllers
             .Select(s => new ShipmentDTO
             {
                 IdShipment = s.IdShipment,
+                ShipmentNo = s.ShipmentNo,
                 CreationDate = s.CreationDate,
                 ShipmentDate = s.ShipmentDate,
                 IdClient = s.IdClient,
@@ -111,6 +112,7 @@ namespace GenericApp.API.Controllers
                 Manifests = s.Manifests.Where(wmp => !(wmp.IsDeleted ?? false)).Select(m => new ManifestDTO
                 {
                     IdManifest = m.IdManifest,
+                    ManifestNo = m.ManifestNo,
                     TrailerBoxPlate = m.TrailerBoxPlate,
                     RegFdaNo = m.RegFdaNo,
                     IdDriver = m.IdDriver,
@@ -189,6 +191,7 @@ namespace GenericApp.API.Controllers
             .Select(s => new ShipmentDTO
             {
                 IdShipment = s.IdShipment,
+                ShipmentNo = s.ShipmentNo,
                 CreationDate = s.CreationDate,
                 ShipmentDate = s.ShipmentDate,
                 IdClient = s.IdClient,
@@ -207,6 +210,7 @@ namespace GenericApp.API.Controllers
                 Manifests = s.Manifests.Where(wmp => !(wmp.IsDeleted ?? false)).Select(m => new ManifestDTO
                 {
                     IdManifest = m.IdManifest,
+                    ManifestNo = m.ManifestNo,
                     TrailerBoxPlate = m.TrailerBoxPlate,
                     RegFdaNo = m.RegFdaNo,
                     IdDriver = m.IdDriver,
@@ -429,7 +433,6 @@ namespace GenericApp.API.Controllers
                 });
             });
         }
-
         private void ComposeLabelTypeSummary(IContainer container, ManifestDTO manifest)
         {
             // 1. Agrupar datos: LabelType -> Total y desglose por Size
@@ -524,8 +527,8 @@ namespace GenericApp.API.Controllers
                     row.RelativeItem(6).AlignRight().Column(stack =>
                     {
                         stack.Item().Text(documentTitle).FontSize(14).Bold();
-                        stack.Item().Text($"REMISION #{shipment.IdShipment:D4}").FontSize(12).AlignRight().Bold().FontColor(Colors.Red.Darken2);
-                        stack.Item().Text($"VIAJE #{shipment.IdShipment:D3}").FontSize(12).AlignRight().Bold().FontColor(Colors.Grey.Darken2);
+                        stack.Item().Text($"REMISION #{shipment.ShipmentNo:D4}").FontSize(12).AlignRight().Bold().FontColor(Colors.Red.Darken2);
+                        stack.Item().Text($"VIAJE #{shipment.ShipmentNo:D3}").FontSize(12).AlignRight().Bold().FontColor(Colors.Grey.Darken2);
                     });
                 });
 
@@ -1050,7 +1053,7 @@ namespace GenericApp.API.Controllers
 
                         row.RelativeItem().AlignRight().Column(col =>
                         {
-                            col.Item().PaddingTop(10).Text($"FOLIO: {shipment.IdShipment.ToString("D3")}").FontSize(12).Bold();
+                            col.Item().PaddingTop(10).Text($"FOLIO: {shipment.ShipmentNo.Value.ToString("D3")}").FontSize(12).Bold();
                         });
                     });
 
@@ -1224,7 +1227,9 @@ namespace GenericApp.API.Controllers
                 shipmentDB.IdUser = user.Id;
                 shipmentDB.IdShipmentStatus = (int)ShipmentsStatus.Activa;
                 shipmentDB.IsDeleted = false;
-
+                var shipmentsQuery = await _repository.Query<Shipment>();
+                var lastShipmentNo = await shipmentsQuery.Where(s => s.IdCompany == shipmentDB.IdCompany).OrderByDescending(x => x.IdShipment).Select(x => x.ShipmentNo).FirstOrDefaultAsync() ?? 0;
+                shipmentDB.ShipmentNo = lastShipmentNo + 1;
                 if (model.Manifests != null && model.Manifests.Any())
                 {
                     shipmentDB.Manifests = new List<Manifest>();
@@ -1237,6 +1242,7 @@ namespace GenericApp.API.Controllers
 
                             manifestDB.CreationDate = DateTime.UtcNow;
                             manifestDB.IdSeason = season.IdSeason;
+                            manifestDB.ManifestNo = shipmentDB.ShipmentNo;
                             manifestDB.IdManifestStatus = (int)ManifestStatusEnum.Activa;
                             manifestDB.IsDeleted = false;
                             manifestDB.ExitDate = manifestDto.ExitDate != null ? DateTime.ParseExact(manifestDto.ExitDate, "HH:mm", null) : DateTime.MinValue;
@@ -1290,8 +1296,6 @@ namespace GenericApp.API.Controllers
         {
             try
             {
-
-
                 // 1. Obtener la entidad completa de la Base de Datos
                 var shipmentDBQuery = await _repository.Query<Shipment>();
 

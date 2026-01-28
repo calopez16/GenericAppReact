@@ -21,6 +21,7 @@ const ShipmentCardList = ({
     handleOpenBitacoraModal
 }) => {
     const formatRemision = (id) => id ? id.toString().padStart(4, '0') : '-';
+    const formatManifest = (id) => id ? id.toString().padStart(3, '0') : '-';
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString() : '-';
 
     if (loading) return <Typography align="center" sx={{ mt: 2 }}>{t('loading')}...</Typography>;
@@ -33,10 +34,10 @@ const ShipmentCardList = ({
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                         <Box>
                             <Typography variant="subtitle1" fontWeight="bold">
-                                {t('remisionNo')}: {formatRemision(shipment.idShipmentNavigation?.idShipment)}
+                                {t('remisionNo')}: {formatRemision(shipment.shipmentNo)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                {t('travelNo')}: {shipment.idManifest || '-'}
+                                {t('travelNo')}: {formatManifest(shipment.shipmentNo) || '-'}
                             </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', gap: 0.5 }}>

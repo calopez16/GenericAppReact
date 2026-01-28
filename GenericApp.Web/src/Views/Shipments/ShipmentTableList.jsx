@@ -26,6 +26,7 @@ const ShipmentListTable = ({
     const minTableWidth = 1200;
 
     const formatRemision = (id) => id ? id.toString().padStart(4, '0') : '-';
+    const formatManifest = (id) => id ? id.toString().padStart(3, '0') : '-';
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString() : '-';
 
     return (
@@ -54,8 +55,8 @@ const ShipmentListTable = ({
                     ) : (
                         shipments.map((shipment) => (
                             <TableRow key={shipment.idShipment}>
-                                <TableCell>{formatRemision(shipment.idShipmentNavigation?.idShipment)}</TableCell>
-                                <TableCell>{shipment.idManifest || '-'}</TableCell>
+                                <TableCell>{formatRemision(shipment.shipmentNo)}</TableCell>
+                                <TableCell>{formatManifest(shipment.shipmentNo) || '-'}</TableCell>
                                 <TableCell>{shipment.regFdaNo || '-'}</TableCell>
                                 <TableCell>{formatDate(shipment.idShipmentNavigation?.shipmentDate)}</TableCell>
                                 <TableCell>{shipment.idDriverNavigation?.name || '-'}</TableCell>

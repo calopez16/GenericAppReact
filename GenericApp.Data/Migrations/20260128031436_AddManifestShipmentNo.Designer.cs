@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260128031436_AddManifestShipmentNo")]
+    partial class AddManifestShipmentNo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -527,8 +529,8 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int?>("ManifestNo")
-                        .HasColumnType("int");
+                    b.Property<string>("ManifestNo")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RegFdaNo")
                         .HasColumnType("nvarchar(max)");
@@ -861,8 +863,8 @@ namespace GenericApp.Data.Migrations
                     b.Property<DateTime>("ShipmentDate")
                         .HasColumnType("date");
 
-                    b.Property<int?>("ShipmentNo")
-                        .HasColumnType("int");
+                    b.Property<string>("ShipmentNo")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdShipment");
 
@@ -1825,7 +1827,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEMz/EVPfOpwen/OPFvEn3BRhQVfbRgCWLWt5m7x6wfRHXFZj0ia2HJDcb9MOi13NUg==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEItVqnBIwpkr6SQayKMlb0uUSa4whyaTAsOUW6d/rtGEqsRuy/DzKIIwO8Shjnagag==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,

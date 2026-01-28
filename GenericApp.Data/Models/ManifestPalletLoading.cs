@@ -17,8 +17,6 @@ namespace GenericApp.Data.Models
         public bool? IsDeleted { get; set; }
         
         public virtual ManifestPallet? IdManifestPalletNavigation { get; set; }
-        public virtual Manifest? IdManifestNavigation { get; set; }
-        public virtual Shipment? IdShipmentNavigation { get; set; }
         public virtual LabelType? IdLabelTypeNavigation { get; set; }
     }
 }

@@ -11,6 +11,8 @@ namespace GenericApp.Data.Models
     public class Shipment
     {
         public int IdShipment { get; set; }
+        public int? ShipmentNo { get; set; }
+        public int? IdCompany { get; set; }
         public DateTime CreationDate { get; set; }
         public DateTime ShipmentDate { get; set; }
         public string? IdUser { get; set; }
@@ -21,7 +23,6 @@ namespace GenericApp.Data.Models
         public int IdShipmentStatus { get; set; }
         public string? Comments { get; set; }
         public bool? IsDeleted { get; set; }
-        public int? IdCompany { get; set; }
 
         public virtual IdentityUser? IdUserNavigation { get; set; }
         public virtual Company? IdCompanyNavigation { get; set; }

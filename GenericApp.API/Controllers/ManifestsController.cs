@@ -79,6 +79,8 @@ namespace GenericApp.API.Controllers
                 {
                     IdManifest = x.IdManifest,
                     IdShipment = x.IdShipment,
+                    ManifestNo = x.ManifestNo,
+                    ShipmentNo = x.IdShipmentNavigation.ShipmentNo,
                     CreationDate = x.CreationDate,
                     TemperatureTrailerBoxF = x.TemperatureTrailerBoxF,
                     TemperatureTrailerBoxC = x.TemperatureTrailerBoxC,
@@ -101,6 +103,7 @@ namespace GenericApp.API.Controllers
                     IdShipmentNavigation = x.IdShipmentNavigation != null ? new ShipmentDTO
                     {
                         IdShipment = x.IdShipmentNavigation.IdShipment,
+                        ShipmentNo = x.IdShipmentNavigation.ShipmentNo,
                         ShipmentDate = x.IdShipmentNavigation.ShipmentDate,
                         IdClient = x.IdShipmentNavigation.IdClient,
                         Mixed = x.IdShipmentNavigation.Mixed,
