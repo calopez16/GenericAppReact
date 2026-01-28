@@ -18,7 +18,7 @@ export const AppContextProvider = ({ children }) => {
         }
     });
     const [userRoles, setUserRoles] = useState(() => localStorage.getItem("userRoles"));
-    const [themeMode, setThemeMode] = useState(() => localStorage.getItem("themeMode") || "light");
+    const [themeMode, setThemeMode] = useState(() => localStorage.getItem("themeMode") || "dark");
     const [loading, setLoading] = useState(false);
 
     const canSelectCompany = userRoles?.includes('MultiEmpresa') || userRoles?.includes('Administrator');;

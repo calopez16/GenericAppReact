@@ -83,12 +83,11 @@ namespace GenericApp
                 options.AddPolicy(nameof(AppPolicies.User), policy => policy.RequireClaim(nameof(AppPolicies.User)));
                 options.AddPolicy(nameof(AppPolicies.IsChangePasswordNeeded), policy => policy.RequireClaim(nameof(AppPolicies.IsChangePasswordNeeded)));
             });
-
             services.AddCors(options =>
             {
                 options.AddDefaultPolicy(builder =>
                 {
-                    builder.WithOrigins("http://localhost:60688").AllowAnyMethod().AllowAnyHeader();
+                    builder.WithOrigins(Configuration.GetSection("AllowedHostsCorsOrigins").Get<string[]>()).AllowAnyMethod().AllowAnyHeader();
                 });
             });
 

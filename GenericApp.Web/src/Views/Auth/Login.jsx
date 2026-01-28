@@ -254,7 +254,8 @@ function LoginPage() {
                     {/* --- SECCIÓN DE IDIOMA MODIFICADA --- */}
                     <Box sx={{
                         width: '100%',
-                        display: 'flex',
+                        //display: 'flex',
+                        display: 'none',
                         justifyContent: 'center',
                         alignItems: 'center',
                     }}>

@@ -5,34 +5,54 @@ export const lightTheme = createTheme({
     palette: {
         mode: 'light',
         background: {
-            default: '#f8f9fa',
+            default: '#fdfbf7', // Un tono "hueso/arena" muy suave, más natural que el blanco
             paper: '#ffffff',
         },
         text: {
-            primary: '#212529',
-            secondary: '#495057',
+            primary: '#1a2e1a',   // Verde muy oscuro, casi negro, para el texto
+            secondary: '#5c635c',
         },
         primary: {
-            main: '#0d6efd',
+            main: '#2d5a27',      // Verde Espárrago (Fuerte y orgánico)
+            light: '#568351',
+            dark: '#1b3a18',
+            contrastText: '#ffffff',
         },
         secondary: {
-            main: '#6c757d',
+            main: '#a67c52',      // Color tierra/madera para acentos
         },
+        divider: '#e8e2d9',
     },
-    // Define overrides para componentes específicos (ej. Card, Button)
     components: {
         MuiCard: {
             styleOverrides: {
                 root: {
                     backgroundColor: '#ffffff',
-                    color: '#212529',
+                    color: '#1a2e1a',
+                    borderRadius: 12,
+                    border: '1px solid #e8e2d9', // Borde sutil color arena
+                    boxShadow: '0px 4px 12px rgba(27, 58, 24, 0.04)', // Sombra con tinte verde
+                },
+            },
+        },
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 20, // Bordes más redondeados (más orgánico)
+                    textTransform: 'none',
+                    fontWeight: 600,
+                },
+            },
+        },
+        MuiAppBar: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#2d5a27', // El encabezado llevará el verde fuerte
                 },
             },
         },
     },
-});
-
-// Define el tema oscuro
+});// Define el tema oscuro
 export const darkTheme = createTheme({
     palette: {
         mode: 'dark',

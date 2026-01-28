@@ -30,13 +30,11 @@ const AppWithThemeWrapper = () => {
 };
 
 createRoot(document.getElementById('root')).render(
-    <StrictMode>
-        <AppContextProvider>
-            <NotificationContext>
-                <BrowserRouter>
-                    <AppWithThemeWrapper />
-                </BrowserRouter>
-            </NotificationContext>
-        </AppContextProvider>
-    </StrictMode>
+    <AppContextProvider>
+        <NotificationContext>
+            <BrowserRouter basename="/embarques">
+                <AppWithThemeWrapper />
+            </BrowserRouter>
+        </NotificationContext>
+    </AppContextProvider>
 );
