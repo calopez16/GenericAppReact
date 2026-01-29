@@ -7,9 +7,6 @@ import { API_BASE_URL } from '@config';
 import espanishFlag from '@images/lang/es-flag.png';
 import englishFlag from '@images/lang/en-flag.png';
 
-// Componente del Modal
-import CompanySelectionModal from './CompanySelectionModal';
-
 // MUI Imports
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -187,14 +184,6 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                     </Box>
                 </Toolbar>
             </AppBar>
-
-            <CompanySelectionModal
-                open={isCompanyModalOpen}
-                onClose={handleCloseCompanyModal}
-                onSelectCompany={handleSelectCompany}
-                selectedCompanyId={companySelected?.idCompany}
-                forceSelection={isNoCompany}
-            />
         </>
     );
 };
