@@ -17,7 +17,7 @@ namespace GenericApp.API.Controllers
     /// </summary>
     [ApiController]
     [Route("drivers")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
     public class DriversController : ControllerBase
     {
         private readonly IRepository _repository;
@@ -112,6 +112,7 @@ namespace GenericApp.API.Controllers
         /// <param name="model">El DriverDTO con los datos del conductor a crear.</param>
         /// <returns>La entidad Driver creada o un conflicto si ya existe un conductor con el mismo nombre.</returns>
         [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> AddDriver([FromBody] DriverDTO model)
         {
             var driverExists = await _repository.FirstOrDefault<Driver>(x => (x.Name.ToLower().Equals(model.Name.ToLower())) && !(x.IsDeleted ?? false));
@@ -138,6 +139,7 @@ namespace GenericApp.API.Controllers
         /// <param name="model">El DriverDTO con los datos actualizados.</param>
         /// <returns>La entidad Driver actualizada o un conflicto si ya existe otro conductor con el mismo nombre.</returns>
         [HttpPut]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> UpdateDriver([FromBody] DriverDTO model)
         {
             var driverExists = await _repository.FirstOrDefault<Driver>(x => x.IdDriver == model.IdDriver && (x.Name.ToLower().Equals(model.Name.ToLower())) && (x.IsDeleted ?? false));
@@ -165,6 +167,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID del conductor a deshabilitar.</param>
         /// <returns>La DriverDTO de la entidad actualizada.</returns>
         [HttpPut("disable/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DisableDriver(int id)
         {
             var driver = await _repository.GetById<Driver>(id);
@@ -185,6 +188,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID del conductor a habilitar.</param>
         /// <returns>La DriverDTO de la entidad actualizada.</returns>
         [HttpPut("enable/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> EnableDriver(int id)
         {
             var driver = await _repository.FirstOrDefault<Driver>(x => x.IdDriver == id && !(x.IsDeleted ?? false));
@@ -205,6 +209,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID del conductor a eliminar.</param>
         /// <returns>La DriverDTO de la entidad eliminada lógicamente.</returns>
         [HttpDelete("{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DeleteDriver(int id)
         {
             var driver = await _repository.FirstOrDefault<Driver>(x => x.IdDriver == id && !(x.IsDeleted ?? false));

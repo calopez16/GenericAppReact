@@ -18,7 +18,7 @@ namespace GenericApp.API.Controllers
     /// </summary>
     [ApiController]
     [Route("dashboard")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
     public class DashboardController : ControllerBase
     {
         private readonly IRepository _repository;

@@ -17,7 +17,7 @@ namespace GenericApp.API.Controllers
     /// </summary>
     [ApiController]
     [Route("labels")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
     public class LabelsController : ControllerBase
     {
         private readonly IRepository _repository;
@@ -123,6 +123,7 @@ namespace GenericApp.API.Controllers
         /// <param name="model">El LabelDTO con los datos de la etiqueta y sus tipos a crear.</param>
         /// <returns>La LabelDTO de la entidad creada o un conflicto si ya existe una etiqueta con la misma descripción.</returns>
         [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> AddLabel([FromBody] LabelDTO model)
         {
             var labelExists = await _repository.FirstOrDefault<Label>(
@@ -189,6 +190,7 @@ namespace GenericApp.API.Controllers
         /// <param name="model">El LabelDTO con los datos actualizados.</param>
         /// <returns>La LabelDTO de la entidad actualizada o un conflicto si ya existe otra etiqueta con el mismo nombre.</returns>
         [HttpPut]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> UpdateLabel([FromBody] LabelDTO model)
         {
             var labelDB = await _repository.FirstOrDefault<Label>(x => x.IdLabel == model.IdLabel, x => x.LabelTypes);
@@ -237,6 +239,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID de la etiqueta a deshabilitar.</param>
         /// <returns>La LabelDTO de la entidad actualizada.</returns>
         [HttpPut("disable/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DisableLabel(int id)
         {
             var label = await _repository.GetById<Label>(id);
@@ -257,6 +260,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID de la etiqueta a habilitar.</param>
         /// <returns>La LabelDTO de la entidad actualizada.</returns>
         [HttpPut("enable/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> EnableLabel(int id)
         {
             var label = await _repository.FirstOrDefault<Label>(x => x.IdLabel == id && !(x.IsDeleted ?? false));
@@ -277,6 +281,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID de la etiqueta a eliminar.</param>
         /// <returns>La LabelDTO de la entidad eliminada lógicamente.</returns>
         [HttpDelete("{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DeleteLabel(int id)
         {
             var label = await _repository.FirstOrDefault<Label>(x => x.IdLabel == id && !(x.IsDeleted ?? false));

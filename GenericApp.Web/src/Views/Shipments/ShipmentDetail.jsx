@@ -239,6 +239,8 @@ const ShipmentDetail = () => {
     const getPhone = () => fetchedClient?.phone || shipment.phone || shipment.idClientNavigation?.phone;
     const getPostalCode = () => fetchedClient?.postalCode || shipment.postalCode || shipment.idClientNavigation?.postalCode;
     const getClientAddress = () => clientFullAddress || shipment.idClientNavigation?.address || shipment.address || '';
+    const formatManifest = (id) => id ? id.toString().padStart(3, '0') : '-';
+    const formatRemision = (id) => id ? id.toString().padStart(4, '0') : '-';
 
     return (
         <Box sx={{ p: { xs: 0, md: 3 }, display: 'flex', flexDirection: 'column', minHeight: '100vh', pb: 10 }}>
@@ -246,7 +248,7 @@ const ShipmentDetail = () => {
                 <Box>
                     <Typography variant={isMobile ? "h5" : "h4"} sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold' }}>
                         <DescriptionIcon fontSize="inherit" />
-                        {t('manifestDetail')} #{shipment.idShipment}
+                        {t('manifestDetail')} #{formatManifest(shipment.shipmentNo)}
                     </Typography>
                 </Box>
             </Box>
@@ -298,7 +300,7 @@ const ShipmentDetail = () => {
                         <Box key={manifest.idManifest || index} sx={{ mb: 12 }}>
                             <Box sx={{ mb: 3 }}>
                                 <Typography variant="h6" fontWeight="bold">
-                                    {t('remision')} #{manifest.idManifest || (index + 1)}
+                                    {t('remision')} #{formatRemision(shipment.shipmentNo)}
                                 </Typography>
                             </Box>
 

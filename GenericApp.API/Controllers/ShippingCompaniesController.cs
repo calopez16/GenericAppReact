@@ -17,7 +17,7 @@ namespace GenericApp.API.Controllers
     /// </summary>
     [ApiController]
     [Route("shipping-companies")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
     public class ShippingCompaniesController : ControllerBase
     {
         private readonly IRepository _repository;
@@ -45,6 +45,7 @@ namespace GenericApp.API.Controllers
         /// <param name="active">Filtro por estado activo (opcional).</param>
         /// <returns>Una respuesta paginada con la lista de ShippingCompanyDTOs.</returns>
         [HttpGet("pagination")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = $"{nameof(AppRoles.User)},{nameof(AppRoles.Administrator)}")]
         public async Task<ActionResult> GetShippingCompaniesPagination(
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,

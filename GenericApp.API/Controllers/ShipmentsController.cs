@@ -20,7 +20,7 @@ namespace GenericApp.API.Controllers
 {
     [ApiController]
     [Route("shipments")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
     public class ShipmentsController : ControllerBase
     {
         private readonly IRepository _repository;
@@ -182,7 +182,6 @@ namespace GenericApp.API.Controllers
         }
 
         [HttpGet("manifest-pdf/{id}")]
-        [AllowAnonymous] // Opcional, depende de tu seguridad
         public async Task<IActionResult> GetManifestPdfById(int id)
         {
             var shipmentQuery = await _repository.Query<Shipment>();
@@ -318,7 +317,6 @@ namespace GenericApp.API.Controllers
 
             return File(stream, "application/pdf", $"Manifiesto_{shipment.IdShipment}.pdf");
         }
-
         private void ComposeRightPanel(IContainer container, ShipmentDTO shipment, ManifestDTO manifest)
         {
             container.Column(col =>
@@ -699,31 +697,8 @@ namespace GenericApp.API.Controllers
                 });
             });
         }
-        private void ComposeExtras(IContainer container, ManifestDTO manifest)
-        {
-            container.PaddingTop(10).Row(row =>
-            {
-                // Caja de Comentarios / Chismógrafo
-                row.RelativeItem(1).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Column(col =>
-                {
-                    col.Item().Text("COMENTARIOS / NOTAS:").Bold().FontSize(8);
-                    col.Item().Text(manifest.Comments ?? "Sin comentarios.").FontSize(8);
-                });
 
-                row.ConstantItem(10); // Espacio separador
-
-                // Caja de Sellos
-                row.RelativeItem(1).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Column(col =>
-                {
-                    col.Item().Text("SELLOS (STAMPS):").Bold().FontSize(8);
-                    col.Item().Text(manifest.Stamps ?? "Sin sellos.").FontSize(9).FontColor(Colors.Red.Medium).Bold();
-                });
-            });
-        }
-
-        // --- DISEÑO TIPO REMISIÓN (Basado en la imagen) ---
         [HttpGet("remision-pdf/{id}")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetRemisionPdfById(int id)
         {
             // -----------------------------------------------------------------------
@@ -736,6 +711,7 @@ namespace GenericApp.API.Controllers
 
             {
                 IdShipment = s.IdShipment,
+                ShipmentNo = s.ShipmentNo,
                 CreationDate = s.CreationDate,
                 ShipmentDate = s.ShipmentDate,
                 IdClient = s.IdClient,
@@ -759,6 +735,7 @@ namespace GenericApp.API.Controllers
                 Manifests = s.Manifests.Where(wmp => !(wmp.IsDeleted ?? false)).Select(m => new ManifestDTO
                 {
                     IdManifest = m.IdManifest,
+                    ManifestNo = m.ManifestNo,
                     TrailerBoxPlate = m.TrailerBoxPlate,
                     RegFdaNo = m.RegFdaNo,
                     IdDriver = m.IdDriver,
@@ -856,7 +833,6 @@ namespace GenericApp.API.Controllers
 
             return File(stream, "application/pdf", $"Remision_{shipment.IdShipment}.pdf");
         }
-
         private void ComposeRemisionSubHeader(IContainer container, ShipmentDTO shipment, ManifestDTO manifest)
         {
             container.Border(1).BorderColor(Colors.Grey.Lighten2).Padding(8).Column(mainCol =>
@@ -1011,7 +987,6 @@ namespace GenericApp.API.Controllers
         }
 
         [HttpGet("bitacora-pdf/{id}/{horaCierre}")]
-        [AllowAnonymous]
         public async Task<ActionResult> GetBitacoraSellosPdf(int id, string horaCierre)
         {
             // 1. Obtención de datos

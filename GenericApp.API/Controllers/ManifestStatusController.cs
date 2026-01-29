@@ -17,7 +17,7 @@ namespace GenericApp.API.Controllers
     /// </summary>
     [ApiController]
     [Route("manifest-status")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
     public class ManifestStatusController : ControllerBase
     {
         private readonly IRepository _repository;
@@ -112,6 +112,7 @@ namespace GenericApp.API.Controllers
         /// <param name="model">El ManifestStatusDTO con los datos del estado de manifiesto a crear.</param>
         /// <returns>La entidad ManifestStatus creada o un conflicto si ya existe un estado con la misma descripción.</returns>
         [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> AddManifestStatus([FromBody] ManifestStatusDTO model)
         {
             var manifestStatusExists = await _repository.FirstOrDefault<ManifestStatus>(x => (x.Description.ToLower().Equals(model.Description.ToLower())) && !(x.IsDeleted ?? false));
@@ -138,6 +139,7 @@ namespace GenericApp.API.Controllers
         /// <param name="model">El ManifestStatusDTO con los datos actualizados.</param>
         /// <returns>La entidad ManifestStatus actualizada o un conflicto si ya existe otro estado con la misma descripción (no eliminada).</returns>
         [HttpPut]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> UpdateManifestStatus([FromBody] ManifestStatusDTO model)
         {
             var manifestStatusExists = await _repository.FirstOrDefault<ManifestStatus>(x => x.IdManifestStatus == model.IdManifestStatus && (x.Description.ToLower().Equals(model.Description.ToLower())) && (x.IsDeleted ?? false));
@@ -165,6 +167,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID del estado de manifiesto a deshabilitar.</param>
         /// <returns>La ManifestStatusDTO de la entidad actualizada.</returns>
         [HttpPut("disable/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DisableManifestStatus(int id)
         {
             var manifestStatus = await _repository.GetById<ManifestStatus>(id);
@@ -185,6 +188,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID del estado de manifiesto a habilitar.</param>
         /// <returns>La ManifestStatusDTO de la entidad actualizada.</returns>
         [HttpPut("enable/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> EnableManifestStatus(int id)
         {
             var manifestStatus = await _repository.FirstOrDefault<ManifestStatus>(x => x.IdManifestStatus == id && !(x.IsDeleted ?? false));
@@ -205,6 +209,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID del estado de manifiesto a eliminar.</param>
         /// <returns>La ManifestStatusDTO de la entidad eliminada lógicamente.</returns>
         [HttpDelete("{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DeleteManifestStatus(int id)
         {
             var manifestStatus = await _repository.FirstOrDefault<ManifestStatus>(x => x.IdManifestStatus == id && !(x.IsDeleted ?? false));

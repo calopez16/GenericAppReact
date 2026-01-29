@@ -16,7 +16,7 @@ namespace GenericApp.API.Controllers
     /// </summary>
     [ApiController]
     [Route("cities")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
     public class CitiesController : ControllerBase
     {
         private readonly IRepository _repository;
@@ -106,6 +106,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID de la ciudad a buscar.</param>
         /// <returns>La CityDTO si se encuentra, o NotFound si no existe.</returns>
         [HttpGet("{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult<CityDTO>> GetCityById(int id)
         {
             // Obtenemos la consulta base del repositorio
@@ -147,6 +148,7 @@ namespace GenericApp.API.Controllers
         /// <param name="model">El CityDTO con los datos de la ciudad a crear.</param>
         /// <returns>La entidad City creada o un conflicto si ya existe.</returns>
         [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> AddCity([FromBody] CityDTO model)
         {
             var cityExists = await _repository.FirstOrDefault<City>(x => (x.Description.ToLower().Equals(model.Description.ToLower())) && x.IdState == model.IdState && !(x.IsDeleted ?? false), x => x.IdStateNavigation, x => x.IdStateNavigation.IdCountryNavigation);
@@ -184,6 +186,7 @@ namespace GenericApp.API.Controllers
         /// <param name="model">El CityDTO con los datos actualizados.</param>
         /// <returns>La entidad City actualizada o un BadRequest/NotFound si falla.</returns>
         [HttpPut]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> UpdateCity([FromBody] CityDTO model)
         {
             var cityExists = await _repository.FirstOrDefault<City>(x => x.IdCity == model.IdCity && (x.Description.ToLower().Equals(model.Description.ToLower())) && (x.IsDeleted ?? false));
@@ -221,6 +224,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID de la ciudad a deshabilitar.</param>
         /// <returns>La CityDTO de la ciudad actualizada.</returns>
         [HttpPut("disable/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DisableCity(int id)
         {
             var city = await _repository.GetById<City>(id);
@@ -241,6 +245,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID de la ciudad a habilitar.</param>
         /// <returns>La CityDTO de la ciudad actualizada.</returns>
         [HttpPut("enable/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> EnableCity(int id)
         {
             var city = await _repository.FirstOrDefault<City>(x => x.IdCity == id && !(x.IsDeleted ?? false));
@@ -261,6 +266,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID de la ciudad a eliminar.</param>
         /// <returns>La CityDTO de la ciudad eliminada lógicamente.</returns>
         [HttpDelete("{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DeleteCity(int id)
         {
             var city = await _repository.FirstOrDefault<City>(x => x.IdCity == id && !(x.IsDeleted ?? false));

@@ -1,5 +1,5 @@
 ﻿import { AuthHelper } from '@helpers/AuthHelper';
-import { API_BASE_URL } from '@config';
+import { API_BASE_URL, APP_BASE_URL } from '@config';
 
 const API_ENDPOINT_REFRESH_TOKEN = "Auth/refresh-token";
 const API_ENDPOINT_LOGIN = "Auth/login";
@@ -90,7 +90,7 @@ const sendRequest = async (endPoint, method, data = null, config = false) => {
         let response = await fetch(url, options);
 
         if (response.status === 403) {
-            window.location.href = '/unauthorized';
+            //window.location.href = `${APP_BASE_URL}/unauthorized`;
             return false;
         }
 

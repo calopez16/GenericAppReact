@@ -15,7 +15,7 @@ namespace GenericApp.API.Controllers
 {
     [ApiController]
     [Route("manifests")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
     public class ManifestsController : ControllerBase
     {
         private readonly IRepository _repository;

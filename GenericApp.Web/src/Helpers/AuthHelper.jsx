@@ -1,5 +1,6 @@
 ﻿// Este helper centraliza el acceso al token en localStorage.
 // Así, tanto el AppContext como el interceptor de API leen del mismo lugar.
+import { APP_BASE_URL } from '@config';
 
 export const AuthHelper = {
     getAccessToken: () => localStorage.getItem('accessToken'),
@@ -22,6 +23,6 @@ export const AuthHelper = {
         window.dispatchEvent(new Event('storage'));
         if (redirectToLogin)
             // Redirección forzada al login.
-            window.location.href = '/login';
+            window.location.href = `${APP_BASE_URL}/login`;
     }
 };

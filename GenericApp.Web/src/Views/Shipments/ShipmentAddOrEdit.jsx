@@ -462,6 +462,7 @@ function ShipmentAddOrEdit() {
     };
 
     if (isLoading) return <Box sx={{ p: 5, textAlign: 'center' }}><CircularProgress /></Box>;
+    const formatManifest = (id) => id ? id.toString().padStart(3, '0') : '-';
 
     return (
         // Agregado pb: 10 para evitar superposición con el footer sticky
@@ -469,7 +470,7 @@ function ShipmentAddOrEdit() {
             <Box sx={{ mb: 3 }}>
                 <Typography variant={isMobile ? "h5" : "h4"} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <LocalShippingIcon fontSize={isMobile ? "medium" : "large"} color="primary" />
-                    {isEditing ? `${t('editManifest')} #${formData.idShipment}` : t('newManifest')}
+                    {isEditing ? `${t('editManifest')} #${formatManifest(formData.shipmentNo)}` : t('newManifest')}
                 </Typography>
             </Box>
 

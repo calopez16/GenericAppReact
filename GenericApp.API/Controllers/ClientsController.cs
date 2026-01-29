@@ -18,7 +18,7 @@ namespace GenericApp.API.Controllers
     /// </summary>
     [ApiController]
     [Route("clients")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
     public class ClientsController : ControllerBase
     {
         private readonly IRepository _repository;
@@ -119,6 +119,7 @@ namespace GenericApp.API.Controllers
         /// <param name="model">El ClientDTO con los datos del cliente a crear.</param>
         /// <returns>La entidad Client creada o un conflicto si ya existe un cliente con el mismo nombre o RFC.</returns>
         [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> AddClient([FromBody] ClientDTO model)
         {
             var clientExists = await _repository.FirstOrDefault<Client>(x => (x.Name.ToLower().Equals(model.Name.ToLower()) || (!model.Rfc.IsNullOrEmpty() && x.Rfc.ToLower().Equals(model.Rfc.ToLower()))) && !(x.IsDeleted ?? false));
@@ -145,6 +146,7 @@ namespace GenericApp.API.Controllers
         /// <param name="model">El ClientDTO con los datos actualizados.</param>
         /// <returns>La entidad Client actualizada o un conflicto si ya existe otro cliente con el mismo nombre o RFC.</returns>
         [HttpPut]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> UpdateClient([FromBody] ClientDTO model)
         {
             var clientExists = await _repository.FirstOrDefault<Client>(x => x.IdClient != model.IdClient && (x.Name.ToLower().Equals(model.Name.ToLower()) || (!model.Rfc.IsNullOrEmpty() && x.Rfc.ToLower().Equals(model.Rfc.ToLower()))) && !(x.IsDeleted ?? false));
@@ -178,6 +180,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID del cliente a deshabilitar.</param>
         /// <returns>La ClientDTO de la entidad actualizada.</returns>
         [HttpPut("disable/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DisableClient(int id)
         {
             var client = await _repository.GetById<Client>(id);
@@ -198,6 +201,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID del cliente a habilitar.</param>
         /// <returns>La ClientDTO de la entidad actualizada.</returns>
         [HttpPut("enable/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> EnableClient(int id)
         {
             var client = await _repository.FirstOrDefault<Client>(x => x.IdClient == id && !(x.IsDeleted ?? false));
@@ -218,6 +222,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID del cliente a eliminar.</param>
         /// <returns>La ClientDTO de la entidad eliminada lógicamente.</returns>
         [HttpDelete("{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DeleteClient(int id)
         {
             var client = await _repository.FirstOrDefault<Client>(x => x.IdClient == id && !(x.IsDeleted ?? false));
