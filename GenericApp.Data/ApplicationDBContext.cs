@@ -14,12 +14,6 @@ namespace GenericApp.Data
         {
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer("Server=localhost;Database=GenericApi;User=sa;Pwd=saadmin;");
-            optionsBuilder.UseLazyLoadingProxies(false);
-        }
-
         public DbSet<ApplicationLog> ApplicationLogs { get; set; }
         public DbSet<City> Cities { get; set; }
         public DbSet<Client> Clients { get; set; }
