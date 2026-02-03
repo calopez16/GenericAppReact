@@ -1,25 +1,30 @@
 import { createTheme } from '@mui/material/styles';
 
-// Define el tema claro
+// Colores Core de Magnolia's
+const BRAND_DARK = '#101828';
+const BRAND_GOLD = '#FCD462';
+const BRAND_GOLD_HOVER = '#e0bd55';
+
 export const lightTheme = createTheme({
     palette: {
         mode: 'light',
         background: {
-            default: '#fdfbf7', // Un tono "hueso/arena" muy suave, más natural que el blanco
+            default: '#fdfbf7',
             paper: '#ffffff',
         },
         text: {
-            primary: '#1a2e1a',   // Verde muy oscuro, casi negro, para el texto
-            secondary: '#5c635c',
+            primary: BRAND_DARK,
+            secondary: '#475467',
         },
         primary: {
-            main: '#2d5a27',      // Verde Espárrago (Fuerte y orgánico)
-            light: '#568351',
-            dark: '#1b3a18',
+            main: BRAND_DARK,
+            light: '#1d2939',
+            dark: '#0b1220',
             contrastText: '#ffffff',
         },
         secondary: {
-            main: '#a67c52',      // Color tierra/madera para acentos
+            main: BRAND_GOLD,
+            contrastText: BRAND_DARK,
         },
         divider: '#e8e2d9',
     },
@@ -27,58 +32,90 @@ export const lightTheme = createTheme({
         MuiCard: {
             styleOverrides: {
                 root: {
-                    backgroundColor: '#ffffff',
-                    color: '#1a2e1a',
-                    borderRadius: 12,
-                    border: '1px solid #e8e2d9', // Borde sutil color arena
-                    boxShadow: '0px 4px 12px rgba(27, 58, 24, 0.04)', // Sombra con tinte verde
+                    borderRadius: 16,
+                    border: '1px solid #eaecf0',
+                    boxShadow: '0px 4px 20px rgba(16, 24, 40, 0.08)',
                 },
             },
         },
         MuiButton: {
             styleOverrides: {
                 root: {
-                    borderRadius: 20, // Bordes más redondeados (más orgánico)
+                    borderRadius: 8,
                     textTransform: 'none',
                     fontWeight: 600,
+                    padding: '8px 20px',
+                },
+                containedPrimary: {
+                    backgroundColor: BRAND_DARK,
+                    '&:hover': {
+                        backgroundColor: '#1d2939',
+                    },
+                },
+                containedSecondary: {
+                    backgroundColor: BRAND_GOLD,
+                    color: BRAND_DARK,
+                    '&:hover': {
+                        backgroundColor: BRAND_GOLD_HOVER,
+                    },
                 },
             },
         },
         MuiAppBar: {
             styleOverrides: {
                 root: {
-                    backgroundColor: '#2d5a27', // El encabezado llevará el verde fuerte
+                    backgroundColor: BRAND_DARK,
+                },
+            },
+        },
+        MuiTextField: {
+            styleOverrides: {
+                root: {
+                    '& .MuiOutlinedInput-root': {
+                        borderRadius: 8,
+                    },
                 },
             },
         },
     },
-});// Define el tema oscuro
+});
+
 export const darkTheme = createTheme({
     palette: {
         mode: 'dark',
         background: {
-            default: '#212529',
-            paper: '#343a40',
+            default: '#0b1220',
+            paper: BRAND_DARK,
         },
         text: {
-            primary: '#f8f9fa',
-            secondary: '#ced4da',
+            primary: '#ffffff',
+            secondary: '#98a2b3',
         },
         primary: {
-            main: '#0d6efd', // Puedes cambiarlo si quieres
+            main: BRAND_GOLD,
+            contrastText: BRAND_DARK,
         },
         secondary: {
-            main: '#6c757d', // Puedes cambiarlo si quieres
+            main: '#ffffff',
         },
     },
-    // Define overrides para componentes específicos (ej. Card, Button)
     components: {
         MuiCard: {
             styleOverrides: {
                 root: {
-                    backgroundColor: '#343a40',
-                    color: '#f8f9fa',
-                    borderColor: '#495057',
+                    backgroundColor: BRAND_DARK,
+                    backgroundImage: 'none',
+                    borderRadius: 16,
+                    border: '1px solid #1f2937',
+                },
+            },
+        },
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 8,
+                    textTransform: 'none',
+                    fontWeight: 600,
                 },
             },
         },

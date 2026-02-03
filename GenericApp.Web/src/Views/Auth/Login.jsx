@@ -1,25 +1,34 @@
 ﻿import React, { useContext, useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '@helpers/AppContext';
 import { AuthenticationAPIService } from '@data/Auth/Authentication';
 import { ShowMessage, HideMessage } from '@helpers/NotificationService';
-import '@styles/Login.css';
+import {
+    Box,
+    Container,
+    Typography,
+    TextField,
+    Button,
+    CircularProgress,
+    Card,
+    CardContent,
+    Grid
+} from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
-import espanishFlag from '@images/lang/es-flag.png';
-import englishFlag from '@images/lang/en-flag.png';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Logo from '@images/logo.png';
 
-import { Box, Container, Typography, TextField, Button, CircularProgress, Card, CardContent } from '@mui/material';
-// IconButton ya no es necesario, pero lo dejamos por si lo usas en otro lado
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Avatar from '@mui/material/Avatar';
-import Tooltip from '@mui/material/Tooltip';
-import Check from '@mui/icons-material/Check';
+const formTransition = {
+    initial: { opacity: 0, x: 20 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -20 },
+    transition: { duration: 0.3 }
+};
 
 function LoginPage() {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const { setAccessToken, setUserRoles, setUserName, setCompanySelected } = useContext(AppContext);
     const navigate = useNavigate();
 
@@ -27,20 +36,11 @@ function LoginPage() {
     const [password, setPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
-
     const [isLoading, setIsLoading] = useState(false);
     const [isRestartPasswordNeeded, setIsRestartPasswordNeeded] = useState(false);
-    const [anchorEl, setAnchorEl] = React.useState(null);
-    const open = Boolean(anchorEl);
 
     const authService = AuthenticationAPIService();
-
     const newPasswordRef = useRef(null);
-
-    const langFlags = {
-        'es': espanishFlag,
-        'en': englishFlag
-    };
 
     useEffect(() => {
         if (isRestartPasswordNeeded && newPasswordRef.current) {
@@ -48,47 +48,22 @@ function LoginPage() {
         }
     }, [isRestartPasswordNeeded]);
 
-    useEffect(() => {
-        document.body.classList.add('login-background');
-
-        return () => {
-            document.body.classList.remove('login-background');
-        };
-    }, []);
-
-    const handleClick = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-    const changeLanguage = (lng) => {
-        i18n.changeLanguage(lng);
-    };
-
     const handleLogin = async (event) => {
         event.preventDefault();
-
         if (!email || !password) {
             ShowMessage(t('emptyFields'), 'warning');
             return;
         }
         setIsLoading(true);
-
         try {
             const response = await authService.authenticate({ email, password });
-
             if (response && response.success) {
                 const { token, roles, userName, isChangePasswordNeeded, company } = response.data;
-
+                setAccessToken(token);
                 if (isChangePasswordNeeded) {
-                    setAccessToken(token);
                     setIsRestartPasswordNeeded(true);
-                    setNewPassword('');
-                    setConfirmNewPassword('');
                     ShowMessage(t('changePasswordNeeded'), 'info');
                 } else {
-                    setAccessToken(token);
                     setUserRoles(roles);
                     setUserName(userName);
                     setCompanySelected(company);
@@ -99,7 +74,6 @@ function LoginPage() {
             }
         } catch (err) {
             ShowMessage(t('error'), 'error');
-            console.error('Error de login:', err);
         } finally {
             setIsLoading(false);
             HideMessage();
@@ -108,30 +82,13 @@ function LoginPage() {
 
     const handlePasswordChange = async (event) => {
         event.preventDefault();
-
-        if (!newPassword || !confirmNewPassword) {
-            ShowMessage(t('emptyFields'), 'error');
-            return;
-        }
-
-        const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+[\]{};':"\\|,.<>/?]).{8,}$/;
-
-        if (!passwordRegex.test(newPassword)) {
-            ShowMessage(t('passwordRequirementsMessage') , 'error');
-            return;
-        }
-        // ---------------------------------------------------
-
         if (newPassword !== confirmNewPassword) {
             ShowMessage(t('passwordsDontMatch'), 'error');
             return;
         }
-
         setIsLoading(true);
-
         try {
             const response = await authService.passwordRestart(newPassword);
-
             if (response && response.success) {
                 const { token, roles, userName, company } = response.data;
                 setAccessToken(token);
@@ -140,8 +97,6 @@ function LoginPage() {
                 setCompanySelected(company);
                 ShowMessage(t('passwordChanged'), 'success');
                 navigate('/');
-            } else {
-                ShowMessage(t('error'), 'error');
             }
         } catch (err) {
             ShowMessage(t('conectionError'), 'error');
@@ -150,157 +105,125 @@ function LoginPage() {
         }
     };
 
-    const handleGoBack = () => {
-        setIsRestartPasswordNeeded(false);
-    };
-
     return (
-        <Container component="main" maxWidth="xs" sx={{ display: 'flex', alignItems: 'center', minHeight: '100vh', justifyContent: 'center' }}>
-            <Card sx={{ p: { xs: 2, sm: 4 }, width: '100%' }}>
-                <CardContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
-                        <Typography component="h1" variant="h5" sx={{ mb: 4 }}>
-                            {isRestartPasswordNeeded ? t('changePassword') : t('login')}
-                        </Typography>
+        <Box sx={{
+            backgroundColor: 'primary.main',
+            color: 'white',
+            minHeight: '100vh',
+            width: '100vw',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            position: 'relative',
+        }}>
+            <Container maxWidth="lg">
+                <Grid
+                    container
+                    spacing={4}
+                    alignItems="center"
+                    justifyContent="center"
+                    sx={{
+                        mt: { xs: -5, md: -10 } // Eleva el formulario
+                    }}
+                >
+                    {/* COLUMNA BRANDING */}
+                    <Grid item xs={12} md={6} sx={{ textAlign: 'center', order: { xs: 1, md: 2 } }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <Box component="img" src={Logo} sx={{ maxWidth: { xs: 130, md: 180 }, mb: 2 }} />
 
-                        {/* Formulario de login normal */}
-                        <div className={`form-container ${isRestartPasswordNeeded ? 'hidden' : 'visible'}`}>
-                            <Box component="form" onSubmit={handleLogin} noValidate sx={{ width: '100%' }}>
-                                <TextField
-                                    margin="normal"
-                                    required
-                                    fullWidth
-                                    id="username"
-                                    label={t('userName')}
-                                    name="username"
-                                    autoComplete="username"
-                                    autoFocus
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
-                                <TextField
-                                    margin="normal"
-                                    required
-                                    fullWidth
-                                    name="password"
-                                    label={t('password')}
-                                    type="password"
-                                    id="password"
-                                    autoComplete="current-password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    fullWidth
-                                    endIcon={!isLoading && <LoginIcon />}
-                                    disabled={isLoading}
-                                    sx={{ mt: 3, mb: 2 }}
-                                >
-                                    {isLoading ? <CircularProgress size={24} color="inherit" /> : t('login')}
-                                </Button>
-                            </Box>
-                        </div>
+                            <Typography variant="overline" color="secondary.main" fontWeight="bold" letterSpacing={1}>
+                                {"MAGNOLIA'S INCOME TAX SERVICE"}
+                            </Typography>
 
-                        {/* Formulario de cambio de contraseña */}
-                        <div className={`form-container ${isRestartPasswordNeeded ? 'visible' : 'hidden'}`}>
-                            <Box component="form" onSubmit={handlePasswordChange} noValidate sx={{ width: '100%' }}>
-                                <TextField
-                                    inputRef={newPasswordRef}
-                                    margin="normal"
-                                    required
-                                    fullWidth
-                                    name="newPassword"
-                                    label={t('newPassword')}
-                                    type="password"
-                                    id="newPassword"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                />
-                                <TextField
-                                    margin="normal"
-                                    required
-                                    fullWidth
-                                    name="confirmNewPassword"
-                                    label={t('confirmPassword')}
-                                    type="password"
-                                    id="confirmNewPassword"
-                                    value={confirmNewPassword}
-                                    onChange={(e) => setConfirmNewPassword(e.target.value)}
-                                />
-                                <Button
-                                    type="submit"
-                                    fullWidth
-                                    variant="contained"
-                                    sx={{ mt: 3, mb: 2 }}
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? <CircularProgress size={24} color="inherit" /> : t('changePassword')}
-                                </Button>
-                                <Button
-                                    fullWidth
-                                    variant="outlined"
-                                    sx={{ mt: 1, mb: 2 }}
-                                    onClick={handleGoBack}
-                                    disabled={isLoading}
-                                >
-                                    {t('goBack')}
-                                </Button>
-                            </Box>
-                        </div>
-                    </Box>
-
-                    {/* --- SECCIÓN DE IDIOMA MODIFICADA --- */}
-                    <Box sx={{
-                        width: '100%',
-                        //display: 'flex',
-                        display: 'none',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}>
-                        <Tooltip title={t('select_language')}>
-                            <Button
-                                aria-label="language selector"
-                                aria-controls={open ? 'language-menu' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={open ? 'true' : undefined}
-                                onClick={handleClick}
-                                variant="text"
-                                sx={{ textTransform: 'none', color: 'text.secondary' }}
-                                startIcon={
-                                    <Avatar
-                                        src={langFlags[i18n.language]}
-                                        alt={t('current_language')}
-                                        sx={{ width: 30, height: 30 }}
-                                    />
-                                }
+                            <Typography
+                                variant="h2"
+                                fontWeight={800}
+                                sx={{
+                                    mb: 1,
+                                    background: (theme) => `linear-gradient(45deg, ${theme.palette.secondary.main} 30%, #ffffff 90%)`,
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    fontSize: { xs: '2rem', md: '3rem' },
+                                    lineHeight: 1.2
+                                }}
                             >
-                                {t('language_selected')}
-                            </Button>
-                        </Tooltip>
-                        <Menu
-                            id="language-menu"
-                            anchorEl={anchorEl}
-                            open={open}
-                            onClose={handleClose}
-                            MenuListProps={{
-                                'aria-labelledby': 'language-selector',
-                            }}
-                        >
-                            <MenuItem onClick={() => { changeLanguage('es'); handleClose(); }}>
-                                <Avatar src={espanishFlag} sx={{ width: 20, height: 20, mr: 1 }} />
-                                {t('language_spanish')}
-                            </MenuItem>
-                            <MenuItem onClick={() => { changeLanguage('en'); handleClose(); }}>
-                                <Avatar src={englishFlag} sx={{ width: 20, height: 20, mr: 1 }} />
-                                {t('language_english')}
-                            </MenuItem>
-                        </Menu>
-                    </Box>
-                </CardContent>
-            </Card>
-        </Container>
+                                {t('welcomeMessage') || 'Bienvenido'}
+                            </Typography>
+
+                            <Typography variant="body2" sx={{ opacity: 0.8, fontWeight: 400, maxWidth: '400px' }}>
+                                {t('loginDescription') || 'Accede a tu cuenta para gestionar tus procesos de manera eficiente.'}
+                            </Typography>
+                        </Box>
+                    </Grid>
+
+                    {/* COLUMNA FORMULARIO */}
+                    <Grid item xs={12} md={6} sx={{ order: { xs: 2, md: 1 } }}>
+                        <Box sx={{ maxWidth: 400, mx: 'auto' }}>
+                            <Card sx={{
+                                borderRadius: 4,
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                backdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                color: 'white',
+                                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+                            }}>
+                                <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+                                    <AnimatePresence mode="wait">
+                                        {!isRestartPasswordNeeded ? (
+                                            <motion.div key="login-form" {...formTransition}>
+                                                <Typography variant="h5" fontWeight="700" gutterBottom sx={{ textAlign: 'center', mb: 2 }}>
+                                                    {t('login')}
+                                                </Typography>
+                                                <Box component="form" onSubmit={handleLogin} noValidate>
+                                                    <TextField
+                                                        margin="dense" fullWidth label={t('userName')} autoFocus value={email} onChange={(e) => setEmail(e.target.value)}
+                                                        sx={{ input: { color: 'white' }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' } } }}
+                                                    />
+                                                    <TextField
+                                                        margin="dense" fullWidth label={t('password')} type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                                                        sx={{ input: { color: 'white' }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' } } }}
+                                                    />
+                                                    <Button
+                                                        type="submit" fullWidth variant="contained" color="secondary"
+                                                        disabled={isLoading} endIcon={!isLoading && <LoginIcon />}
+                                                        sx={{ mt: 3, py: 1.2, fontWeight: 'bold', borderRadius: '30px' }}
+                                                    >
+                                                        {isLoading ? <CircularProgress size={24} color="inherit" /> : t('login')}
+                                                    </Button>
+                                                </Box>
+                                            </motion.div>
+                                        ) : (
+                                            <motion.div key="reset-form" {...formTransition}>
+                                                <Typography variant="h5" fontWeight="700" gutterBottom sx={{ textAlign: 'center' }}>
+                                                    {t('changePassword')}
+                                                </Typography>
+                                                <Box component="form" onSubmit={handlePasswordChange} noValidate sx={{ mt: 1 }}>
+                                                    <TextField
+                                                        inputRef={newPasswordRef} margin="dense" fullWidth label={t('newPassword')} type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                                                        sx={{ input: { color: 'white' }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' } }}
+                                                    />
+                                                    <TextField
+                                                        margin="dense" fullWidth label={t('confirmPassword')} type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                                        sx={{ input: { color: 'white' }, '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' } }}
+                                                    />
+                                                    <Button type="submit" fullWidth variant="contained" color="secondary" sx={{ mt: 3, py: 1.2, borderRadius: '30px' }} disabled={isLoading}>
+                                                        {isLoading ? <CircularProgress size={24} color="inherit" /> : t('changePassword')}
+                                                    </Button>
+                                                    <Button fullWidth startIcon={<ArrowBackIcon />} sx={{ mt: 1, color: 'white', textTransform: 'none' }} onClick={() => setIsRestartPasswordNeeded(false)}>
+                                                        {t('goBack')}
+                                                    </Button>
+                                                </Box>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </CardContent>
+                            </Card>
+                        </Box>
+                    </Grid>
+                </Grid>
+            </Container>
+        </Box>
     );
 }
 

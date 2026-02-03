@@ -52,7 +52,7 @@ const Index = () => {
         >
             {/* --- SECCIÓN HERO ÚNICA --- */}
             <Box sx={{
-                backgroundColor: '#101828',
+                backgroundColor: 'primary.main', // Vinculado a #101828
                 color: 'white',
                 minHeight: '90vh',
                 display: 'flex',
@@ -68,11 +68,11 @@ const Index = () => {
                             <motion.div variants={itemVariants}>
                                 <Typography
                                     variant="h6"
-                                    color="#FCD462"
+                                    color="secondary.main" // Vinculado a #FCD462
                                     fontWeight="bold"
                                     letterSpacing={1}
                                     gutterBottom
-                                    sx={{ textAlign: { xs: 'center', md: 'left' } }} // Centrado en móvil
+                                    sx={{ textAlign: { xs: 'center', md: 'left' } }}
                                 >
                                     {COMPANY_NAME.toUpperCase()}
                                 </Typography>
@@ -82,11 +82,11 @@ const Index = () => {
                                     fontWeight={800}
                                     sx={{
                                         mb: 2,
-                                        background: 'linear-gradient(45deg, #FCD462 30%, #ffffff 90%)',
+                                        background: (theme) => `linear-gradient(45deg, ${theme.palette.secondary.main} 30%, #ffffff 90%)`,
                                         WebkitBackgroundClip: 'text',
                                         WebkitTextFillColor: 'transparent',
                                         fontSize: { xs: '2.5rem', md: '3.75rem' },
-                                        textAlign: { xs: 'center', md: 'left' } // Centrado en móvil
+                                        textAlign: { xs: 'center', md: 'left' }
                                     }}
                                 >
                                     Seguimiento de procesos migratorios
@@ -100,8 +100,8 @@ const Index = () => {
                                         fontWeight: 400,
                                         maxWidth: '95%',
                                         fontSize: { xs: '1rem', md: '1.25rem' },
-                                        textAlign: { xs: 'center', md: 'left' }, // Centrado en móvil
-                                        mx: { xs: 'auto', md: 0 } // Asegura centrado con maxWidth
+                                        textAlign: { xs: 'center', md: 'left' },
+                                        mx: { xs: 'auto', md: 0 }
                                     }}
                                 >
                                     Te ayudamos con la documentacion de procesos migratorios y administrativos.
@@ -114,7 +114,7 @@ const Index = () => {
                                         fontWeight="bold"
                                         sx={{
                                             mb: 2,
-                                            color: '#FCD462',
+                                            color: 'secondary.main', // Vinculado a #FCD462
                                         }}
                                     >
                                         Nuestros Servicios:
@@ -127,7 +127,7 @@ const Index = () => {
                                                     alignItems="center"
                                                     spacing={1.5}
                                                 >
-                                                    <CheckCircleIcon sx={{ color: '#FCD462', fontSize: 20 }} />
+                                                    <CheckCircleIcon sx={{ color: 'secondary.main', fontSize: 20 }} />
                                                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                                         {service}
                                                     </Typography>
@@ -141,17 +141,16 @@ const Index = () => {
                                 <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
                                     <Button
                                         variant="contained"
+                                        color="secondary"
                                         size="large"
                                         endIcon={<ArrowForwardIcon />}
                                         sx={{
-                                            bgcolor: '#FCD462',
-                                            color: '#101828',
                                             fontWeight: 'bold',
                                             px: 5, py: 1.5,
                                             borderRadius: '30px',
                                             fontSize: '1.1rem',
                                             width: { xs: '100%', sm: 'auto' },
-                                            '&:hover': { bgcolor: '#e0bd55' }
+                                            '&:hover': { bgcolor: 'secondary.dark' }
                                         }}
                                         onClick={() => alert("Abrir Modal de Formulario")}
                                     >
@@ -169,7 +168,7 @@ const Index = () => {
                                 display: 'flex',
                                 justifyContent: 'center',
                                 order: { xs: 1, md: 2 },
-                                mb: { xs: 2, md: 0 } // CAMBIO: Menos margen en móvil para acercarlo al texto
+                                mb: { xs: 2, md: 0 }
                             }}
                         >
                             <motion.div variants={itemVariants} >

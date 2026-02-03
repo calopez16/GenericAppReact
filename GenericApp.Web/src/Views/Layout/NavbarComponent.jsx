@@ -1,4 +1,4 @@
-﻿import React from 'react';
+﻿import React, { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     AppBar,
@@ -6,29 +6,31 @@ import {
     Button,
     Box,
     Container,
-    Typography
+    Typography,
+    IconButton,
+    useTheme
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
+import { AppContext } from '@helpers/AppContext';
 
-// Importa tu logo
+// Íconos
+import DarkModeIcon from '@mui/icons-material/Brightness4';
+import LightModeIcon from '@mui/icons-material/Brightness7';
 import Logo from '@images/logo.png';
 
 const NavbarComponent = () => {
     const { t } = useTranslation();
+    const { themeMode, setThemeMode } = useContext(AppContext);
+    const theme = useTheme();
 
-    const navLinks = [
-        //{ title: 'Home', path: '/' },
-        //{ title: 'About', path: '/about' },
-        //{ title: 'Services', path: '/services' },
-        //{ title: 'Contact', path: '/contact' }
-    ];
+    const navLinks = [];
 
     return (
         <AppBar
             position="static"
             elevation={0}
             sx={{
-                backgroundColor: '#101828',
+                backgroundColor: 'primary.main',
                 borderBottom: '1px solid rgba(255,255,255,0.05)'
             }}
         >
@@ -49,21 +51,16 @@ const NavbarComponent = () => {
                         <img
                             src={Logo}
                             alt="Logo Empresa"
-                            style={{
-                                height: '40px',
-                                width: 'auto',
-                                marginRight: '12px'
-                            }}
+                            style={{ height: '40px', width: 'auto', marginRight: '12px' }}
                         />
                         <Typography
                             variant="h6"
                             noWrap
                             sx={{
                                 fontWeight: 700,
-                                color: '#FCD462',
+                                color: 'secondary.main',
                                 fontSize: '1.5rem',
                                 letterSpacing: '.1rem',
-                                // CAMBIO: Oculto en móviles (xs), visible en escritorio (md)
                                 display: { xs: 'none', md: 'block' }
                             }}
                         >
@@ -71,38 +68,29 @@ const NavbarComponent = () => {
                         </Typography>
                     </Box>
 
-                    {/* Links de Navegación (Escritorio) */}
-                    <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3 }}>
-                        {navLinks.map((link) => (
-                            <Button
-                                key={link.title}
-                                component={RouterLink}
-                                to={link.path}
-                                sx={{
-                                    color: 'white',
-                                    textTransform: 'none',
-                                    fontSize: '1rem',
-                                    '&:hover': { color: '#FCD462' }
-                                }}
-                            >
-                                {link.title}
-                            </Button>
-                        ))}
-                    </Box>
-
                     {/* Botones de Acción */}
-                    <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+
+                        {/* BOTÓN TOGGLE THEME */}
+                        {/*<IconButton*/}
+                        {/*    onClick={() => setThemeMode(themeMode === 'light' ? 'dark' : 'light')}*/}
+                        {/*    sx={{ color: 'secondary.main' }}*/}
+                        {/*>*/}
+                        {/*    {themeMode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}*/}
+                        {/*</IconButton>*/}
+
                         <Button
                             variant="outlined"
-                            color="inherit"
+                            component={RouterLink}
+                            to="/login"
                             sx={{
-                                borderColor: '#FCD462',
-                                color: '#FCD462',
+                                borderColor: 'secondary.main',
+                                color: 'secondary.main',
                                 borderRadius: '20px',
                                 textTransform: 'none',
                                 px: 3,
                                 '&:hover': {
-                                    borderColor: '#e0bd55',
+                                    borderColor: 'secondary.dark',
                                     backgroundColor: 'rgba(252, 212, 98, 0.04)'
                                 }
                             }}
@@ -114,7 +102,7 @@ const NavbarComponent = () => {
                             sx={{
                                 color: 'white',
                                 textTransform: 'none',
-                                '&:hover': { color: '#FCD462' }
+                                '&:hover': { color: 'secondary.main' }
                             }}
                         >
                             Sign Up
