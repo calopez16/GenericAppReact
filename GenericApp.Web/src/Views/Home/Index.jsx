@@ -107,14 +107,16 @@ const DashboardPage = () => {
     const fetchUltimoViaje = async (id) => {
         try {
             const res = await dashboardService.getUltimoViaje(id);
+            const total = Number(res.data?.totalCajas) || 0;
+            const formattedTotal = total.toLocaleString();
             setUltimoViaje({
-                value: `${res.data?.totalCajas || 0} ${t('dashboard.units.boxes')}`,
+                value: `${formattedTotal} ${t('dashboard.units.boxes')}`,
                 trend: res.data?.numeroViaje ? `${t('dashboard.units.trip')} #${res.data.numeroViaje}` : '---',
                 loading: false
             });
         } catch (e) {
             console.error("Error en fetchUltimoViaje:", e);
-            setUltimoViaje({ value: `0 ${t('dashboard.units.boxes')}`, trend: '---', loading: false });
+            setUltimoViaje({ value: `${(0).toLocaleString()} ${t('dashboard.units.boxes')}`, trend: '---', loading: false });
         }
     };
 

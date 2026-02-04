@@ -163,8 +163,8 @@ namespace GenericApp.API.Controllers
             // 2. Calculamos el promedio filtrando valores que no sean 0 (asumiendo que 0 es vacío o error de sensor)
             // Usamos la temperatura en Celsius para el estándar del KPI
             var promedio = manifestList
-                .Where(x => x.TemperatureTrailerBoxC.HasValue && x.TemperatureTrailerBoxC != 0)
-                .Select(x => x.TemperatureTrailerBoxC)
+                .Where(x => x.TemperatureTrailerBoxF.HasValue && x.TemperatureTrailerBoxF != 0)
+                .Select(x => x.TemperatureTrailerBoxF)
                 .DefaultIfEmpty(0)
                 .Average();
 

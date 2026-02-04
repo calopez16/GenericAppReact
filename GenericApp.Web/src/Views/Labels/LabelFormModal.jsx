@@ -86,9 +86,12 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 ? await dataService.editData(payload, true)
                 : await dataService.addData(payload, true);
 
+            if (response.responseCode == 409) {
+                ShowMessage(t('dataAlreadyExists') + ": " + response.conflict, 'warning');
+                return;
+            }
+
             if (response.success) {
-                // REQUERIMIENTO: Actualizar el estado con lo editado en la vista
-                // Aplanamos labelTypes para que la tabla principal pueda procesarlos normalmente
                 const flatLabelTypesForState = [];
                 formData.labelTypes.forEach(group => {
                     group.sizes.forEach(s => {
@@ -116,6 +119,8 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
                 handleClose();
                 ShowMessage(t(isEditing ? 'recordEditedSuccessPlural' : 'recordAddedSuccessPlural'), 'success');
+            } else {
+                ShowMessage(t('error'), 'error');
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');

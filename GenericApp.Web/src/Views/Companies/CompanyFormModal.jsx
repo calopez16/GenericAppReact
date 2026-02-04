@@ -117,6 +117,11 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
             const response = isEditing ? await dataService.editData(dataToSend, true) : await dataService.addData(dataToSend, true);
 
+            if (response.responseCode == 409) {
+                ShowMessage(t('dataAlreadyExists') + ": " + response.conflict, 'warning');
+                return;
+            }
+
             if (response.success) {
                 if (isEditing) {
                     setData(prev => prev.map(item => item.idCompany === formData.idCompany ? { ...item, ...formData, logoName: response.data?.logoName || item.logoName } : item));
@@ -126,10 +131,10 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 handleClose();
                 ShowMessage(t(isEditing ? 'recordEditedSuccessPlural' : 'recordAddedSuccessPlural'), 'success');
             } else {
-                ShowMessage(response.message || t('error_saving'), 'error');
+                ShowMessage(response.message || t('error'), 'error');
             }
         } catch (error) {
-            ShowMessage(t('error_unexpected'), 'error');
+            ShowMessage(t('error'), 'error');
         } finally {
             setIsLoading(false);
         }
@@ -190,7 +195,7 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                     fullWidth required inputRef={nameRef} error={validationErrors.name} helperText={validationErrors.name ? t('requiredField') : ''} />
                             </Grid>
                             <Grid item size={{ xs: 12}}>
-                                <TextField label={t('razonSocial')} name="razonSocial" value={formData.razonSocial} onChange={(e) => setFormData({ ...formData, razonSocial: e.target.value })} fullWidth />
+                                <TextField label={t('socialReason')} name="razonSocial" value={formData.razonSocial} onChange={(e) => setFormData({ ...formData, razonSocial: e.target.value })} fullWidth />
                             </Grid>
                             <Grid item size={{ xs: 12, md: 6 }}>
                                 <TextField label={t('rfc')} name="rfc" value={formData.rfc} onChange={(e) => setFormData({ ...formData, rfc: e.target.value })} fullWidth />
@@ -218,7 +223,7 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             </Grid>
 
                             <Grid item size={{ xs: 12, md: 4 }}>
-                                <TextField label={t('gnn_number')} name="gnnNumber" value={formData.gnnNumber} onChange={(e) => setFormData({ ...formData, gnnNumber: e.target.value })} fullWidth />
+                                <TextField label={t('gnnNumber')} name="gnnNumber" value={formData.gnnNumber} onChange={(e) => setFormData({ ...formData, gnnNumber: e.target.value })} fullWidth />
                             </Grid>
 
                             {/* NOTAS (TEXTAREA MULTILINE) */}

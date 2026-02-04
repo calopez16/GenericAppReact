@@ -214,6 +214,8 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 } else {
                     setData(prevData => [...prevData, userPayload]);
                 }
+            } else {
+                ShowMessage(t('error'), 'error');
             }
 
             handleClose();

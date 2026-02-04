@@ -117,12 +117,12 @@ namespace GenericApp.API.Controllers
         [HttpPost]
         public async Task<ActionResult> AddSeason([FromBody] SeasonDTO model)
         {
-            if (await CheckDateOverlap(model.InitialDate, model.EndDate))
+            if (await CheckDateOverlap(model.InitialDate, model.EndDate, model.Name))
             {
                 return Conflict(
                     new ApiResponse
                     {
-                        Conflict = "Las fechas seleccionadas se solapan con una temporada existente y activa."
+                        Conflict = $"El nombre o los rangos de fechas ya existen"
                     }
                 );
             }
@@ -150,12 +150,12 @@ namespace GenericApp.API.Controllers
             if (seasonDB == null || (seasonDB.IsDeleted ?? false))
                 return NotFound(new ApiResponse());
 
-            if (await CheckDateOverlap(model.InitialDate, model.EndDate, model.IdSeason))
+            if (await CheckDateOverlap(model.InitialDate, model.EndDate, model.Name, model.IdSeason))
             {
                 return Conflict(
                     new ApiResponse
                     {
-                        Conflict = "Las fechas seleccionadas se solapan con otra temporada existente y activa."
+                        Conflict = $"El nombre o los rangos de fechas ya existen"
                     }
                 );
             }
@@ -280,7 +280,7 @@ namespace GenericApp.API.Controllers
         /// <param name="endDate">Fecha de fin del nuevo rango.</param>
         /// <param name="currentSeasonId">ID de la temporada actual a excluir del chequeo (solo para actualizaciones).</param>
         /// <returns>True si hay solapamiento, false en caso contrario.</returns>
-        private async Task<bool> CheckDateOverlap(DateTime initialDate, DateTime endDate, int? currentSeasonId = null)
+        private async Task<bool> CheckDateOverlap(DateTime initialDate, DateTime endDate, string name, int? currentSeasonId = null)
         {
             var newStart = initialDate.Date;
             var newEnd = endDate.Date;
@@ -297,8 +297,8 @@ namespace GenericApp.API.Controllers
             }
 
             var hasOverlap = await query.AnyAsync(s =>
-                (newStart <= s.EndDate) &&
-                (newEnd >= s.InitialDate)
+                ((newStart <= s.EndDate) &&
+                (newEnd >= s.InitialDate)) || s.Name.ToLower().Equals(name.ToLower())
             );
 
             return hasOverlap;
