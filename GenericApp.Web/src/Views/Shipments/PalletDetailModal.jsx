@@ -376,7 +376,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                         {t('delete')}
                     </Button>
                 )}
-                <Button color="inherit" variant="outlined" startIcon={<CloseIcon />} onClick={onClose}>{t('cancel')}</Button>
+                <Button color="error" variant="outlined" startIcon={<CloseIcon />} onClick={onClose}>{t('cancel')}</Button>
                 <Button onClick={handleSavePallet} variant="contained" startIcon={<SaveIcon />} color={"primary"}>
                     {t('save')}
                 </Button>

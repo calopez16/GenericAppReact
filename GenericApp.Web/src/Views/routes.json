@@ -77,6 +77,13 @@
         "i18nKey": "shippingCompanies",
         "i18nKeyDescription": "shippingCompanies_description",
         "icon": "PeopleIcon"
+      },
+      {
+        "id": "trailerboxtypes",
+        "path": "/trailerboxtypes",
+        "i18nKey": "trailerBoxTypes",
+        "i18nKeyDescription": "trailerBoxTypes_description",
+        "icon": "PeopleIcon"
       }
     ]
   }

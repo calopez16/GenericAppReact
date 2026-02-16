@@ -13,6 +13,7 @@ const ShippingCompaniesPage = lazy(() => import('@views/ShippingCompanies'));
 const DriversPage = lazy(() => import('@views/Drivers'));
 const SeasonsPage = lazy(() => import('@views/Seasons'));
 const LabelsPage = lazy(() => import('@views/Labels'));
+const TrailerBoxTypesPage = lazy(() => import('@views/TrailerBoxTypes'));
 const NotFoundPage = lazy(() => import('@views/Pages/NotFound'));
 const Parameters = lazy(() => import('@views/Parameters'));
 const ShipmentsPage = lazy(() => import('@views/Shipments/Index'));
@@ -35,6 +36,7 @@ function App() {
                 <Route path="/drivers" element={<DriversPage />} />
                 <Route path="/shipping-companies" element={<ShippingCompaniesPage />} />
                 <Route path="/labels" element={<LabelsPage />} />
+                <Route path="/trailerboxtypes" element={<TrailerBoxTypesPage />} />
                 <Route path="/unauthorized" element={<UnathorizePage />} />
 
                 <Route path="/shipments">

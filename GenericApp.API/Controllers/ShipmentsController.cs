@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -113,7 +114,6 @@ namespace GenericApp.API.Controllers
                 {
                     IdManifest = m.IdManifest,
                     ManifestNo = m.ManifestNo,
-                    TrailerBoxPlate = m.TrailerBoxPlate,
                     RegFdaNo = m.RegFdaNo,
                     IdDriver = m.IdDriver,
                     IdDriverNavigation = new DriverDTO
@@ -126,6 +126,14 @@ namespace GenericApp.API.Controllers
                     IdSeason = m.IdSeason,
                     SeasonYear = m.IdSeasonNavigation.SeasonYear,
                     TrailerPlate = m.TrailerPlate,
+                    TrailerBoxPlate = m.TrailerBoxPlate,
+                    TrailerPlateEconomicNumber = m.TrailerPlateEconomicNumber,
+                    TrailerBoxPlateEconomicNumber = m.TrailerBoxPlateEconomicNumber,
+                    IdTrailerBoxType = m.IdTrailerBoxType,
+                    IdTrailerBoxTypeNavigation = new TrailerBoxTypeDTO
+                    {
+                        Description = m.IdTrailerBoxTypeNavigation.Description
+                    },
                     IdShippingCompany = m.IdShippingCompany,
                     IdShippingCompanyNavigation = new ShippingCompanyDTO
                     {
@@ -194,6 +202,10 @@ namespace GenericApp.API.Controllers
                 CreationDate = s.CreationDate,
                 ShipmentDate = s.ShipmentDate,
                 IdClient = s.IdClient,
+                IdClientNavigation = new ClientDTO
+                {
+                    Code = s.IdClientNavigation.Code
+                },
                 IdCity = s.IdCity,
                 IdCompanyNavigation = new CompanyDTO
                 {
@@ -210,18 +222,21 @@ namespace GenericApp.API.Controllers
                 {
                     IdManifest = m.IdManifest,
                     ManifestNo = m.ManifestNo,
-                    TrailerBoxPlate = m.TrailerBoxPlate,
                     RegFdaNo = m.RegFdaNo,
                     IdDriver = m.IdDriver,
-                    IdDriverNavigation = new DriverDTO
-                    {
-                        Name = m.IdDriverNavigation.Name
-                    },
                     TemperatureTrailerBoxC = m.TemperatureTrailerBoxC,
                     TemperatureTrailerBoxF = m.TemperatureTrailerBoxF,
                     IdSeason = m.IdSeason,
+                    ClientCode = s.IdClientNavigation.Code,
                     SeasonYear = m.IdSeasonNavigation.SeasonYear,
                     TrailerPlate = m.TrailerPlate,
+                    TrailerPlateEconomicNumber = m.TrailerPlateEconomicNumber,
+                    TrailerBoxPlate = m.TrailerBoxPlate,
+                    TrailerBoxPlateEconomicNumber = m.TrailerBoxPlateEconomicNumber,
+                    IdTrailerBoxTypeNavigation = new TrailerBoxTypeDTO
+                    {
+                        Description = m.IdTrailerBoxTypeNavigation.Description
+                    },
                     IdShippingCompany = m.IdShippingCompany,
                     IdShippingCompanyNavigation = new ShippingCompanyDTO
                     {
@@ -278,7 +293,7 @@ namespace GenericApp.API.Controllers
                         page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Lato));
 
                         // Header
-                        page.Header().Element(header => ComposeHeader(header, shipment, manifest, "REPORTE DE MANIFIESTO DE EMBARQUE"));
+                        page.Header().Element(header => ComposeHeader(header, shipment, manifest, "MANIFIESTO DE EMBARQUE"));
 
                         // Content
                         page.Content().Column(mainCol =>
@@ -362,11 +377,14 @@ namespace GenericApp.API.Controllers
                         t.Cell().PaddingBottom(1).Text("").FontSize(8).Style(labelStyle);
                         t.Cell().Text("").FontSize(7).Style(valueStyle);
 
+                        t.Cell().PaddingBottom(1).Text("TIPO CON.:").FontSize(8).Style(labelStyle);
+                        t.Cell().Text(manifest.IdTrailerBoxTypeNavigation.Description ?? "-").FontSize(7).Style(valueStyle);
+
                         t.Cell().PaddingBottom(1).Text("PLACAS TRÁILER:").FontSize(8).Style(labelStyle);
-                        t.Cell().Text(manifest.TrailerPlate ?? "-").FontSize(7).Style(valueStyle);
+                        t.Cell().Text(!string.IsNullOrEmpty(manifest.TrailerPlate) ? $"{manifest.TrailerPlateEconomicNumber} {manifest.TrailerPlate}" : "-").FontSize(7).Style(valueStyle);
 
                         t.Cell().PaddingBottom(1).Text("PLACAS CAJA:").FontSize(8).Style(labelStyle);
-                        t.Cell().Text(manifest.TrailerBoxPlate ?? "-").FontSize(7).Style(valueStyle);
+                        t.Cell().Text(!string.IsNullOrEmpty(manifest.TrailerBoxPlate) ? $"{manifest.TrailerBoxPlateEconomicNumber} {manifest.TrailerBoxPlate}" : "-").FontSize(7).Style(valueStyle);
 
                         t.Cell().PaddingBottom(1).Text("LÍNEA:").FontSize(8).Style(labelStyle);
                         t.Cell().Text(manifest.IdShippingCompanyNavigation?.Name ?? "-").FontSize(7).Style(valueStyle);
@@ -592,7 +610,7 @@ namespace GenericApp.API.Controllers
                     if (pallet != null)
                     {
                         if (pallet.TemperatureF != null)
-                            row.RelativeItem().AlignRight().Text($"{pallet.TemperatureF?.ToString("0.00")} °F").FontSize(8).FontColor(Colors.Blue.Darken3);
+                            row.RelativeItem().AlignRight().Text($"{pallet.TemperatureF?.ToString("0.##")} °F").FontSize(8).FontColor(Colors.Blue.Darken3);
                     }
                 });
 
@@ -611,8 +629,10 @@ namespace GenericApp.API.Controllers
 
                         stack.Item().PaddingTop(2).Text(t =>
                         {
-                            t.Span($"{qty} - ").Bold().FontSize(8);
-                            t.Span(load.Description ?? load.IdLabelTypeNavigation?.Description ?? "").FontSize(7);
+                            t.Span(load.IdLabelTypeNavigation?.Description ?? "").Bold().FontSize(7);
+                            t.Span($" {load.IdLabelTypeNavigation?.Size} " ?? "").FontSize(7);
+                            t.Span($" {manifest.ClientCode} " ?? "").FontSize(7);
+                            t.Span($" ({qty:0})").Bold().FontSize(8);
                         });
                     }
 
@@ -636,14 +656,14 @@ namespace GenericApp.API.Controllers
                         .AlignRight()
                         .Text(text =>
                         {
-                            foreach (var item in sizeSummary)
-                            {
-                                text.Span($"{item.Size} ").FontSize(6).FontColor(Colors.Grey.Darken1);
-                                text.Span($"{item.Count}   ").FontSize(7).Bold().FontColor(Colors.Black);
-                            }
+                            //foreach (var item in sizeSummary)
+                            //{
+                            //    text.Span($"{item.Size} ").FontSize(6).FontColor(Colors.Grey.Darken1);
+                            //    text.Span($"{item.Count}   ").FontSize(7).Bold().FontColor(Colors.Black);
+                            //}
 
                             // Total Final en Verde
-                            text.Span($"TOTAL: {grandTotal}").Bold().FontSize(8).FontColor(Colors.Green.Darken2);
+                            text.Span($"TOTAL: {grandTotal:0}").Bold().FontSize(8).FontColor(Colors.Green.Darken2);
                         });
                 }
                 else
@@ -736,7 +756,6 @@ namespace GenericApp.API.Controllers
                 {
                     IdManifest = m.IdManifest,
                     ManifestNo = m.ManifestNo,
-                    TrailerBoxPlate = m.TrailerBoxPlate,
                     RegFdaNo = m.RegFdaNo,
                     IdDriver = m.IdDriver,
                     IdDriverNavigation = new DriverDTO
@@ -748,6 +767,9 @@ namespace GenericApp.API.Controllers
                     IdSeason = m.IdSeason,
                     SeasonYear = m.IdSeasonNavigation.SeasonYear,
                     TrailerPlate = m.TrailerPlate,
+                    TrailerPlateEconomicNumber = m.TrailerPlateEconomicNumber,
+                    TrailerBoxPlate = m.TrailerBoxPlate,
+                    TrailerBoxPlateEconomicNumber = m.TrailerBoxPlateEconomicNumber,
                     IdShippingCompany = m.IdShippingCompany,
                     IdShippingCompanyNavigation = new ShippingCompanyDTO
                     {
@@ -807,7 +829,7 @@ namespace GenericApp.API.Controllers
 
                         // A) HEADER: Reutilizamos el mismo diseño que el Manifiesto
                         // Pasamos "REMISIÓN" como título para diferenciarlo
-                        page.Header().Element(header => ComposeHeader(header, shipment, manifest, "INFORMACIÓN DE REMISIÓN"));
+                        page.Header().Element(header => ComposeHeader(header, shipment, manifest, "REMISIÓN"));
 
                         // B) CONTENIDO: Usamos la tabla de lista (específica de remisión)
                         page.Content().Column(col =>
@@ -882,14 +904,14 @@ namespace GenericApp.API.Controllers
                     row.RelativeItem().Column(col =>
                     {
                         col.Item().Text("PLACAS TRÁILER").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
-                        col.Item().Text($"{manifest.TrailerPlate ?? "-"}").FontSize(9).Bold();
+                        col.Item().Text($"{manifest.TrailerPlateEconomicNumber} {manifest.TrailerPlate ?? "-"}").FontSize(9).Bold();
                     });
 
                     // Placas Caja
                     row.RelativeItem().Column(col =>
                     {
                         col.Item().Text("PLACAS CAJA").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
-                        col.Item().Text($"{manifest.TrailerBoxPlate ?? "-"}").FontSize(9).Bold();
+                        col.Item().Text($"{manifest.TrailerBoxPlateEconomicNumber} {manifest.TrailerBoxPlate ?? "-"}").FontSize(9).Bold();
                     });
                 });
             });
@@ -993,7 +1015,7 @@ namespace GenericApp.API.Controllers
             var shipment = await _repository.FirstOrDefault<Shipment>(x => x.IdShipment == id && !(x.IsDeleted ?? false), x => x.IdCompanyNavigation);
 
             // Incluimos IdDriverNavigation para la firma
-            var manifest = await _repository.FirstOrDefault<Manifest>(x => x.IdShipment == id && !(x.IsDeleted ?? false), m => m.IdDriverNavigation);
+            var manifest = await _repository.FirstOrDefault<Manifest>(x => x.IdShipment == id && !(x.IsDeleted ?? false), m => m.IdDriverNavigation, m => m.IdTrailerBoxTypeNavigation);
 
             if (shipment == null || manifest == null) return NotFound(new ApiResponse());
 
@@ -1086,7 +1108,7 @@ namespace GenericApp.API.Controllers
 
                             // Fila 3
                             table.Cell().Text(t => { t.Span("Fecha: ").Bold(); t.Span($"{shipment.ShipmentDate.ToString("dd/MM/yyyy")}"); });
-                            table.Cell().Text(t => { t.Span("Placa Caja: ").Bold(); t.Span($"{manifest.TrailerBoxPlate}"); });
+                            table.Cell().Text(t => { t.Span("Placa Caja: ").Bold(); t.Span($"{manifest.TrailerBoxPlateEconomicNumber} {manifest.TrailerBoxPlate}"); });
 
                             // Fila 4
                             table.Cell().Text(t => { t.Span("Hora de salida: ").Bold(); t.Span($"{manifest.ExitDate:hh:mm tt}"); });
@@ -1328,6 +1350,9 @@ namespace GenericApp.API.Controllers
                         if (mDto.IdDriver.HasValue) manifestDB.IdDriver = mDto.IdDriver.Value;
                         if (mDto.TrailerPlate != null) manifestDB.TrailerPlate = mDto.TrailerPlate;
                         if (mDto.TrailerBoxPlate != null) manifestDB.TrailerBoxPlate = mDto.TrailerBoxPlate;
+                        if (mDto.TrailerPlateEconomicNumber != null) manifestDB.TrailerPlateEconomicNumber = mDto.TrailerPlateEconomicNumber;
+                        if (mDto.TrailerBoxPlateEconomicNumber != null) manifestDB.TrailerBoxPlateEconomicNumber = mDto.TrailerBoxPlateEconomicNumber;
+                        if (mDto.IdTrailerBoxType != null) manifestDB.IdTrailerBoxType = mDto.IdTrailerBoxType;
                         if (mDto.IdShippingCompany.HasValue) manifestDB.IdShippingCompany = mDto.IdShippingCompany.Value;
                         if (mDto.Empaque != null) manifestDB.Empaque = mDto.Empaque;
                         if (mDto.RegFdaNo != null) manifestDB.RegFdaNo = mDto.RegFdaNo;
@@ -1356,6 +1381,9 @@ namespace GenericApp.API.Controllers
                             IdDriver = mDto.IdDriver ?? 0,
                             TrailerPlate = mDto.TrailerPlate,
                             TrailerBoxPlate = mDto.TrailerBoxPlate,
+                            TrailerPlateEconomicNumber = mDto.TrailerPlateEconomicNumber,
+                            TrailerBoxPlateEconomicNumber = mDto.TrailerBoxPlateEconomicNumber,
+                            IdTrailerBoxType = mDto.IdTrailerBoxType,
                             IdShippingCompany = mDto.IdShippingCompany ?? 0,
                             Empaque = mDto.Empaque,
                             RegFdaNo = mDto.RegFdaNo,
@@ -1522,5 +1550,23 @@ namespace GenericApp.API.Controllers
             var shipmentDTO = _mapper.Map<ShipmentDTO>(shipment);
             return Ok(new ApiResponse { Data = shipmentDTO });
         }
+
+        [HttpGet("last-plate/{idCompany}/{economicNo}/{isBoxPlateEconomic}")]
+        public async Task<ActionResult> GetLastPlateByEconomicNumber(int idCompany, string economicNo, bool isBoxPlateEconomic)
+        {
+            var trailerPlate = "";
+            var manifestDBQuery = await _repository.Query<Manifest>();
+            manifestDBQuery = manifestDBQuery
+                .Where(x => x.IdCompany == idCompany && !(x.IsDeleted ?? false))
+            .OrderByDescending(x => x.CreationDate);
+
+            if (isBoxPlateEconomic)
+                trailerPlate = manifestDBQuery.Where(x => x.TrailerBoxPlateEconomicNumber.ToLower().Equals(economicNo.ToLower())).Select(x => x.TrailerBoxPlate).FirstOrDefault();
+            else
+                trailerPlate = manifestDBQuery.Where(x => x.TrailerPlateEconomicNumber.ToLower().Equals(economicNo.ToLower())).Select(x => x.TrailerBoxPlate).FirstOrDefault();
+
+            return Ok(new ApiResponse { Data = trailerPlate });
+        }
+
     }
 }

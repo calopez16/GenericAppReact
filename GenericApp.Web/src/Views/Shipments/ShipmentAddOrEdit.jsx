@@ -14,7 +14,8 @@ import {
     InputAdornment,
     Autocomplete,
     useTheme,
-    useMediaQuery
+    useMediaQuery,
+    Tooltip
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
@@ -27,6 +28,7 @@ import { dataApiShipmentsService } from '@data/Shipments/Data';
 import { DataAPICitiesService } from '@data/Cities/Data';
 import { DataAPIClientsService } from '@data/Clients/Data';
 import { DataAPIDriversService } from '@data/Drivers/Data';
+import { DataAPITrailerBoxTypesService } from '@data/TrailerBoxTypes/Data';
 import { DataAPIShippingCompaniesService } from '@data/ShippingCompanies/Data';
 
 import { ShowMessage } from '@helpers/NotificationService';
@@ -45,9 +47,12 @@ const initialManifestStructure = {
     idDriver: '',
     trailerPlate: '',
     trailerBoxPlate: '',
+    trailerPlateEconomicNumber: '',
+    trailerBoxPlateEconomicNumber: '',
     idShippingCompany: '',
     regFdaNo: '',
     empaque: '',
+    idTrailerBoxType: '',
     idManifestStatus: 1,
     comments: '',
     chismografo: '',
@@ -89,6 +94,7 @@ function ShipmentAddOrEdit() {
     const citiesService = DataAPICitiesService();
     const clientsService = DataAPIClientsService();
     const driversService = DataAPIDriversService();
+    const trailerBoxTypesService = DataAPITrailerBoxTypesService();
     const shippingCompaniesService = DataAPIShippingCompaniesService();
     const { companySelected } = useContext(AppContext);
 
@@ -97,10 +103,13 @@ function ShipmentAddOrEdit() {
     const [activeTab, setActiveTab] = useState(0);
     const [clients, setClients] = useState([]);
     const [drivers, setDrivers] = useState([]);
+    const [trailerBoxTypes, setTrailerBoxTypes] = useState([]);
     const [shippingCos, setShippingCos] = useState([]);
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [palletToDeletePos, setPalletToDeletePos] = useState(null);
     const [copyModeInfo, setCopyModeInfo] = useState({ active: false, pos: null, confirm: null, cancel: null });
+    const [loadingTrailerPlate, setLoadingTrailerPlate] = useState(false);
+    const [loadingBoxPlate, setLoadingBoxPlate] = useState(false);
 
     const handleCopyModeChange = (isActive, sourcePos, confirmFn, cancelFn) => {
         setCopyModeInfo({ active: isActive, pos: sourcePos, confirm: confirmFn, cancel: cancelFn });
@@ -123,6 +132,11 @@ function ShipmentAddOrEdit() {
     const fetchDrivers = async () => {
         const response = await driversService.getDataPagination(1, 500, "", true);
         if (response.success) setDrivers(response.data.data || []);
+    };
+
+    const fetchTrailerBoxTypes = async () => {
+        const response = await trailerBoxTypesService.getDataPagination(1, 500, "", true);
+        if (response.success) setTrailerBoxTypes(response.data.data || []);
     };
 
     const fetchShippingCompanies = async () => {
@@ -149,6 +163,7 @@ function ShipmentAddOrEdit() {
     useEffect(() => {
         fetchClients();
         fetchDrivers();
+        fetchTrailerBoxTypes();
         fetchShippingCompanies();
     }, []);
 
@@ -268,6 +283,13 @@ function ShipmentAddOrEdit() {
         setFormData(prev => ({ ...prev, manifests: newManifests }));
     };
 
+    const handleEconomicBlur = (e, isBox) => {
+        const value = e.target.value;
+        if (value) {
+            fetchPlateByEconomic(value, isBox);
+        }
+    };
+
     const handleDriverChange = (event, newValue) => {
         if (errors.idDriver && newValue) {
             setErrors(prev => ({ ...prev, idDriver: false }));
@@ -276,6 +298,18 @@ function ShipmentAddOrEdit() {
         newManifests[activeTab] = {
             ...newManifests[activeTab],
             idDriver: newValue ? newValue.idDriver : ''
+        };
+        setFormData(prev => ({ ...prev, manifests: newManifests }));
+    };
+
+    const handleTrailerBoxTypeChange = (event, newValue) => {
+        if (errors.idTrailerBoxType && newValue) {
+            setErrors(prev => ({ ...prev, idTrailerBoxType: false }));
+        }
+        const newManifests = [...formData.manifests];
+        newManifests[activeTab] = {
+            ...newManifests[activeTab],
+            idTrailerBoxType: newValue ? newValue.idTrailerBoxType : ''
         };
         setFormData(prev => ({ ...prev, manifests: newManifests }));
     };
@@ -300,12 +334,16 @@ function ShipmentAddOrEdit() {
         if (!formData.shipmentDate) newErrors.shipmentDate = true;
         if (!formData.idClient) newErrors.idClient = true;
 
-        // Validar campos requeridos dentro del manifiesto actual
+        
         if (!currentManifest.idShippingCompany) newErrors.idShippingCompany = true;
         if (!currentManifest.idDriver) newErrors.idDriver = true;
         if (!currentManifest.exitDate) newErrors.exitDate = true;
-        // Nuevo campo requerido: Temperatura F
-        if (!currentManifest.temperatureTrailerBoxF) newErrors.temperatureTrailerBoxF = true;
+                if (!currentManifest.temperatureTrailerBoxF) newErrors.temperatureTrailerBoxF = true;
+        if (!currentManifest.trailerPlateEconomicNumber) newErrors.trailerPlateEconomicNumber = true;
+        if (!currentManifest.trailerPlate) newErrors.trailerPlate = true;
+        if (!currentManifest.trailerBoxPlateEconomicNumber) newErrors.trailerBoxPlateEconomicNumber = true;
+        if (!currentManifest.trailerBoxPlate) newErrors.trailerBoxPlate = true;
+        if (!currentManifest.idTrailerBoxType) newErrors.idTrailerBoxType = true;
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -460,6 +498,37 @@ function ShipmentAddOrEdit() {
             ShowMessage(t('palletCopied'), 'success');
         }
     };
+
+    const fetchPlateByEconomic = async (economicNo, isBox) => {
+        if (!economicNo || !companySelected?.idCompany) return;
+
+        isBox ? setLoadingBoxPlate(true) : setLoadingTrailerPlate(true);
+
+        try {
+            const response = await shipmentDataService.getLastPlateByEconomicNumber(
+                companySelected.idCompany,
+                economicNo,
+                isBox
+            );
+
+            // Si la respuesta es exitosa, actualizamos el campo correspondiente
+            if (response && response.success && response.data) {
+                const plateValue = response.data || ''; // Ajustar según el nombre del campo que devuelva tu API
+
+                const newManifests = [...formData.manifests];
+                newManifests[activeTab] = {
+                    ...newManifests[activeTab],
+                    [isBox ? 'trailerBoxPlate' : 'trailerPlate']: plateValue
+                };
+                setFormData(prev => ({ ...prev, manifests: newManifests }));
+            }
+        } catch (error) {
+            console.error("Error fetching plate:", error);
+        } finally {
+            isBox ? setLoadingBoxPlate(false) : setLoadingTrailerPlate(false);
+        }
+    };
+
 
     if (isLoading) return <Box sx={{ p: 5, textAlign: 'center' }}><CircularProgress /></Box>;
     const formatManifest = (id) => id ? id.toString().padStart(3, '0') : '-';
@@ -617,10 +686,21 @@ function ShipmentAddOrEdit() {
                             )}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                        <TextField fullWidth label={t('trailerPlate')} name="trailerPlate" value={formData.manifests[activeTab]?.trailerPlate || ''} onChange={handleManifestChange} />
+
+                    <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label={t('temperatureF')}
+                            name="temperatureTrailerBoxF"
+                            value={formData.manifests[activeTab]?.temperatureTrailerBoxF || ""}
+                            onChange={handleManifestChange}
+                            required
+                            error={!!errors.temperatureTrailerBoxF}
+                            slotProps={{ input: { startAdornment: <InputAdornment position="start"><ThermostatIcon /></InputAdornment> } }}
+                        />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 12, md: 4 }}>
+                    <Grid size={{ xs: 12, sm: 12, md: 2 }}>
                         <TextField
                             fullWidth
                             type="time"
@@ -633,23 +713,94 @@ function ShipmentAddOrEdit() {
                             error={!!errors.exitDate}
                         />
                     </Grid>
-
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                        <TextField fullWidth label={t('boxPlate')} name="trailerBoxPlate" value={formData.manifests[activeTab]?.trailerBoxPlate || ''} onChange={handleManifestChange} />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label={t('temperatureF')}
-                            name="temperatureTrailerBoxF"
-                            value={formData.manifests[activeTab]?.temperatureTrailerBoxF || null}
-                            onChange={handleManifestChange}
+                        <Autocomplete
+                            options={trailerBoxTypes}
+                            getOptionLabel={(option) => option.description || ""}
+                            value={trailerBoxTypes.find(d => d.idTrailerBoxType === parseInt(formData.manifests[activeTab]?.idTrailerBoxType)) || null}
+                            onChange={handleTrailerBoxTypeChange}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label={t('trailerBoxType')}
+                                    required
+                                    error={!!errors.idTrailerBoxType}
+                                />
+                            )}
                             required
-                            error={!!errors.temperatureTrailerBoxF}
-                            slotProps={{ input: { startAdornment: <InputAdornment position="start"><ThermostatIcon /></InputAdornment> } }}
+                            error={!!errors.idTrailerBoxType}
+                            helperText={errors.idTrailerBoxType ? t('requiredField') : ""}
                         />
                     </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <TextField
+                            fullWidth
+                            label={t('trailerPlateEconomicNo')}
+                            name="trailerPlateEconomicNumber"
+                            required
+                            error={!!errors.trailerPlateEconomicNumber}
+                            value={formData.manifests[activeTab]?.trailerPlateEconomicNumber || ''}
+                            onChange={handleManifestChange}
+                            onBlur={(e) => handleEconomicBlur(e, false)}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <TextField
+                            fullWidth
+                            label={t('trailerPlate')}
+                            name="trailerPlate"
+                            required
+                            error={!!errors.trailerPlate}
+                            value={formData.manifests[activeTab]?.trailerPlate || ''}
+                            onChange={handleManifestChange}
+                            slotProps={{
+                                input: {
+                                    endAdornment: loadingTrailerPlate ? (
+                                        <InputAdornment position="end">
+                                            <Tooltip title={t('searchingPlate') || "Buscando placa..."}>
+                                                <CircularProgress size={20} />
+                                            </Tooltip>
+                                        </InputAdornment>
+                                    ) : null,
+                                }
+                            }}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <TextField
+                            fullWidth
+                            label={t('boxPlateEconomicNo')}
+                            name="trailerBoxPlateEconomicNumber"
+                            required
+                            error={!!errors.trailerBoxPlateEconomicNumber}
+                            value={formData.manifests[activeTab]?.trailerBoxPlateEconomicNumber || ''}
+                            onChange={handleManifestChange}
+                            onBlur={(e) => handleEconomicBlur(e, true)}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <TextField
+                            fullWidth
+                            label={t('boxPlate')}
+                            name="trailerBoxPlate"
+                            required
+                            error={!!errors.trailerBoxPlate}
+                            value={formData.manifests[activeTab]?.trailerBoxPlate || ''}
+                            onChange={handleManifestChange}
+                            slotProps={{
+                                input: {
+                                    endAdornment: loadingBoxPlate ? (
+                                        <InputAdornment position="end">
+                                            <Tooltip title={t('searchingPlate') || "Buscando placa..."}>
+                                                <CircularProgress size={20} />
+                                            </Tooltip>
+                                        </InputAdornment>
+                                    ) : null,
+                                }
+                            }}
+                        />
+                    </Grid>
+
                 </Grid>
 
                 <Divider sx={{ my: 4 }} />

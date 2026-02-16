@@ -325,10 +325,19 @@ const ShipmentDetail = () => {
                                     <DetailItem icon={<PersonIcon />} label={t('driver')} value={manifest.idDriverNavigation?.name} />
                                 </Grid>
                                 <Grid size={{ xs: 4, md: 4, xl: 2 }}>
+                                    <DetailItem label={`${t('trailerBoxType')}`} value={`${manifest.idTrailerBoxTypeNavigation.description}`} />
+                                </Grid>
+                                <Grid size={{ xs: 4, md: 4, xl: 2 }}>
+                                    <DetailItem label={t('trailerPlateEconomicNo')} value={manifest.trailerPlateEconomicNumber} />
+                                </Grid>
+                                <Grid size={{ xs: 4, md: 4, xl: 2 }}>
                                     <DetailItem label={t('trailerPlate')} value={manifest.trailerPlate} />
                                 </Grid>
                                 <Grid size={{ xs: 4, md: 4, xl: 2 }}>
                                     <DetailItem label={t('exitTime')} value={formatTime12Hour(manifest.exitDate)} />
+                                </Grid>
+                                <Grid size={{ xs: 4, md: 4, xl: 2 }}>
+                                    <DetailItem label={t('boxPlateEconomicNo')} value={manifest.trailerBoxPlateEconomicNumber} />
                                 </Grid>
                                 <Grid size={{ xs: 4, md: 4, xl: 2 }}>
                                     <DetailItem label={t('boxPlate')} value={manifest.trailerBoxPlate} />
@@ -379,12 +388,12 @@ const ShipmentDetail = () => {
                                                         {pallet.manifestPalletLoadings?.length > 0 ? (
                                                             pallet.manifestPalletLoadings.map((loading, lIndex) => (
                                                                 <Box key={lIndex} sx={{ mb: lIndex < pallet.manifestPalletLoadings.length - 1 ? 2 : 0 }}>
-                                                                    <Typography variant="body2" fontWeight="bold" gutterBottom>{loading.description || t('noDescription')}</Typography>
+                                                                    <Typography variant="body2" fontWeight="bold" gutterBottom>{loading.idLabelTypeNavigation?.description || t('noDescription')} {loading.idLabelTypeNavigation?.size} ({loading.boxQuantity})</Typography>
                                                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                                                                        <Chip label={`${t('boxes')}: ${loading.boxQuantity || 0}`} size="small" variant="outlined" />
                                                                         <Typography variant="caption" color="text.secondary">
-                                                                            {loading.idLabelType ? `${loading.idLabelTypeNavigation?.description || loading.idLabelType}` : '-'}
+                                                                            
                                                                         </Typography>
+                                                                        <Chip label={`${t('total')}: ${loading.boxQuantity || 0} ${t('boxes')}`} size="small" variant="outlined" />
                                                                     </Box>
                                                                     {lIndex < pallet.manifestPalletLoadings.length - 1 && <Divider sx={{ my: 1.5, borderStyle: 'dashed' }} />}
                                                                 </Box>

@@ -29,6 +29,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
     const [formData, setFormData] = useState({
         idClient: 0,
+        code: '',
         name: '',
         rfc: '',
         address: '',
@@ -45,8 +46,13 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const [isCitiesLoading, setIsCitiesLoading] = useState(false);
     const [isAutocompleteOpen, setIsAutocompleteOpen] = useState(false);
 
+    // NUEVO: Estado extendido para validaciones
     const [validationErrors, setValidationErrors] = useState({
         name: false,
+        code: false,
+        address: false,
+        postalCode: false,
+        idCity: false
     });
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
@@ -86,6 +92,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 const clientData = { ...data };
                 setFormData({
                     idClient: clientData.idClient || 0,
+                    code: clientData.code || '',
                     name: clientData.name || '',
                     rfc: clientData.rfc || '',
                     address: clientData.address || '',
@@ -98,11 +105,12 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 setFormData({
                     idClient: 0,
                     name: '', rfc: '', address: '', idCity: null,
-                    postalCode: '', phone: '', notes: '',
+                    postalCode: '', phone: '', notes: '', code: ''
                 });
             }
             setSelectedCity(null);
-            setValidationErrors({ name: false });
+            // NUEVO: Resetear errores al abrir
+            setValidationErrors({ name: false, code: false, address: false, postalCode: false, idCity: false });
             setHasAttemptedSubmit(false);
         }
     }, [open, isEditing, data]);
@@ -132,20 +140,30 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             [name]: value
         }));
 
-        if (hasAttemptedSubmit && name === 'name') {
+        // NUEVO: Validación en tiempo real si ya se intentó enviar
+        if (hasAttemptedSubmit) {
             setValidationErrors(prev => ({
                 ...prev,
-                name: value.trim().length === 0
+                [name]: value.trim().length === 0
             }));
         }
     };
 
     const handleCityChange = (event, newValue) => {
         setSelectedCity(newValue);
+        const cityId = newValue ? newValue.idCity : null;
         setFormData(prev => ({
             ...prev,
-            idCity: newValue ? newValue.idCity : null
+            idCity: cityId
         }));
+
+        // NUEVO: Validación en tiempo real para Autocomplete
+        if (hasAttemptedSubmit) {
+            setValidationErrors(prev => ({
+                ...prev,
+                idCity: cityId === null
+            }));
+        }
     };
 
     const handleAutocompleteOpen = () => {
@@ -172,15 +190,18 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     };
 
+    // NUEVO: Función de validación mejorada
     const validateForm = () => {
-        const isNameEmpty = !formData.name.trim();
         const errors = {
-            name: isNameEmpty,
+            name: !formData.name.trim(),
+            code: !formData.code.trim(),
+            address: !formData.address.trim(),
+            postalCode: !formData.postalCode.trim(),
+            idCity: formData.idCity === null,
         };
 
         setValidationErrors(errors);
-
-        return !isNameEmpty;
+        return !Object.values(errors).some(error => error === true);
     };
 
     const handleSubmit = async (event) => {
@@ -200,6 +221,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
             const clientPayload = {
                 idClient: formData.idClient || 0,
+                code: formData.code,
                 name: formData.name,
                 rfc: formData.rfc,
                 address: formData.address,
@@ -237,10 +259,10 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 } else {
                     setData(prevData => [...prevData, newClientData]);
                 }
-            }
 
-            handleClose();
-            ShowMessage(t(messageKey), 'success');
+                handleClose();
+                ShowMessage(t(messageKey), 'success');
+            }
         } catch (error) {
             ShowMessage(t('error'), 'error');
             console.error("Error saving client:", error);
@@ -283,20 +305,45 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 helperText={validationErrors.name ? t('requiredField') : ''}
                             />
 
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                label={t('code')}
+                                name="code"
+                                value={formData.code}
+                                onChange={handleChange}
+                                error={validationErrors.code}
+                                helperText={validationErrors.code ? t('requiredField') : ''}
+                            />
+
                             <TextField margin="normal" fullWidth label={t('rfc')} name="rfc" value={formData.rfc} onChange={handleChange} />
                             <TextField margin="normal" fullWidth label={t('phone')} name="phone" value={formData.phone} onChange={handleChange} />
 
                             <TextField
                                 margin="normal"
+                                required
                                 fullWidth
                                 label={t('address')}
                                 name="address"
                                 value={formData.address}
                                 onChange={handleChange}
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
+                                error={validationErrors.address}
+                                helperText={validationErrors.address ? t('requiredField') : ''}
                             />
 
-                            <TextField margin="normal" fullWidth label={t('postalCode')} name="postalCode" value={formData.postalCode} onChange={handleChange} />
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                label={t('postalCode')}
+                                name="postalCode"
+                                value={formData.postalCode}
+                                onChange={handleChange}
+                                error={validationErrors.postalCode}
+                                helperText={validationErrors.postalCode ? t('requiredField') : ''}
+                            />
 
                             <Autocomplete
                                 id="city-autocomplete"
@@ -314,9 +361,12 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                     <TextField
                                         {...params}
                                         margin="normal"
+                                        required
                                         fullWidth
                                         label={t('city')}
                                         name="idCity"
+                                        error={validationErrors.idCity}
+                                        helperText={validationErrors.idCity ? t('requiredField') : ''}
                                     />
                                 )}
                             />

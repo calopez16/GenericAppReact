@@ -5,6 +5,7 @@ namespace GenericApp.API.Models
     public class ClientDTO
     {
         public int? IdClient { get; set; }
+        public string? Code { get; set; }
         public string? Name { get; set; }
         public string? Rfc { get; set; }
         public string? Address { get; set; }

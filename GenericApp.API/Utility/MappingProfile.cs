@@ -18,6 +18,7 @@ namespace GenericApp.API.Utility
             CreateMap<Driver, DriverDTO>().ReverseMap();
             CreateMap<Label, LabelDTO>().ReverseMap();
             CreateMap<LabelType, LabelTypeDTO>().ReverseMap();
+            CreateMap<TrailerBoxType, TrailerBoxTypeDTO>().ReverseMap();
             CreateMap<Season, SeasonDTO>().ReverseMap();
             CreateMap<ShippingCompany, ShippingCompanyDTO>().ReverseMap();
             CreateMap<Manifest, ManifestDTO>().ReverseMap();

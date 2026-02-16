@@ -152,6 +152,7 @@ namespace GenericApp.Data
             modelBuilder.Entity<Client>(b =>
             {
                 b.HasKey(x => x.IdClient);
+                b.Property(x => x.Code).HasMaxLength(25).IsRequired();
                 b.Property(x => x.Name).HasMaxLength(150).IsRequired();
                 b.Property(x => x.Rfc).HasMaxLength(13);
                 b.Property(x => x.Address).HasMaxLength(250);
@@ -213,7 +214,13 @@ namespace GenericApp.Data
                     .IsRequired()
                     .OnDelete(DeleteBehavior.Restrict);
             });
-
+            modelBuilder.Entity<TrailerBoxType>(b =>
+            {
+                b.HasKey(x => x.IdTrailerBoxType);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            });
             modelBuilder.Entity<Season>(b =>
             {
                 b.HasKey(x => x.IdSeason);
@@ -279,11 +286,12 @@ namespace GenericApp.Data
                 b.Property(x => x.TemperatureTrailerBoxF).HasColumnType("decimal(18,2)");
                 b.Property(x => x.TemperatureTrailerBoxC).HasColumnType("decimal(18,2)");
                 b.Property(x => x.TrailerPlate).HasMaxLength(50);
+                b.Property(x => x.TrailerPlateEconomicNumber).HasMaxLength(50);
                 b.Property(x => x.TrailerBoxPlate).HasMaxLength(50);
+                b.Property(x => x.TrailerBoxPlateEconomicNumber).HasMaxLength(50);
                 b.Property(x => x.Comments).HasMaxLength(500);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
 
-                // CORREGIDO
                 b.HasOne(m => m.IdShipmentNavigation)
                     .WithMany(s => s.Manifests)
                     .HasForeignKey(x => x.IdShipment)
@@ -318,6 +326,11 @@ namespace GenericApp.Data
                     .WithMany()
                     .HasForeignKey(x => x.IdCompany)
                     .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(m => m.IdTrailerBoxTypeNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdTrailerBoxType)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

@@ -9,6 +9,7 @@ namespace GenericApp.API.Models
         public int? ManifestNo { get; set; }
         public int? ShipmentNo { get; set; }
         public int? IdShipment { get; set; }
+        
         public DateTime? CreationDate { get; set; }
         public string? ExitDate { get; set; }
         public decimal? TemperatureTrailerBoxF { get; set; }
@@ -16,8 +17,11 @@ namespace GenericApp.API.Models
         public int? IdSeason { get; set; }
         public int? IdDriver { get; set; }
         public string? TrailerPlate { get; set; }
+        public string? TrailerPlateEconomicNumber { get; set; }
         public string? TrailerBoxPlate { get; set; }
-        public int? IdShippingCompany { get; set; } 
+        public string? TrailerBoxPlateEconomicNumber { get; set; }
+        public int? IdTrailerBoxType { get; set; }
+        public int? IdShippingCompany { get; set; }
         public string? Comments { get; set; }
         public bool? IsDeleted { get; set; }
         public int? IdCompany { get; set; }
@@ -28,7 +32,10 @@ namespace GenericApp.API.Models
         public string? Chismografo { get; set; }
         public string? Stamps { get; set; }
         public string? GnnNumber { get; set; }
+        //Campos de embarques
+        public string? ClientCode { get; set; }
 
+        public virtual TrailerBoxTypeDTO? IdTrailerBoxTypeNavigation { get; set; }
         public virtual CompanyDTO? IdCompanyNavigation { get; set; }
         public virtual ShipmentDTO? IdShipmentNavigation { get; set; }
         public virtual ShippingCompanyDTO? IdShippingCompanyNavigation { get; set; }

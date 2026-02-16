@@ -10,6 +10,7 @@ namespace GenericApp.Data.Models
     public class Client
     {
         public int IdClient { get; set; }
+        public string? Code { get; set; }
         public string? Name { get; set; }
         public string? Rfc { get; set; }
         public string? Address { get; set; }

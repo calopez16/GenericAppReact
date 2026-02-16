@@ -71,6 +71,7 @@ namespace GenericApp.API.Controllers
                 .Select(x => new ClientDTO
                 {
                     Name = x.Name,
+                    Code = x.Code,
                     Address = x.Address,
                     IdCity = x.IdCity,
                     IdClient = x.IdClient,
@@ -160,6 +161,7 @@ namespace GenericApp.API.Controllers
 
             var clientDB = await _repository.GetById<Client>(model.IdClient ?? 0);
             clientDB.Name = model.Name;
+            clientDB.Code = model.Code;
             clientDB.Rfc = model.Rfc;
             clientDB.Phone = model.Phone;
             clientDB.Address = model.Address;

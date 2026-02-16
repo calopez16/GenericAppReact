@@ -20,7 +20,10 @@ namespace GenericApp.Data.Models
         public int IdSeason { get; set; }
         public int IdDriver { get; set; }
         public string? TrailerPlate { get; set; }
+        public string? TrailerPlateEconomicNumber { get; set; }
         public string? TrailerBoxPlate { get; set; }
+        public string? TrailerBoxPlateEconomicNumber { get; set; }
+        public int? IdTrailerBoxType { get; set; }
         public int IdShippingCompany { get; set; }
         public int IdManifestStatus { get; set; }
         public string? Comments { get; set; }
@@ -36,6 +39,7 @@ namespace GenericApp.Data.Models
         public virtual Shipment? IdShipmentNavigation { get; set; }
         public virtual ShippingCompany? IdShippingCompanyNavigation { get; set; }
         public virtual Season? IdSeasonNavigation { get; set; }
+        public virtual TrailerBoxType? IdTrailerBoxTypeNavigation { get; set; }
         public virtual Driver? IdDriverNavigation { get; set; }
         public virtual ManifestStatus? IdManifestStatusNavigation { get; set; }
         public virtual ICollection<ManifestPallet> ManifestPallets { get; set; } = new List<ManifestPallet>();

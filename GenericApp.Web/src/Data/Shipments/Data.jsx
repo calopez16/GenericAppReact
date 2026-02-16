@@ -16,6 +16,7 @@ export const dataApiShipmentsService = () => {
         getManifestPdfById: (id) => GET(`${moduleSource}/manifest-pdf/${id}`, { responseType: 'blob' }),
         getRemisionPdfById: (id) => GET(`${moduleSource}/remision-pdf/${id}`, { responseType: 'blob' }),
         getBitacoraSellosPdfById: (id,horaCierre) => GET(`${moduleSource}/bitacora-pdf/${id}/${horaCierre}`, { responseType: 'blob' }),
+        getLastPlateByEconomicNumber: (idCompany, economicNo, isBoxPlateEconomic) => GET(`${moduleSource}/last-plate/${idCompany}/${economicNo}/${isBoxPlateEconomic}`),
 
     };
 };
