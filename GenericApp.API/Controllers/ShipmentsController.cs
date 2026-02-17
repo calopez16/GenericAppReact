@@ -224,6 +224,10 @@ namespace GenericApp.API.Controllers
                     ManifestNo = m.ManifestNo,
                     RegFdaNo = m.RegFdaNo,
                     IdDriver = m.IdDriver,
+                    IdDriverNavigation = new DriverDTO
+                    {
+                        Name = m.IdDriverNavigation.Name
+                    },
                     TemperatureTrailerBoxC = m.TemperatureTrailerBoxC,
                     TemperatureTrailerBoxF = m.TemperatureTrailerBoxF,
                     IdSeason = m.IdSeason,

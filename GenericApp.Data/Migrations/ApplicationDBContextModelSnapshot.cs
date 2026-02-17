@@ -67,7 +67,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdApplicationLog");
 
-                    b.ToTable("ApplicationLogs");
+                    b.ToTable("ApplicationLogs", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.City", b =>
@@ -100,7 +100,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdState");
 
-                    b.ToTable("Cities");
+                    b.ToTable("Cities", (string)null);
 
                     b.HasData(
                         new
@@ -253,7 +253,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdCompany");
 
-                    b.ToTable("Clients");
+                    b.ToTable("Clients", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Company", b =>
@@ -317,7 +317,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdCompany");
 
-                    b.ToTable("Companies");
+                    b.ToTable("Companies", (string)null);
 
                     b.HasData(
                         new
@@ -354,7 +354,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdCountry");
 
-                    b.ToTable("Countries");
+                    b.ToTable("Countries", (string)null);
 
                     b.HasData(
                         new
@@ -403,7 +403,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdCompany");
 
-                    b.ToTable("Drivers");
+                    b.ToTable("Drivers", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Label", b =>
@@ -440,7 +440,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdCompany");
 
-                    b.ToTable("Labels");
+                    b.ToTable("Labels", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.LabelType", b =>
@@ -476,7 +476,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdLabel");
 
-                    b.ToTable("LabelTypes");
+                    b.ToTable("LabelTypes", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Manifest", b =>
@@ -585,7 +585,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdTrailerBoxType");
 
-                    b.ToTable("Manifests");
+                    b.ToTable("Manifests", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.ManifestPallet", b =>
@@ -632,7 +632,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdManifest");
 
-                    b.ToTable("ManifestPallets");
+                    b.ToTable("ManifestPallets", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.ManifestPalletLoading", b =>
@@ -668,7 +668,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdManifestPallet");
 
-                    b.ToTable("ManifestPalletLoadings");
+                    b.ToTable("ManifestPalletLoadings", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.ManifestStatus", b =>
@@ -696,7 +696,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdManifestStatus");
 
-                    b.ToTable("ManifestStatuses");
+                    b.ToTable("ManifestStatuses", (string)null);
 
                     b.HasData(
                         new
@@ -740,7 +740,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdParameter");
 
-                    b.ToTable("Parameters");
+                    b.ToTable("Parameters", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.RefreshTokenAspNetUser", b =>
@@ -774,7 +774,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdRefreshTokenAspNetUser");
 
-                    b.ToTable("RefreshTokenAspNetUser");
+                    b.ToTable("RefreshTokenAspNetUser", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Season", b =>
@@ -825,7 +825,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdCompany");
 
-                    b.ToTable("Seasons");
+                    b.ToTable("Seasons", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Shipment", b =>
@@ -894,7 +894,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdUser");
 
-                    b.ToTable("Shipments");
+                    b.ToTable("Shipments", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.ShipmentStatus", b =>
@@ -922,7 +922,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdShipmentStatus");
 
-                    b.ToTable("ShipmentStatuses");
+                    b.ToTable("ShipmentStatuses", (string)null);
 
                     b.HasData(
                         new
@@ -969,7 +969,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdShippingCompany");
 
-                    b.ToTable("ShippingCompanies");
+                    b.ToTable("ShippingCompanies", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.State", b =>
@@ -1002,7 +1002,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdCountry");
 
-                    b.ToTable("States");
+                    b.ToTable("States", (string)null);
 
                     b.HasData(
                         new
@@ -1688,7 +1688,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdTrailerBoxType");
 
-                    b.ToTable("TrailerBoxType");
+                    b.ToTable("TrailerBoxType", (string)null);
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.UserDetail", b =>
@@ -1710,7 +1710,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdUserDetail");
 
-                    b.ToTable("UserDetails");
+                    b.ToTable("UserDetails", (string)null);
 
                     b.HasData(
                         new
@@ -1871,7 +1871,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEKLdOhhx2KJX4gGDb6O9L/PId8gEiMs9+cI9Y1RNjS0JxJwDHddUhF4syH2oJNImiw==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEEjh+ptmVFDmMVXuir9Bhi6K351IvuS1jQKjHojUAJH5sREOSGxx93HnNkQYeIfMcg==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
