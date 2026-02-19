@@ -16,7 +16,7 @@ import {
     FormControlLabel,
     Checkbox,
     Chip,
-    Autocomplete // Nuevo componente importado
+    Autocomplete
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
@@ -76,7 +76,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
         }
     }, [open, initialData]);
 
-    // Sincronizar data inicial y lógica de temperatura heredada
+    // Sincronizar data inicial
     useEffect(() => {
         if (open) {
             let data = initialData || {
@@ -126,43 +126,28 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
         }
     }, [open, initialData, labels, position, allPallets]);
 
-    // Cálculos
     const currentLabel = labels.find(l => l.idLabel === palletData.idLabel);
     const maxAllowed = currentLabel?.maxBoxQuantity || 0;
     const totalBoxes = palletData.manifestPalletLoadings?.reduce((acc, curr) => acc + (Number(curr.boxQuantity) || 0), 0) || 0;
     const isExceeded = maxAllowed > 0 && totalBoxes > maxAllowed;
-
     const isLabelSelectorDisabled = palletData.manifestPalletLoadings?.length > 0;
 
-    // Cambiado para manejar el objeto de Autocomplete
     const handleLabelChange = (event, newValue) => {
         const id = newValue ? newValue.idLabel : '';
         const found = labels.find(l => l.idLabel === id);
-
         setLabelTypes(found?.labelTypes || []);
-        setPalletData(prev => ({
-            ...prev,
-            idLabel: id
-        }));
+        setPalletData(prev => ({ ...prev, idLabel: id }));
     };
 
     const handleLabelTypeChange = (index, typeId) => {
-        const typeFound = labelTypes.find(t => t.idLabelType === typeId);
         const newLoadings = [...(palletData.manifestPalletLoadings || [])];
-
-        const boxesOtherRows = newLoadings.reduce((acc, curr, i) => {
-            if (i === index) return acc;
-            return acc + (Number(curr.boxQuantity) || 0);
-        }, 0);
-
+        const boxesOtherRows = newLoadings.reduce((acc, curr, i) => i === index ? acc : acc + (Number(curr.boxQuantity) || 0), 0);
         const remainingSpace = maxAllowed - boxesOtherRows;
-        const defaultQuantity = remainingSpace > 0 ? remainingSpace : 0;
 
         newLoadings[index] = {
             ...newLoadings[index],
             idLabelType: typeId,
-            boxQuantity: defaultQuantity,
-            description: newLoadings[index].description == '' ? typeFound?.description : newLoadings[index].description || ''
+            boxQuantity: remainingSpace > 0 ? remainingSpace : 0
         };
         setPalletData(prev => ({ ...prev, manifestPalletLoadings: newLoadings }));
     };
@@ -242,9 +227,7 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                             fullWidth
                             size="small"
                             options={Array.isArray(labels) ? labels : []}
-                            // Especificamos qué propiedad usar para el filtrado de texto
                             getOptionLabel={(option) => option.description || ''}
-                            // Comparamos por ID para mantener la referencia correcta
                             isOptionEqualToValue={(option, value) => option.idLabel === value.idLabel}
                             value={labels.find(l => l.idLabel === palletData.idLabel) || null}
                             onChange={handleLabelChange}
@@ -257,25 +240,12 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                                 />
                             )}
                             renderOption={(props, option) => {
-                                // Desestructuramos las props para asegurar que Material UI 
-                                // mantenga el control del evento click y el filtrado
                                 const { key, ...optionProps } = props;
                                 return (
-                                    <Box
-                                        component="li"
-                                        key={option.idLabel}
-                                        {...optionProps}
-                                        sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1 }}
-                                    >
+                                    <Box component="li" key={option.idLabel} {...optionProps} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1 }}>
                                         <Typography variant="body2">{option.description}</Typography>
                                         {option.isDeleted && (
-                                            <Chip
-                                                label={t('deleted')}
-                                                size="small"
-                                                variant="outlined"
-                                                color="secondary"
-                                                sx={{ marginLeft: 1, height: 20, fontSize: '0.65rem' }}
-                                            />
+                                            <Chip label={t('deleted')} size="small" variant="outlined" color="secondary" sx={{ marginLeft: 1, height: 20, fontSize: '0.65rem' }} />
                                         )}
                                     </Box>
                                 );
@@ -294,85 +264,78 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                     </Button>
                 </Box>
 
-               
                 <Box sx={{ maxHeight: 380, overflowY: 'auto', pr: 0.5 }}>
-                    {palletData.manifestPalletLoadings?.map((loading, index) => (
-                        <Paper key={index} elevation={0} sx={{ p: 2, mb: 2, border: `1px solid ${isExceeded ? red[700] : ""}`, borderRadius: '8px' }}>
-                            <Grid container spacing={2}>
-                                <Grid size={{ xs: 10.5 }}>
-                                    <Autocomplete
-                                        fullWidth
-                                        size="small"
-                                        options={labelTypes || []}
-                                        getOptionLabel={(option) => option.description || ''}
-                                        isOptionEqualToValue={(option, value) => option.idLabelType === value.idLabelType}
-                                        // Buscamos el objeto completo basado en el ID guardado
-                                        value={labelTypes.find(t_type => t_type.idLabelType === loading.idLabelType) || null}
-                                        onChange={(event, newValue) => {
-                                            // Extraemos el ID para pasarlo a tu función existente
-                                            handleLabelTypeChange(index, newValue ? newValue.idLabelType : '');
-                                        }}
-                                        disabled={!palletData.idLabel}
-                                        renderInput={(params) => (
-                                            <TextField
-                                                {...params}
-                                                label={t('labelType')}
-                                                variant="filled"
-                                            />
-                                        )}
-                                        renderOption={(props, option) => {
-                                            const { key, ...optionProps } = props;
-                                            return (
-                                                <Box
-                                                    component="li"
-                                                    key={option.idLabelType}
-                                                    {...optionProps}
-                                                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1 }}
-                                                >
-                                                    <Typography variant="body2">{option.description}</Typography>
-                                                    <Chip
-                                                        label={option.size}
-                                                        size="small"
-                                                        variant="filled"
-                                                        color="primary"
-                                                        sx={{ ml: 1, height: 20, fontSize: '0.65rem' }}
-                                                    />
-                                                </Box>
-                                            );
-                                        }}
-                                    />
+                    {palletData.manifestPalletLoadings?.map((loading, index) => {
+                        const selectedType = labelTypes.find(t_type => t_type.idLabelType === loading.idLabelType);
+                        return (
+                            <Paper key={index} elevation={0} sx={{ p: 2, mb: 2, border: `1px solid ${isExceeded ? red[700] : ""}`, borderRadius: '8px' }}>
+                                <Grid container spacing={2}>
+                                    <Grid size={{ xs: 10.5 }}>
+                                        <Autocomplete
+                                            fullWidth
+                                            size="small"
+                                            options={labelTypes || []}
+                                            getOptionLabel={(option) => option.description || ''}
+                                            isOptionEqualToValue={(option, value) => option.idLabelType === value.idLabelType}
+                                            value={selectedType || null}
+                                            onChange={(event, newValue) => {
+                                                handleLabelTypeChange(index, newValue ? newValue.idLabelType : '');
+                                            }}
+                                            disabled={!palletData.idLabel}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label={t('labelType')}
+                                                    variant="filled"
+                                                    InputProps={{
+                                                        ...params.InputProps,
+                                                        startAdornment: selectedType ? (
+                                                            <Chip
+                                                                label={selectedType.size}
+                                                                size="small"
+                                                                color="primary"
+                                                                sx={{ ml: 1, mr: 2, width: 50, height: 20, fontSize: '0.65rem' }}
+                                                            />
+                                                        ) : null,
+                                                    }}
+                                                />
+                                            )}
+                                            renderOption={(props, option) => {
+                                                const { key, ...optionProps } = props;
+                                                return (
+                                                    <Box component="li" key={option.idLabelType} {...optionProps} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1 }}>
+                                                        <Chip label={option.size} size="small" variant="filled" color="primary" sx={{ height: 20,width:50, fontSize: '0.65rem' }} />
+                                                        <Typography variant="body2" sx={{ml:2} }> {option.description}</Typography>
+                                                    </Box>
+                                                );
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Grid size={{ xs: 1.5 }} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                        <IconButton color="error" onClick={() => handleRemoveLoading(index)}><DeleteIcon /></IconButton>
+                                    </Grid>
+                                    <Grid size={{ xs: 3 }}>
+                                        <TextField label={t('boxes')} type="number" size="small" fullWidth
+                                            value={loading.boxQuantity || ''}
+                                            onChange={(e) => handleLoadingChange(index, 'boxQuantity', e.target.value)}
+                                        />
+                                    </Grid>
+                                    <Grid size={{ xs: 9 }}>
+                                        <TextField label={t('description')} fullWidth size="small"
+                                            value={loading.description || ''}
+                                            onChange={(e) => handleLoadingChange(index, 'description', e.target.value)}
+                                        />
+                                    </Grid>
                                 </Grid>
-                                <Grid size={{ xs: 1.5 }} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                    <IconButton color="error" onClick={() => handleRemoveLoading(index)}><DeleteIcon /></IconButton>
-                                </Grid>
-
-                                <Grid size={{ xs: 3 }}>
-                                    <TextField label={t('boxes')} type="number" size="small" fullWidth
-                                        value={loading.boxQuantity || ''}
-                                        onChange={(e) => handleLoadingChange(index, 'boxQuantity', e.target.value)}
-                                    />
-                                </Grid>
-                                <Grid size={{ xs: 9 }}>
-                                    <TextField label={t('description')} fullWidth size="small"
-                                        value={loading.description || ''}
-                                        onChange={(e) => handleLoadingChange(index, 'description', e.target.value)}
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Paper>
-                    ))}
+                            </Paper>
+                        );
+                    })}
                 </Box>
             </DialogContent>
 
             <DialogActions sx={{ p: 3, borderTop: `1px solid ${grey[800]}`, gap: 1 }}>
                 {(palletData.idManifestPallet > 0 || palletData.manifestPalletLoadings?.length > 0) && (
-                    <Button
-                        color="error"
-                        variant="text"
-                        startIcon={<DeleteIcon />}
-                        onClick={() => onDelete(position)}
-                        sx={{ mr: 'auto' }}
-                    >
+                    <Button color="error" variant="text" startIcon={<DeleteIcon />} onClick={() => onDelete(position)} sx={{ mr: 'auto' }}>
                         {t('delete')}
                     </Button>
                 )}

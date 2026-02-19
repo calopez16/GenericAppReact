@@ -388,7 +388,7 @@ const ShipmentDetail = () => {
                                                         {pallet.manifestPalletLoadings?.length > 0 ? (
                                                             pallet.manifestPalletLoadings.map((loading, lIndex) => (
                                                                 <Box key={lIndex} sx={{ mb: lIndex < pallet.manifestPalletLoadings.length - 1 ? 2 : 0 }}>
-                                                                    <Typography variant="body2" fontWeight="bold" gutterBottom>{loading.idLabelTypeNavigation?.description || t('noDescription')} {loading.idLabelTypeNavigation?.size} ({loading.boxQuantity})</Typography>
+                                                                    <Typography variant="body2" fontWeight="bold" gutterBottom>{loading.idLabelTypeNavigation?.description || t('noDescription')} {loading.description} {loading.idLabelTypeNavigation?.size} ({loading.boxQuantity})</Typography>
                                                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                                                                         <Typography variant="caption" color="text.secondary">
                                                                             

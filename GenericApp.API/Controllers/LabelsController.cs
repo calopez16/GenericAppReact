@@ -199,32 +199,58 @@ namespace GenericApp.API.Controllers
             labelDB.Description = model.Description;
             labelDB.MaxBoxQuantity = model.MaxBoxQuantity;
 
-            var incomingGroups = model.LabelTypes ?? new List<LabelTypeDTO>();
+            // 1. Aplanamos los datos entrantes para tener una lista clara de pares (Descripción + Size)
+            var incomingPairs = (model.LabelTypes ?? new List<LabelTypeDTO>())
+                .SelectMany(g => (g.Sizes ?? new List<string>())
+                    .Select(s => new { Description = g.Description, Size = s }))
+                .ToList();
+
             var existingLabelTypes = labelDB.LabelTypes ?? new List<LabelType>();
 
-            foreach (var group in incomingGroups)
+            // 2. Borrado Lógico: Desactivar lo que está en DB pero NO viene en la nueva lista
+            var toDelete = existingLabelTypes
+                .Where(lt => !(lt.IsDeleted ?? false))
+                .Where(lt => !incomingPairs.Any(ip => ip.Description == lt.Description && ip.Size == lt.Size))
+                .ToList();
+
+            foreach (var item in toDelete)
             {
-                var requestedSizes = group.Sizes ?? new List<string>();
+                item.IsDeleted = true;
+            }
 
-                // Borrado lógico de tallas desmarcadas
-                var toRemove = existingLabelTypes
-                    .Where(lt => lt.Description == group.Description && !(lt.IsDeleted ?? false) && !requestedSizes.Contains(lt.Size))
-                    .ToList();
+            // 3. Crear o Restaurar: Procesar cada par de la lista entrante
+            foreach (var pair in incomingPairs)
+            {
+                // ¿Ya existe uno activo con esta descripción y talla?
+                var activeInDB = existingLabelTypes.Any(lt =>
+                    lt.Description == pair.Description &&
+                    lt.Size == pair.Size &&
+                    !(lt.IsDeleted ?? false));
 
-                foreach (var item in toRemove) { item.IsDeleted = true; item.IsActive = false; }
-
-                // Restaurar o Crear
-                foreach (var s in requestedSizes)
+                if (!activeInDB)
                 {
-                    var exists = existingLabelTypes.Any(lt => lt.Description == group.Description && lt.Size == s && !(lt.IsDeleted ?? false));
-                    if (!exists)
+                    // Si no está activo, buscamos si hay uno eliminado para restaurarlo
+                    var deletedInDB = existingLabelTypes.FirstOrDefault(lt =>
+                        lt.Description == pair.Description &&
+                        lt.Size == pair.Size &&
+                        (lt.IsDeleted ?? false));
+
+                    if (deletedInDB != null)
                     {
-                        var deleted = existingLabelTypes.FirstOrDefault(lt => lt.Description == group.Description && lt.Size == s && (lt.IsDeleted ?? false));
-                        if (deleted != null) { deleted.IsDeleted = false; deleted.IsActive = true; }
-                        else
+                        deletedInDB.IsDeleted = false;
+                        deletedInDB.IsActive = true;
+                    }
+                    else
+                    {
+                        // Si no existe ni eliminado, creamos el nuevo registro
+                        existingLabelTypes.Add(new LabelType
                         {
-                            existingLabelTypes.Add(new LabelType { Description = group.Description, Size = s, IdLabel = labelDB.IdLabel, IsActive = true, IsDeleted = false });
-                        }
+                            Description = pair.Description,
+                            Size = pair.Size,
+                            IdLabel = labelDB.IdLabel,
+                            IsActive = true,
+                            IsDeleted = false
+                        });
                     }
                 }
             }

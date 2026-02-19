@@ -12,4 +12,7 @@
     <None Remove=".vite\**" />
     <TypeScriptConfiguration Remove=".vite\**" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="dist\" />
+  </ItemGroup>
 </Project>

@@ -460,10 +460,11 @@ namespace GenericApp.API.Controllers
                 .Where(p => !(p.IsDeleted ?? false))
                 .SelectMany(p => p.ManifestPalletLoadings)
                 .Where(l => !(l.IsDeleted ?? false))
-                .GroupBy(l => l.IdLabelTypeNavigation?.Description ?? "Sin Descripción")
+                .GroupBy(l => l.IdLabelTypeNavigation?.Description + " " + l.Description ?? "Sin Descripción")
                 .Select(g => new
                 {
                     LabelType = g.Key,
+
                     Total = g.Sum(x => x.BoxQuantity ?? 0),
                     Sizes = g.GroupBy(s => s.IdLabelTypeNavigation?.Size ?? "N/A")
                              .Select(sg => new { Size = sg.Key, Qty = sg.Sum(x => x.BoxQuantity ?? 0) })
@@ -634,6 +635,7 @@ namespace GenericApp.API.Controllers
                         stack.Item().PaddingTop(2).Text(t =>
                         {
                             t.Span(load.IdLabelTypeNavigation?.Description ?? "").Bold().FontSize(7);
+                            t.Span($" {load.Description}" ?? "").FontSize(7);
                             t.Span($" {load.IdLabelTypeNavigation?.Size} " ?? "").FontSize(7);
                             t.Span($" {manifest.ClientCode} " ?? "").FontSize(7);
                             t.Span($" ({qty:0})").Bold().FontSize(8);
@@ -929,7 +931,7 @@ namespace GenericApp.API.Controllers
                 .Where(l => !(l.IsDeleted ?? false))
                 .GroupBy(l => new
                 {
-                    Description = l.IdLabelTypeNavigation?.Description ?? l.Description,
+                    Description = l.IdLabelTypeNavigation?.Description + " " + l.Description,
                     Size = l.IdLabelTypeNavigation?.Size
                 })
                 .Select(g => new
@@ -985,12 +987,12 @@ namespace GenericApp.API.Controllers
                     // 2. Descripción (Size Bold + Texto) en la misma celda
                     table.Cell().Element(CellStyle).Text(t =>
                     {
+                        t.Span($"{item.Description}").FontSize(9);
                         if (!string.IsNullOrEmpty(item.Size))
                         {
-                            t.Span($"{item.Size}").FontSize(9).Bold();
                             t.Span($" - ").FontSize(9);
+                            t.Span($"{item.Size}").FontSize(9).Bold();
                         }
-                        t.Span($"{item.Description}").FontSize(9);
                     });
 
                     // 3. Precio (Blanco)
