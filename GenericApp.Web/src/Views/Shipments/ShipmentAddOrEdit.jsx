@@ -742,6 +742,7 @@ function ShipmentAddOrEdit() {
                             value={formData.manifests[activeTab]?.trailerPlateEconomicNumber || ''}
                             onChange={handleManifestChange}
                             onBlur={(e) => handleEconomicBlur(e, false)}
+                            inputProps={{ maxLength: 50 }}
                         />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -753,6 +754,7 @@ function ShipmentAddOrEdit() {
                             error={!!errors.trailerPlate}
                             value={formData.manifests[activeTab]?.trailerPlate || ''}
                             onChange={handleManifestChange}
+                            inputProps={{ maxLength: 50 }}
                             slotProps={{
                                 input: {
                                     endAdornment: loadingTrailerPlate ? (
@@ -776,6 +778,7 @@ function ShipmentAddOrEdit() {
                             value={formData.manifests[activeTab]?.trailerBoxPlateEconomicNumber || ''}
                             onChange={handleManifestChange}
                             onBlur={(e) => handleEconomicBlur(e, true)}
+                            inputProps={{ maxLength: 50 }}
                         />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -787,6 +790,7 @@ function ShipmentAddOrEdit() {
                             error={!!errors.trailerBoxPlate}
                             value={formData.manifests[activeTab]?.trailerBoxPlate || ''}
                             onChange={handleManifestChange}
+                            inputProps={{ maxLength: 50 }}
                             slotProps={{
                                 input: {
                                     endAdornment: loadingBoxPlate ? (
@@ -839,7 +843,7 @@ function ShipmentAddOrEdit() {
                     </Grid>
 
                     <Grid size={{ xs: 12 }}>
-                        <TextField fullWidth multiline rows={5} label={t('comments')} name="comments" value={formData.manifests[activeTab]?.comments || ''} onChange={handleManifestChange} />
+                        <TextField fullWidth multiline rows={5} label={t('comments')} name="comments" value={formData.manifests[activeTab]?.comments || ''} onChange={handleManifestChange} inputProps={{ maxLength: 500 }} />
                     </Grid>
                 </Grid>
             </Paper>

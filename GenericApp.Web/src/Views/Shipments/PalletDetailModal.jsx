@@ -40,6 +40,14 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
     const [palletData, setPalletData] = useState({});
     const [labels, setLabels] = useState([]);
     const [labelTypes, setLabelTypes] = useState([]);
+    const [submitted, setSubmitted] = useState(false); // Control de validación visual
+
+    // Limpiar estado de validación al abrir el modal
+    useEffect(() => {
+        if (open) {
+            setSubmitted(false);
+        }
+    }, [open]);
 
     // 1. Cargar catálogo de etiquetas al abrir
     useEffect(() => {
@@ -177,6 +185,24 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
     };
 
     const handleSavePallet = () => {
+        setSubmitted(true); // Activar bordes rojos
+
+        if (!palletData.idLabel) {
+            ShowMessage(t('labelRequired'), 'error');
+            return;
+        }
+
+        if (!palletData.manifestPalletLoadings || palletData.manifestPalletLoadings.length === 0) {
+            ShowMessage(t('atLeastOneLoadingRequired'), 'error');
+            return;
+        }
+
+        const hasInvalidItems = palletData.manifestPalletLoadings.some(l => !l.idLabelType || !l.boxQuantity || Number(l.boxQuantity) <= 0);
+        if (hasInvalidItems) {
+            ShowMessage(t('loadingFieldsRequired'), 'error');
+            return;
+        }
+
         onSave(palletData);
         onClose();
     };
@@ -235,8 +261,9 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
-                                    label={t('label')}
-                                    helperText={isLabelSelectorDisabled ? t('clearLoadsToChangeLabel') : ""}
+                                    label={`${t('label')} *`}
+                                    error={submitted && !palletData.idLabel}
+                                    helperText={submitted && !palletData.idLabel ? t('requiredField') : (isLabelSelectorDisabled ? t('clearLoadsToChangeLabel') : "")}
                                 />
                             )}
                             renderOption={(props, option) => {
@@ -267,8 +294,19 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                 <Box sx={{ maxHeight: 380, overflowY: 'auto', pr: 0.5 }}>
                     {palletData.manifestPalletLoadings?.map((loading, index) => {
                         const selectedType = labelTypes.find(t_type => t_type.idLabelType === loading.idLabelType);
+
+                        // Validación de la fila: solo activa si submitted es true
+                        const rowHasInvalidFields = !loading.idLabelType || !loading.boxQuantity || Number(loading.boxQuantity) <= 0;
+                        const shouldShowRowError = submitted && (rowHasInvalidFields || isExceeded);
+
                         return (
-                            <Paper key={index} elevation={0} sx={{ p: 2, mb: 2, border: `1px solid ${isExceeded ? red[700] : ""}`, borderRadius: '8px' }}>
+                            <Paper key={index} elevation={0} sx={{
+                                p: 2,
+                                mb: 2,
+                                // El borde solo cambia a rojo si se presionó guardar y hay error
+                                border: `1px solid ${shouldShowRowError ? red[700] : grey[800]}`,
+                                borderRadius: '8px'
+                            }}>
                                 <Grid container spacing={2}>
                                     <Grid size={{ xs: 10.5 }}>
                                         <Autocomplete
@@ -278,24 +316,19 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                                             getOptionLabel={(option) => option.description || ''}
                                             isOptionEqualToValue={(option, value) => option.idLabelType === value.idLabelType}
                                             value={selectedType || null}
-                                            onChange={(event, newValue) => {
-                                                handleLabelTypeChange(index, newValue ? newValue.idLabelType : '');
-                                            }}
+                                            onChange={(event, newValue) => handleLabelTypeChange(index, newValue ? newValue.idLabelType : '')}
                                             disabled={!palletData.idLabel}
                                             renderInput={(params) => (
                                                 <TextField
                                                     {...params}
-                                                    label={t('labelType')}
+                                                    label={`${t('labelType')} *`}
                                                     variant="filled"
+                                                    error={submitted && !loading.idLabelType}
+                                                    helperText={submitted && !loading.idLabelType ? t('requiredField') : ""}
                                                     InputProps={{
                                                         ...params.InputProps,
                                                         startAdornment: selectedType ? (
-                                                            <Chip
-                                                                label={selectedType.size}
-                                                                size="small"
-                                                                color="primary"
-                                                                sx={{ ml: 1, mr: 2, width: 50, height: 20, fontSize: '0.65rem' }}
-                                                            />
+                                                            <Chip label={selectedType.size} size="small" color="primary" sx={{ ml: 1, mr: 2, width: 50, height: 20, fontSize: '0.65rem' }} />
                                                         ) : null,
                                                     }}
                                                 />
@@ -304,8 +337,8 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                                                 const { key, ...optionProps } = props;
                                                 return (
                                                     <Box component="li" key={option.idLabelType} {...optionProps} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1 }}>
-                                                        <Chip label={option.size} size="small" variant="filled" color="primary" sx={{ height: 20,width:50, fontSize: '0.65rem' }} />
-                                                        <Typography variant="body2" sx={{ml:2} }> {option.description}</Typography>
+                                                        <Chip label={option.size} size="small" variant="filled" color="primary" sx={{ height: 20, width: 50, fontSize: '0.65rem' }} />
+                                                        <Typography variant="body2" sx={{ ml: 2 }}> {option.description}</Typography>
                                                     </Box>
                                                 );
                                             }}
@@ -315,15 +348,22 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
                                         <IconButton color="error" onClick={() => handleRemoveLoading(index)}><DeleteIcon /></IconButton>
                                     </Grid>
                                     <Grid size={{ xs: 3 }}>
-                                        <TextField label={t('boxes')} type="number" size="small" fullWidth
+                                        <TextField
+                                            label={`${t('boxes')} *`}
+                                            type="number"
+                                            size="small"
+                                            fullWidth
                                             value={loading.boxQuantity || ''}
                                             onChange={(e) => handleLoadingChange(index, 'boxQuantity', e.target.value)}
+                                            error={submitted && (!loading.boxQuantity || Number(loading.boxQuantity) <= 0)}
+                                            helperText={submitted && (!loading.boxQuantity || Number(loading.boxQuantity) <= 0) ? t('requiredField') : ""}
                                         />
                                     </Grid>
                                     <Grid size={{ xs: 9 }}>
                                         <TextField label={t('description')} fullWidth size="small"
                                             value={loading.description || ''}
                                             onChange={(e) => handleLoadingChange(index, 'description', e.target.value)}
+                                            inputProps={{ maxLength: 250 }}
                                         />
                                     </Grid>
                                 </Grid>

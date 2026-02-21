@@ -110,6 +110,7 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave }) => {
                         value={formData.description} onChange={handleChange}
                         inputRef={descriptionRef} error={validationErrors.description}
                         helperText={validationErrors.description ? t('requiredField') : ''}
+                        inputProps={{ maxLength: 150 }}
                     />
                     <FormControl fullWidth margin="normal" error={validationErrors.sizes} required>
                         <InputLabel id="lbl-sizes">{t('size')}</InputLabel>

@@ -303,6 +303,7 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                                 error={validationErrors.name}
                                 helperText={validationErrors.name ? t('requiredField') : ''}
+                                inputProps={{ maxLength: 150 }}
                             />
 
                             <DatePicker
@@ -350,6 +351,7 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 multiline
                                 rows={2}
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
+                                inputProps={{ maxLength: 250 }}
                             />
                         </Box>
                     </DialogContent>

@@ -192,38 +192,40 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             {/* CAMPOS PRINCIPALES */}
                             <Grid item size={{ xs: 12 }}>
                                 <TextField label={t('name')} name="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    fullWidth required inputRef={nameRef} error={validationErrors.name} helperText={validationErrors.name ? t('requiredField') : ''} />
+                                    fullWidth required inputRef={nameRef} error={validationErrors.name} helperText={validationErrors.name ? t('requiredField') : ''}
+                                    inputProps={{ maxLength: 150 }}
+                                />
                             </Grid>
-                            <Grid item size={{ xs: 12}}>
-                                <TextField label={t('socialReason')} name="razonSocial" value={formData.razonSocial} onChange={(e) => setFormData({ ...formData, razonSocial: e.target.value })} fullWidth />
+                            <Grid item size={{ xs: 12 }}>
+                                <TextField label={t('socialReason')} name="razonSocial" value={formData.razonSocial} onChange={(e) => setFormData({ ...formData, razonSocial: e.target.value })} fullWidth inputProps={{ maxLength: 250 }} />
                             </Grid>
                             <Grid item size={{ xs: 12, md: 6 }}>
-                                <TextField label={t('rfc')} name="rfc" value={formData.rfc} onChange={(e) => setFormData({ ...formData, rfc: e.target.value })} fullWidth />
+                                <TextField label={t('rfc')} name="rfc" value={formData.rfc} onChange={(e) => setFormData({ ...formData, rfc: e.target.value })} fullWidth inputProps={{ maxLength: 13 }} />
                             </Grid>
 
                             <Grid item size={{ xs: 12, md: 6 }}>
-                                <TextField label={t('phone')} name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} fullWidth />
+                                <TextField label={t('phone')} name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} fullWidth inputProps={{ maxLength: 25 }} />
                             </Grid>
 
                             <Grid item size={{ xs: 12 }}>
-                                <TextField label={t('address')} name="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} fullWidth />
+                                <TextField label={t('address')} name="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} fullWidth inputProps={{ maxLength: 250 }} />
                             </Grid>
 
                             {/* FILA DE REGISTROS (3 COLUMNAS) */}
                             <Grid item size={{ xs: 12, md: 4 }}>
-                                <TextField label={t('postal_code')} name="postalCode" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} fullWidth />
+                                <TextField label={t('postal_code')} name="postalCode" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} fullWidth inputProps={{ maxLength: 50 }} />
                             </Grid>
 
                             <Grid item size={{ xs: 12, md: 4 }}>
-                                <TextField label={t('reg_fda_no')} name="regFdaNo" value={formData.regFdaNo} onChange={(e) => setFormData({ ...formData, regFdaNo: e.target.value })} fullWidth />
+                                <TextField label={t('reg_fda_no')} name="regFdaNo" value={formData.regFdaNo} onChange={(e) => setFormData({ ...formData, regFdaNo: e.target.value })} fullWidth inputProps={{ maxLength: 50 }} />
                             </Grid>
 
                             <Grid item size={{ xs: 12, md: 4 }}>
-                                <TextField label={t('empaque')} name="empaque" value={formData.empaque} onChange={(e) => setFormData({ ...formData, empaque: e.target.value })} fullWidth />
+                                <TextField label={t('empaque')} name="empaque" value={formData.empaque} onChange={(e) => setFormData({ ...formData, empaque: e.target.value })} fullWidth inputProps={{ maxLength: 80 }} />
                             </Grid>
 
                             <Grid item size={{ xs: 12, md: 4 }}>
-                                <TextField label={t('gnnNumber')} name="gnnNumber" value={formData.gnnNumber} onChange={(e) => setFormData({ ...formData, gnnNumber: e.target.value })} fullWidth />
+                                <TextField label={t('gnnNumber')} name="gnnNumber" value={formData.gnnNumber} onChange={(e) => setFormData({ ...formData, gnnNumber: e.target.value })} fullWidth inputProps={{ maxLength: 150 }} />
                             </Grid>
 
                             {/* NOTAS (TEXTAREA MULTILINE) */}
@@ -236,6 +238,7 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                     fullWidth
                                     multiline
                                     rows={3}
+                                    inputProps={{ maxLength: 250 }}
                                 />
                             </Grid>
                         </Grid>

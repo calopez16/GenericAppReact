@@ -303,6 +303,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                                 error={validationErrors.name}
                                 helperText={validationErrors.name ? t('requiredField') : ''}
+                                inputProps={{ maxLength: 150 }}
                             />
 
                             <TextField
@@ -315,10 +316,11 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 onChange={handleChange}
                                 error={validationErrors.code}
                                 helperText={validationErrors.code ? t('requiredField') : ''}
+                                inputProps={{ maxLength: 25 }}
                             />
 
-                            <TextField margin="normal" fullWidth label={t('rfc')} name="rfc" value={formData.rfc} onChange={handleChange} />
-                            <TextField margin="normal" fullWidth label={t('phone')} name="phone" value={formData.phone} onChange={handleChange} />
+                            <TextField margin="normal" fullWidth label={t('rfc')} name="rfc" value={formData.rfc} onChange={handleChange} inputProps={{ maxLength: 13 }} />
+                            <TextField margin="normal" fullWidth label={t('phone')} name="phone" value={formData.phone} onChange={handleChange} inputProps={{ maxLength: 25 }} />
 
                             <TextField
                                 margin="normal"
@@ -331,6 +333,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                                 error={validationErrors.address}
                                 helperText={validationErrors.address ? t('requiredField') : ''}
+                                inputProps={{ maxLength: 250 }}
                             />
 
                             <TextField
@@ -343,6 +346,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 onChange={handleChange}
                                 error={validationErrors.postalCode}
                                 helperText={validationErrors.postalCode ? t('requiredField') : ''}
+                                inputProps={{ maxLength: 50 }}
                             />
 
                             <Autocomplete
@@ -381,6 +385,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 multiline
                                 rows={4}
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
+                                inputProps={{ maxLength: 250 }}
                             />
 
                         </Box>

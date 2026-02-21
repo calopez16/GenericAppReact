@@ -185,6 +185,7 @@ const DriverFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                                 error={validationErrors.name}
                                 helperText={validationErrors.name ? t('requiredField') : ''}
+                                inputProps={{ maxLength: 150 }}
                             />
 
                         </Box>

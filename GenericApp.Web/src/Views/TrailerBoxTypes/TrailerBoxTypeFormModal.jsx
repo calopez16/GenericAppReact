@@ -185,6 +185,7 @@ const TrailerBoxTypeFormModal = ({ open, handleClose, data, isEditing, setData }
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                                 error={validationErrors.description}
                                 helperText={validationErrors.description ? t('requiredField') : ''}
+                                inputProps={{ maxLength: 150 }}
                             />
 
                         </Box>

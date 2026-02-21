@@ -136,7 +136,7 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 <Box component="form" onSubmit={handleSubmit}>
                     <DialogContent>
                         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3 }}>
-                            <TextField fullWidth label={t('description')} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+                            <TextField fullWidth label={t('description')} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} inputProps={{ maxLength: 150 }} />
                             <TextField fullWidth label={t('label_maxBoxQuantity')} type="number" value={formData.maxBoxQuantity} onChange={(e) => setFormData({ ...formData, maxBoxQuantity: e.target.value })} />
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
