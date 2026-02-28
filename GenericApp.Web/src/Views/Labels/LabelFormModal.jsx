@@ -23,6 +23,7 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const [isLabelTypeModalOpen, setIsLabelTypeModalOpen] = useState(false);
     const [selectedLabelType, setSelectedLabelType] = useState(null);
     const [isLabelTypeEditing, setIsLabelTypeEditing] = useState(false);
+    const [availableLabelTypes, setAvailableLabelTypes] = useState([]); // Estado para los tipos del API
 
     const groupLabelTypes = (flatList) => {
         if (!flatList || !Array.isArray(flatList)) return [];
@@ -37,8 +38,22 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }, []);
     };
 
+    const fetchLabelTypes = async () => {
+        try {
+            // Asumiendo que dataService tiene este método o ajustándolo al que proporcionaste
+            const response = await dataService.getActiveLabelTypes();
+            if (response.success) {
+                // Guardamos los datos originales del API
+                setAvailableLabelTypes(response.data.data || response.data || []);
+            }
+        } catch (error) {
+            console.error("Error fetching label types", error);
+        }
+    };
+
     useEffect(() => {
         if (open) {
+            fetchLabelTypes();
             if (isEditing && data) {
                 setFormData({
                     idLabel: data.idLabel,
@@ -171,7 +186,14 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     </DialogActions>
                 </Box>
             </Dialog>
-            <LabelTypeModal open={isLabelTypeModalOpen} handleClose={() => setIsLabelTypeModalOpen(false)} data={selectedLabelType} isEditing={isLabelTypeEditing} onSave={handleSaveLabelType} />
+            <LabelTypeModal
+                open={isLabelTypeModalOpen}
+                handleClose={() => setIsLabelTypeModalOpen(false)}
+                data={selectedLabelType}
+                isEditing={isLabelTypeEditing}
+                onSave={handleSaveLabelType}
+                availableOptions={availableLabelTypes}
+            />
         </>
     );
 };

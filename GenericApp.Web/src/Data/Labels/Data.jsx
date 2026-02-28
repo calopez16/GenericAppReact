@@ -10,6 +10,8 @@ export const DataAPILabelsService = () => {
     const genericService = createApiMethodsService(moduleSource, dataMapper);
 
     return {
-        ...genericService
+        ...genericService,
+        getActiveLabelTypes: () => GET(`${moduleSource}/labeltypes-active`),
+
     };
 };

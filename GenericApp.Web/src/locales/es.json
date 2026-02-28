@@ -235,7 +235,6 @@
   "remisionNo": "No. de remisión",
   "reports_description": "Modulo de reportes del sistema",
   "requiredField": "Este campo es requerido",
-  "requiredField": "Campo requerido",
   "resetPassword": "Reiniciar contraseña",
   "rfc": "RFC",
   "roles": "Roles",
@@ -298,5 +297,11 @@
   "welcome_page_options_title": "Opciones del sistema",
   "welcome_page_subtitle": "Descripcion generica del sistema donde se pueden hacer diferentes cosas",
   "welcome_page_title": "Bienvenido(a)",
-  "yes": "Sí"
+  "yes": "Sí",
+  "size": "Tamaño",
+  "new_size": "Nuevo tamaño",
+  "new_size_placeholder": "Ej: XL o 10x10",
+  "add_plus": "Agregar +",
+  "add_size_tooltip": "Agregar tamaño a la lista",
+  "no_data_label_types": "No se han agregado tipos de etiqueta aún"
 }

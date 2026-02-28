@@ -235,7 +235,6 @@
   "remisionNo": "Remisión No.",
   "reports_description": "System reports module",
   "requiredField": "This field is required",
-  "requiredField": "Required field",
   "resetPassword": "Restart password",
   "rfc": "RFC",
   "roles": "Roles",
@@ -298,5 +297,11 @@
   "welcome_page_options_title": "App options",
   "welcome_page_subtitle": "General description of the system where you can perform different tasks",
   "welcome_page_title": "Welcome",
-  "yes": "Yes"
+  "yes": "Yes",
+  "size": "Size",
+  "new_size": "New size",
+  "new_size_placeholder": "Ex: XL or 10x10",
+  "add_plus": "Add +",
+  "add_size_tooltip": "Add size to list",
+  "no_data_label_types": "No label types have been added yet"
 }

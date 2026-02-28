@@ -321,5 +321,36 @@ namespace GenericApp.API.Controllers
             var labelDTO = _mapper.Map<LabelDTO>(label);
             return Ok(new ApiResponse { Data = labelDTO });
         }
+
+        /// <summary>
+        /// Obtiene listado de tamaño de etiquetas registradas en el sistema.
+        /// </summary>
+        /// <returns>Listado de LabelDTO si se encuentran, o NotFound si no existen.</returns>
+        [HttpGet("labeltypes-active")]
+        public async Task<ActionResult<IEnumerable<LabelTypeDTO>>> GetActiveSizeLabels()
+        {
+            try
+            {
+                var query = await _repository.Query<LabelType>();
+
+                var labelTypeList = await query
+                    .Where(x => !(x.IsDeleted ?? false))
+                    .GroupBy(x => x.Size)
+                    .Select(group => group.OrderBy(lt => lt.IdLabelType).FirstOrDefault())
+                    .ToListAsync();
+
+                if (labelTypeList == null || !labelTypeList.Any())
+                    return NotFound(new ApiResponse { Message = "No se encontraron etiquetas." });
+
+                var labelDTO = _mapper.Map<List<LabelTypeDTO>>(labelTypeList);
+
+                return Ok(new ApiResponse { Data = labelDTO });
+            }
+            catch (Exception)
+            {
+                // Es recomendable registrar el error aquí (logger)
+                return StatusCode(500, new ApiResponse { Message = "Error interno al procesar los tipos de etiqueta." });
+            }
+        }
     }
 }
