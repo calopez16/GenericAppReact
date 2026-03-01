@@ -134,7 +134,7 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                                 aria-haspopup="true"
                                 aria-expanded={open ? 'true' : undefined}
                                 onClick={handleClick}
-                                sx={{ mr: 1 ,display:"none"}}
+                                sx={{ mr: 1 }}
                             >
                                 <Avatar
                                     src={langFlags[i18n.language]}

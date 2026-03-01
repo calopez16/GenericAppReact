@@ -126,6 +126,7 @@ namespace GenericApp.API.Controllers
                 var roles = await _userManager.GetRolesAsync(user);
                 var claims = await _userManager.GetClaimsAsync(user);
                 var userDetail = await _repository.FirstOrDefault<UserDetail>(x => x.IdUser.Equals(user.Id));
+                var companyDB = await _repository.FirstOrDefault<Company>(x => x.IdCompany == userDetail.IdCompany);
                 usersWithClaims.Add(new UserDTO
                 {
                     UserNameId = user.UserName,
@@ -133,7 +134,8 @@ namespace GenericApp.API.Controllers
                     Email = user.Email,
                     Roles = roles.ToList(),
                     IsDisabled = claims.Any(x => x.Type == nameof(AppPolicies.IsDisabled)),
-                    IdCompany = userDetail?.IdCompany
+                    IdCompany = userDetail?.IdCompany,
+                    CompanyDescription = companyDB?.Name ?? ""
                 });
             }
 

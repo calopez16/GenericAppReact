@@ -9,6 +9,7 @@
         public string? NewPassword { get; set; }
         public bool? IsDisabled { get; set; }
         public int? IdCompany { get; set; }
+        public string? CompanyDescription { get; set; }
         public List<UserClaimDTO>? Claims { get; set; }
         public List<string>? Roles { get; set; }
     }

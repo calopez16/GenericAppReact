@@ -15,11 +15,18 @@ import {
     OutlinedInput,
     Checkbox,
     ListItemText,
-    FormHelperText
+    FormHelperText,
+    Avatar,
+    IconButton,
+    Divider,
+    Tooltip  
 } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import EditIcon from '@mui/icons-material/Edit';
 import { DataAPIUsersService } from '@data/Users/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
@@ -31,7 +38,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const service = DataAPIUsersService();
     const cityDataCompanies = DataAPICompaniesService();
 
-    // Estado para almacenar la lista de compañías
     const [companies, setCompanies] = useState([]);
 
     const [formData, setFormData] = useState({
@@ -54,7 +60,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     });
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-    // Carga inicial de datos
     useEffect(() => {
         const fetchCompanies = async () => {
             try {
@@ -80,7 +85,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         loadRoles();
     }, []);
 
-    // Inicialización del formulario
     useEffect(() => {
         if (open) {
             if (isEditing && data) {
@@ -95,7 +99,6 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     userName: '',
                     email: '',
                     roles: [],
-                    // Seleccionar la primera compañía por defecto si existe
                     idCompany: companies.length > 0 ? companies[0].id : '',
                 });
             }
@@ -104,46 +107,34 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         }
     }, [open, isEditing, data, companies]);
 
-    // 1. Manejador para Inputs de Texto (UserName, Email)
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
 
         if (hasAttemptedSubmit) {
             setValidationErrors(prev => ({
                 ...prev,
-                [name]: value.trim() === '', // Validación simple de texto
+                [name]: value.trim() === '',
             }));
         }
     };
 
-    // 2. Manejador específico para Compañía (Dropdown simple)
     const handleCompanyChange = (e) => {
         const { value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            idCompany: value
-        }));
+        setFormData(prev => ({ ...prev, idCompany: value }));
 
         if (hasAttemptedSubmit) {
             setValidationErrors(prev => ({
                 ...prev,
-                idCompany: !value, // Error si no hay valor seleccionado
+                idCompany: !value,
             }));
         }
     };
 
-    // 3. Manejador específico para Roles (Dropdown múltiple)
     const handleRoleChange = (e) => {
         const { value } = e.target;
         const newRoles = typeof value === 'string' ? value.split(',') : value;
-        setFormData(prev => ({
-            ...prev,
-            roles: newRoles,
-        }));
+        setFormData(prev => ({ ...prev, roles: newRoles }));
 
         if (hasAttemptedSubmit) {
             setValidationErrors(prev => ({
@@ -160,15 +151,12 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
             roles: formData.roles.length === 0,
             idCompany: !formData.idCompany,
         };
-
         setValidationErrors(errors);
-
         return !errors.userName && !errors.email && !errors.roles && !errors.idCompany;
     };
 
     const handleSubmit = async (event) => {
         if (event) event.preventDefault();
-
         setHasAttemptedSubmit(true);
 
         if (!validateForm()) {
@@ -241,11 +229,34 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
     return (
         <>
-            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-                <DialogTitle>
-                    {isEditing ? t('editUser') : t('addUser')}
-                </DialogTitle>
+            <Dialog
+                open={open}
+                onClose={handleClose}
+                fullWidth
+                maxWidth="sm"
+                PaperProps={{ sx: { borderRadius: 3 } }}
+            >
                 <Box component="form" onSubmit={handleSubmit} noValidate>
+                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 42, height: 42, borderRadius: 2 }}>
+                                {isEditing ? <EditIcon /> : <PersonAddIcon />}
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                                    {isEditing ? t('editUser') : t('addUser')}
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Tooltip title={t('close')}>
+                        <IconButton onClick={handleClose} size="small" sx={{ color: 'text.secondary' }}>
+                            <CloseIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </DialogTitle>
+
+                    <Divider />
+
                     <DialogContent>
                         <TextField
                             margin="normal"
@@ -271,21 +282,19 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             helperText={validationErrors.email ? requiredErrorText : ''}
                         />
 
-                        {/* --- DROPDOWN DE COMPAÑÍA --- */}
                         <FormControl
                             fullWidth
                             margin="normal"
                             required
                             error={validationErrors.idCompany}
                         >
-                            <InputLabel id="company-select-label">{t('company') || 'Compañía'}</InputLabel>
+                            <InputLabel id="company-select-label">{t('company')}</InputLabel>
                             <Select
                                 labelId="company-select-label"
-                                id="company-select"
                                 name="idCompany"
                                 value={formData.idCompany ?? ''}
-                                onChange={handleCompanyChange} // <--- USANDO LA NUEVA FUNCIÓN
-                                label={t('company') || 'Compañía'}
+                                onChange={handleCompanyChange}
+                                label={t('company')}
                             >
                                 {companies.map((company) => (
                                     <MenuItem key={company.idCompany} value={company.idCompany}>
@@ -304,8 +313,9 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             required
                             error={validationErrors.roles}
                         >
-                            <InputLabel>{t('roles')}</InputLabel>
+                            <InputLabel id="roles-label">{t('roles')}</InputLabel>
                             <Select
+                                labelId="roles-label"
                                 multiple
                                 value={formData.roles}
                                 onChange={handleRoleChange}
@@ -320,36 +330,36 @@ const UserFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 ))}
                             </Select>
                             {validationErrors.roles && (
-                                <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>
-                                    {requiredErrorText}
-                                </Typography>
+                                <FormHelperText color="error">{requiredErrorText}</FormHelperText>
                             )}
                         </FormControl>
                     </DialogContent>
-                    <DialogActions
-                        sx={{
-                            flexDirection: { xs: 'column', sm: 'row' },
-                            justifyContent: 'flex-end',
-                            p: 3
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                width: { xs: '100%', sm: 'auto' },
-                                display: 'flex',
-                                justifyContent: { xs: 'space-between', sm: 'flex-end' },
-                            }}
+
+                    <Divider />
+
+                    <DialogActions sx={{ p: 2.5 }}>
+                        <Button
+                            onClick={handleClose}
+                            color="error"
+                            variant="outlined"
+                            endIcon={<CancelIcon />}
                         >
-                            <Button type="button" color="error" sx={{ mr: { xs: 0, sm: 1 } }} variant="outlined" endIcon={<CancelIcon />} onClick={handleClose}>
-                                {t('cancel')}
-                            </Button>
-                            <Button type="submit" color="primary" variant="contained" endIcon={isEditing ? <SaveIcon /> : <AddIcon />} disabled={isLoading}>
-                                {isEditing ? t('save') : t('add')}
-                            </Button>
-                        </Box>
+                            {t('cancel')}
+                        </Button>
+                        <Button
+                            type="submit"
+                            color="primary"
+                            variant="contained"
+                            disableElevation
+                            disabled={isLoading}
+                            endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
+                        >
+                            {isEditing ? t('save') : t('add')}
+                        </Button>
                     </DialogActions>
                 </Box>
             </Dialog>
+
             <PasswordModal
                 open={passwordModalOpen}
                 onClose={handlePasswordModalClose}
