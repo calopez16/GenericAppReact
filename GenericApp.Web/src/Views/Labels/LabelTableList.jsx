@@ -56,11 +56,11 @@ const LabelListTable = ({
             <Table sx={{ minWidth: 650 }} aria-label="labels table">
                 <TableHead sx={{ bgcolor: 'action.hover' }}>
                     <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold', width: 120 }} align="center">{t('status')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', width: 10  }} align="center">{t('status')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('description')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('label_maxBoxQuantity')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('types')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }} align="center">{t('actions')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', width: 200 }} align="center">{t('actions')}</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>

@@ -10,11 +10,17 @@ import {
     Typography,
     Grid,
     IconButton,
+    Avatar,
+    Divider,
+    Tooltip,
+    CircularProgress
 } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import CloseIcon from '@mui/icons-material/Close';
+import BusinessIcon from '@mui/icons-material/Business';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 import { DataAPICompaniesService } from '@data/Companies/Data';
@@ -50,6 +56,7 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const [originalLogoUrl, setOriginalLogoUrl] = useState(null);
     const [newLogoPreview, setNewLogoPreview] = useState(null);
     const [validationErrors, setValidationErrors] = useState({ name: false });
+    const [showErrors, setShowErrors] = useState(false);
 
     useEffect(() => {
         if (open) {
@@ -75,7 +82,8 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 setOriginalLogoUrl(null);
             }
             setNewLogoPreview(null);
-            setValidationErrors({ name: false });
+            setValidationErrors({ name: !isEditing || !data?.name });
+            setShowErrors(false);
             setTimeout(() => { if (nameRef.current) nameRef.current.focus(); }, 100);
         }
     }, [open, isEditing, data]);
@@ -98,6 +106,7 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
+        setShowErrors(true);
         if (!formData.name.trim()) {
             setValidationErrors({ name: true });
             ShowMessage(t('emptyFields'), 'warning');
@@ -167,10 +176,29 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     );
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+        <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
             <form onSubmit={handleSubmit} noValidate>
-                <DialogTitle sx={{ fontWeight: 'bold' }}>{isEditing ? t('edit_company') : t('add_company')}</DialogTitle>
-                <DialogContent dividers>
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 42, height: 42, borderRadius: 2 }}>
+                            {isEditing ? <EditIcon /> : <BusinessIcon />}
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                                {isEditing ? t('edit_company') : t('add_company')}
+                            </Typography>
+                        </Box>
+                    </Box>
+                    <Tooltip title={t('close')}>
+                        <IconButton onClick={handleClose} size="small" sx={{ color: 'text.secondary' }}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Tooltip>
+                </DialogTitle>
+
+                <Divider />
+
+                <DialogContent>
                     <Box sx={{ mt: 1 }}>
                         <Grid container spacing={3}>
                             {/* LOGO */}
@@ -191,8 +219,14 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
                             {/* CAMPOS PRINCIPALES */}
                             <Grid item size={{ xs: 12 }}>
-                                <TextField label={t('name')} name="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    fullWidth required inputRef={nameRef} error={validationErrors.name} helperText={validationErrors.name ? t('requiredField') : ''}
+                                <TextField label={t('name')} name="name" value={formData.name}
+                                    onChange={(e) => {
+                                        setFormData({ ...formData, name: e.target.value });
+                                        setValidationErrors({ name: !e.target.value.trim() });
+                                    }}
+                                    fullWidth required inputRef={nameRef}
+                                    error={showErrors && validationErrors.name}
+                                    helperText={showErrors && validationErrors.name ? t('requiredField') : ''}
                                     inputProps={{ maxLength: 150 }}
                                 />
                             </Grid>
@@ -211,7 +245,6 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 <TextField label={t('address')} name="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} fullWidth inputProps={{ maxLength: 250 }} />
                             </Grid>
 
-                            {/* FILA DE REGISTROS (3 COLUMNAS) */}
                             <Grid item size={{ xs: 12, md: 4 }}>
                                 <TextField label={t('postal_code')} name="postalCode" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} fullWidth inputProps={{ maxLength: 50 }} />
                             </Grid>
@@ -228,27 +261,31 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 <TextField label={t('gnnNumber')} name="gnnNumber" value={formData.gnnNumber} onChange={(e) => setFormData({ ...formData, gnnNumber: e.target.value })} fullWidth inputProps={{ maxLength: 150 }} />
                             </Grid>
 
-                            {/* NOTAS (TEXTAREA MULTILINE) */}
                             <Grid item size={{ xs: 12 }}>
                                 <TextField
-                                    label={t('notes')}
-                                    name="notes"
-                                    value={formData.notes}
+                                    label={t('notes')} name="notes" value={formData.notes}
                                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    fullWidth
-                                    multiline
-                                    rows={3}
-                                    inputProps={{ maxLength: 250 }}
+                                    fullWidth multiline rows={3} inputProps={{ maxLength: 250 }}
                                 />
                             </Grid>
                         </Grid>
                     </Box>
                 </DialogContent>
-                <DialogActions sx={{ p: 3, gap: 1 }}>
-                    <Button color="error" variant="outlined" startIcon={<CancelIcon />} onClick={handleClose}>
+
+                <Divider />
+
+                <DialogActions sx={{ p: 2.5 }}>
+                    <Button color="error" variant="outlined" endIcon={<CancelIcon />} onClick={handleClose}>
                         {t('cancel')}
                     </Button>
-                    <Button type="submit" color="primary" variant="contained" startIcon={isEditing ? <SaveIcon /> : <AddIcon />} disabled={isLoading}>
+                    <Button
+                        type="submit" color="primary" variant="contained" disableElevation
+                        disabled={isLoading}
+                        endIcon={isLoading
+                            ? <CircularProgress size={18} color="inherit" />
+                            : isEditing ? <SaveIcon /> : <AddIcon />
+                        }
+                    >
                         {isEditing ? t('save') : t('add')}
                     </Button>
                 </DialogActions>

@@ -7,12 +7,18 @@ import {
     TextField,
     Button,
     Box,
-    Switch,
-    FormControlLabel,
+    Avatar,
+    Typography,
+    IconButton,
+    Tooltip,
+    Divider,
+    CircularProgress
 } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -274,15 +280,33 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
     return (
         <>
-            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-                <DialogTitle>
-                    {isEditing ? t('season_edit') : t('season_add')}
+            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md" PaperProps={{ sx: { borderRadius: 3 } }}>
+                <form onSubmit={handleSubmit} noValidate>
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 42, height: 42, borderRadius: 2 }}>
+                            {isEditing ? <EditIcon /> : <AddIcon />}
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                                {isEditing ? t('season_edit') : t('season_add')}
+                            </Typography>
+                        </Box>
+                    </Box>
+                    <Tooltip title={t('close')}>
+                        <IconButton onClick={handleClose} size="small" sx={{ color: 'text.secondary' }}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Tooltip>
                 </DialogTitle>
-                <Box component="form" onSubmit={handleSubmit} noValidate>
+
+                <Divider />
+
+                <Box component="div">
                     <DialogContent>
                         <Box
                             sx={{
-                                mt: 2,
+                                mt: 1,
                                 display: 'grid',
                                 gridTemplateColumns: {
                                     xs: '1fr',
@@ -355,52 +379,67 @@ const SeasonFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                             />
                         </Box>
                     </DialogContent>
-                    <DialogActions
-                        sx={{
-                            flexDirection: { xs: 'column', sm: 'row' },
-                            justifyContent: isEditing ? { xs: 'flex-start', sm: 'space-between' } : 'flex-end',
-                            p: 3
-                        }}
-                    >
-                        {isEditing && (
-                            <Button
-                                color={formData.isClosed ? "success" : "error"}
-                                variant="contained"
-                                onClick={handleToggleCloseStatus}
-                                disabled={isClosingOrOpening || isLoading}
-                                sx={{
-                                    order: { xs: 1, sm: 1 },
-                                    width: { xs: '100%', sm: 'auto' },
-                                    mb: { xs: 2, sm: 0 }
-                                }}
-                            >
-                                {toggleButtonText}
-                            </Button>
-                        )}
+                </Box>
 
-                        <Box
+                <Divider />
+
+                <DialogActions
+                    sx={{
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        justifyContent: isEditing ? { xs: 'flex-start', sm: 'space-between' } : 'flex-end',
+                        p: 2.5
+                    }}
+                >
+                    {isEditing && (
+                        <Button
+                            color={formData.isClosed ? "success" : "error"}
+                            variant="contained"
+                            disableElevation
+                            onClick={handleToggleCloseStatus}
+                            disabled={isClosingOrOpening || isLoading}
                             sx={{
-                                order: { xs: 2, sm: isEditing ? 2 : 1 },
+                                order: { xs: 1, sm: 1 },
                                 width: { xs: '100%', sm: 'auto' },
-                                display: 'flex',
-                                justifyContent: { xs: 'space-between', sm: 'flex-end' }
+                                mb: { xs: 2, sm: 0 }
                             }}
                         >
-                            <Button color="error" variant="outlined" endIcon={<CancelIcon />} onClick={handleClose} sx={{ mr: { xs: 0, sm: 1 } }}>
-                                {t('cancel') || 'Cancelar'}
-                            </Button>
-                            <Button
-                                type="submit"
-                                color="primary"
-                                variant="contained"
-                                endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
-                                disabled={isLoading || isClosingOrOpening}
-                            >
-                                {isEditing ? t('save') : t('add')}
-                            </Button>
-                        </Box>
-                    </DialogActions>
-                </Box>
+                            {toggleButtonText}
+                        </Button>
+                    )}
+
+                    <Box
+                        sx={{
+                            order: { xs: 2, sm: isEditing ? 2 : 1 },
+                            width: { xs: '100%', sm: 'auto' },
+                            display: 'flex',
+                            justifyContent: { xs: 'space-between', sm: 'flex-end' }
+                        }}
+                    >
+                        <Button
+                            color="error"
+                            variant="outlined"
+                            endIcon={<CancelIcon />}
+                            onClick={handleClose}
+                            sx={{ mr: { xs: 0, sm: 1 } }}
+                        >
+                            {t('cancel')}
+                        </Button>
+                        <Button
+                            type="submit"
+                            color="primary"
+                            variant="contained"
+                            disableElevation
+                            disabled={isLoading || isClosingOrOpening}
+                            endIcon={isLoading
+                                ? <CircularProgress size={18} color="inherit" />
+                                : isEditing ? <SaveIcon /> : <AddIcon />
+                            }
+                        >
+                            {isEditing ? t('save') : t('add')}
+                        </Button>
+                    </Box>
+                </DialogActions>
+                </form>
             </Dialog>
         </>
     );

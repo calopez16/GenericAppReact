@@ -8,10 +8,18 @@ import {
     Button,
     Box,
     Autocomplete,
+    Avatar,
+    Typography,
+    IconButton,
+    Tooltip,
+    Divider,
+    CircularProgress
 } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import CloseIcon from '@mui/icons-material/Close';
 import { AppContext } from '@helpers/AppContext';
 
 import { DataAPIClientsService } from '@data/Clients/Data';
@@ -273,15 +281,33 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
     return (
         <>
-            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-                <DialogTitle>
-                    {isEditing ? t('clients_edit') : t('clients_add')}
+            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md" PaperProps={{ sx: { borderRadius: 3 } }}>
+                <form onSubmit={handleSubmit} noValidate>
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 42, height: 42, borderRadius: 2 }}>
+                            {isEditing ? <EditIcon /> : <AddIcon />}
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                                {isEditing ? t('clients_edit') : t('clients_add')}
+                            </Typography>
+                        </Box>
+                    </Box>
+                    <Tooltip title={t('close')}>
+                        <IconButton onClick={handleClose} size="small" sx={{ color: 'text.secondary' }}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Tooltip>
                 </DialogTitle>
-                <Box component="form" onSubmit={handleSubmit} noValidate>
+
+                <Divider />
+
+                <Box component="div">
                     <DialogContent>
                         <Box
                             sx={{
-                                mt: 2,
+                                mt: 1,
                                 display: 'grid',
                                 gridTemplateColumns: {
                                     xs: '1fr',
@@ -390,41 +416,34 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
                         </Box>
                     </DialogContent>
-                    <DialogActions
-                        sx={{
-                            flexDirection: { xs: 'column', sm: 'row' },
-                            justifyContent: 'flex-end',
-                            p: 3
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                width: { xs: '100%', sm: 'auto' },
-                                display: 'flex',
-                                justifyContent: { xs: 'space-between', sm: 'flex-end' },
-                            }}
-                        >
-                            <Button
-                                color="error"
-                                variant="outlined"
-                                endIcon={<CancelIcon />}
-                                onClick={handleClose}
-                                sx={{ mr: { xs: 0, sm: 1 } }}
-                            >
-                                {t('cancel')}
-                            </Button>
-                            <Button
-                                type="submit"
-                                color="primary"
-                                variant="contained"
-                                endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
-                                disabled={isLoading}
-                            >
-                                {(isEditing ? t('save') : t('add'))}
-                            </Button>
-                        </Box>
-                    </DialogActions>
                 </Box>
+
+                <Divider />
+
+                <DialogActions sx={{ p: 2.5 }}>
+                    <Button
+                        color="error"
+                        variant="outlined"
+                        endIcon={<CancelIcon />}
+                        onClick={handleClose}
+                    >
+                        {t('cancel')}
+                    </Button>
+                    <Button
+                        type="submit"
+                        color="primary"
+                        variant="contained"
+                        disableElevation
+                        disabled={isLoading}
+                        endIcon={isLoading
+                            ? <CircularProgress size={18} color="inherit" />
+                            : isEditing ? <SaveIcon /> : <AddIcon />
+                        }
+                    >
+                        {isEditing ? t('save') : t('add')}
+                    </Button>
+                </DialogActions>
+                </form>
             </Dialog>
         </>
     );

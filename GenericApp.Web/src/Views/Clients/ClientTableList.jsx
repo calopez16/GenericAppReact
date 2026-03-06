@@ -10,10 +10,13 @@ import {
     Switch,
     IconButton,
     Tooltip,
-    Typography
+    Typography,
+    Box,
+    Skeleton
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EmptyData from '@layout/EmptyData';
 
 const ANIMATION_DURATION = 500;
 
@@ -30,7 +33,6 @@ const normalRowStyle = {
     transition: `all ${ANIMATION_DURATION}ms ease-out`,
     transform: 'translateX(0)',
     opacity: 1,
-    maxHeight: '1000px',
 };
 
 const ClientListTable = ({
@@ -40,88 +42,139 @@ const ClientListTable = ({
     handleOpenEditClient,
     handleToggleClientStatus,
     handleOpenDeleteConfirmation,
-    setSelectedClient,
-    deletingId
+    deletingId,
+    isSearch = false,
+    rowsPerPage = 5
 }) => {
 
-    const minTableWidth = 900;
+    const rowHeight = 65;
+    const colSpan = 6;
+
+    const emptyRows = !loading && clients?.length > 0
+        ? Math.max(0, rowsPerPage - clients.length)
+        : 0;
 
     return (
-        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-            <Table sx={{ minWidth: minTableWidth }}>
-                <TableHead>
+        <TableContainer
+            component={Paper}
+            elevation={0}
+            sx={{ overflowX: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
+        >
+            <Table sx={{ minWidth: 900 }}>
+                <TableHead sx={{ bgcolor: 'action.hover' }}>
                     <TableRow>
-                        <TableCell>{t('active')}</TableCell>
-                        <TableCell>{t('name')}</TableCell>
-                        <TableCell>{t('rfc')}</TableCell>
-                        <TableCell>{t('address')}</TableCell>
-                        <TableCell>{t('phone')}</TableCell>
-                        <TableCell align="right">{t('actions')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', width: 10 }} align="center">{t('status')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('name')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('rfc')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('address')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('phone')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', width: 200 }} align="center">{t('actions')}</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {loading ? (
-                        <TableRow>
-                            <TableCell colSpan={6} align="center">
-                                {t('loading')}...
-                            </TableCell>
-                        </TableRow>
-                    ) : (clients?.length ?? 0) === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={6} align="center"> {t('records_notFound')}.</TableCell>
-                        </TableRow>
+                        Array.from(new Array(rowsPerPage)).map((_, index) => (
+                            <TableRow key={`skeleton-${index}`} style={{ height: rowHeight }}>
+                                <TableCell align="center">
+                                    <Skeleton variant="rectangular" width={40} height={20} sx={{ mx: 'auto', borderRadius: 1 }} />
+                                </TableCell>
+                                <TableCell><Skeleton width="70%" /></TableCell>
+                                <TableCell><Skeleton width="50%" /></TableCell>
+                                <TableCell><Skeleton width="60%" /></TableCell>
+                                <TableCell><Skeleton width="40%" /></TableCell>
+                                <TableCell align="center">
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                                        <Skeleton variant="circular" width={30} height={30} />
+                                        <Skeleton variant="circular" width={30} height={30} />
+                                    </Box>
+                                </TableCell>
+                            </TableRow>
+                        ))
                     ) : (
-                        clients.map((client) => {
-                            const isDeleting = client.idClient === deletingId;
+                        <>
+                            {clients?.map((client) => {
+                                const isDeleting = client.idClient === deletingId;
 
-                            const rowCurrentStyle = isDeleting ? deletingRowStyle : normalRowStyle;
-
-                            return (
-                                <TableRow
-                                    key={client.idClient}
-                                    sx={rowCurrentStyle}
-                                >
-                                    <TableCell>
-                                        <Tooltip title={client.isActive ? t('disable') : t('enable')}>
+                                return (
+                                    <TableRow
+                                        key={client.idClient}
+                                        hover
+                                        sx={isDeleting ? deletingRowStyle : { ...normalRowStyle, '&:last-child td, &:last-child th': { border: 0 }, height: rowHeight }}
+                                    >
+                                        <TableCell align="center">
                                             <Switch
                                                 checked={client.isActive}
                                                 onChange={() => handleToggleClientStatus(client)}
                                                 color="primary"
                                                 disabled={isDeleting}
                                             />
-                                        </Tooltip>
-                                    </TableCell>
-                                    <TableCell>{client.name}</TableCell>
-                                    <TableCell>{client.rfc}</TableCell>
-                                    <TableCell>{client.address}</TableCell>
-                                    <TableCell>{client.phone}</TableCell>
-                                    <TableCell align="right">
-                                        <Tooltip title={t('edit')}>
-                                            <IconButton
-                                                color="primary"
-                                                onClick={() => handleOpenEditClient(client)}
-                                                disabled={isDeleting}
-                                            >
-                                                <EditIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title={t('delete')}>
-                                            <IconButton
-                                                color="error"
-                                                onClick={() => handleOpenDeleteConfirmation(client)}
-                                                sx={{ ml: 1 }}
-                                                disabled={isDeleting}
-                                            >
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                {client.name}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {client.rfc || '-'}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2">{client.address}</Typography>
+                                            <Typography variant="caption" color="text.secondary">{client.postalCode}</Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {client.phone || '-'}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                                                <Tooltip title={t('edit')}>
+                                                    <IconButton
+                                                        onClick={() => handleOpenEditClient(client)}
+                                                        disabled={isDeleting}
+                                                        sx={{ color: 'white', bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, p: 1 }}
+                                                    >
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title={t('delete')}>
+                                                    <IconButton
+                                                        onClick={() => handleOpenDeleteConfirmation(client)}
+                                                        disabled={isDeleting}
+                                                        sx={{ color: 'white', bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' }, p: 1 }}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+
+                            {emptyRows > 0 && (
+                                Array.from(new Array(emptyRows)).map((_, index) => (
+                                    <TableRow key={`empty-${index}`} style={{ height: rowHeight }}>
+                                        <TableCell colSpan={colSpan} sx={{ borderBottom: index === emptyRows - 1 ? 'none' : '1px solid rgba(224, 224, 224, 0.4)' }} />
+                                    </TableRow>
+                                ))
+                            )}
+                        </>
                     )}
                 </TableBody>
             </Table>
+
+            {!loading && (clients?.length ?? 0) === 0 && (
+                <Box sx={{ mt: 2 }}>
+                    <EmptyData
+                        isSearch={isSearch}
+                        title={isSearch ? t('records_notFound') : t('no_clients_yet')}
+                        description={isSearch ? t('try_another_search_term') : t('start_by_adding_client')}
+                    />
+                </Box>
+            )}
         </TableContainer>
     );
 };

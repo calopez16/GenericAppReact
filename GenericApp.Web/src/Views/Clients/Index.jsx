@@ -1,18 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Box,
     Typography,
     TextField,
-    InputAdornment,
     Button,
     TablePagination,
     useMediaQuery,
     useTheme,
-    LinearProgress
+    LinearProgress,
+    Paper,
+    Avatar,
+    IconButton,
+    ClickAwayListener,
+    Tooltip
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import CloseIcon from '@mui/icons-material/Close';
 import { DataAPIClientsService } from '@data/Clients/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
@@ -31,6 +36,8 @@ function Index() {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+    const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+    const searchInputRef = useRef(null);
 
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,7 +51,7 @@ function Index() {
     const ANIMATION_DURATION = 500;
 
     const theme = useTheme();
-    const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
     useEffect(() => {
         const timerId = setTimeout(() => {
@@ -72,7 +79,6 @@ function Index() {
         loadClients();
     }, [page, rowsPerPage, debouncedSearchTerm]);
 
-
     const handlePageChange = (event, newPage) => {
         setPage(newPage);
     };
@@ -85,6 +91,23 @@ function Index() {
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
         setPage(0);
+    };
+
+    const toggleSearch = () => {
+        if (!isSearchExpanded) {
+            setIsSearchExpanded(true);
+            setTimeout(() => searchInputRef.current?.focus(), 100);
+        } else if (searchTerm !== '') {
+            setSearchTerm('');
+        } else {
+            setIsSearchExpanded(false);
+        }
+    };
+
+    const handleCloseSearch = () => {
+        if (searchTerm === '') {
+            setIsSearchExpanded(false);
+        }
     };
 
     const handleToggleClientStatus = async (client) => {
@@ -161,7 +184,6 @@ function Index() {
         setClientToDelete(null);
     };
 
-
     const handleOpenAddClient = () => {
         setSelectedClient(null);
         setIsEditing(false);
@@ -186,57 +208,113 @@ function Index() {
         handleToggleClientStatus,
         handleOpenDeleteConfirmation,
         setSelectedClient,
-        deletingId
+        deletingId,
+        isSearch: searchTerm !== '',
+        rowsPerPage
     };
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{
-                display: 'flex',
-                flexDirection: isSmallScreen ? 'column' : 'row',
-                justifyContent: 'space-between',
-                alignItems: isSmallScreen ? 'stretch' : 'center',
-                gap: isSmallScreen ? 1 : 2,
-                mb: 2,
-            }}>
-                <Typography variant="h4" component="h1">
-                    {t('clients')}
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: isSmallScreen ? 'column' : 'row', gap: 1, flexGrow: 1, justifyContent: 'flex-end' }}>
-                    <TextField
-                        label={t('search') + "..."}
-                        variant="outlined"
-                        size="small"
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <SearchIcon />
-                                </InputAdornment>
-                            ),
-                        }}
-                        fullWidth={isSmallScreen}
-                        sx={{ flexShrink: 1 }}
-                    />
+        <Box>
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2,
+                    mb: isSmallScreen && isSearchExpanded ? 10 : 2,
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 2,
+                    position: 'relative',
+                    transition: 'margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 45, height: 45, borderRadius: 2 }}><PeopleAltIcon /></Avatar>
+                    <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>{t('clients')}</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                            {t('clients_description')}
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <ClickAwayListener onClickAway={handleCloseSearch}>
+                        <Box sx={{
+                            display: 'flex',
+                            flexDirection: 'row-reverse',
+                            alignItems: 'center',
+                            bgcolor: isSearchExpanded ? 'action.hover' : 'transparent',
+                            borderRadius: isSmallScreen && isSearchExpanded ? 2 : 10,
+                            px: isSearchExpanded ? 1 : 0,
+                            position: isSmallScreen && isSearchExpanded ? 'absolute' : 'relative',
+                            top: isSmallScreen && isSearchExpanded ? '110%' : 'auto',
+                            left: isSmallScreen && isSearchExpanded ? 0 : 'auto',
+                            right: isSmallScreen && isSearchExpanded ? 0 : 'auto',
+                            zIndex: 10,
+                            boxShadow: isSmallScreen && isSearchExpanded ? theme.shadows[4] : 'none',
+                            width: isSearchExpanded
+                                ? (isSmallScreen ? '100%' : '300px')
+                                : '42px',
+                            height: '42px',
+                            transition: !isSmallScreen ? 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : '',
+                            border: '1px solid',
+                            borderColor: isSearchExpanded ? 'primary.main' : 'transparent',
+                            overflow: 'hidden'
+                        }}>
+                            <Tooltip title={isSearchExpanded && searchTerm === '' ? t('closeSearch') : t('search')}>
+                                <IconButton
+                                    onClick={toggleSearch}
+                                    size="small"
+                                    sx={{
+                                        color: isSearchExpanded ? 'primary.main' : 'text.secondary',
+                                        flexShrink: 0,
+                                        width: '42px',
+                                        height: '42px'
+                                    }}
+                                >
+                                    {isSearchExpanded && searchTerm !== '' ? <CloseIcon /> : <SearchIcon />}
+                                </IconButton>
+                            </Tooltip>
+                            <TextField
+                                inputRef={searchInputRef}
+                                placeholder={t('search')}
+                                variant="standard"
+                                fullWidth
+                                value={searchTerm}
+                                onChange={handleSearchChange}
+                                InputProps={{
+                                    disableUnderline: true,
+                                    sx: {
+                                        ml: 1,
+                                        fontSize: '0.9rem',
+                                        visibility: isSearchExpanded ? 'visible' : 'hidden',
+                                        opacity: isSearchExpanded ? 1 : 0,
+                                        transition: 'opacity 0.2s ease-in-out'
+                                    }
+                                }}
+                            />
+                        </Box>
+                    </ClickAwayListener>
+
                     <Button
                         variant="contained"
+                        disableElevation
                         endIcon={<AddIcon />}
                         onClick={handleOpenAddClient}
-                        fullWidth={isSmallScreen}
+                        sx={{ whiteSpace: 'nowrap', ml: 1 }}
                     >
                         {t('add')}
                     </Button>
                 </Box>
-            </Box>
+            </Paper>
 
-            {loading && <LinearProgress />}
+            {loading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
 
-            {isSmallScreen ? (
-                <ClientCardList {...commonListProps} />
-            ) : (
-                <ClientListTable {...commonListProps} />
-            )}
+            {isSmallScreen ? <ClientCardList {...commonListProps} /> : <ClientListTable {...commonListProps} />}
 
             <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
@@ -268,6 +346,7 @@ function Index() {
                 message={t('question_areYouSureDeleteClient', { clientName: clientToDelete?.name || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
+                type="danger"
             />
         </Box>
     );
