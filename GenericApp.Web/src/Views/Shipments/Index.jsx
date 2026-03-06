@@ -1,11 +1,14 @@
-﻿import React, { useState, useEffect, useContext } from 'react';
+﻿import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Box, Typography, TextField, InputAdornment, Button,
-    TablePagination, useMediaQuery, useTheme, LinearProgress
+    Box, Typography, TextField, Button,
+    TablePagination, useMediaQuery, useTheme, LinearProgress,
+    Paper, Avatar, IconButton, ClickAwayListener, Tooltip
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import { dataApiShipmentsService } from '@data/Shipments/Data';
 import { dataApiManifestsService } from '@data/Manifests/Data';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +31,8 @@ function ShipmentsIndex() {
     const [totalShipments, setTotalShipments] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+    const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+    const searchInputRef = useRef(null);
     const [pageLoading, setPageLoading] = useState(true);
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [shipmentToDelete, setShipmentToDelete] = useState(null);
@@ -37,7 +42,7 @@ function ShipmentsIndex() {
     const [closingTimeError, setClosingTimeError] = useState(false);
 
     const theme = useTheme();
-    const isSmallScreen = useMediaQuery(theme.breakpoints.down('xl'));
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
     useEffect(() => {
         const timerId = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);
@@ -61,6 +66,28 @@ function ShipmentsIndex() {
         };
         loadShipments();
     }, [page, rowsPerPage, debouncedSearchTerm,companySelected]);
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setPage(0);
+    };
+
+    const toggleSearch = () => {
+        if (!isSearchExpanded) {
+            setIsSearchExpanded(true);
+            setTimeout(() => searchInputRef.current?.focus(), 100);
+        } else if (searchTerm !== '') {
+            setSearchTerm('');
+        } else {
+            setIsSearchExpanded(false);
+        }
+    };
+
+    const handleCloseSearch = () => {
+        if (searchTerm === '') {
+            setIsSearchExpanded(false);
+        }
+    };
 
     const handleViewDetails = (shipment) => navigate(`/shipments/details/${shipment.idShipment}`);
 
@@ -177,39 +204,128 @@ function ShipmentsIndex() {
         handleOpenEditShipment,
         handleDeleteShipment: handleOpenDeleteConfirmation,
         handleViewDetails,
-        // Pasamos las dos nuevas funciones en lugar de la genérica
         handleExportManifest,
         handleExportRemision,
-        handleOpenBitacoraModal 
+        handleOpenBitacoraModal,
+        isSearch: searchTerm !== '',
+        rowsPerPage
     };
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', flexDirection: isSmallScreen ? 'column' : 'row', justifyContent: 'space-between', mb: 2, gap: 2 }}>
-                <Typography variant="h4">{t('shipments')}</Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexGrow: 1, justifyContent: 'flex-end' }}>
-                    <TextField
-                        size="small"
-                        placeholder={t('search')}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
-                    />
-                    <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddShipment}>{t('add')}</Button>
+        <Box>
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2,
+                    mb: isSmallScreen && isSearchExpanded ? 10 : 2,
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 2,
+                    position: 'relative',
+                    transition: 'margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 45, height: 45, borderRadius: 2 }}>
+                        <LocalShippingIcon />
+                    </Avatar>
+                    <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>{t('shipments')}</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                            {t('shipments_description')}
+                        </Typography>
+                    </Box>
                 </Box>
-            </Box>
 
-            {pageLoading && <LinearProgress sx={{ mb: 2 }} />}
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <ClickAwayListener onClickAway={handleCloseSearch}>
+                        <Box sx={{
+                            display: 'flex',
+                            flexDirection: 'row-reverse',
+                            alignItems: 'center',
+                            bgcolor: isSearchExpanded ? 'action.hover' : 'transparent',
+                            borderRadius: isSmallScreen && isSearchExpanded ? 2 : 10,
+                            px: isSearchExpanded ? 1 : 0,
+                            position: isSmallScreen && isSearchExpanded ? 'absolute' : 'relative',
+                            top: isSmallScreen && isSearchExpanded ? '110%' : 'auto',
+                            left: isSmallScreen && isSearchExpanded ? 0 : 'auto',
+                            right: isSmallScreen && isSearchExpanded ? 0 : 'auto',
+                            zIndex: 10,
+                            boxShadow: isSmallScreen && isSearchExpanded ? theme.shadows[4] : 'none',
+                            width: isSearchExpanded ? (isSmallScreen ? '100%' : '300px') : '42px',
+                            height: '42px',
+                            transition: !isSmallScreen ? 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : '',
+                            border: '1px solid',
+                            borderColor: isSearchExpanded ? 'primary.main' : 'transparent',
+                            overflow: 'hidden'
+                        }}>
+                            <Tooltip title={isSearchExpanded && searchTerm === '' ? t('closeSearch') : t('search')}>
+                                <IconButton
+                                    onClick={toggleSearch}
+                                    size="small"
+                                    sx={{
+                                        color: isSearchExpanded ? 'primary.main' : 'text.secondary',
+                                        flexShrink: 0,
+                                        width: '42px',
+                                        height: '42px'
+                                    }}
+                                >
+                                    {isSearchExpanded && searchTerm !== '' ? <CloseIcon /> : <SearchIcon />}
+                                </IconButton>
+                            </Tooltip>
+                            <TextField
+                                inputRef={searchInputRef}
+                                placeholder={t('search')}
+                                variant="standard"
+                                fullWidth
+                                value={searchTerm}
+                                onChange={handleSearchChange}
+                                InputProps={{
+                                    disableUnderline: true,
+                                    sx: {
+                                        ml: 1,
+                                        fontSize: '0.9rem',
+                                        visibility: isSearchExpanded ? 'visible' : 'hidden',
+                                        opacity: isSearchExpanded ? 1 : 0,
+                                        transition: 'opacity 0.2s ease-in-out'
+                                    }
+                                }}
+                            />
+                        </Box>
+                    </ClickAwayListener>
+
+                    <Button
+                        variant="contained"
+                        disableElevation
+                        endIcon={<AddIcon />}
+                        onClick={handleOpenAddShipment}
+                        sx={{ whiteSpace: 'nowrap', ml: 1 }}
+                    >
+                        {t('add')}
+                    </Button>
+                </Box>
+            </Paper>
+
+            {pageLoading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
 
             {isSmallScreen ? <ShipmentCardList {...commonListProps} /> : <ShipmentListTable {...commonListProps} />}
 
             <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
                 component="div"
                 count={totalShipments}
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={(e, p) => setPage(p)}
                 onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+                labelRowsPerPage={t('rows_perPage')}
+                labelDisplayedRows={({ from, to, count }) =>
+                    `${from}-${to} ${t('of')} ${count !== -1 ? count : `${t('moreThan')} ${to}`}`
+                }
             />
 
             <ConfirmationModal
@@ -218,6 +334,9 @@ function ShipmentsIndex() {
                 onConfirm={handleDeleteShipment}
                 title={t('deleteManifest')}
                 message={t('question_areYouSureDeleteManifest', { manifestNumber: shipmentToDelete?.idShipment })}
+                confirmText={t('delete')}
+                cancelText={t('cancel')}
+                type="danger"
             />
 
             <ConfirmationModal

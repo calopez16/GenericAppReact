@@ -10,10 +10,10 @@ import LoaderComponent from '@views/Layout/LoaderComponent';
 import { Box, CssBaseline, useMediaQuery, useTheme } from '@mui/material';
 
 const Layout = () => {
-    const { accessToken, loading } = useContext(AppContext);
-    const [showSidebar, setShowSidebar] = useState(false);
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('xl'));
+const { accessToken, loading } = useContext(AppContext);
+const [showSidebar, setShowSidebar] = useState(false);
+const theme = useTheme();
+const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     if (!accessToken) {
         return <Navigate to="/login" replace />;
@@ -71,16 +71,9 @@ const Layout = () => {
                             component="main"
                             sx={{
                                 flexGrow: 1,
-                                p: 3,
-                                transition: theme.transitions.create('margin', {
-                                    easing: theme.transitions.easing.sharp,
-                                    duration: theme.transitions.duration.leavingScreen,
-                                }),
-                                ...(showSidebar && {
-                                    [theme.breakpoints.up('lg')]: {
-                                        marginLeft: '240px',
-                                    },
-                                }),
+                                minWidth: 0,
+                                p: { xs: 1, sm: 2, md: 3 },
+                                overflow: 'hidden',
                             }}
                         >
                             <Outlet />

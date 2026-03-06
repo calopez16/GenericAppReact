@@ -15,9 +15,12 @@ import {
     Autocomplete,
     useTheme,
     useMediaQuery,
-    Tooltip
+    Tooltip,
+    Avatar,
+    IconButton
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import CancelIcon from '@mui/icons-material/Clear';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
@@ -534,16 +537,55 @@ function ShipmentAddOrEdit() {
     const formatManifest = (id) => id ? id.toString().padStart(3, '0') : '-';
 
     return (
-        // Agregado pb: 10 para evitar superposición con el footer sticky
-        <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', minHeight: '100vh', pb: 10 }}>
-            <Box sx={{ mb: 3 }}>
-                <Typography variant={isMobile ? "h5" : "h4"} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <LocalShippingIcon fontSize={isMobile ? "medium" : "large"} color="primary" />
-                    {isEditing ? `${t('editManifest')} #${formatManifest(formData.shipmentNo)}` : t('newManifest')}
-                </Typography>
-            </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
 
-            <Paper sx={{ p: 4, borderRadius: 2, flexGrow: 1 }}>
+            {/* ── HEADER estilo Index ── */}
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2,
+                    mb: 3,
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 2,
+                    flexWrap: 'wrap'
+                }}
+            >
+                {/* Izquierda: avatar + título + descripción */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 45, height: 45, borderRadius: 2 }}>
+                        <LocalShippingIcon />
+                    </Avatar>
+                    <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                            {isEditing
+                                ? <>{t('editManifest')}&nbsp;<Box component="span" sx={{ color: 'primary.main' }}>#{formatManifest(formData.shipmentNo)}</Box></>
+                                : t('newManifest')
+                            }
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                            {isEditing ? t('editManifest_description') : t('newManifest_description')}
+                        </Typography>
+                    </Box>
+                </Box>
+
+                {/* Derecha: botón volver */}
+                <Tooltip title={t('cancel')}>
+                    <IconButton
+                        onClick={() => navigate('/shipments')}
+                        size="small"
+                        sx={{ color: 'white', bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' }, p: 1 }}
+                    >
+                        <ArrowBackIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+            </Paper>
+
+            <Paper sx={{ p: 4, borderRadius: 2, flexGrow: 1, mb: 12 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'secondary.main', mb: 3 }}>
                     {t('manifestInfo')}
                 </Typography>
@@ -849,10 +891,12 @@ function ShipmentAddOrEdit() {
             </Paper>
 
             <Paper
-                elevation={10}
+                elevation={4}
                 sx={{
-                    position: 'sticky',
+                    position: 'fixed',
                     bottom: 0,
+                    left: 0,
+                    right: 0,
                     p: 2,
                     mt: 3,
                     backgroundColor: theme.palette.background.paper,

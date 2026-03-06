@@ -11,30 +11,31 @@ import {
     Grid,
     IconButton,
     Paper,
-    MenuItem,
-    useMediaQuery,
     FormControlLabel,
     Checkbox,
     Chip,
-    Autocomplete
+    Autocomplete,
+    Avatar,
+    Divider,
+    Tooltip,
+    LinearProgress
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Clear';
+import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import SensorsIcon from '@mui/icons-material/Sensors';
+import ViewInArIcon from '@mui/icons-material/ViewInAr';
 
 import { DataAPILabelsService } from '@data/Labels/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
-import { grey, red, orange } from '@mui/material/colors';
 
 const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDelete, allPallets = [] }) => {
-    const { t } = useTranslation();
-    const isMobile = useMediaQuery((theme) => theme.breakpoints.down('sm'));
-    const labelService = DataAPILabelsService();
+const { t } = useTranslation();
+const labelService = DataAPILabelsService();
 
     // Estados
     const [palletData, setPalletData] = useState({});
@@ -208,179 +209,322 @@ const PalletDetailModal = ({ open, onClose, onSave, initialData, position, onDel
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle sx={{ borderBottom: `1px solid ${grey[800]}`, py: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6" fontWeight="bold">PALLET #{position}</Typography>
-                    <Box sx={{ textAlign: 'right' }}>
-                        <Typography variant="h6" color={isExceeded ? red[400] : "primary.main"} sx={{ fontWeight: 'bold', lineHeight: 1 }}>
-                            {totalBoxes} / {maxAllowed || '--'}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: grey[500], fontWeight: 'bold' }}>{t('maxBoxes')}</Typography>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 3 } }}
+        >
+            {/* ── HEADER estilo Index ── */}
+            <DialogTitle sx={{ p: 0 }}>
+                <Paper
+                    elevation={0}
+                    sx={{
+                        px: 2.5,
+                        py: 2,
+                        borderRadius: 0,
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 2
+                    }}
+                >
+                    {/* Izquierda: avatar + título + descripción */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{
+                            bgcolor: isExceeded ? 'error.main' : 'primary.light',
+                            color: 'white',
+                            width: 45,
+                            height: 45,
+                            borderRadius: 2,
+                            transition: 'background-color 0.3s'
+                        }}>
+                            <ViewInArIcon />
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                                PALLET #{position}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                {currentLabel?.description
+                                    ? currentLabel.description
+                                    : t('label')}
+                            </Typography>
+                        </Box>
                     </Box>
-                </Box>
+
+                    {/* Derecha: badge cajas + botón cerrar */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip
+                            icon={isExceeded
+                                ? <WarningAmberIcon sx={{ fontSize: 16 }} />
+                                : <InventoryIcon sx={{ fontSize: 16 }} />
+                            }
+                            label={`${totalBoxes} / ${maxAllowed || '--'} ${t('maxBoxes')}`}
+                            size="small"
+                            color={isExceeded ? 'error' : totalBoxes > 0 ? 'primary' : 'default'}
+                            variant={totalBoxes > 0 ? 'filled' : 'outlined'}
+                            sx={{ fontWeight: 700, fontSize: '0.75rem' }}
+                        />
+                        <Tooltip title={t('close')}>
+                            <IconButton onClick={onClose} size="small" sx={{ color: 'text.secondary' }}>
+                                <CloseIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+                </Paper>
             </DialogTitle>
 
-            <DialogContent sx={{ mt: 3 }}>
-                <Grid container spacing={3}>
-                    <Grid size={{ xs: 6 }} sx={{ mt: 1 }}>
-                        <TextField fullWidth label={t('temperatureF')} type="number" size="small"
-                            value={palletData.temperatureF || ''}
-                            onChange={(e) => setPalletData({ ...palletData, temperatureF: e.target.value })}
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                        <Paper variant="outlined" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: '5px', borderColor: palletData.chismografo ? '#29b6f6' : grey[700], transition: 'all 0.3s' }}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={palletData.chismografo || false}
-                                        onChange={(e) => setPalletData({ ...palletData, chismografo: e.target.checked })}
-                                        icon={<SensorsIcon sx={{ color: grey[500] }} />}
-                                        checkedIcon={<SensorsIcon className="pulse-animation" />}
-                                    />
-                                }
-                                label={
-                                    <Typography variant="body2" sx={{ color: palletData.chismografo ? '#29b6f6' : grey[400], fontWeight: palletData.chismografo ? 'bold' : 'normal' }}>
-                                        {t('chismografo')}
-                                    </Typography>
-                                }
+            {/* ── CONTENIDO ── */}
+            <DialogContent>
+                <Box sx={{ mt: 1 }}>
+                    <Grid container spacing={2}>
+                        {/* Temperatura */}
+                        <Grid size={{ xs: 7 }}>
+                            <TextField
+                                fullWidth
+                                label={t('temperatureF')}
+                                type="number"
+                                size="small"
+                                value={palletData.temperatureF || ''}
+                                onChange={(e) => setPalletData({ ...palletData, temperatureF: e.target.value })}
                             />
-                        </Paper>
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                        <Autocomplete
-                            fullWidth
-                            size="small"
-                            options={Array.isArray(labels) ? labels : []}
-                            getOptionLabel={(option) => option.description || ''}
-                            isOptionEqualToValue={(option, value) => option.idLabel === value.idLabel}
-                            value={labels.find(l => l.idLabel === palletData.idLabel) || null}
-                            onChange={handleLabelChange}
-                            disabled={isLabelSelectorDisabled}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    label={`${t('label')} *`}
-                                    error={submitted && !palletData.idLabel}
-                                    helperText={submitted && !palletData.idLabel ? t('requiredField') : (isLabelSelectorDisabled ? t('clearLoadsToChangeLabel') : "")}
-                                />
-                            )}
-                            renderOption={(props, option) => {
-                                const { key, ...optionProps } = props;
-                                return (
-                                    <Box component="li" key={option.idLabel} {...optionProps} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1 }}>
-                                        <Typography variant="body2">{option.description}</Typography>
-                                        {option.isDeleted && (
-                                            <Chip label={t('deleted')} size="small" variant="outlined" color="secondary" sx={{ marginLeft: 1, height: 20, fontSize: '0.65rem' }} />
-                                        )}
-                                    </Box>
-                                );
-                            }}
-                        />
-                    </Grid>
-                </Grid>
+                        </Grid>
 
-                <Box sx={{ mt: 5, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="subtitle2" sx={{ color: grey[400], fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <InventoryIcon sx={{ fontSize: 18 }} /> {t('shipload')}
-                        {isExceeded && <WarningAmberIcon sx={{ color: orange[500], fontSize: 20 }} />}
-                    </Typography>
-                    <Button startIcon={<AddIcon />} onClick={handleAddLoading} variant="contained" size="small">
-                        {t('add')}
-                    </Button>
-                </Box>
-
-                <Box sx={{ maxHeight: 380, overflowY: 'auto', pr: 0.5 }}>
-                    {palletData.manifestPalletLoadings?.map((loading, index) => {
-                        const selectedType = labelTypes.find(t_type => t_type.idLabelType === loading.idLabelType);
-
-                        // Validación de la fila: solo activa si submitted es true
-                        const rowHasInvalidFields = !loading.idLabelType || !loading.boxQuantity || Number(loading.boxQuantity) <= 0;
-                        const shouldShowRowError = submitted && (rowHasInvalidFields || isExceeded);
-
-                        return (
-                            <Paper key={index} elevation={0} sx={{
-                                p: 2,
-                                mb: 2,
-                                // El borde solo cambia a rojo si se presionó guardar y hay error
-                                border: `1px solid ${shouldShowRowError ? red[700] : grey[800]}`,
-                                borderRadius: '8px'
-                            }}>
-                                <Grid container spacing={2}>
-                                    <Grid size={{ xs: 10.5 }}>
-                                        <Autocomplete
-                                            fullWidth
-                                            size="small"
-                                            options={labelTypes || []}
-                                            getOptionLabel={(option) => option.description || ''}
-                                            isOptionEqualToValue={(option, value) => option.idLabelType === value.idLabelType}
-                                            value={selectedType || null}
-                                            onChange={(event, newValue) => handleLabelTypeChange(index, newValue ? newValue.idLabelType : '')}
-                                            disabled={!palletData.idLabel}
-                                            renderInput={(params) => (
-                                                <TextField
-                                                    {...params}
-                                                    label={`${t('labelType')} *`}
-                                                    variant="filled"
-                                                    error={submitted && !loading.idLabelType}
-                                                    helperText={submitted && !loading.idLabelType ? t('requiredField') : ""}
-                                                    InputProps={{
-                                                        ...params.InputProps,
-                                                        startAdornment: selectedType ? (
-                                                            <Chip label={selectedType.size} size="small" color="primary" sx={{ ml: 1, mr: 2, width: 50, height: 20, fontSize: '0.65rem' }} />
-                                                        ) : null,
-                                                    }}
-                                                />
-                                            )}
-                                            renderOption={(props, option) => {
-                                                const { key, ...optionProps } = props;
-                                                return (
-                                                    <Box component="li" key={option.idLabelType} {...optionProps} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1 }}>
-                                                        <Chip label={option.size} size="small" variant="filled" color="primary" sx={{ height: 20, width: 50, fontSize: '0.65rem' }} />
-                                                        <Typography variant="body2" sx={{ ml: 2 }}> {option.description}</Typography>
-                                                    </Box>
-                                                );
+                        {/* Chismógrafo */}
+                        <Grid size={{ xs: 5 }}>
+                            <Paper
+                                variant="outlined"
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    height: '100%',
+                                    borderRadius: 2,
+                                    borderColor: palletData.chismografo ? 'primary.main' : 'divider',
+                                    transition: 'border-color 0.3s'
+                                }}
+                            >
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={palletData.chismografo || false}
+                                            onChange={(e) => setPalletData({ ...palletData, chismografo: e.target.checked })}
+                                            icon={<SensorsIcon />}
+                                            checkedIcon={<SensorsIcon />}
+                                            color="primary"
+                                        />
+                                    }
+                                    label={
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                color: palletData.chismografo ? 'primary.main' : 'text.secondary',
+                                                fontWeight: palletData.chismografo ? 700 : 400
                                             }}
-                                        />
-                                    </Grid>
-                                    <Grid size={{ xs: 1.5 }} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                        <IconButton color="error" onClick={() => handleRemoveLoading(index)}><DeleteIcon /></IconButton>
-                                    </Grid>
-                                    <Grid size={{ xs: 3 }}>
-                                        <TextField
-                                            label={`${t('boxes')} *`}
-                                            type="number"
-                                            size="small"
-                                            fullWidth
-                                            value={loading.boxQuantity || ''}
-                                            onChange={(e) => handleLoadingChange(index, 'boxQuantity', e.target.value)}
-                                            error={submitted && (!loading.boxQuantity || Number(loading.boxQuantity) <= 0)}
-                                            helperText={submitted && (!loading.boxQuantity || Number(loading.boxQuantity) <= 0) ? t('requiredField') : ""}
-                                        />
-                                    </Grid>
-                                    <Grid size={{ xs: 9 }}>
-                                        <TextField label={t('description')} fullWidth size="small"
-                                            value={loading.description || ''}
-                                            onChange={(e) => handleLoadingChange(index, 'description', e.target.value)}
-                                            inputProps={{ maxLength: 250 }}
-                                        />
-                                    </Grid>
-                                </Grid>
+                                        >
+                                            {t('chismografo')}
+                                        </Typography>
+                                    }
+                                />
                             </Paper>
-                        );
-                    })}
+                        </Grid>
+
+                        {/* Etiqueta */}
+                        <Grid size={{ xs: 12 }}>
+                            <Autocomplete
+                                fullWidth
+                                size="small"
+                                options={Array.isArray(labels) ? labels : []}
+                                getOptionLabel={(option) => option.description || ''}
+                                isOptionEqualToValue={(option, value) => option.idLabel === value.idLabel}
+                                value={labels.find(l => l.idLabel === palletData.idLabel) || null}
+                                onChange={handleLabelChange}
+                                disabled={isLabelSelectorDisabled}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label={`${t('label')} *`}
+                                        error={submitted && !palletData.idLabel}
+                                        helperText={
+                                            submitted && !palletData.idLabel
+                                                ? t('requiredField')
+                                                : isLabelSelectorDisabled
+                                                    ? t('clearLoadsToChangeLabel')
+                                                    : ''
+                                        }
+                                    />
+                                )}
+                                renderOption={(props, option) => {
+                                    const { key, ...optionProps } = props;
+                                    return (
+                                        <Box component="li" key={option.idLabel} {...optionProps} sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1 }}>
+                                            <Typography variant="body2">{option.description}</Typography>
+                                            {option.isDeleted && (
+                                                <Chip label={t('deleted')} size="small" variant="outlined" color="secondary" sx={{ ml: 1, height: 20, fontSize: '0.65rem' }} />
+                                            )}
+                                        </Box>
+                                    );
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+
+                    {/* ── CARGAS ── */}
+                    <Box sx={{ mt: 3, mb: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <InventoryIcon sx={{ fontSize: 18 }} />
+                            {t('shipload')}
+                            {isExceeded && <WarningAmberIcon sx={{ color: 'warning.main', fontSize: 18 }} />}
+                        </Typography>
+                        <Button
+                            startIcon={<AddIcon />}
+                            onClick={handleAddLoading}
+                            variant="contained"
+                            disableElevation
+                            size="small"
+                        >
+                            {t('add')}
+                        </Button>
+                    </Box>
+
+                    <Box sx={{ maxHeight: 380, overflowY: 'auto', pr: 0.5 }}>
+                        {palletData.manifestPalletLoadings?.map((loading, index) => {
+                            const selectedType = labelTypes.find(t_type => t_type.idLabelType === loading.idLabelType);
+                            const rowInvalid = !loading.idLabelType || !loading.boxQuantity || Number(loading.boxQuantity) <= 0;
+                            const showRowError = submitted && (rowInvalid || isExceeded);
+
+                            return (
+                                <Paper
+                                    key={index}
+                                    elevation={0}
+                                    sx={{
+                                        p: 2,
+                                        mb: 2,
+                                        borderRadius: 2,
+                                        border: '1px solid',
+                                        borderColor: showRowError ? 'error.main' : 'divider',
+                                        transition: 'border-color 0.2s'
+                                    }}
+                                >
+                                    <Grid container spacing={2}>
+                                        {/* Tipo de etiqueta */}
+                                        <Grid size={{ xs: 10.5 }}>
+                                            <Autocomplete
+                                                fullWidth
+                                                size="small"
+                                                options={labelTypes || []}
+                                                getOptionLabel={(option) => option.description || ''}
+                                                isOptionEqualToValue={(option, value) => option.idLabelType === value.idLabelType}
+                                                value={selectedType || null}
+                                                onChange={(_, newValue) => handleLabelTypeChange(index, newValue ? newValue.idLabelType : '')}
+                                                disabled={!palletData.idLabel}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        label={`${t('labelType')} *`}
+                                                        variant="filled"
+                                                        error={submitted && !loading.idLabelType}
+                                                        helperText={submitted && !loading.idLabelType ? t('requiredField') : ''}
+                                                        InputProps={{
+                                                            ...params.InputProps,
+                                                            startAdornment: selectedType ? (
+                                                                <Chip label={selectedType.size} size="small" color="primary" sx={{ ml: 1, mr: 2, width: 50, height: 20, fontSize: '0.65rem' }} />
+                                                            ) : null
+                                                        }}
+                                                    />
+                                                )}
+                                                renderOption={(props, option) => {
+                                                    const { key, ...optionProps } = props;
+                                                    return (
+                                                        <Box component="li" key={option.idLabelType} {...optionProps} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1 }}>
+                                                            <Chip label={option.size} size="small" variant="filled" color="primary" sx={{ height: 20, width: 50, fontSize: '0.65rem' }} />
+                                                            <Typography variant="body2" sx={{ ml: 2 }}>{option.description}</Typography>
+                                                        </Box>
+                                                    );
+                                                }}
+                                            />
+                                        </Grid>
+
+                                        {/* Botón eliminar fila */}
+                                        <Grid size={{ xs: 1.5 }} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                            <Tooltip title={t('delete')}>
+                                                <IconButton
+                                                    color="error"
+                                                    size="small"
+                                                    onClick={() => handleRemoveLoading(index)}
+                                                    sx={{ bgcolor: 'error.main', color: 'white', '&:hover': { bgcolor: 'error.dark' }, p: 1 }}
+                                                >
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Grid>
+
+                                        {/* Cajas */}
+                                        <Grid size={{ xs: 4 }}>
+                                            <TextField
+                                                label={`${t('boxes')} *`}
+                                                type="number"
+                                                size="small"
+                                                fullWidth
+                                                value={loading.boxQuantity || ''}
+                                                onChange={(e) => handleLoadingChange(index, 'boxQuantity', e.target.value)}
+                                                error={submitted && (!loading.boxQuantity || Number(loading.boxQuantity) <= 0)}
+                                                helperText={submitted && (!loading.boxQuantity || Number(loading.boxQuantity) <= 0) ? t('requiredField') : ''}
+                                            />
+                                        </Grid>
+
+                                        {/* Descripción */}
+                                        <Grid size={{ xs: 8 }}>
+                                            <TextField
+                                                label={t('description')}
+                                                fullWidth
+                                                size="small"
+                                                value={loading.description || ''}
+                                                onChange={(e) => handleLoadingChange(index, 'description', e.target.value)}
+                                                inputProps={{ maxLength: 250 }}
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+                            );
+                        })}
+                    </Box>
                 </Box>
             </DialogContent>
 
-            <DialogActions sx={{ p: 3, borderTop: `1px solid ${grey[800]}`, gap: 1 }}>
+            <Divider />
+
+            {/* ── ACCIONES ── */}
+            <DialogActions sx={{ p: 2.5, gap: 1 }}>
                 {(palletData.idManifestPallet > 0 || palletData.manifestPalletLoadings?.length > 0) && (
-                    <Button color="error" variant="text" startIcon={<DeleteIcon />} onClick={() => onDelete(position)} sx={{ mr: 'auto' }}>
+                    <Button
+                        color="error"
+                        variant="text"
+                        startIcon={<DeleteIcon />}
+                        onClick={() => onDelete(position)}
+                        sx={{ mr: 'auto' }}
+                    >
                         {t('delete')}
                     </Button>
                 )}
-                <Button color="error" variant="outlined" startIcon={<CloseIcon />} onClick={onClose}>{t('cancel')}</Button>
-                <Button onClick={handleSavePallet} variant="contained" startIcon={<SaveIcon />} color={"primary"}>
+                <Button
+                    color="error"
+                    variant="outlined"
+                    startIcon={<CloseIcon />}
+                    onClick={onClose}
+                >
+                    {t('cancel')}
+                </Button>
+                <Button
+                    onClick={handleSavePallet}
+                    variant="contained"
+                    disableElevation
+                    startIcon={<SaveIcon />}
+                >
                     {t('save')}
                 </Button>
             </DialogActions>

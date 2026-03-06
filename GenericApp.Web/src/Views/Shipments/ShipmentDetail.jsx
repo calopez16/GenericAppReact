@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -12,7 +12,9 @@ import {
     useTheme,
     useMediaQuery,
     IconButton,
-    TextField
+    TextField,
+    Avatar,
+    Tooltip
 } from '@mui/material';
 import { ShowMessage } from '@helpers/NotificationService';
 
@@ -35,7 +37,6 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import SensorsIcon from '@mui/icons-material/Sensors';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 
-import Tooltip from '@mui/material/Tooltip';
 import ConfirmationModal from '@layout/ConfirmationModal';
 
 import { useTranslation } from 'react-i18next';
@@ -243,17 +244,76 @@ const ShipmentDetail = () => {
     const formatRemision = (id) => id ? id.toString().padStart(4, '0') : '-';
 
     return (
-        <Box sx={{ p: { xs: 0, md: 3 }, display: 'flex', flexDirection: 'column', minHeight: '100vh', pb: 10 }}>
-            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                    <Typography variant={isMobile ? "h5" : "h4"} sx={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 'bold' }}>
-                        <DescriptionIcon fontSize="inherit" />
-                        {t('manifestDetail')} #{formatManifest(shipment.shipmentNo)}
-                    </Typography>
-                </Box>
-            </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
 
-            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: 2, flexGrow: 1 }} elevation={1}>
+            {/* ── HEADER estilo Index ── */}
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2,
+                    mb: 3,
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 2,
+                    flexWrap: 'wrap'
+                }}
+            >
+                {/* Izquierda: avatar + título + descripción */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 45, height: 45, borderRadius: 2 }}>
+                        <LocalShippingIcon />
+                    </Avatar>
+                    <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                            {t('manifestDetail')} &nbsp;
+                            <Box component="span" sx={{ color: 'primary.main' }}>
+                                #{formatManifest(shipment.shipmentNo)}
+                            </Box>
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                            {getClientName() || t('client')}
+                        </Typography>
+                    </Box>
+                </Box>
+
+                {/* Derecha: chips de info + botón volver */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    {shipment.idShipmentNavigation?.shipmentDate && (
+                        <Chip
+                            icon={<CalendarTodayIcon sx={{ fontSize: 15 }} />}
+                            label={new Date(shipment.idShipmentNavigation.shipmentDate).toLocaleDateString()}
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontWeight: 600 }}
+                        />
+                    )}
+                    {shipment.idDriverNavigation?.name && (
+                        <Chip
+                            icon={<PersonIcon sx={{ fontSize: 15 }} />}
+                            label={shipment.idDriverNavigation.name}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            sx={{ fontWeight: 600, display: { xs: 'none', md: 'flex' } }}
+                        />
+                    )}
+                    <Tooltip title={t('back')}>
+                        <IconButton
+                            onClick={() => navigate('/shipments')}
+                            size="small"
+                            sx={{ color: 'white', bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, p: 1 }}
+                        >
+                            <ArrowBackIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+            </Paper>
+
+            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: 2, flexGrow: 1, mb: 12 }} elevation={1}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
                     {t('manifestInfo')}
                 </Typography>
@@ -416,7 +476,7 @@ const ShipmentDetail = () => {
                                         </Grid>
                                     )}
 
-                                    {/* SECCI�N DE TOTALES CALCULADOS */}
+                                    {/* SECCIÓN DE TOTALES CALCULADOS */}
                                     <Grid size={{ xs: 12 }}>
                                         <Paper sx={{ p: 2, mt: 2, display: 'flex', justifyContent: 'space-around', alignItems: 'center', border: '1px solid #333' }}>
                                             <Box sx={{ textAlign: 'center' }}>
@@ -462,7 +522,7 @@ const ShipmentDetail = () => {
                 })}
             </Paper>
 
-            <Paper elevation={3} sx={{ position: 'sticky', bottom: 0, p: 2, mt: 3, backgroundColor: theme.palette.background.paper, borderTop: `1px solid ${theme.palette.divider}`, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, zIndex: 10, flexWrap: 'wrap' }}>
+            <Paper elevation={4} sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, p: 2, backgroundColor: theme.palette.background.paper, borderTop: `1px solid ${theme.palette.divider}`, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, zIndex: 1100, flexWrap: 'wrap' }}>
                 <Button variant="contained" color="primary" startIcon={<FactCheckIcon />} onClick={() => setIsBitacoraModalOpen(true)}>
                     {t('generateBitacora')}
                 </Button>
