@@ -17,9 +17,17 @@ import {
     FormHelperText,
     Divider,
     InputAdornment,
-    IconButton, Tooltip
+    IconButton,
+    Tooltip,
+    Avatar,
+    Typography
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Clear';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
+import CategoryIcon from '@mui/icons-material/Category';
 import { useTranslation } from 'react-i18next';
 
 
@@ -37,7 +45,7 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave, availableO
     });
 
     const [validationErrors, setValidationErrors] = useState({ description: false, sizes: false });
-    const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+    const [showErrors, setShowErrors] = useState(false);
 
     useEffect(() => {
         if (open) {
@@ -56,11 +64,12 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave, availableO
                     description: data.description || '',
                     sizes: Array.isArray(data.sizes) ? [...data.sizes] : []
                 });
+                setValidationErrors({ description: false, sizes: false });
             } else {
                 setFormData({ idLabelType: Date.now() * -1, description: '', sizes: [] });
+                setValidationErrors({ description: true, sizes: true });
             }
-            setValidationErrors({ description: false, sizes: false });
-            setHasAttemptedSubmit(false);
+            setShowErrors(false);
         }
     }, [open, isEditing, data, availableOptions]);
 
@@ -75,9 +84,13 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave, availableO
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
+        const newValue = name === 'sizes' ? (typeof value === 'string' ? value.split(',') : value) : value;
+        setFormData(prev => ({ ...prev, [name]: newValue }));
+        setValidationErrors(prev => ({
             ...prev,
-            [name]: name === 'sizes' ? (typeof value === 'string' ? value.split(',') : value) : value
+            [name]: name === 'description'
+                ? !newValue || newValue.trim().length === 0
+                : !Array.isArray(newValue) || newValue.length === 0
         }));
     };
 
@@ -92,6 +105,7 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave, availableO
 
     const handleSubmit = (event) => {
         if (event) event.preventDefault();
+        setShowErrors(true);
         if (!formData.description.trim() || formData.sizes.length === 0) {
             setValidationErrors({
                 description: !formData.description.trim(),
@@ -111,19 +125,38 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave, availableO
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
-            <DialogTitle>{isEditing ? t('labelType_edit') : t('labelType_add')}</DialogTitle>
+        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: 3 } }}>
             <Box component="form" onSubmit={handleSubmit} noValidate>
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 42, height: 42, borderRadius: 2 }}>
+                            {isEditing ? <EditIcon /> : <CategoryIcon />}
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                                {isEditing ? t('labelType_edit') : t('labelType_add')}
+                            </Typography>
+                        </Box>
+                    </Box>
+                    <Tooltip title={t('close')}>
+                        <IconButton onClick={handleClose} size="small" sx={{ color: 'text.secondary' }}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Tooltip>
+                </DialogTitle>
+
+                <Divider />
+
                 <DialogContent>
                     <TextField
                         margin="normal" required fullWidth
                         label={t('description')} name="description"
                         value={formData.description} onChange={handleChange}
-                        error={validationErrors.description}
-                        helperText={validationErrors.description ? t('requiredField') : ''}
+                        error={showErrors && validationErrors.description}
+                        helperText={showErrors && validationErrors.description ? t('requiredField') : ''}
                     />
 
-                    <FormControl fullWidth margin="normal" error={validationErrors.sizes}>
+                    <FormControl fullWidth margin="normal" error={showErrors && validationErrors.sizes}>
                         <InputLabel id="lbl-sizes">{t('size')}</InputLabel>
                         <Select
                             labelId="lbl-sizes" multiple name="sizes"
@@ -131,6 +164,7 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave, availableO
                             input={<OutlinedInput label={t('size')} />}
                             renderValue={(selected) => selected.join(', ')}
                         >
+
                             <Box
                                 sx={{
                                     p: 2,
@@ -186,12 +220,29 @@ const LabelTypeModal = ({ open, handleClose, data, isEditing, onSave, availableO
 
                             
                         </Select>
-                        {validationErrors.sizes && <FormHelperText>{t('requiredField')}</FormHelperText>}
+                        {showErrors && validationErrors.sizes && <FormHelperText>{t('requiredField')}</FormHelperText>}
                     </FormControl>
                 </DialogContent>
-                <DialogActions>
-                    <Button color="error" onClick={handleClose}>{t('cancel')}</Button>
-                    <Button type="submit" variant="contained">{isEditing ? t('save') : t('add')}</Button>
+
+                <Divider />
+
+                <DialogActions sx={{ p: 2.5 }}>
+                    <Button
+                        onClick={handleClose}
+                        color="error"
+                        variant="outlined"
+                        endIcon={<CancelIcon />}
+                    >
+                        {t('cancel')}
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        disableElevation
+                        endIcon={isEditing ? <SaveIcon /> : <AddIcon />}
+                    >
+                        {isEditing ? t('save') : t('add')}
+                    </Button>
                 </DialogActions>
             </Box>
         </Dialog>

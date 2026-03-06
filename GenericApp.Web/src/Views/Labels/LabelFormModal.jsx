@@ -2,11 +2,15 @@
 import {
     Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box,
     Typography, TableContainer, Table, TableHead, TableRow, TableCell, TableBody,
-    IconButton, Paper, Chip
+    IconButton, Paper, Chip, Avatar, Divider, Tooltip, CircularProgress
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
+import CancelIcon from '@mui/icons-material/Clear';
+import LabelIcon from '@mui/icons-material/Label';
 import { DataAPILabelsService } from '@data/Labels/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
@@ -20,6 +24,8 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
     const [formData, setFormData] = useState({ idLabel: 0, description: '', maxBoxQuantity: 120, labelTypes: [] });
     const [isLoading, setIsLoading] = useState(false);
+    const [validationErrors, setValidationErrors] = useState({ description: false, maxBoxQuantity: false });
+    const [showErrors, setShowErrors] = useState(false);
     const [isLabelTypeModalOpen, setIsLabelTypeModalOpen] = useState(false);
     const [selectedLabelType, setSelectedLabelType] = useState(null);
     const [isLabelTypeEditing, setIsLabelTypeEditing] = useState(false);
@@ -61,9 +67,12 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                     maxBoxQuantity: data.maxBoxQuantity,
                     labelTypes: groupLabelTypes(data.labelTypes),
                 });
+                setValidationErrors({ description: false, maxBoxQuantity: false });
             } else {
                 setFormData({ idLabel: 0, description: '', maxBoxQuantity: 0, labelTypes: [] });
+                setValidationErrors({ description: true, maxBoxQuantity: true });
             }
+            setShowErrors(false);
         }
     }, [open, isEditing, data]);
 
@@ -78,9 +87,30 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         });
     };
 
+    const validateForm = () => {
+        const errors = {
+            description: !formData.description.trim(),
+            maxBoxQuantity: !formData.maxBoxQuantity || Number(formData.maxBoxQuantity) <= 0,
+        };
+        setValidationErrors(errors);
+        return !errors.description && !errors.maxBoxQuantity;
+    };
+
+    const handleFieldChange = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        setValidationErrors(prev => ({
+            ...prev,
+            [field]: field === 'description' ? !value.trim() : !value || Number(value) <= 0,
+        }));
+    };
+
     const handleSubmit = async (event) => {
         if (event) event.preventDefault();
-        if (!formData.description.trim() || formData.maxBoxQuantity <= 0) return;
+        setShowErrors(true);
+        if (!validateForm()) {
+            ShowMessage(t('emptyFields'), 'warning');
+            return;
+        }
 
         try {
             setIsLoading(true);
@@ -146,43 +176,137 @@ const LabelFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
     return (
         <>
-            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-                <DialogTitle>{isEditing ? t('label_edit') : t('label_add')}</DialogTitle>
-                <Box component="form" onSubmit={handleSubmit}>
+            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md" PaperProps={{ sx: { borderRadius: 3 } }}>
+                <Box component="form" onSubmit={handleSubmit} noValidate>
+                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 42, height: 42, borderRadius: 2 }}>
+                                {isEditing ? <EditIcon /> : <LabelIcon />}
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                                    {isEditing ? t('label_edit') : t('label_add')}
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Tooltip title={t('close')}>
+                            <IconButton onClick={handleClose} size="small" sx={{ color: 'text.secondary' }}>
+                                <CloseIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </DialogTitle>
+
+                    <Divider />
+
                     <DialogContent>
-                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3 }}>
-                            <TextField fullWidth label={t('description')} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} inputProps={{ maxLength: 150 }} />
-                            <TextField fullWidth label={t('label_maxBoxQuantity')} type="number" value={formData.maxBoxQuantity} onChange={(e) => setFormData({ ...formData, maxBoxQuantity: e.target.value })} />
+                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3, mt: 1 }}>
+                            <TextField
+                                fullWidth
+                                required
+                                label={t('description')}
+                                value={formData.description}
+                                onChange={(e) => handleFieldChange('description', e.target.value)}
+                                inputProps={{ maxLength: 150 }}
+                                error={showErrors && validationErrors.description}
+                                helperText={showErrors && validationErrors.description ? t('requiredField') : ''}
+                            />
+                            <TextField
+                                fullWidth
+                                required
+                                label={t('label_maxBoxQuantity')}
+                                type="number"
+                                value={formData.maxBoxQuantity}
+                                onChange={(e) => handleFieldChange('maxBoxQuantity', e.target.value)}
+                                error={showErrors && validationErrors.maxBoxQuantity}
+                                helperText={showErrors && validationErrors.maxBoxQuantity ? t('requiredField') : ''}
+                            />
                         </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                            <Typography variant="h6">{t('labelTypes')}</Typography>
-                            <Button variant="outlined" startIcon={<AddIcon />} onClick={() => { setSelectedLabelType(null); setIsLabelTypeEditing(false); setIsLabelTypeModalOpen(true); }}>{t('labelType_add')}</Button>
+
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{t('labelTypes')}</Typography>
+                            <Button
+                                variant="outlined"
+                                disableElevation
+                                startIcon={<AddIcon />}
+                                onClick={() => { setSelectedLabelType(null); setIsLabelTypeEditing(false); setIsLabelTypeModalOpen(true); }}
+                            >
+                                {t('labelType_add')}
+                            </Button>
                         </Box>
-                        <TableContainer component={Paper}>
+
+                        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                             <Table size="small">
-                                <TableHead><TableRow><TableCell>{t('description')}</TableCell><TableCell align="right">{t('actions')}</TableCell></TableRow></TableHead>
+                                <TableHead sx={{ bgcolor: 'action.hover' }}>
+                                    <TableRow>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>{t('description')}</TableCell>
+                                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>{t('actions')}</TableCell>
+                                    </TableRow>
+                                </TableHead>
                                 <TableBody>
-                                    {formData.labelTypes.map((lt, idx) => (
-                                        <TableRow key={`${lt.description}-${idx}`}>
-                                            <TableCell>
-                                                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{lt.description}</Typography>
-                                                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
-                                                    {lt.sizes.map(s => <Chip key={s} label={s} size="small" variant="outlined" color="primary" />)}
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell align="right">
-                                                <IconButton onClick={() => { setSelectedLabelType(lt); setIsLabelTypeEditing(true); setIsLabelTypeModalOpen(true); }} color="primary"><EditIcon fontSize="small" /></IconButton>
-                                                <IconButton onClick={() => setFormData(p => ({ ...p, labelTypes: p.labelTypes.filter(x => x.description !== lt.description) }))} color="error"><DeleteIcon fontSize="small" /></IconButton>
+                                    {formData.labelTypes.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={2} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                                                {t('records_notFound')}
                                             </TableCell>
                                         </TableRow>
-                                    ))}
+                                    ) : (
+                                        formData.labelTypes.map((lt, idx) => (
+                                            <TableRow key={`${lt.description}-${idx}`} hover>
+                                                <TableCell>
+                                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{lt.description}</Typography>
+                                                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+                                                        {lt.sizes.map(s => <Chip key={s} label={s} size="small" variant="outlined" color="primary" />)}
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <Tooltip title={t('edit')}>
+                                                        <IconButton
+                                                            onClick={() => { setSelectedLabelType(lt); setIsLabelTypeEditing(true); setIsLabelTypeModalOpen(true); }}
+                                                            sx={{ color: 'white', bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, p: 0.75, mr: 0.5 }}
+                                                        >
+                                                            <EditIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title={t('delete')}>
+                                                        <IconButton
+                                                            onClick={() => setFormData(p => ({ ...p, labelTypes: p.labelTypes.filter(x => x.description !== lt.description) }))}
+                                                            sx={{ color: 'white', bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' }, p: 0.75 }}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
                                 </TableBody>
                             </Table>
                         </TableContainer>
                     </DialogContent>
-                    <DialogActions sx={{ p: 3 }}>
-                        <Button onClick={handleClose} color="error">{t('cancel')}</Button>
-                        <Button type="submit" variant="contained" disabled={isLoading}>{isEditing ? t('save') : t('add')}</Button>
+
+                    <Divider />
+
+                    <DialogActions sx={{ p: 2.5 }}>
+                        <Button
+                            onClick={handleClose}
+                            color="error"
+                            variant="outlined"
+                            endIcon={<CancelIcon />}
+                        >
+                            {t('cancel')}
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            disableElevation
+                            disabled={isLoading}
+                            endIcon={isLoading
+                                ? <CircularProgress size={18} color="inherit" />
+                                : isEditing ? <SaveIcon /> : <AddIcon />
+                            }
+                        >
+                            {isEditing ? t('save') : t('add')}
+                        </Button>
                     </DialogActions>
                 </Box>
             </Dialog>

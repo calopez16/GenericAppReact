@@ -1,9 +1,22 @@
 import React from 'react';
-import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Switch, IconButton, Tooltip, Typography, Box, Chip } from '@mui/material';
+import {
+    TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody,
+    Switch, IconButton, Tooltip, Typography, Box, Chip, Skeleton
+} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import LabelOutlinedIcon from '@mui/icons-material/LabelOutlined';
+import EmptyData from '@layout/EmptyData';
 
-const LabelListTable = ({ labels, loading, t, handleOpenEditLabel, handleToggleLabelStatus, handleOpenDeleteConfirmation, deletingId }) => {
+const LabelListTable = ({
+    labels, loading, t, handleOpenEditLabel, handleToggleLabelStatus,
+    handleOpenDeleteConfirmation, deletingId, isSearch = false, rowsPerPage = 5
+}) => {
+
+    const rowHeight = 65;
+    const emptyRows = !loading && labels?.length > 0
+        ? Math.max(0, rowsPerPage - labels.length)
+        : 0;
 
     const renderLabelTypeChips = (labelTypes) => {
         if (!labelTypes || labelTypes.length === 0) return "-";
@@ -23,9 +36,6 @@ const LabelListTable = ({ labels, loading, t, handleOpenEditLabel, handleToggleL
                 {grouped.map((g, i) => (
                     <Box key={i} sx={{ mb: 0.5 }}>
                         <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block' }}>{g.description}</Typography>
-                        {/*<Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>*/}
-                        {/*    {g.sizes.map(s => <Chip key={s} label={s} size="small" variant="outlined" color="primary" />)}*/}
-                        {/*</Box>*/}
                     </Box>
                 ))}
             </Box>
@@ -33,40 +43,146 @@ const LabelListTable = ({ labels, loading, t, handleOpenEditLabel, handleToggleL
     };
 
     return (
-        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-            <Table sx={{ minWidth: 900 }}>
-                <TableHead>
+        <TableContainer
+            component={Paper}
+            elevation={0}
+            sx={{
+                overflowX: 'auto',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2
+            }}
+        >
+            <Table sx={{ minWidth: 650 }} aria-label="labels table">
+                <TableHead sx={{ bgcolor: 'action.hover' }}>
                     <TableRow>
-                        <TableCell>{t('active')}</TableCell>
-                        <TableCell>{t('description')}</TableCell>
-                        <TableCell>{t('label_maxBoxQuantity')}</TableCell>
-                        <TableCell>{t('types')}</TableCell>
-                        <TableCell align="right">{t('actions')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', width: 120 }} align="center">{t('status')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('description')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('label_maxBoxQuantity')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('types')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }} align="center">{t('actions')}</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {loading ? (
-                        <TableRow><TableCell colSpan={5} align="center">{t('loading')}...</TableCell></TableRow>
-                    ) : (labels?.length ?? 0) === 0 ? (
-                        <TableRow><TableCell colSpan={5} align="center">{t('records_notFound')}</TableCell></TableRow>
-                    ) : (
-                        labels.map((label) => (
-                            <TableRow key={label.idLabel}>
-                                <TableCell>
-                                    <Switch checked={label.isActive} onChange={() => handleToggleLabelStatus(label)} color="primary" disabled={label.idLabel === deletingId} />
+                        Array.from(new Array(rowsPerPage)).map((_, index) => (
+                            <TableRow key={`skeleton-${index}`} style={{ height: rowHeight }}>
+                                <TableCell align="center">
+                                    <Skeleton variant="rectangular" width={40} height={20} sx={{ mx: 'auto' }} />
                                 </TableCell>
-                                <TableCell><Typography>{label.description}</Typography></TableCell>
-                                <TableCell><Typography>{label.maxBoxQuantity}</Typography></TableCell>
-                                <TableCell>{renderLabelTypeChips(label.labelTypes)}</TableCell>
-                                <TableCell align="right">
-                                    <IconButton color="primary" onClick={() => handleOpenEditLabel(label)}><EditIcon /></IconButton>
-                                    <IconButton color="error" onClick={() => handleOpenDeleteConfirmation(label)}><DeleteIcon /></IconButton>
+                                <TableCell>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Skeleton variant="circular" width={32} height={32} sx={{ mr: 2 }} />
+                                        <Skeleton width="60%" />
+                                    </Box>
+                                </TableCell>
+                                <TableCell><Skeleton width="50%" /></TableCell>
+                                <TableCell><Skeleton width="70%" /></TableCell>
+                                <TableCell align="center">
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                                        <Skeleton variant="circular" width={30} height={30} />
+                                        <Skeleton variant="circular" width={30} height={30} />
+                                    </Box>
                                 </TableCell>
                             </TableRow>
                         ))
+                    ) : (
+                        <>
+                            {labels?.map((label) => (
+                                <TableRow
+                                    key={label.idLabel}
+                                    hover
+                                    sx={{ '&:last-child td, &:last-child th': { border: 0 }, height: rowHeight }}
+                                >
+                                    <TableCell align="center">
+                                        <Switch
+                                            size="medium"
+                                            checked={label.isActive}
+                                            onChange={() => handleToggleLabelStatus(label)}
+                                            disabled={label.idLabel === deletingId}
+                                            color="primary"
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                            <Box
+                                                sx={{
+                                                    width: 32, height: 32, borderRadius: 1.5,
+                                                    bgcolor: label.isActive ? 'primary.main' : 'grey.400',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    flexShrink: 0
+                                                }}
+                                            >
+                                                <LabelOutlinedIcon sx={{ fontSize: 18, color: 'white' }} />
+                                            </Box>
+                                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                {label.description}
+                                            </Typography>
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {label.maxBoxQuantity}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>{renderLabelTypeChips(label.labelTypes)}</TableCell>
+                                    <TableCell align="center">
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                                            <Tooltip title={t('edit')}>
+                                                <IconButton
+                                                    onClick={() => handleOpenEditLabel(label)}
+                                                    disabled={label.idLabel === deletingId}
+                                                    sx={{
+                                                        color: 'white',
+                                                        bgcolor: 'primary.main',
+                                                        '&:hover': { bgcolor: 'primary.dark' },
+                                                        p: 1
+                                                    }}
+                                                >
+                                                    <EditIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title={t('delete')}>
+                                                <IconButton
+                                                    onClick={() => handleOpenDeleteConfirmation(label)}
+                                                    disabled={label.idLabel === deletingId}
+                                                    sx={{
+                                                        color: 'white',
+                                                        bgcolor: 'error.main',
+                                                        '&:hover': { bgcolor: 'error.dark' },
+                                                        p: 1
+                                                    }}
+                                                >
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Box>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+
+                            {emptyRows > 0 && (
+                                Array.from(new Array(emptyRows)).map((_, index) => (
+                                    <TableRow key={`empty-${index}`} style={{ height: rowHeight }}>
+                                        <TableCell colSpan={5} sx={{ borderBottom: index === emptyRows - 1 ? 'none' : '1px solid rgba(224, 224, 224, 0.4)' }} />
+                                    </TableRow>
+                                ))
+                            )}
+                        </>
                     )}
                 </TableBody>
             </Table>
+
+            {!loading && labels?.length === 0 && (
+                <Box sx={{ mt: 2 }}>
+                    <EmptyData
+                        isSearch={isSearch}
+                        title={isSearch ? t('records_notFound') : t('no_labels_yet')}
+                        description={isSearch ? t('try_another_search_term') : t('start_by_adding_label')}
+                        actionLabel={t('add')}
+                    />
+                </Box>
+            )}
         </TableContainer>
     );
 };
