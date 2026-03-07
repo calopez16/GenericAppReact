@@ -119,9 +119,9 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                     <Typography variant="h6" noWrap sx={{ fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>
                         {userName}
                     </Typography>
-                    {userRoles && (
+                    {userRoles && userRoles.length > 0 && (
                         <Typography variant="body2" noWrap sx={{ color: 'rgba(255,255,255,0.85)', display: 'block', mt: 0.3 }}>
-                            {userRoles.split(',')[0].trim()}
+                            {userRoles[0].trim()}
                         </Typography>
                     )}
                 </Box>
@@ -270,9 +270,9 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                                     </Avatar>
                                     <Box sx={{ textAlign: 'left', lineHeight: 1 }}>
                                         <Typography variant="body2" sx={{ fontWeight: 600, display: 'block' }}>{userName}</Typography>
-                                        {userRoles && (
+                                        {userRoles && userRoles.length > 0 && (
                                             <Typography variant="caption" sx={{ opacity: 0.8, display: 'block', mt: '-1px' }}>
-                                                {userRoles.split(',')[0].trim()}
+                                                {userRoles[0].trim()}
                                             </Typography>
                                         )}
                                     </Box>

@@ -45,10 +45,10 @@ import WidgetsIcon from '@mui/icons-material/Widgets';
 const drawerWidth = 256;
 
 const iconMap = {
-DashboardIcon,
-PeopleIcon,
-PeopleAltIcon,
-SettingsIcon,
+    DashboardIcon,
+    PeopleIcon,
+    PeopleAltIcon,
+    SettingsIcon,
     BarChartIcon,
     HomeIcon,
     TruckIcon,
@@ -182,8 +182,33 @@ const drawerPaperSx = (theme) => {
 
 const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
     const { t } = useTranslation();
-    const { companySelected } = useContext(AppContext);
+    const { companySelected, userRoles, userName } = useContext(AppContext);
     const theme = useTheme();
+
+    const userRoleList = userRoles ? userRoles.map(r => r.trim()) : [];
+    const isAdmin = userRoleList.includes('Administrator');
+
+    const isItemAllowed = (item) => {
+        const hasRole = !item.roles || item.roles.some(r => userRoleList.includes(r));
+        if (!hasRole) return false;
+        if (item.allowedUsers) return item.allowedUsers.includes(userName);
+        return true;
+    };
+
+    const filterRoutesByRole = (items) => {
+        return items
+            .filter(item => isItemAllowed(item))
+            .map(item => {
+                if (item.submenu) {
+                    const filteredSubmenu = item.submenu.filter(sub => isItemAllowed(sub));
+                    return { ...item, submenu: filteredSubmenu };
+                }
+                return item;
+            })
+            .filter(item => !item.submenu || item.submenu.length > 0);
+    };
+
+    const filteredRoutes = filterRoutesByRole(routes);
 
     const location = useLocation();
     const currentPath = location.pathname;
@@ -212,7 +237,7 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
     const [openSubmenu, setOpenSubmenu] = useState(null);
 
     useEffect(() => {
-        const activeParentId = findParentId(routes, currentPath);
+        const activeParentId = findParentId(filteredRoutes, currentPath);
 
         if (isFirstRender.current) {
             if (activeParentId) setOpenSubmenu(activeParentId);
@@ -233,7 +258,7 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
     };
 
     const menuContent = renderMenuItems(
-        routes, t, toggleSubmenu, openSubmenu, currentPath, closeSidebarOnMobile
+        filteredRoutes, t, toggleSubmenu, openSubmenu, currentPath, closeSidebarOnMobile
     );
 
     const SidebarHeader = ({ showClose }) => (

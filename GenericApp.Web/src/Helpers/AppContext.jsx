@@ -17,7 +17,14 @@ export const AppContextProvider = ({ children }) => {
             return null;
         }
     });
-    const [userRoles, setUserRoles] = useState(() => localStorage.getItem("userRoles"));
+    const [userRoles, setUserRoles] = useState(() => {
+        try {
+            const stored = localStorage.getItem("userRoles");
+            return stored ? JSON.parse(stored) : [];
+        } catch {
+            return [];
+        }
+    });
     const [themeMode, setThemeMode] = useState(() => localStorage.getItem("themeMode") || "dark");
     const [loading, setLoading] = useState(false);
 
@@ -26,7 +33,7 @@ export const AppContextProvider = ({ children }) => {
     // useEffect para guardar userName y userRole. El token ya se maneja con el helper.
     useEffect(() => {
         if (userName) localStorage.setItem("userName", userName);
-        if (userRoles) localStorage.setItem("userRoles", userRoles);
+        if (userRoles) localStorage.setItem("userRoles", JSON.stringify(userRoles));
     }, [userName, userRoles]);
 
     useEffect(() => {
@@ -44,7 +51,12 @@ export const AppContextProvider = ({ children }) => {
         const handleStorageChange = () => {
             setAccessToken(AuthHelper.getAccessToken());
             setUserName(localStorage.getItem("userName"));
-            setUserRoles(localStorage.getItem("userRoles"));
+            try {
+                const storedRoles = localStorage.getItem("userRoles");
+                setUserRoles(storedRoles ? JSON.parse(storedRoles) : []);
+            } catch {
+                setUserRoles([]);
+            }
             const companyData = localStorage.getItem("company");
             try {
                 setCompanySelected(companyData ? JSON.parse(companyData) : null);
@@ -71,14 +83,12 @@ export const AppContextProvider = ({ children }) => {
         companySelected,
         setCompanySelected,
         canSelectCompany,
-        // setAccessToken ahora usa el helper para que el cambio sea global.
         setAccessToken: (token) => {
             AuthHelper.setAccessToken(token);
-            setAccessToken(token); // Actualiza también el estado local del contexto.
+            setAccessToken(token);
         },
         userRoles,
         setUserRoles,
-        // Agregamos una función de logout al contexto.
         logout: AuthHelper.logout,
         themeMode,
         setThemeMode,

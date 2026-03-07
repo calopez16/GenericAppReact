@@ -1,6 +1,7 @@
-import React, { lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { lazy, useContext } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '@layout/Layout';
+import { AppContext } from '@helpers/AppContext';
 
 // --- Importaciones Dinámicas (Lazy Loading) ---
 const LoginPage = lazy(() => import('@views/Auth/Login'));
@@ -16,10 +17,19 @@ const LabelsPage = lazy(() => import('@views/Labels'));
 const TrailerBoxTypesPage = lazy(() => import('@views/TrailerBoxTypes'));
 const NotFoundPage = lazy(() => import('@views/Pages/NotFound'));
 const Parameters = lazy(() => import('@views/Parameters'));
+const ConfigurationPage = lazy(() => import('@views/Configuration'));
 const ShipmentsPage = lazy(() => import('@views/Shipments/Index'));
 const EmbarqueAddOrEdit = lazy(() => import('@views/Shipments/ShipmentAddOrEdit'));
 const EmbarqueDetail = lazy(() => import('@views/Shipments/ShipmentDetail'));
 const UnathorizePage = lazy(() => import('@views/Pages/Unauthorized'));
+
+const ProtectedRoute = ({ roles, allowedUsers, children }) => {
+    const { userRoles, userName } = useContext(AppContext);
+    const userRoleList = Array.isArray(userRoles) ? userRoles.map(r => r.trim()) : [];
+    const hasRoleAccess = roles?.some(r => userRoleList.includes(r));
+    const hasUserAccess = allowedUsers?.includes(userName);
+    return hasRoleAccess && hasUserAccess ? children : <Navigate to="/unauthorized" replace />;
+};
 
 function App() {
     return (
@@ -38,6 +48,11 @@ function App() {
                 <Route path="/labels" element={<LabelsPage />} />
                 <Route path="/trailerboxtypes" element={<TrailerBoxTypesPage />} />
                 <Route path="/unauthorized" element={<UnathorizePage />} />
+                <Route path="/configuration" element={
+                    <ProtectedRoute roles={['Administrator']} allowedUsers={['admin']}>
+                        <ConfigurationPage />
+                    </ProtectedRoute>
+                } />
 
                 <Route path="/shipments">
                     <Route index element={<ShipmentsPage />} />

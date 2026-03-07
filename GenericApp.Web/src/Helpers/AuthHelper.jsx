@@ -18,7 +18,7 @@ export const AuthHelper = {
     logout: (redirectToLogin = true) => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('userName');
-        localStorage.removeItem('userRole');
+        localStorage.removeItem('userRoles');
         localStorage.removeItem('company');
         window.dispatchEvent(new Event('storage'));
         if (redirectToLogin)

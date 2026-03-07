@@ -5,7 +5,8 @@
     "i18nKey": "home",
     "i18nKeyDescription": "homepage_description",
     "icon": "HomeIcon",
-    "exact": true
+    "exact": true,
+    "roles": [ "Administrator", "User" ]
   },
   {
     "id": "shipments",
@@ -13,7 +14,8 @@
     "i18nKey": "shipments",
     "i18nKeyDescription": "shipments_description",
     "icon": "TruckIcon",
-    "exact": true
+    "exact": true,
+    "roles": [ "Administrator", "User" ]
   },
   {
     "id": "administration",
@@ -21,6 +23,7 @@
     "i18nKey": "administration",
     "i18nKeyDescription": "administration_description",
     "icon": "SettingsIcon",
+    "roles": [ "Administrator" ],
     "submenu": [
       {
         "id": "users",
@@ -86,5 +89,15 @@
         "icon": "TruckIcon"
       }
     ]
+  },
+  {
+    "id": "configuration",
+    "path": "/configuration",
+    "i18nKey": "configuration",
+    "i18nKeyDescription": "configuration_description",
+    "icon": "SettingsIcon",
+    "exact": true,
+    "roles": [ "Administrator" ],
+    "allowedUsers": [ "admin" ]
   }
 ]
