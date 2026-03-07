@@ -145,8 +145,8 @@ const DashboardPage = () => {
     const displayName = hasCompany ? companySelected.name : t('app_name');
 
     return (
-        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-            <Paper elevation={3} sx={{ p: 4, borderRadius: 2, mb: 4 }}>
+        <Container maxWidth="xl" sx={{ mt: 2, mb: 2 }}>
+            <Paper elevation={3} sx={{ p: 2.5, borderRadius: 2, mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: { xs: 'column', md: 'row' } }}>
                     <Box sx={{ mb: { xs: 2, md: 0 } }}>
                         <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
@@ -158,7 +158,7 @@ const DashboardPage = () => {
                 </Box>
             </Paper>
 
-            <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
                 {statCards.map((card, index) => (
                     <Grid key={index} size={{ xs: 12, sm: 6, md: 3 }}>
                         <Paper sx={{ p: 3, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
@@ -182,7 +182,7 @@ const DashboardPage = () => {
                 ))}
             </Grid>
 
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
                 <Grid size={{ xs: 12 }}>
                     <Paper sx={{ p: 3, borderRadius: 2, height: '450px', display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
