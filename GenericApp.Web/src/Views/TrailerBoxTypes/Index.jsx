@@ -17,7 +17,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-import ViewInArIcon from '@mui/icons-material/ViewInAr';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import { DataAPITrailerBoxTypesService } from '@data/TrailerBoxTypes/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
@@ -239,7 +239,7 @@ function Index() {
                 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 45, height: 45, borderRadius: 2 }}><ViewInArIcon /></Avatar>
+                    <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 45, height: 45, borderRadius: 2 }}><LocalShippingIcon /></Avatar>
                     <Box>
                         <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>{t('trailerBoxTypes')}</Typography>
                         <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>

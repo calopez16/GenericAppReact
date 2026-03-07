@@ -13,7 +13,8 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import BadgeIcon from '@mui/icons-material/BadgeOutlined';
+
 import EmptyData from '@layout/EmptyData';
 
 const DriverCardList = ({
@@ -48,7 +49,7 @@ const DriverCardList = ({
                             bgcolor: driver.isActive ? 'primary.main' : 'grey.400'
                         }}
                     >
-                        <LocalShippingIcon sx={{ color: 'white', fontSize: 22 }} />
+                        <BadgeIcon sx={{ color: 'white', fontSize: 22 }} />
                     </Avatar>
                     <Box sx={{ flexGrow: 1 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>

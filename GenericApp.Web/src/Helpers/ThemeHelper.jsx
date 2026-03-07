@@ -65,7 +65,9 @@ export const darkTheme = createTheme({
             secondary: '#ced4da',
         },
         primary: {
-            main: '#0d6efd', // Puedes cambiarlo si quieres
+            main: '#0d6efd',
+            light: '#3d8bfd',
+            dark: '#0a58ca',
         },
         secondary: {
             main: '#6c757d', // Puedes cambiarlo si quieres

@@ -18,36 +18,67 @@ import {
     Collapse,
     IconButton,
     Avatar,
-    Divider 
+    Tooltip,
+    alpha,
+    useTheme
 } from '@mui/material';
 
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import HomeIcon from '@mui/icons-material/Home';
 import PeopleIcon from '@mui/icons-material/People';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import SettingsIcon from '@mui/icons-material/Settings';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import TruckIcon from '@mui/icons-material/FireTruck';
 import BusinessIcon from '@mui/icons-material/Business';
+import LabelIcon from '@mui/icons-material/Label';
+import ApartmentIcon from '@mui/icons-material/Apartment';
+import LocationCityIcon from '@mui/icons-material/LocationCity';
+import DateRangeIcon from '@mui/icons-material/DateRange';
+import BadgeIcon from '@mui/icons-material/Badge';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import WidgetsIcon from '@mui/icons-material/Widgets';
 
-const drawerWidth = 240;
+const drawerWidth = 256;
 
 const iconMap = {
-    DashboardIcon: DashboardIcon,
-    PeopleIcon: PeopleIcon,
-    SettingsIcon: SettingsIcon,
-    BarChartIcon: BarChartIcon,
-    HomeIcon: HomeIcon,
-    TruckIcon: TruckIcon
+DashboardIcon,
+PeopleIcon,
+PeopleAltIcon,
+SettingsIcon,
+    BarChartIcon,
+    HomeIcon,
+    TruckIcon,
+    LabelIcon,
+    ApartmentIcon,
+    BusinessIcon,
+    LocationCityIcon,
+    DateRangeIcon,
+    BadgeIcon,
+    LocalShippingIcon,
+    WidgetsIcon,
 };
 
-const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath, closeSidebarOnMobile, companySelected) => {
+const NAV_ITEM_SX = (isSelected) => ({
+    borderRadius: '10px',
+    mx: 1,
+    mb: 0.5,
+    color: isSelected ? '#ffffff' : 'rgba(255,255,255,0.72)',
+    backgroundColor: isSelected ? 'rgba(255,255,255,0.18)' : 'transparent',
+    '&:hover': {
+        backgroundColor: isSelected ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.10)',
+        color: '#ffffff',
+    },
+    transition: 'background-color 0.2s, color 0.2s',
+});
+
+const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath, closeSidebarOnMobile) => {
     return items.map((item) => {
         const IconComponent = iconMap[item.icon];
         const isSubmenuOpen = openSubmenu === item.id;
-        const isItemSelected = currentPath.startsWith(item.path) && item.path !== '/';
 
         if (item.submenu) {
             const isAnySubItemSelected = item.submenu.some(subItem => currentPath.startsWith(subItem.path));
@@ -56,26 +87,42 @@ const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath, clos
                 <React.Fragment key={item.id}>
                     <ListItemButton
                         onClick={() => toggleSubmenu(item.id)}
-                        selected={isAnySubItemSelected}
+                        sx={NAV_ITEM_SX(isAnySubItemSelected)}
                     >
-                        {IconComponent && <ListItemIcon><IconComponent /></ListItemIcon>}
-                        <ListItemText primary={t(item.i18nKey)} />
-                        {isSubmenuOpen ? <ExpandLess /> : <ExpandMore />}
+                        {IconComponent && (
+                            <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
+                                <IconComponent fontSize="small" />
+                            </ListItemIcon>
+                        )}
+                        <ListItemText
+                            primary={t(item.i18nKey)}
+                            primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: isAnySubItemSelected ? 600 : 400 }}
+                        />
+                        {isSubmenuOpen ? <ExpandLess sx={{ fontSize: 18 }} /> : <ExpandMore sx={{ fontSize: 18 }} />}
                     </ListItemButton>
                     <Collapse in={isSubmenuOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
                             {item.submenu.map((subItem) => {
                                 const isSubItemSelected = currentPath.startsWith(subItem.path);
+                                const SubIconComponent = iconMap[subItem.icon];
                                 return (
                                     <ListItemButton
                                         key={subItem.id}
-                                        sx={{ pl: 4 }}
+                                        sx={{ ...NAV_ITEM_SX(isSubItemSelected), pl: 3 }}
                                         to={subItem.path}
                                         component={RouterLink}
-                                        selected={isSubItemSelected}
                                         onClick={closeSidebarOnMobile}
                                     >
-                                        <ListItemText primary={t(subItem.i18nKey)} />
+                                        <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+                                            {SubIconComponent
+                                                ? <SubIconComponent sx={{ fontSize: 18 }} />
+                                                : <WidgetsIcon sx={{ fontSize: 18 }} />
+                                            }
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary={t(subItem.i18nKey)}
+                                            primaryTypographyProps={{ fontSize: '0.82rem', fontWeight: isSubItemSelected ? 600 : 400 }}
+                                        />
                                     </ListItemButton>
                                 );
                             })}
@@ -85,31 +132,63 @@ const renderMenuItems = (items, t, toggleSubmenu, openSubmenu, currentPath, clos
             );
         }
 
+        const isItemSelected = item.path === '/'
+            ? currentPath === '/'
+            : currentPath.startsWith(item.path);
+
         return (
             <ListItem key={item.id} disablePadding>
-                <ListItemButton
-                    to={item.path}
-                    component={RouterLink}
-                    selected={isItemSelected}
-                    onClick={closeSidebarOnMobile}
-                >
-                    {IconComponent && <ListItemIcon><IconComponent /></ListItemIcon>}
-                    <ListItemText primary={t(item.i18nKey)} />
-                </ListItemButton>
+                <Tooltip title={t(item.i18nKey)} placement="right" arrow disableHoverListener>
+                    <ListItemButton
+                        to={item.path}
+                        component={RouterLink}
+                        sx={NAV_ITEM_SX(isItemSelected)}
+                        onClick={closeSidebarOnMobile}
+                    >
+                        {IconComponent && (
+                            <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
+                                <IconComponent fontSize="small" />
+                            </ListItemIcon>
+                        )}
+                        <ListItemText
+                            primary={t(item.i18nKey)}
+                            primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: isItemSelected ? 600 : 400 }}
+                        />
+                    </ListItemButton>
+                </Tooltip>
             </ListItem>
         );
     });
 };
 
+const drawerPaperSx = (theme) => {
+    const isDark = theme.palette.mode === 'dark';
+    const bgFrom = isDark ? theme.palette.background.paper : theme.palette.primary.main;
+    const bgTo = isDark ? theme.palette.background.default : theme.palette.primary.dark;
+    const shadow = isDark
+        ? `4px 0 24px ${alpha('#000000', 0.45)}`
+        : `4px 0 24px ${alpha(theme.palette.primary.dark, 0.35)}`;
+
+    return {
+        width: drawerWidth,
+        boxSizing: 'border-box',
+        background: `linear-gradient(160deg, ${bgFrom} 0%, ${bgTo} 100%)`,
+        color: '#ffffff',
+        border: 'none',
+        boxShadow: shadow,
+        overflowX: 'hidden',
+    };
+};
+
 const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
     const { t } = useTranslation();
-    const { themeMode, companySelected } = useContext(AppContext);
+    const { companySelected } = useContext(AppContext);
+    const theme = useTheme();
 
     const location = useLocation();
     const currentPath = location.pathname;
     const isFirstRender = useRef(true);
 
-    // --- LÓGICA PARA LOGO Y NOMBRE ---
     const hasCompany = companySelected && Object.keys(companySelected).length > 0;
 
     const displayLogo = hasCompany
@@ -119,15 +198,12 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
     const displayName = hasCompany
         ? companySelected.name
         : t('app_name');
-    // ---------------------------------
 
     const findParentId = (routes, path) => {
         for (const item of routes) {
             if (item.submenu) {
                 const isSubItemActive = item.submenu.some(subItem => path.startsWith(subItem.path));
-                if (isSubItemActive) {
-                    return item.id;
-                }
+                if (isSubItemActive) return item.id;
             }
         }
         return null;
@@ -139,21 +215,13 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
         const activeParentId = findParentId(routes, currentPath);
 
         if (isFirstRender.current) {
-            if (activeParentId) {
-                setOpenSubmenu(activeParentId);
-            }
+            if (activeParentId) setOpenSubmenu(activeParentId);
             isFirstRender.current = false;
             return;
         }
 
-        if (activeParentId && openSubmenu !== activeParentId) {
-            setOpenSubmenu(activeParentId);
-        }
-
-        if (!activeParentId && openSubmenu) {
-            setOpenSubmenu(null);
-        }
-
+        if (activeParentId && openSubmenu !== activeParentId) setOpenSubmenu(activeParentId);
+        if (!activeParentId && openSubmenu) setOpenSubmenu(null);
     }, [currentPath]);
 
     const toggleSubmenu = (submenuName) => {
@@ -161,35 +229,60 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
     };
 
     const closeSidebarOnMobile = () => {
-        if (isMobile) {
-            toggleSidebar();
-        }
+        if (isMobile) toggleSidebar();
     };
 
     const menuContent = renderMenuItems(
-        routes,
-        t,
-        toggleSubmenu,
-        openSubmenu,
-        currentPath,
-        closeSidebarOnMobile,
-        companySelected
+        routes, t, toggleSubmenu, openSubmenu, currentPath, closeSidebarOnMobile
     );
 
-    // Header reutilizable
-    const SidebarHeader = () => (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar
-                src={displayLogo}
-                alt={displayName}
-                sx={{ mr: 2, width: 40, height: 40 }}
-            >
-                <BusinessIcon />
-            </Avatar>
-            <Typography variant="h6" component="div" noWrap sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
-                {displayName}
-            </Typography>
+    const SidebarHeader = ({ showClose }) => (
+        <Box
+            sx={{
+                px: 2,
+                py: 1.6,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderBottom: '1px solid rgba(255,255,255,0.10)',
+            }}
+        >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, overflow: 'hidden' }}>
+                <Avatar
+                    src={displayLogo}
+                    alt={displayName}
+                    sx={{
+                        width: 38,
+                        height: 38,
+                        border: '2px solid rgba(255,255,255,0.3)',
+                        flexShrink: 0,
+                        bgcolor: 'rgba(255,255,255,0.15)',
+                    }}
+                >
+                    <BusinessIcon fontSize="small" />
+                </Avatar>
+                <Typography
+                    noWrap
+                    sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#ffffff', letterSpacing: 0.3 }}
+                >
+                    {displayName}
+                </Typography>
+            </Box>
+            {showClose && (
+                <IconButton onClick={toggleSidebar} size="small" sx={{ color: 'rgba(255,255,255,0.7)', '&:hover': { color: '#fff' } }}>
+                    <CloseIcon fontSize="small" />
+                </IconButton>
+            )}
         </Box>
+    );
+
+    const drawerContent = (showClose) => (
+        <>
+            <SidebarHeader showClose={showClose} />
+            <List sx={{ px: 0.5, flex: 1 }}>
+                {menuContent}
+            </List>
+        </>
     );
 
     return (
@@ -205,54 +298,22 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
                 ModalProps={{ keepMounted: true }}
                 sx={{
                     display: { xs: 'block', md: 'none' },
-                    '& .MuiDrawer-paper': {
-                        width: drawerWidth,
-                        boxSizing: 'border-box',
-                        backgroundColor: themeMode === 'light' ? 'background.paper' : 'background.default',
-                        color: themeMode === 'light' ? 'text.primary' : 'text.secondary',
-                    }
+                    '& .MuiDrawer-paper': drawerPaperSx(theme),
                 }}
             >
-                <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <SidebarHeader />
-                    <IconButton onClick={toggleSidebar}>
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-
-                {/* SEPARADOR AGREGADO */}
-                <Divider />
-
-                <List>
-                    {menuContent}
-                </List>
+                {drawerContent(true)}
             </Drawer>
 
             {/* --- DRAWER DESKTOP --- */}
             <Drawer
                 variant="permanent"
+                open
                 sx={{
                     display: { xs: 'none', md: 'block' },
-                    '& .MuiDrawer-paper': {
-                        width: drawerWidth,
-                        boxSizing: 'border-box',
-                        backgroundColor: themeMode === 'light' ? 'background.paper' : 'background.default',
-                        color: themeMode === 'light' ? 'text.primary' : 'text.secondary',
-                    }
+                    '& .MuiDrawer-paper': drawerPaperSx(theme),
                 }}
-                open
             >
-                {/* Header del drawer */}
-                <Box sx={{ p: 2, minHeight: 64, display: 'flex', alignItems: 'center' }}>
-                    <SidebarHeader />
-                </Box>
-
-                {/* SEPARADOR AGREGADO */}
-                <Divider />
-
-                <List>
-                    {menuContent}
-                </List>
+                {drawerContent(false)}
             </Drawer>
         </Box>
     );

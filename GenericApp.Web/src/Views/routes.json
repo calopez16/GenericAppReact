@@ -34,56 +34,56 @@
         "path": "/labels",
         "i18nKey": "labels",
         "i18nKeyDescription": "labels_description",
-        "icon": "TruckIcon"
+        "icon": "LabelIcon"
       },
       {
         "id": "companies",
         "path": "/companies",
         "i18nKey": "companies",
         "i18nKeyDescription": "companies_description",
-        "icon": "TruckIcon"
+        "icon": "ApartmentIcon"
       },
       {
         "id": "clients",
         "path": "/clients",
         "i18nKey": "clients",
         "i18nKeyDescription": "clients_description",
-        "icon": "PeopleIcon"
+        "icon": "PeopleAltIcon"
       },
       {
         "id": "cities",
         "path": "/cities",
         "i18nKey": "cities",
         "i18nKeyDescription": "cities_description",
-        "icon": "PeopleIcon"
+        "icon": "LocationCityIcon"
       },
       {
         "id": "seasons",
         "path": "/seasons",
         "i18nKey": "seasons",
         "i18nKeyDescription": "seasons_description",
-        "icon": "PeopleIcon"
+        "icon": "DateRangeIcon"
       },
       {
         "id": "drivers",
         "path": "/drivers",
         "i18nKey": "drivers",
         "i18nKeyDescription": "drivers_description",
-        "icon": "PeopleIcon"
+        "icon": "BadgeIcon"
       },
       {
         "id": "shippingCompanies",
         "path": "/shipping-companies",
         "i18nKey": "shippingCompanies",
         "i18nKeyDescription": "shippingCompanies_description",
-        "icon": "PeopleIcon"
+        "icon": "LocalShippingIcon"
       },
       {
         "id": "trailerboxtypes",
         "path": "/trailerboxtypes",
         "i18nKey": "trailerBoxTypes",
         "i18nKeyDescription": "trailerBoxTypes_description",
-        "icon": "PeopleIcon"
+        "icon": "TruckIcon"
       }
     ]
   }

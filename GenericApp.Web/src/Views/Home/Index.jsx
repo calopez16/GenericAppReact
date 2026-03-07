@@ -182,7 +182,7 @@ const DashboardPage = () => {
                 ))}
             </Grid>
 
-            <Grid container spacing={2}>
+            <Grid container spacing={1}>
                 <Grid size={{ xs: 12 }}>
                     <Paper sx={{ p: 3, borderRadius: 2, height: '450px', display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
@@ -208,7 +208,7 @@ const DashboardPage = () => {
                                             connectNulls: false,
                                         },
                                     ]}
-                                    margin={{ left: 50, right: 30, top: 20, bottom: 60 }}
+                                    margin={{ left: -20, right: 15, top: 20, bottom: 60 }}
                                 />
                             </Box>
                         )}

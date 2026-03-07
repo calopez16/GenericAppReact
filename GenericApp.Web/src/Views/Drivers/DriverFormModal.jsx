@@ -19,7 +19,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import BadgeIcon from '@mui/icons-material/BadgeOutlined';
 import { AppContext } from '@helpers/AppContext';
 
 import { DataAPIDriversService } from '@data/Drivers/Data';
@@ -159,7 +159,7 @@ const DriverFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 42, height: 42, borderRadius: 2 }}>
-                            {isEditing ? <EditIcon /> : <LocalShippingIcon />}
+                            {isEditing ? <EditIcon /> : <BadgeIcon />}
                         </Avatar>
                         <Box>
                             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
