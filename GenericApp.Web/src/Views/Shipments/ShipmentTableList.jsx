@@ -1,7 +1,7 @@
-﻿import React from 'react';
+﻿import React, { useState } from 'react';
 import {
     TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody,
-    IconButton, Tooltip, Typography, Box, Skeleton
+    IconButton, Tooltip, Typography, Box, Skeleton, Menu, MenuItem, ListItemIcon, ListItemText, Divider
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/Delete';
@@ -9,6 +9,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ReceiptIcon from '@mui/icons-material/Receipt';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EmptyData from '@layout/EmptyData';
 
 const ShipmentListTable = ({
@@ -24,6 +25,18 @@ const ShipmentListTable = ({
     isSearch = false,
     rowsPerPage = 5
 }) => {
+    const [menuAnchor, setMenuAnchor] = useState(null);
+    const [menuShipment, setMenuShipment] = useState(null);
+
+    const handleOpenMenu = (e, shipment) => {
+        setMenuAnchor(e.currentTarget);
+        setMenuShipment(shipment);
+    };
+
+    const handleCloseMenu = () => {
+        setMenuAnchor(null);
+        setMenuShipment(null);
+    };
     const rowHeight = 65;
     const colSpan = 7;
 
@@ -50,7 +63,7 @@ const ShipmentListTable = ({
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('shipmentDate')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('driver')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('trailerPlate')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', width: 280 }} align="center">{t('actions')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', width: 200 }} align="center">{t('actions')}</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -96,13 +109,22 @@ const ShipmentListTable = ({
                                     <TableCell>{shipment.trailerBoxPlate || '-'}</TableCell>
                                     <TableCell align="center">
                                         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
-                                            <Tooltip title={t('bitacoraSellos')}>
+                                            <Tooltip title={t('more_options')}>
                                                 <IconButton
                                                     size="small"
-                                                    onClick={() => handleOpenBitacoraModal(shipment)}
-                                                    sx={{ color: 'white', bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark' }, p: 1 }}
+                                                    onClick={(e) => handleOpenMenu(e, shipment)}
+                                                    sx={{ color: 'text.secondary', p: 1 }}
                                                 >
-                                                    <FactCheckIcon fontSize="small" />
+                                                    <MoreVertIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title={t('edit')}>
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={() => handleOpenEditShipment(shipment)}
+                                                    sx={{ color: 'white', bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, p: 1 }}
+                                                >
+                                                    <EditIcon fontSize="small" />
                                                 </IconButton>
                                             </Tooltip>
                                             <Tooltip title={t('generateManifest')}>
@@ -121,33 +143,6 @@ const ShipmentListTable = ({
                                                     sx={{ color: 'white', bgcolor: 'success.main', '&:hover': { bgcolor: 'success.dark' }, p: 1 }}
                                                 >
                                                     <ReceiptIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={t('details')}>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => handleViewDetails(shipment)}
-                                                    sx={{ color: 'white', bgcolor: 'info.main', '&:hover': { bgcolor: 'info.dark' }, p: 1 }}
-                                                >
-                                                    <VisibilityIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={t('edit')}>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => handleOpenEditShipment(shipment)}
-                                                    sx={{ color: 'white', bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, p: 1 }}
-                                                >
-                                                    <EditIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={t('delete')}>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => handleDeleteShipment(shipment)}
-                                                    sx={{ color: 'white', bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' }, p: 1 }}
-                                                >
-                                                    <DeleteForeverIcon fontSize="small" />
                                                 </IconButton>
                                             </Tooltip>
                                         </Box>
@@ -176,6 +171,28 @@ const ShipmentListTable = ({
                     />
                 </Box>
             )}
+
+            <Menu
+                anchorEl={menuAnchor}
+                open={Boolean(menuAnchor)}
+                onClose={handleCloseMenu}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+                <MenuItem onClick={() => { handleViewDetails(menuShipment); handleCloseMenu(); }}>
+                    <ListItemIcon><VisibilityIcon fontSize="small" color="info" /></ListItemIcon>
+                    <ListItemText>{t('details')}</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => { handleOpenBitacoraModal(menuShipment); handleCloseMenu(); }}>
+                    <ListItemIcon><FactCheckIcon fontSize="small" color="secondary" /></ListItemIcon>
+                    <ListItemText>{t('bitacoraSellos')}</ListItemText>
+                </MenuItem>
+                <Divider />
+                <MenuItem onClick={() => { handleDeleteShipment(menuShipment); handleCloseMenu(); }} sx={{ color: 'error.main' }}>
+                    <ListItemIcon><DeleteForeverIcon fontSize="small" color="error" /></ListItemIcon>
+                    <ListItemText>{t('delete')}</ListItemText>
+                </MenuItem>
+            </Menu>
         </TableContainer>
     );
 };

@@ -52,23 +52,25 @@ namespace GenericApp.API.Controllers
                 query = query
                     .Include(s => s.IdManifestStatusNavigation)
                     .Include(s => s.IdShipmentNavigation)
+                        .ThenInclude(s => s.IdClientNavigation)
                     .Include(s => s.IdDriverNavigation);
 
                 query = query.Where(x => !(x.IdShipmentNavigation.IsDeleted ?? false));
                 query = query.Where(x => x.IdCompany == idCompany);
 
-                //if (!string.IsNullOrWhiteSpace(searchTerm))
-                //{
-                //    searchTerm = searchTerm.ToUpper();
-                //    query = query.Where(s =>
-                //        s.RegFdaNo.ToString().ToUpper().Contains(searchTerm) ||
-                //        s.IdShipmentNavigation.ShipmentDate.ToString("dd/mm/yyyy").Contains(searchTerm) ||
-                //        s.IdDriverNavigation.Name.ToUpper().Contains(searchTerm) ||
-                //        s.TrailerBoxPlate.ToUpper().Contains(searchTerm)||
-                //        s.TrailerPlate.ToUpper().Contains(searchTerm)||
-                //        s.IdShipmentNavigation.IdClientNavigation.Name.ToUpper().Contains(searchTerm)
-                //        );
-                //}
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    searchTerm = searchTerm.ToUpper();
+                    int.TryParse(searchTerm, out int searchTermInt);
+                    query = query.Where(s =>
+                        (s.IdShipment == searchTermInt) ||
+                        (s.RegFdaNo != null && s.RegFdaNo.ToUpper().Contains(searchTerm)) ||
+                        (s.IdDriverNavigation.Name != null && s.IdDriverNavigation.Name.ToUpper().Contains(searchTerm)) ||
+                        (s.TrailerBoxPlate != null && s.TrailerBoxPlate.ToUpper().Contains(searchTerm)) ||
+                        (s.TrailerPlate != null && s.TrailerPlate.ToUpper().Contains(searchTerm)) ||
+                        (s.IdShipmentNavigation.IdClientNavigation.Name != null && s.IdShipmentNavigation.IdClientNavigation.Name.ToUpper().Contains(searchTerm))
+                        );
+                }
 
                 var totalRows = await query.CountAsync();
                 var data = await query
@@ -106,7 +108,11 @@ namespace GenericApp.API.Controllers
                         ShipmentNo = x.IdShipmentNavigation.ShipmentNo,
                         ShipmentDate = x.IdShipmentNavigation.ShipmentDate,
                         IdClient = x.IdShipmentNavigation.IdClient,
-                        Mixed = x.IdShipmentNavigation.Mixed,
+                        IdClientNavigation = new ClientDTO
+                        {
+                            Name = x.IdShipmentNavigation.IdClientNavigation.Name
+                        },
+                        Mixed = x.IdShipmentNavigation.Mixed
                     } : null
                 })
                 .ToListAsync();

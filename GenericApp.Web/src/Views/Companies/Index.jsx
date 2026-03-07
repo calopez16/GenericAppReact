@@ -353,6 +353,7 @@ function Index() {
                 message={t('question_areYouSureDeleteCompany', { companyName: companyToDelete?.name || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
+                type="danger"
             />
         </Box>
     );

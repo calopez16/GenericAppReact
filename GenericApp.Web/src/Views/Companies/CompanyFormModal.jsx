@@ -158,12 +158,16 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                         width: 130, height: 130, borderRadius: 2, overflow: 'hidden', border: '2px dashed',
                         borderColor: isNew ? 'primary.main' : 'divider', display: 'flex', justifyContent: 'center',
                         alignItems: 'center', bgcolor: '#f9f9f9', cursor: isEditable ? 'pointer' : 'default',
-                        transition: 'all 0.2s', '&:hover': { borderColor: isEditable ? 'primary.main' : 'divider' }
+                        transition: 'all 0.2s', position: 'relative',
+                        '&:hover': { borderColor: isEditable ? 'primary.main' : 'divider' }
                     }}
                     onClick={isEditable ? () => fileInputRef.current.click() : undefined}
                 >
                     {src ? <img src={src} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> :
-                        <Typography variant="caption" sx={{ p: 1, textAlign: 'center' }}>{t('no_logo')}</Typography>}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, opacity: 0.4 }}>
+                            <BusinessIcon sx={{ fontSize: 48 }} />
+                            <Typography variant="caption" sx={{ textAlign: 'center' }}>{t('no_logo')}</Typography>
+                        </Box>}
                     {isEditable && <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', bgcolor: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', opacity: 0, transition: 'opacity 0.2s', color: 'white', '&:hover': { opacity: 1 } }}><EditIcon /></Box>}
                 </Box>
                 {isNew && (

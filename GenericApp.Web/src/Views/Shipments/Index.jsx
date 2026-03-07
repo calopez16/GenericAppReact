@@ -173,7 +173,6 @@ function ShipmentsIndex() {
     const handleExportBitacora = async () => {
         if (!closingTime) {
             setClosingTimeError(true);
-            ShowMessage(t('field_required'), 'warning');
             return;
         }
         try {

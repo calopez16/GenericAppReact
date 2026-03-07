@@ -1,27 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '@config';
 import { useTranslation } from 'react-i18next';
-
-// MUI Imports
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import ListItemText from '@mui/material/ListItemText';
-import Avatar from '@mui/material/Avatar';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
-
-// Icons
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemAvatar,
+    ListItemText,
+    Avatar,
+    IconButton,
+    Button,
+    Chip,
+    Typography,
+    Box,
+    CircularProgress,
+    Paper,
+    Divider,
+    Tooltip
+} from '@mui/material';
 import BusinessIcon from '@mui/icons-material/Business';
 import CloseIcon from '@mui/icons-material/Close';
-
-// Servicio
 import { DataAPICompaniesService } from '@data/Companies/Data';
 
 const CompanySelectionModal = ({ open, onClose, onSelectCompany, selectedCompanyId, forceSelection }) => {
@@ -31,7 +33,6 @@ const CompanySelectionModal = ({ open, onClose, onSelectCompany, selectedCompany
 
     const cityDataCompanies = DataAPICompaniesService();
 
-    // Lógica de carga y limpieza con timeout
     useEffect(() => {
         let timeoutId;
         if (open) {
@@ -55,81 +56,132 @@ const CompanySelectionModal = ({ open, onClose, onSelectCompany, selectedCompany
         return () => { if (timeoutId) clearTimeout(timeoutId); };
     }, [open]);
 
-    // --- MANEJADOR DE CIERRE DEL DIÁLOGO ---
     const handleDialogClose = (event, reason) => {
-        // Si la selección es forzosa, ignoramos clic afuera (backdropClick) o tecla ESC (escapeKeyDown)
         if (forceSelection && (reason === 'backdropClick' || reason === 'escapeKeyDown')) {
             return;
         }
-        // Si no es forzosa, ejecutamos la función onClose del padre
         onClose();
     };
 
     return (
         <Dialog
             open={open}
-            onClose={handleDialogClose} // Usamos nuestro handler interceptor
+            onClose={handleDialogClose}
             fullWidth
             maxWidth="xs"
-            disableEscapeKeyDown={forceSelection} // Deshabilitamos ESC visualmente también
+            disableEscapeKeyDown={forceSelection}
+            PaperProps={{ sx: { borderRadius: 3 } }}
         >
-            <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography >
-                    {t('selectCompany')}
-                </Typography>
+            <DialogTitle sx={{ p: 0 }}>
+                <Paper
+                    elevation={0}
+                    sx={{
+                        px: 2.5,
+                        py: 2,
+                        borderRadius: 0,
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 2
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 45, height: 45, borderRadius: 2 }}>
+                            <BusinessIcon />
+                        </Avatar>
+                        <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                            {t('selectCompany')}
+                        </Typography>
+                    </Box>
 
-                {/* Ocultamos el botón X si la selección es obligatoria */}
-                {!forceSelection && (
-                    <IconButton
-                        aria-label="close"
-                        onClick={onClose}
-                        sx={{ color: (theme) => theme.palette.grey[500] }}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                )}
+                    {!forceSelection && (
+                        <Tooltip title={t('close')}>
+                            <IconButton onClick={onClose} size="small" sx={{ color: 'text.secondary' }}>
+                                <CloseIcon />
+                            </IconButton>
+                        </Tooltip>
+                    )}
+                </Paper>
             </DialogTitle>
 
-            <DialogContent dividers>
+            <DialogContent sx={{ p: 0 }}>
                 {loading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                         <CircularProgress />
                     </Box>
                 ) : (
-                    <List sx={{ pt: 0 }}>
+                    <List disablePadding>
                         {companies.length > 0 ? (
-                            companies.map((company) => (
-                                <ListItem disableGutters key={company.idCompany}>
-                                    <ListItemButton
-                                        onClick={() => onSelectCompany(company)}
-                                        selected={selectedCompanyId === company.idCompany}
-                                        sx={{ borderRadius: 1, py: 1.5 }}
-                                    >
-                                        <ListItemAvatar sx={{ mr: 2 }}>
-                                            <Avatar
-                                                src={API_BASE_URL + "/img/logos/" + company?.logoName}
-                                                alt={company.name}
-                                                sx={{ width: 64, height: 64 }}
-                                            >
-                                                <BusinessIcon sx={{ fontSize: 36 }} />
-                                            </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={company.name}
-                                            secondary={company.rfc || null}
-                                            primaryTypographyProps={{ variant: 'subtitle1', fontWeight: 'medium' }}
-                                        />
-                                    </ListItemButton>
-                                </ListItem>
+                            companies.map((company, index) => (
+                                <React.Fragment key={company.idCompany}>
+                                    <ListItem disableGutters>
+                                        <ListItemButton
+                                            onClick={() => onSelectCompany(company)}
+                                            selected={selectedCompanyId === company.idCompany}
+                                            sx={{
+                                                px: 2.5,
+                                                py: 1.5,
+                                                borderLeft: '3px solid transparent',
+                                                borderRight: '3px solid transparent',
+                                                ...(selectedCompanyId === company.idCompany && {
+                                                    borderLeftColor: 'primary.main',
+                                                    borderRightColor: 'primary.main',
+                                                })
+                                            }}
+                                        >
+                                            <ListItemAvatar sx={{ mr: 1.5 }}>
+                                                <Avatar
+                                                    src={API_BASE_URL + "/img/logos/" + company?.logoName}
+                                                    alt={company.name}
+                                                    sx={{ width: 68, height: 68, borderRadius: 2 }}
+                                                >
+                                                    <BusinessIcon sx={{ fontSize: 40 }} />
+                                                </Avatar>
+                                            </ListItemAvatar>
+                                            <ListItemText
+                                                primary={company.name}
+                                                secondary={company.rfc || null}
+                                                primaryTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                                            />
+                                            {selectedCompanyId === company.idCompany && (
+                                                <Chip
+                                                    label={t('selected')}
+                                                    size="small"
+                                                    color="primary"
+                                                    variant="filled"
+                                                    sx={{ ml: 1, fontWeight: 600 }}
+                                                />
+                                            )}
+                                        </ListItemButton>
+                                    </ListItem>
+                                    {index < companies.length - 1 && <Divider component="li" />}
+                                </React.Fragment>
                             ))
                         ) : (
-                            <Typography align="center" sx={{ p: 2, color: 'text.secondary' }}>
+                            <Typography align="center" sx={{ p: 3, color: 'text.secondary' }}>
                                 {t('noCompaniesFound')}
                             </Typography>
                         )}
                     </List>
                 )}
             </DialogContent>
+
+            <Divider />
+
+            <DialogActions sx={{ p: 2, justifyContent: 'flex-end' }}>
+                {!forceSelection && (
+                    <Button
+                        variant="outlined"
+                        color="inherit"
+                        startIcon={<CloseIcon />}
+                        onClick={onClose}
+                    >
+                        {t('close')}
+                    </Button>
+                )}
+            </DialogActions>
         </Dialog>
     );
 };

@@ -191,15 +191,21 @@ const ShipmentDetail = () => {
     };
 
     const handleExportBitacora = async () => {
-        if (!closingTime) return;
+        if (!closingTime) {
+            setClosingTimeError(true);
+            return;
+        }
         try {
             setLoading(true);
+            ShowMessage(`${t('exportingBitacora')}...`, 'info');
             const response = await shipmentDataService.getBitacoraSellosPdfById(shipment.idShipment, closingTime);
             const fileData = response.data ? response.data : response;
             const blob = new Blob([fileData], { type: 'application/pdf' });
             const pdfUrl = window.URL.createObjectURL(blob);
             window.open(pdfUrl, '_blank');
             setIsBitacoraModalOpen(false);
+            setClosingTime("");
+            setClosingTimeError(false);
         } catch (error) {
             ShowMessage(t('error'), 'error');
         } finally {
@@ -274,9 +280,7 @@ const ShipmentDetail = () => {
                                 #{formatManifest(shipment.shipmentNo)}
                             </Box>
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                            {getClientName() || t('client')}
-                        </Typography>
+                       
                     </Box>
                 </Box>
 
@@ -301,15 +305,15 @@ const ShipmentDetail = () => {
                             sx={{ fontWeight: 600, display: { xs: 'none', md: 'flex' } }}
                         />
                     )}
-                    <Tooltip title={t('back')}>
-                        <IconButton
-                            onClick={() => navigate('/shipments')}
-                            size="small"
-                            sx={{ color: 'white', bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, p: 1 }}
-                        >
-                            <ArrowBackIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
+                    {/*<Tooltip title={t('back')}>*/}
+                    {/*    <IconButton*/}
+                    {/*        onClick={() => navigate('/shipments')}*/}
+                    {/*        size="small"*/}
+                    {/*        sx={{ color: 'white', bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, p: 1 }}*/}
+                    {/*    >*/}
+                    {/*        <ArrowBackIcon fontSize="small" />*/}
+                    {/*    </IconButton>*/}
+                    {/*</Tooltip>*/}
                 </Box>
             </Paper>
 
@@ -523,6 +527,9 @@ const ShipmentDetail = () => {
             </Paper>
 
             <Paper elevation={4} sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, p: 2, backgroundColor: theme.palette.background.paper, borderTop: `1px solid ${theme.palette.divider}`, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, zIndex: 1100, flexWrap: 'wrap' }}>
+                <Button variant="contained" color="inherit" startIcon={<ArrowBackIcon />} onClick={() => navigate('/shipments')} sx={{ px: 4, minWidth: 150 }}>
+                    {t('back')}
+                </Button>
                 <Button variant="contained" color="primary" startIcon={<FactCheckIcon />} onClick={() => setIsBitacoraModalOpen(true)}>
                     {t('generateBitacora')}
                 </Button>
@@ -531,10 +538,7 @@ const ShipmentDetail = () => {
                 </Button>
                 <Button variant="contained" color="success" startIcon={<ReceiptIcon />} onClick={() => handleExportRemision(shipment)} sx={{ minWidth: 120 }}>
                     {t('generateRemision')}
-                </Button>
-                <Button variant="contained" color="inherit" size="large" startIcon={<ArrowBackIcon />} onClick={() => navigate('/shipments')} sx={{ px: 4, minWidth: 150 }}>
-                    {t('back')}
-                </Button>
+                </Button>               
             </Paper>
 
             <ConfirmationModal

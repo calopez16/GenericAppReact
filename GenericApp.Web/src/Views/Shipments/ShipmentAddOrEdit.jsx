@@ -574,15 +574,15 @@ function ShipmentAddOrEdit() {
                 </Box>
 
                 {/* Derecha: botón volver */}
-                <Tooltip title={t('cancel')}>
-                    <IconButton
-                        onClick={() => navigate('/shipments')}
-                        size="small"
-                        sx={{ color: 'white', bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' }, p: 1 }}
-                    >
-                        <ArrowBackIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
+                {/*<Tooltip title={t('cancel')}>*/}
+                {/*    <IconButton*/}
+                {/*        onClick={() => navigate('/shipments')}*/}
+                {/*        size="small"*/}
+                {/*        sx={{ color: 'white', bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' }, p: 1 }}*/}
+                {/*    >*/}
+                {/*        <ArrowBackIcon fontSize="small" />*/}
+                {/*    </IconButton>*/}
+                {/*</Tooltip>*/}
             </Paper>
 
             <Paper sx={{ p: 4, borderRadius: 2, flexGrow: 1, mb: 12 }}>
@@ -941,7 +941,7 @@ function ShipmentAddOrEdit() {
                             <Button
                                 fullWidth={isMobile}
                                 variant="outlined"
-                                color="error"
+                                color="light"
                                 startIcon={<CancelIcon />}
                                 onClick={() => navigate('/shipments')}
                             >
