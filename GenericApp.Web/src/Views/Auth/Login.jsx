@@ -20,7 +20,7 @@ import Check from '@mui/icons-material/Check';
 
 function LoginPage() {
     const { t, i18n } = useTranslation();
-    const { setAccessToken, setUserRoles, setUserName, setCompanySelected } = useContext(AppContext);
+    const { setAccessToken, setUserRoles, setUserName, setCompanySelected, loadAppConfig } = useContext(AppContext);
     const navigate = useNavigate();
 
     const [email, setEmail] = useState('');
@@ -92,7 +92,9 @@ function LoginPage() {
                     setUserRoles(roles);
                     setUserName(userName);
                     setCompanySelected(company);
+                    await loadAppConfig(i18n);
                     navigate('/');
+
                 }
             } else {
                 ShowMessage(t('invalidCredentials'), 'error');
@@ -138,8 +140,10 @@ function LoginPage() {
                 setUserRoles(roles);
                 setUserName(userName);
                 setCompanySelected(company);
+                await loadAppConfig(i18n);
                 ShowMessage(t('passwordChanged'), 'success');
                 navigate('/');
+
             } else {
                 ShowMessage(t('error'), 'error');
             }

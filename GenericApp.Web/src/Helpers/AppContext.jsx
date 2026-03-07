@@ -1,5 +1,6 @@
-﻿import { createContext, useState, useEffect } from "react";
-import { AuthHelper } from '@helpers/AuthHelper'; 
+﻿import { createContext, useState, useEffect, useCallback } from "react";
+import { AuthHelper } from '@helpers/AuthHelper';
+import { DataAPIConfigurationService } from '@data/Configuration/Data';
 
 export const AppContext = createContext(null);
 
@@ -27,8 +28,37 @@ export const AppContextProvider = ({ children }) => {
     });
     const [themeMode, setThemeMode] = useState(() => localStorage.getItem("themeMode") || "dark");
     const [loading, setLoading] = useState(false);
+    const [appConfig, setAppConfig] = useState(() => {
+        try {
+            const stored = localStorage.getItem("appConfig");
+            return stored ? JSON.parse(stored) : null;
+        } catch {
+            return null;
+        }
+    });
 
-    const canSelectCompany = userRoles?.includes('MultiEmpresa') || userRoles?.includes('Administrator');;
+    const canSelectCompany = userRoles?.includes('MultiEmpresa') || userRoles?.includes('Administrator');
+    const configService = DataAPIConfigurationService();
+
+    const loadAppConfig = useCallback(async (i18nInstance) => {
+        try {
+            const response = await configService.getData();
+            if (response?.success && response?.data) {
+                const config = response.data;
+                setAppConfig(config);
+                localStorage.setItem("appConfig", JSON.stringify(config));
+
+                if (i18nInstance && config.defaultLanguage) {
+                    i18nInstance.changeLanguage(config.defaultLanguage);
+                }
+                if (config.defaultTheme) {
+                    setThemeMode(config.defaultTheme);
+                }
+            }
+        } catch {
+            // Si falla, se mantiene la configuración previa
+        }
+    }, []);
 
     // useEffect para guardar userName y userRole. El token ya se maneja con el helper.
     useEffect(() => {
@@ -93,7 +123,10 @@ export const AppContextProvider = ({ children }) => {
         themeMode,
         setThemeMode,
         loading,
-        setLoading
+        setLoading,
+        appConfig,
+        setAppConfig,
+        loadAppConfig,
     };
 
     return (

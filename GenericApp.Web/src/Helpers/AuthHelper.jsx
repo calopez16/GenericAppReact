@@ -20,6 +20,8 @@ export const AuthHelper = {
         localStorage.removeItem('userName');
         localStorage.removeItem('userRoles');
         localStorage.removeItem('company');
+        localStorage.removeItem('appConfig');
+        localStorage.removeItem('themeMode');
         window.dispatchEvent(new Event('storage'));
         if (redirectToLogin)
             // Redirección forzada al login.

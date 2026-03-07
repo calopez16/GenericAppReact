@@ -90,7 +90,7 @@ namespace GenericApp.API.Controllers
         /// <param name="id">El ID de la compañía a buscar.</param>
         /// <returns>La CompanyDTO si se encuentra, o NotFound si no existe o está eliminada.</returns>
         [HttpGet("active")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
         public async Task<ActionResult<CompanyDTO>> GetActiveCompany()
         {
             var company = await _repository.FindBy<Company>(x => (x.IsActive ?? false) && !(x.IsDeleted ?? false));
