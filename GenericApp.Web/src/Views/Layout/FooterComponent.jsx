@@ -17,7 +17,7 @@ const FooterComponent = () => {
             }}
         >
             <Typography variant="body2" component="p">
-                &copy; {new Date().getFullYear()} Mi Sistema. Todos los derechos reservados.
+                &copy; Embarques {new Date().getFullYear()}.
             </Typography>
         </Box>
     );
