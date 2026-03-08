@@ -1,37 +1,100 @@
-﻿body.login-background {
-    background-image: url('../img/login_background.png');
+﻿/* ── Fondo de la página de login ── */
+body.login-background {
+    background-attachment: fixed;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    background-attachment: fixed;
     height: 100vh;
+    max-height: 100vh;
     margin: 0;
+    overflow: hidden;
 }
 
+body.login-background.theme-dark {
+    background-image: linear-gradient(135deg, rgba(13, 17, 23, 0.82) 0%, rgba(22, 27, 34, 0.78) 50%, rgba(28, 33, 40, 0.74) 100%), var(--login-bg-image);
+}
+
+body.login-background.theme-light {
+    background-image: linear-gradient(135deg, rgba(27, 58, 24, 0.75) 0%, rgba(45, 90, 39, 0.68) 50%, rgba(61, 122, 53, 0.62) 100%), var(--login-bg-image);
+}
+
+/* ── Card principal ── */
+.login-card {
+    overflow: hidden;
+    border-radius: 20px !important;
+}
+
+.theme-dark .login-card {
+    box-shadow: none !important;
+}
+
+.theme-light .login-card {
+    box-shadow: none !important;
+}
+
+/* ── Panel formulario ── */
+.login-form-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 36px;
+    overflow-y: auto;
+}
+
+.login-form-panel .form-container,
+.login-form-panel form {
+    width: 100%;
+}
+
+.theme-dark .login-form-panel {
+    background: var(--login-panel-bg, #1c2128);
+}
+
+.theme-light .login-form-panel {
+    background: var(--login-panel-bg, #ffffff);
+}
+
+/* ── Formulario container con animación ── */
 .form-container {
     width: 100%;
+}
+
+.form-container.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+}
+
+.form-container.hidden {
     position: absolute;
-    top: 0;
-    left: 0;
-    /* Elimina las transiciones por defecto para tener control total */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
     transition: none;
 }
 
-    .form-container.visible {
-        position: relative;
-        opacity: 1;
-        transform: translateY(0);
-        /* Animación de entrada: la misma que antes */
-        transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-    }
+/* ── Ocultar botón nativo del navegador para revelar contraseña ── */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+    display: none !important;
+    visibility: hidden;
+    pointer-events: none;
+}
 
-    .form-container.hidden {
-        position: absolute;
-        opacity: 0;
-        /* Transición instantánea: no se animará el cambio de estado */
-        transition: none;
-        pointer-events: none;
+/* ── Responsive: móvil ── */
+@media (max-width: 600px) {
+.login-form-panel {
+    padding: 32px 20px;
+}
+
+    .login-card {
+        border-radius: 16px !important;
     }
+}
 
 
 

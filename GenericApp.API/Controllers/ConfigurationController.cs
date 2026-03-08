@@ -12,7 +12,6 @@ namespace GenericApp.Controllers
 {
     [ApiController]
     [Route("configuration")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
     public class ConfigurationController : ControllerBase
     {
         private const string AllowedUserName = "admin";
