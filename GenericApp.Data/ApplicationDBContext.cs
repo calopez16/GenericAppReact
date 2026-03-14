@@ -1,8 +1,8 @@
 ﻿using GenericApp.Data.Models;
+using GenericApp.Data.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GenericApp.Data
 {
@@ -19,19 +19,8 @@ namespace GenericApp.Data
         public DbSet<Client> Clients { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Country> Countries { get; set; }
-        public DbSet<Driver> Drivers { get; set; }
-        public DbSet<Label> Labels { get; set; }
-        public DbSet<LabelType> LabelTypes { get; set; }
-        public DbSet<Manifest> Manifests { get; set; }
-        public DbSet<ManifestStatus> ManifestStatuses { get; set; }
-        public DbSet<ManifestPallet> ManifestPallets { get; set; }
-        public DbSet<ManifestPalletLoading> ManifestPalletLoadings { get; set; }
         public DbSet<Parameter> Parameters { get; set; }
         public DbSet<RefreshTokenAspNetUser> RefreshTokenAspNetUser { get; set; }
-        public DbSet<Season> Seasons { get; set; }
-        public DbSet<Shipment> Shipments { get; set; }
-        public DbSet<ShipmentStatus> ShipmentStatuses { get; set; }
-        public DbSet<ShippingCompany> ShippingCompanies { get; set; }
         public DbSet<State> States { get; set; }
         public DbSet<UserDetail> UserDetails { get; set; }
 
@@ -85,14 +74,6 @@ namespace GenericApp.Data
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
             });
 
-            modelBuilder.Entity<ShippingCompany>(b =>
-            {
-                b.HasKey(x => x.IdShippingCompany);
-                b.Property(x => x.Name).HasMaxLength(150).IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-            });
-
             modelBuilder.Entity<ApplicationLog>(b =>
             {
                 b.HasKey(x => x.IdApplicationLog);
@@ -105,23 +86,6 @@ namespace GenericApp.Data
                 b.Property(x => x.Details).HasMaxLength(500);
                 b.Property(x => x.Details2).HasMaxLength(500);
             });
-
-            modelBuilder.Entity<ShipmentStatus>(b =>
-            {
-                b.HasKey(x => x.IdShipmentStatus);
-                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-            });
-
-            modelBuilder.Entity<ManifestStatus>(b =>
-            {
-                b.HasKey(x => x.IdManifestStatus);
-                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-            });
-
 
             modelBuilder.Entity<State>(b =>
             {
@@ -173,215 +137,10 @@ namespace GenericApp.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            modelBuilder.Entity<Driver>(b =>
-            {
-                b.HasKey(x => x.IdDriver);
-                b.Property(x => x.Name).HasMaxLength(150).IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne(d => d.IdCompanyNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdCompany)
-                    .OnDelete(DeleteBehavior.Restrict)
-                    .IsRequired();
-            });
-
-            modelBuilder.Entity<Label>(b =>
-            {
-                b.HasKey(x => x.IdLabel);
-                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
-                b.Property(x => x.MaxBoxQuantity).HasColumnType("decimal(18,2)").IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne(l => l.IdCompanyNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdCompany)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<LabelType>(b =>
-            {
-                b.HasKey(x => x.IdLabelType);
-                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne(lt => lt.IdLabelNavigation)
-                    .WithMany(l => l.LabelTypes)
-                    .HasForeignKey(x => x.IdLabel)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-            modelBuilder.Entity<TrailerBoxType>(b =>
-            {
-                b.HasKey(x => x.IdTrailerBoxType);
-                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-            });
-            modelBuilder.Entity<Season>(b =>
-            {
-                b.HasKey(x => x.IdSeason);
-                b.Property(x => x.Name).HasMaxLength(150).IsRequired();
-                b.Property(x => x.Description).HasMaxLength(250);
-                b.Property(x => x.InitialDate).HasColumnType("date");
-                b.Property(x => x.EndDate).HasColumnType("date");
-                b.Property(x => x.IsClosed).HasDefaultValue(false);
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne(s => s.IdCompanyNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdCompany)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<Shipment>(b =>
-            {
-                b.HasKey(x => x.IdShipment);
-                b.Property(x => x.CreationDate).HasDefaultValueSql("GETDATE()").IsRequired();
-                b.Property(x => x.ShipmentDate).HasColumnType("date").IsRequired();
-                b.Property(x => x.IdUser).HasMaxLength(450);
-                b.Property(x => x.Address).HasMaxLength(250);
-                b.Property(x => x.Comments).HasMaxLength(500);
-                b.Property(x => x.Mixed).HasDefaultValue(false);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne(s => s.IdClientNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdClient)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(s => s.IdCityNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdCity)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(s => s.IdShipmentStatusNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdShipmentStatus)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(s => s.IdCompanyNavigation)
-                  .WithMany()
-                  .HasForeignKey(x => x.IdCompany)
-                  .IsRequired()
-                  .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(s => s.IdUserNavigation)
-                  .WithMany()
-                  .HasForeignKey(s => s.IdUser)
-                  .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<Manifest>(b =>
-            {
-                b.HasKey(x => x.IdManifest);
-                b.Property(x => x.CreationDate).HasDefaultValueSql("GETDATE()").IsRequired();
-                b.Property(x => x.ExitDate).IsRequired();
-                b.Property(x => x.TemperatureTrailerBoxF).HasColumnType("decimal(18,2)");
-                b.Property(x => x.TemperatureTrailerBoxC).HasColumnType("decimal(18,2)");
-                b.Property(x => x.TrailerPlate).HasMaxLength(50);
-                b.Property(x => x.TrailerPlateEconomicNumber).HasMaxLength(50);
-                b.Property(x => x.TrailerBoxPlate).HasMaxLength(50);
-                b.Property(x => x.TrailerBoxPlateEconomicNumber).HasMaxLength(50);
-                b.Property(x => x.Comments).HasMaxLength(500);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne(m => m.IdShipmentNavigation)
-                    .WithMany(s => s.Manifests)
-                    .HasForeignKey(x => x.IdShipment)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(m => m.IdSeasonNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdSeason)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(m => m.IdDriverNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdDriver)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(m => m.IdShippingCompanyNavigation)
-                     .WithMany()
-                     .HasForeignKey(x => x.IdShippingCompany)
-                     .IsRequired()
-                     .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(m => m.IdManifestStatusNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdManifestStatus)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(m => m.IdCompanyNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdCompany)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(m => m.IdTrailerBoxTypeNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdTrailerBoxType)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<ManifestPallet>(b =>
-            {
-                b.HasKey(x => x.IdManifestPallet);
-                b.Property(x => x.MaxBoxQuantity).HasColumnType("decimal(18,2)");
-                b.Property(x => x.Position).IsRequired();
-                b.Property(x => x.TemperatureF).HasColumnType("decimal(18,2)");
-                b.Property(x => x.TemperatureC).HasColumnType("decimal(18,2)");
-                b.Property(x => x.Comments).HasMaxLength(500);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne(mp => mp.IdManifestNavigation)
-                    .WithMany(m => m.ManifestPallets)
-                    .HasForeignKey(x => x.IdManifest)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);           
-
-                b.HasOne(mp => mp.IdLabelNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdLabel)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<ManifestPalletLoading>(b =>
-            {
-                b.HasKey(x => x.IdManifestPalletLoading);
-                b.Property(x => x.Description).HasMaxLength(250).IsRequired();
-                b.Property(x => x.BoxQuantity).HasColumnType("decimal(18,2)");
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne(mpl => mpl.IdManifestPalletNavigation)
-                    .WithMany(p => p.ManifestPalletLoadings)
-                    .HasForeignKey(x => x.IdManifestPallet)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(mpl => mpl.IdLabelTypeNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdLabelType)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-
             modelBuilder.Entity<Company>().HasData(new Company
             {
                 IdCompany = 1,
-                Name = "Mision",
+                Name = "Default Company",
                 IsActive = true,
                 IsDeleted = false
             });
@@ -514,16 +273,6 @@ namespace GenericApp.Data
                 new City { IdCity = 11, IdState = 37, Description = "Calexico", IsActive = true, IsDeleted = false }
             );
 
-            modelBuilder.Entity<ShipmentStatus>().HasData(
-               new ShipmentStatus { IdShipmentStatus = 1, Description = "Activa", IsActive = true, IsDeleted = false },
-               new ShipmentStatus { IdShipmentStatus = 2, Description = "Concluída", IsActive = true, IsDeleted = false }
-            );
-
-            modelBuilder.Entity<ManifestStatus>().HasData(
-               new ManifestStatus { IdManifestStatus = 1, Description = "Activa", IsActive = true, IsDeleted = false },
-               new ManifestStatus { IdManifestStatus = 2, Description = "Concluída", IsActive = true, IsDeleted = false }
-            );
-
             modelBuilder.Entity<IdentityRole>().HasData(
                 new IdentityRole
                 {
@@ -545,6 +294,44 @@ namespace GenericApp.Data
                     Name = "MultiEmpresa",
                     NormalizedName = "MULTIEMPRESA",
                     ConcurrencyStamp = MULTICOMPANY_ID
+                }
+            );
+
+            modelBuilder.Entity<Parameter>().HasData(
+                new Parameter
+                {
+                    IdParameter = 1,
+                    ParameterCode = "P1",
+                    Description = "MultiLenguage habilitado",
+                    Value = "false"
+                },
+                new Parameter
+                {
+                    IdParameter = 2,
+                    ParameterCode = "P2",
+                    Description = "Lenguaje por defecto",
+                    Value = "es"
+                },
+                new Parameter
+                {
+                    IdParameter = 3,
+                    ParameterCode = "P3",
+                    Description = "Elegir Thema habilitado",
+                    Value = "true"
+                },
+                new Parameter
+                {
+                    IdParameter = 4,
+                    ParameterCode = "P4",
+                    Description = "Thema por defecto",
+                    Value = "dark"
+                },
+                new Parameter
+                {
+                    IdParameter = 5,
+                    ParameterCode = "P5",
+                    Description = "MultiEmpresa habilitado",
+                    Value = "false"
                 }
             );
 

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20251227224226_FixNavigations")]
-    partial class FixNavigations
+    [Migration("20260314190637_FirstMigration")]
+    partial class FirstMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -207,6 +207,11 @@ namespace GenericApp.Data.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
                     b.Property<int?>("IdCity")
                         .HasColumnType("int");
 
@@ -265,6 +270,12 @@ namespace GenericApp.Data.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
+                    b.Property<string>("Empaque")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GnnNumber")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool?>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -294,6 +305,9 @@ namespace GenericApp.Data.Migrations
                     b.Property<string>("PostalCode")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("RazonSocial")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RegFdaNo")
                         .HasMaxLength(50)
@@ -361,307 +375,6 @@ namespace GenericApp.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("GenericApp.Data.Models.Driver", b =>
-                {
-                    b.Property<int>("IdDriver")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdDriver"), 1L, 1);
-
-                    b.Property<int>("IdCompany")
-                        .HasColumnType("int");
-
-                    b.Property<bool?>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.HasKey("IdDriver");
-
-                    b.HasIndex("IdCompany");
-
-                    b.ToTable("Drivers");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Label", b =>
-                {
-                    b.Property<int>("IdLabel")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdLabel"), 1L, 1);
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<int>("IdCompany")
-                        .HasColumnType("int");
-
-                    b.Property<bool?>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<decimal?>("MaxBoxQuantity")
-                        .IsRequired()
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("IdLabel");
-
-                    b.HasIndex("IdCompany");
-
-                    b.ToTable("Labels");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.LabelType", b =>
-                {
-                    b.Property<int>("IdLabelType")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdLabelType"), 1L, 1);
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<int>("IdLabel")
-                        .HasColumnType("int");
-
-                    b.Property<bool?>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.HasKey("IdLabelType");
-
-                    b.HasIndex("IdLabel");
-
-                    b.ToTable("LabelTypes");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Manifest", b =>
-                {
-                    b.Property<int>("IdManifest")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdManifest"), 1L, 1);
-
-                    b.Property<string>("Comments")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("CreationDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.Property<DateTime>("ExitDate")
-                        .HasColumnType("date");
-
-                    b.Property<int?>("IdCompany")
-                        .IsRequired()
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdDriver")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdManifestStatus")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdSeason")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdShipment")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdShippingCompany")
-                        .HasColumnType("int");
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<decimal?>("TemperatureTrailerBoxC")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("TemperatureTrailerBoxF")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("TrailerBoxPlate")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("TrailerPlate")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("IdManifest");
-
-                    b.HasIndex("IdCompany");
-
-                    b.HasIndex("IdDriver");
-
-                    b.HasIndex("IdManifestStatus");
-
-                    b.HasIndex("IdSeason");
-
-                    b.HasIndex("IdShipment");
-
-                    b.HasIndex("IdShippingCompany");
-
-                    b.ToTable("Manifests");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.ManifestPallet", b =>
-                {
-                    b.Property<int>("IdManifestPallet")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdManifestPallet"), 1L, 1);
-
-                    b.Property<string>("Comments")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("IdLabel")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdManifest")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdShipment")
-                        .HasColumnType("int");
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<decimal?>("MaxBoxQuantity")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("int");
-
-                    b.Property<decimal?>("TemperatureC")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("TemperatureF")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("IdManifestPallet");
-
-                    b.HasIndex("IdLabel");
-
-                    b.HasIndex("IdManifest");
-
-                    b.HasIndex("IdShipment");
-
-                    b.ToTable("ManifestPallets");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.ManifestPalletLoading", b =>
-                {
-                    b.Property<int>("IdManifestPalletLoading")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdManifestPalletLoading"), 1L, 1);
-
-                    b.Property<decimal?>("BoxQuantity")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<int>("IdLabelType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdManifest")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdManifestPallet")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdShipment")
-                        .HasColumnType("int");
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.HasKey("IdManifestPalletLoading");
-
-                    b.HasIndex("IdLabelType");
-
-                    b.HasIndex("IdManifest");
-
-                    b.HasIndex("IdManifestPallet");
-
-                    b.HasIndex("IdShipment");
-
-                    b.ToTable("ManifestPalletLoadings");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.ManifestStatus", b =>
-                {
-                    b.Property<int>("IdManifestStatus")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdManifestStatus"), 1L, 1);
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<bool?>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.HasKey("IdManifestStatus");
-
-                    b.ToTable("ManifestStatuses");
-                });
-
             modelBuilder.Entity("GenericApp.Data.Models.Parameter", b =>
                 {
                     b.Property<int>("IdParameter")
@@ -722,179 +435,6 @@ namespace GenericApp.Data.Migrations
                     b.HasKey("IdRefreshTokenAspNetUser");
 
                     b.ToTable("RefreshTokenAspNetUser");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Season", b =>
-                {
-                    b.Property<int>("IdSeason")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdSeason"), 1L, 1);
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("date");
-
-                    b.Property<int>("IdCompany")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("InitialDate")
-                        .HasColumnType("date");
-
-                    b.Property<bool?>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool?>("IsClosed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.HasKey("IdSeason");
-
-                    b.HasIndex("IdCompany");
-
-                    b.ToTable("Seasons");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Shipment", b =>
-                {
-                    b.Property<int>("IdShipment")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdShipment"), 1L, 1);
-
-                    b.Property<string>("Address")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<string>("Comments")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("CreationDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.Property<int?>("IdCity")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdClient")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("IdCompany")
-                        .IsRequired()
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdShipmentStatus")
-                        .HasColumnType("int");
-
-                    b.Property<string>("IdUser")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool?>("Mixed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<DateTime>("ShipmentDate")
-                        .HasColumnType("date");
-
-                    b.HasKey("IdShipment");
-
-                    b.HasIndex("IdCity");
-
-                    b.HasIndex("IdClient");
-
-                    b.HasIndex("IdCompany");
-
-                    b.HasIndex("IdShipmentStatus");
-
-                    b.HasIndex("IdUser");
-
-                    b.ToTable("Shipments");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.ShipmentStatus", b =>
-                {
-                    b.Property<int>("IdShipmentStatus")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdShipmentStatus"), 1L, 1);
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<bool?>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.HasKey("IdShipmentStatus");
-
-                    b.ToTable("ShipmentStatuses");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.ShippingCompany", b =>
-                {
-                    b.Property<int>("IdShippingCompany")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdShippingCompany"), 1L, 1);
-
-                    b.Property<int>("IdCompany")
-                        .HasColumnType("int");
-
-                    b.Property<bool?>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.HasKey("IdShippingCompany");
-
-                    b.ToTable("ShippingCompanies");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.State", b =>
@@ -1768,7 +1308,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEGTkryl9xFx8U+44AAk9DfXpzKNvGv+jBChleCPG2VLffXWQZU9mvPuSpypLEgPSwg==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEJ7xutA1nZ9OFQAeBaATDSl7OsSTL15OIUX3i6WmGlooXRvbtNk7G4mA2fh7vHL5ag==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
@@ -1902,204 +1442,6 @@ namespace GenericApp.Data.Migrations
                     b.Navigation("IdCompanyNavigation");
                 });
 
-            modelBuilder.Entity("GenericApp.Data.Models.Driver", b =>
-                {
-                    b.HasOne("GenericApp.Data.Models.Company", "IdCompanyNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdCompany")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("IdCompanyNavigation");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Label", b =>
-                {
-                    b.HasOne("GenericApp.Data.Models.Company", "IdCompanyNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdCompany")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("IdCompanyNavigation");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.LabelType", b =>
-                {
-                    b.HasOne("GenericApp.Data.Models.Label", "IdLabelNavigation")
-                        .WithMany("LabelTypes")
-                        .HasForeignKey("IdLabel")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("IdLabelNavigation");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Manifest", b =>
-                {
-                    b.HasOne("GenericApp.Data.Models.Company", "IdCompanyNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdCompany")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Driver", "IdDriverNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdDriver")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.ManifestStatus", "IdManifestStatusNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdManifestStatus")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Season", "IdSeasonNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdSeason")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Shipment", "IdShipmentNavigation")
-                        .WithMany("Manifests")
-                        .HasForeignKey("IdShipment")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.ShippingCompany", "IdShippingCompanyNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdShippingCompany")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("IdCompanyNavigation");
-
-                    b.Navigation("IdDriverNavigation");
-
-                    b.Navigation("IdManifestStatusNavigation");
-
-                    b.Navigation("IdSeasonNavigation");
-
-                    b.Navigation("IdShipmentNavigation");
-
-                    b.Navigation("IdShippingCompanyNavigation");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.ManifestPallet", b =>
-                {
-                    b.HasOne("GenericApp.Data.Models.Label", "IdLabelNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdLabel")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Manifest", "IdManifestNavigation")
-                        .WithMany("ManifestPallets")
-                        .HasForeignKey("IdManifest")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Shipment", "IdShipmentNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdShipment")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("IdLabelNavigation");
-
-                    b.Navigation("IdManifestNavigation");
-
-                    b.Navigation("IdShipmentNavigation");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.ManifestPalletLoading", b =>
-                {
-                    b.HasOne("GenericApp.Data.Models.LabelType", "IdLabelTypeNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdLabelType")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Manifest", "IdManifestNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdManifest")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.ManifestPallet", "IdManifestPalletNavigation")
-                        .WithMany("ManifestPalletLoadings")
-                        .HasForeignKey("IdManifestPallet")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Shipment", "IdShipmentNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdShipment")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("IdLabelTypeNavigation");
-
-                    b.Navigation("IdManifestNavigation");
-
-                    b.Navigation("IdManifestPalletNavigation");
-
-                    b.Navigation("IdShipmentNavigation");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Season", b =>
-                {
-                    b.HasOne("GenericApp.Data.Models.Company", "IdCompanyNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdCompany")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("IdCompanyNavigation");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Shipment", b =>
-                {
-                    b.HasOne("GenericApp.Data.Models.City", "IdCityNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdCity")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("GenericApp.Data.Models.Client", "IdClientNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdClient")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.Company", "IdCompanyNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdCompany")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GenericApp.Data.Models.ShipmentStatus", "IdShipmentStatusNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdShipmentStatus")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "IdUserNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdUser")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("IdCityNavigation");
-
-                    b.Navigation("IdClientNavigation");
-
-                    b.Navigation("IdCompanyNavigation");
-
-                    b.Navigation("IdShipmentStatusNavigation");
-
-                    b.Navigation("IdUserNavigation");
-                });
-
             modelBuilder.Entity("GenericApp.Data.Models.State", b =>
                 {
                     b.HasOne("GenericApp.Data.Models.Country", "IdCountryNavigation")
@@ -2170,26 +1512,6 @@ namespace GenericApp.Data.Migrations
             modelBuilder.Entity("GenericApp.Data.Models.Country", b =>
                 {
                     b.Navigation("States");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Label", b =>
-                {
-                    b.Navigation("LabelTypes");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Manifest", b =>
-                {
-                    b.Navigation("ManifestPallets");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.ManifestPallet", b =>
-                {
-                    b.Navigation("ManifestPalletLoadings");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Shipment", b =>
-                {
-                    b.Navigation("Manifests");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.State", b =>

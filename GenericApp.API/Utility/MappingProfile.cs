@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
+using AutoMapper;
 using GenericApp.API.Models;
 using GenericApp.Data.Models;
-using GenericApp.Models;
 
 namespace GenericApp.API.Utility
 {
@@ -9,25 +9,11 @@ namespace GenericApp.API.Utility
     {
         public MappingProfile()
         {
-            CreateMap<Parameter, ParameterDTO>().ReverseMap();
             CreateMap<Client, ClientDTO>().ReverseMap();
             CreateMap<City, CityDTO>().ReverseMap();
             CreateMap<Country, CountryDTO>().ReverseMap();
             CreateMap<State, StateDTO>().ReverseMap();
             CreateMap<Company, CompanyDTO>().ReverseMap();
-            CreateMap<Driver, DriverDTO>().ReverseMap();
-            CreateMap<Label, LabelDTO>().ReverseMap();
-            CreateMap<LabelType, LabelTypeDTO>().ReverseMap();
-            CreateMap<TrailerBoxType, TrailerBoxTypeDTO>().ReverseMap();
-            CreateMap<Season, SeasonDTO>().ReverseMap();
-            CreateMap<ShippingCompany, ShippingCompanyDTO>().ReverseMap();
-            CreateMap<Manifest, ManifestDTO>().ReverseMap();
-            CreateMap<ManifestPallet, ManifestPalletDTO>().ReverseMap();
-            CreateMap<ManifestPalletLoading, ManifestPalletLoadingDTO>().ReverseMap();
-            CreateMap<ManifestStatus, ManifestStatusDTO>().ReverseMap();
-            CreateMap<Shipment, ShipmentDTO>().ReverseMap();
-            CreateMap<ShipmentStatus, ShipmentStatusDTO>().ReverseMap();
-            
         }
     }
 }

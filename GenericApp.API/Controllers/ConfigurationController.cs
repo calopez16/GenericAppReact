@@ -30,13 +30,15 @@ namespace GenericApp.Controllers
             var p2 = await _repository.FirstOrDefault<Parameter>(p => p.ParameterCode == "P2");
             var p3 = await _repository.FirstOrDefault<Parameter>(p => p.ParameterCode == "P3");
             var p4 = await _repository.FirstOrDefault<Parameter>(p => p.ParameterCode == "P4");
+            var p5 = await _repository.FirstOrDefault<Parameter>(p => p.ParameterCode == "P5");
 
             var configuration = new ConfigurationDTO
             {
-                IsMultilaguageEnable = p1?.Value != null ? bool.TryParse(p1.Value, out var v1) && v1 : null,
+                IsMultilaguageEnable = p1?.Value != null ? bool.TryParse(p1.Value, out var v1) && v1 : false,
                 DefaultLanguage = p2?.Value,
-                IsChooseThemeEnable = p3?.Value != null ? bool.TryParse(p3.Value, out var v3) && v3 : null,
+                IsChooseThemeEnable = p3?.Value != null ? bool.TryParse(p3.Value, out var v3) && v3 : false,
                 DefaultTheme = p4?.Value,
+                IsMultiCompanyEnable = p5?.Value != null ? bool.TryParse(p5.Value, out var v5) && v5 : false,
             };
 
             return Ok(new ApiResponse { Data = configuration });
@@ -61,6 +63,7 @@ namespace GenericApp.Controllers
             var p2 = await _repository.FirstOrDefault<Parameter>(p => p.ParameterCode == "P2");
             var p3 = await _repository.FirstOrDefault<Parameter>(p => p.ParameterCode == "P3");
             var p4 = await _repository.FirstOrDefault<Parameter>(p => p.ParameterCode == "P4");
+            var p5 = await _repository.FirstOrDefault<Parameter>(p => p.ParameterCode == "P5");
 
             if (p1 != null)
                 p1.Value = model.IsMultilaguageEnable.HasValue ? model.IsMultilaguageEnable.Value.ToString().ToLower() : p1.Value;
@@ -73,11 +76,14 @@ namespace GenericApp.Controllers
 
             if (p4 != null)
                 p4.Value = model.DefaultTheme ?? p4.Value;
+            if (p5 != null)
+                p5.Value = model.IsMultiCompanyEnable.HasValue ? model.IsMultiCompanyEnable.Value.ToString().ToLower() : p5.Value;
 
             var result = (p1 == null || await _repository.Update(p1))
                       && (p2 == null || await _repository.Update(p2))
                       && (p3 == null || await _repository.Update(p3))
-                      && (p4 == null || await _repository.Update(p4));
+                      && (p4 == null || await _repository.Update(p4))
+                      && (p5 == null || await _repository.Update(p5));
 
             if (!result)
                 return BadRequest(new ApiResponse());

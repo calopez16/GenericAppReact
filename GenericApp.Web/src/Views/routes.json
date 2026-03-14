@@ -1,22 +1,13 @@
 [
-  {
-    "id": "dashboard",
-    "path": "/",
-    "i18nKey": "home",
-    "i18nKeyDescription": "homepage_description",
-    "icon": "HomeIcon",
-    "exact": true,
-    "roles": [ "Administrator", "User" ]
-  },
-  {
-    "id": "shipments",
-    "path": "/shipments",
-    "i18nKey": "shipments",
-    "i18nKeyDescription": "shipments_description",
-    "icon": "TruckIcon",
-    "exact": true,
-    "roles": [ "Administrator", "User" ]
-  },
+{
+  "id": "dashboard",
+  "path": "/",
+  "i18nKey": "home",
+  "i18nKeyDescription": "homepage_description",
+  "icon": "HomeIcon",
+  "exact": true,
+  "roles": [ "Administrator", "User" ]
+},
   {
     "id": "administration",
     "path": "/",
@@ -31,13 +22,6 @@
         "i18nKey": "users",
         "i18nKeyDescription": "users_description",
         "icon": "PeopleIcon"
-      },
-      {
-        "id": "labels",
-        "path": "/labels",
-        "i18nKey": "labels",
-        "i18nKeyDescription": "labels_description",
-        "icon": "LabelIcon"
       },
       {
         "id": "companies",
@@ -59,34 +43,6 @@
         "i18nKey": "cities",
         "i18nKeyDescription": "cities_description",
         "icon": "LocationCityIcon"
-      },
-      {
-        "id": "seasons",
-        "path": "/seasons",
-        "i18nKey": "seasons",
-        "i18nKeyDescription": "seasons_description",
-        "icon": "DateRangeIcon"
-      },
-      {
-        "id": "drivers",
-        "path": "/drivers",
-        "i18nKey": "drivers",
-        "i18nKeyDescription": "drivers_description",
-        "icon": "BadgeIcon"
-      },
-      {
-        "id": "shippingCompanies",
-        "path": "/shipping-companies",
-        "i18nKey": "shippingCompanies",
-        "i18nKeyDescription": "shippingCompanies_description",
-        "icon": "LocalShippingIcon"
-      },
-      {
-        "id": "trailerboxtypes",
-        "path": "/trailerboxtypes",
-        "i18nKey": "trailerBoxTypes",
-        "i18nKeyDescription": "trailerBoxTypes_description",
-        "icon": "TruckIcon"
       }
     ]
   },

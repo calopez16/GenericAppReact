@@ -34,13 +34,8 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import TruckIcon from '@mui/icons-material/FireTruck';
 import BusinessIcon from '@mui/icons-material/Business';
-import LabelIcon from '@mui/icons-material/Label';
 import ApartmentIcon from '@mui/icons-material/Apartment';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
-import DateRangeIcon from '@mui/icons-material/DateRange';
-import BadgeIcon from '@mui/icons-material/Badge';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
-import WidgetsIcon from '@mui/icons-material/Widgets';
 
 const drawerWidth = 256;
 
@@ -52,14 +47,9 @@ const iconMap = {
     BarChartIcon,
     HomeIcon,
     TruckIcon,
-    LabelIcon,
     ApartmentIcon,
     BusinessIcon,
     LocationCityIcon,
-    DateRangeIcon,
-    BadgeIcon,
-    LocalShippingIcon,
-    WidgetsIcon,
 };
 
 const NAV_ITEM_SX = (isSelected) => ({

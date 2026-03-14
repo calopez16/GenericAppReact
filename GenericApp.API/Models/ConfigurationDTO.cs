@@ -8,6 +8,7 @@ namespace GenericApp.API.Models
         public string? DefaultLanguage { get; set; }
         public bool? IsChooseThemeEnable { get; set; }
         public string? DefaultTheme { get; set; }
-       
+        public bool? IsMultiCompanyEnable { get; set; }
+
     }
 }
