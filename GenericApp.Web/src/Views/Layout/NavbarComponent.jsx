@@ -36,7 +36,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 
 const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
     const { t, i18n } = useTranslation();
-    const { themeMode, setThemeMode, userName = 'Usuario', userRoles, companySelected, setCompanySelected, canSelectCompany, appConfig } = useContext(AppContext);
+    const { themeMode, setThemeMode, userName = 'Usuario', userRoles, companySelected, setCompanySelected, canSelectCompany, appConfig, isMultiCompanyEnable } = useContext(AppContext);
 
     const allowLanguage = appConfig?.isMultilaguageEnable !== false;
     const allowTheme    = appConfig?.isChooseThemeEnable !== false;
@@ -55,10 +55,10 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
     const isNoCompany = !companySelected || (typeof companySelected === 'object' && Object.keys(companySelected).length === 0);
 
     useEffect(() => {
-        if (isNoCompany && canSelectCompany) {
+        if (isNoCompany && canSelectCompany && isMultiCompanyEnable) {
             setIsCompanyModalOpen(true);
         }
-    }, [isNoCompany]);
+    }, [isNoCompany, isMultiCompanyEnable]);
 
     const handleOpenCompanyModal = () => {
         setIsCompanyModalOpen(true);
@@ -255,7 +255,7 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                     <Box sx={{ flexGrow: 1 }} />
 
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        {canSelectCompany && (
+                        {isMultiCompanyEnable && canSelectCompany && (
                             <>
                                 <Tooltip title={companySelected ? companySelected.name : t('selectCompany')}>
                                     <IconButton onClick={handleOpenCompanyModal} sx={{ mr: 1 }} color="inherit">

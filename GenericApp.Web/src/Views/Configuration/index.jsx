@@ -23,12 +23,13 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import WbSunnyIcon from '@mui/icons-material/WbSunny';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SaveIcon from '@mui/icons-material/Save';
+import BusinessIcon from '@mui/icons-material/Business';
 import { DataAPIConfigurationService } from '@data/Configuration/Data';
 
 
 const ConfigurationPage = () => {
     const { t, i18n } = useTranslation();
-    const { themeMode, setThemeMode } = useContext(AppContext);
+    const { themeMode, setThemeMode, loadAppConfig } = useContext(AppContext);
     const theme = useTheme();
     const configService = DataAPIConfigurationService();
 
@@ -37,6 +38,7 @@ const ConfigurationPage = () => {
     const [defaultLanguage, setDefaultLanguage] = useState('es');
     const [allowTheme, setAllowTheme] = useState(true);
     const [defaultTheme, setDefaultTheme] = useState('dark');
+    const [allowMultiCompany, setAllowMultiCompany] = useState(false);
 
     useEffect(() => {
         const loadConfiguration = async () => {
@@ -49,6 +51,7 @@ const ConfigurationPage = () => {
                     setDefaultLanguage(data.defaultLanguage ?? 'es');
                     setAllowTheme(data.isChooseThemeEnable ?? true);
                     setDefaultTheme(data.defaultTheme ?? 'dark');
+                    setAllowMultiCompany(data.isMultiCompanyEnable ?? false);
                 }
             } catch {
                 ShowMessage(t('error'), 'error');
@@ -66,11 +69,13 @@ const ConfigurationPage = () => {
                 defaultLanguage,
                 isChooseThemeEnable: allowTheme,
                 defaultTheme,
+                isMultiCompanyEnable: allowMultiCompany,
             };
             const response = await configService.editData(payload);
             if (response?.isSuccess || response?.success) {
                 i18n.changeLanguage(defaultLanguage);
                 setThemeMode(defaultTheme);
+                await loadAppConfig(i18n);
                 ShowMessage(t('config_saved'), 'success');
             } else {
                 ShowMessage(t('error'), 'error');
@@ -176,7 +181,7 @@ const ConfigurationPage = () => {
             {/* Sección Tema */}
             <Paper
                 elevation={0}
-                sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', overflow: 'hidden', mb: 12 }}
+                sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', overflow: 'hidden', mb: 2 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 2.5, py: 1.5, bgcolor: 'action.hover' }}>
                     <PaletteIcon color="primary" fontSize="small" />
@@ -278,6 +283,42 @@ const ConfigurationPage = () => {
                     </Box>
                 </Box>
             </Paper>
+
+            {/* Sección Multi-Compañía */}
+            <Paper
+                elevation={0}
+                sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', mb: 12, overflow: 'hidden' }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 2.5, py: 1.5, bgcolor: 'action.hover' }}>
+                    <BusinessIcon color="primary" fontSize="small" />
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                        {t('config_multicompany_section')}
+                    </Typography>
+                </Box>
+                <Divider />
+                <Box sx={{ px: 2.5, py: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+                    <Box>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                            {t('config_multicompany_allow')}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {t('config_multicompany_allow_desc')}
+                        </Typography>
+                    </Box>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={allowMultiCompany}
+                                onChange={(e) => setAllowMultiCompany(e.target.checked)}
+                                color="primary"
+                            />
+                        }
+                        label=""
+                        sx={{ m: 0 }}
+                    />
+                </Box>
+            </Paper>
+
             <Paper
                 elevation={4}
                 sx={{

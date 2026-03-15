@@ -13,7 +13,9 @@ import {
     Avatar,
     Divider,
     Tooltip,
-    CircularProgress
+    CircularProgress,
+    Paper,
+    useTheme,
 } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
@@ -28,9 +30,10 @@ import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import { API_BASE_URL } from '@config';
 
-const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
-    const { t } = useTranslation();
-    const dataService = DataAPICompaniesService();
+const CompanyFormModal = ({ open, handleClose, data, isEditing, setData, inline = false }) => {
+const { t } = useTranslation();
+const dataService = DataAPICompaniesService();
+const theme = useTheme();
 
     const nameRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -179,6 +182,117 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
         </Box>
     );
 
+    const formContent = (
+        <Box sx={{ mt: inline ? 0 : 1 }}>
+            <Grid container spacing={3}>
+                {/* LOGO */}
+                <Grid item size={{ xs: 12 }} sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                    <input type="file" accept="image/*" hidden ref={fileInputRef} onChange={handleFileChange} />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, sm: 5 } }}>
+                        {newLogoPreview ? (
+                            <>
+                                {renderLogoBox(originalLogoUrl, t('current_logo'), false)}
+                                <ArrowForwardIcon color="disabled" sx={{ fontSize: 30 }} />
+                                {renderLogoBox(newLogoPreview, t('new_logo'), true, true)}
+                            </>
+                        ) : (
+                            renderLogoBox(originalLogoUrl, t('company_logo'), true)
+                        )}
+                    </Box>
+                </Grid>
+
+                {/* CAMPOS PRINCIPALES */}
+                <Grid item size={{ xs: 12 }}>
+                    <TextField label={t('name')} name="name" value={formData.name}
+                        onChange={(e) => {
+                            setFormData({ ...formData, name: e.target.value });
+                            setValidationErrors({ name: !e.target.value.trim() });
+                        }}
+                        fullWidth required inputRef={nameRef}
+                        error={showErrors && validationErrors.name}
+                        helperText={showErrors && validationErrors.name ? t('requiredField') : ''}
+                        inputProps={{ maxLength: 150 }}
+                    />
+                </Grid>
+                <Grid item size={{ xs: 12 }}>
+                    <TextField label={t('socialReason')} name="razonSocial" value={formData.razonSocial} onChange={(e) => setFormData({ ...formData, razonSocial: e.target.value })} fullWidth inputProps={{ maxLength: 250 }} />
+                </Grid>
+                <Grid item size={{ xs: 12, md: 6 }}>
+                    <TextField label={t('rfc')} name="rfc" value={formData.rfc} onChange={(e) => setFormData({ ...formData, rfc: e.target.value })} fullWidth inputProps={{ maxLength: 13 }} />
+                </Grid>
+
+                <Grid item size={{ xs: 12, md: 6 }}>
+                    <TextField label={t('phone')} name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} fullWidth inputProps={{ maxLength: 25 }} />
+                </Grid>
+
+                <Grid item size={{ xs: 12 }}>
+                    <TextField label={t('address')} name="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} fullWidth inputProps={{ maxLength: 250 }} />
+                </Grid>
+
+                <Grid item size={{ xs: 12, md: 4 }}>
+                    <TextField label={t('postal_code')} name="postalCode" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} fullWidth inputProps={{ maxLength: 50 }} />
+                </Grid>
+
+                <Grid item size={{ xs: 12, md: 4 }}>
+                    <TextField label={t('reg_fda_no')} name="regFdaNo" value={formData.regFdaNo} onChange={(e) => setFormData({ ...formData, regFdaNo: e.target.value })} fullWidth inputProps={{ maxLength: 50 }} />
+                </Grid>
+
+                <Grid item size={{ xs: 12, md: 4 }}>
+                    <TextField label={t('empaque')} name="empaque" value={formData.empaque} onChange={(e) => setFormData({ ...formData, empaque: e.target.value })} fullWidth inputProps={{ maxLength: 80 }} />
+                </Grid>
+
+                <Grid item size={{ xs: 12, md: 4 }}>
+                    <TextField label={t('gnnNumber')} name="gnnNumber" value={formData.gnnNumber} onChange={(e) => setFormData({ ...formData, gnnNumber: e.target.value })} fullWidth inputProps={{ maxLength: 150 }} />
+                </Grid>
+
+                <Grid item size={{ xs: 12 }}>
+                    <TextField
+                        label={t('notes')} name="notes" value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        fullWidth multiline rows={3} inputProps={{ maxLength: 250 }}
+                    />
+                </Grid>
+            </Grid>
+        </Box>
+    );
+
+    if (inline) {
+        return (
+            <form onSubmit={handleSubmit} noValidate>
+                <Paper elevation={0} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', p: 3, mb: 12 }}>
+                    {formContent}
+                </Paper>
+                <Paper
+                    elevation={4}
+                    sx={{
+                        position: 'fixed',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        p: 2,
+                        backgroundColor: theme.palette.background.paper,
+                        borderTop: `1px solid ${theme.palette.divider}`,
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        alignItems: 'center',
+                        gap: 2,
+                        zIndex: 1100,
+                    }}
+                >
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        disableElevation
+                        disabled={isLoading}
+                        endIcon={isLoading ? <CircularProgress size={18} color="inherit" /> : <SaveIcon />}
+                    >
+                        {t('save')}
+                    </Button>
+                </Paper>
+            </form>
+        );
+    }
+
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
             <form onSubmit={handleSubmit} noValidate>
@@ -203,77 +317,7 @@ const CompanyFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 <Divider />
 
                 <DialogContent>
-                    <Box sx={{ mt: 1 }}>
-                        <Grid container spacing={3}>
-                            {/* LOGO */}
-                            <Grid item size={{ xs: 12 }} sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                                <input type="file" accept="image/*" hidden ref={fileInputRef} onChange={handleFileChange} />
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, sm: 5 } }}>
-                                    {newLogoPreview ? (
-                                        <>
-                                            {renderLogoBox(originalLogoUrl, t('current_logo'), false)}
-                                            <ArrowForwardIcon color="disabled" sx={{ fontSize: 30 }} />
-                                            {renderLogoBox(newLogoPreview, t('new_logo'), true, true)}
-                                        </>
-                                    ) : (
-                                        renderLogoBox(originalLogoUrl, t('company_logo'), true)
-                                    )}
-                                </Box>
-                            </Grid>
-
-                            {/* CAMPOS PRINCIPALES */}
-                            <Grid item size={{ xs: 12 }}>
-                                <TextField label={t('name')} name="name" value={formData.name}
-                                    onChange={(e) => {
-                                        setFormData({ ...formData, name: e.target.value });
-                                        setValidationErrors({ name: !e.target.value.trim() });
-                                    }}
-                                    fullWidth required inputRef={nameRef}
-                                    error={showErrors && validationErrors.name}
-                                    helperText={showErrors && validationErrors.name ? t('requiredField') : ''}
-                                    inputProps={{ maxLength: 150 }}
-                                />
-                            </Grid>
-                            <Grid item size={{ xs: 12 }}>
-                                <TextField label={t('socialReason')} name="razonSocial" value={formData.razonSocial} onChange={(e) => setFormData({ ...formData, razonSocial: e.target.value })} fullWidth inputProps={{ maxLength: 250 }} />
-                            </Grid>
-                            <Grid item size={{ xs: 12, md: 6 }}>
-                                <TextField label={t('rfc')} name="rfc" value={formData.rfc} onChange={(e) => setFormData({ ...formData, rfc: e.target.value })} fullWidth inputProps={{ maxLength: 13 }} />
-                            </Grid>
-
-                            <Grid item size={{ xs: 12, md: 6 }}>
-                                <TextField label={t('phone')} name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} fullWidth inputProps={{ maxLength: 25 }} />
-                            </Grid>
-
-                            <Grid item size={{ xs: 12 }}>
-                                <TextField label={t('address')} name="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} fullWidth inputProps={{ maxLength: 250 }} />
-                            </Grid>
-
-                            <Grid item size={{ xs: 12, md: 4 }}>
-                                <TextField label={t('postal_code')} name="postalCode" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} fullWidth inputProps={{ maxLength: 50 }} />
-                            </Grid>
-
-                            <Grid item size={{ xs: 12, md: 4 }}>
-                                <TextField label={t('reg_fda_no')} name="regFdaNo" value={formData.regFdaNo} onChange={(e) => setFormData({ ...formData, regFdaNo: e.target.value })} fullWidth inputProps={{ maxLength: 50 }} />
-                            </Grid>
-
-                            <Grid item size={{ xs: 12, md: 4 }}>
-                                <TextField label={t('empaque')} name="empaque" value={formData.empaque} onChange={(e) => setFormData({ ...formData, empaque: e.target.value })} fullWidth inputProps={{ maxLength: 80 }} />
-                            </Grid>
-
-                            <Grid item size={{ xs: 12, md: 4 }}>
-                                <TextField label={t('gnnNumber')} name="gnnNumber" value={formData.gnnNumber} onChange={(e) => setFormData({ ...formData, gnnNumber: e.target.value })} fullWidth inputProps={{ maxLength: 150 }} />
-                            </Grid>
-
-                            <Grid item size={{ xs: 12 }}>
-                                <TextField
-                                    label={t('notes')} name="notes" value={formData.notes}
-                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    fullWidth multiline rows={3} inputProps={{ maxLength: 250 }}
-                                />
-                            </Grid>
-                        </Grid>
-                    </Box>
+                    {formContent}
                 </DialogContent>
 
                 <Divider />
