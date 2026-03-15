@@ -1,44 +1,43 @@
 import { createTheme } from '@mui/material/styles';
 
-// Define el tema claro
 export const lightTheme = createTheme({
     palette: {
         mode: 'light',
         background: {
-            default: '#fdfbf7', // Un tono "hueso/arena" muy suave, más natural que el blanco
+            default: '#f0f6fb',
             paper: '#ffffff',
         },
         text: {
-            primary: '#1a2e1a',   // Verde muy oscuro, casi negro, para el texto
-            secondary: '#5c635c',
+            primary: '#0d2137',
+            secondary: '#4a6080',
         },
         primary: {
-            main: '#2d5a27',      // Verde Espárrago (Fuerte y orgánico)
-            light: '#568351',
-            dark: '#1b3a18',
+            main: '#1565c0',
+            light: '#5e92f3',
+            dark: '#003c8f',
             contrastText: '#ffffff',
         },
         secondary: {
-            main: '#a67c52',      // Color tierra/madera para acentos
+            main: '#00acc1',
         },
-        divider: '#e8e2d9',
+        divider: '#d0e4f5',
     },
     components: {
         MuiCard: {
             styleOverrides: {
                 root: {
                     backgroundColor: '#ffffff',
-                    color: '#1a2e1a',
+                    color: '#0d2137',
                     borderRadius: 12,
-                    border: '1px solid #e8e2d9', // Borde sutil color arena
-                    boxShadow: '0px 4px 12px rgba(27, 58, 24, 0.04)', // Sombra con tinte verde
+                    border: '1px solid #d0e4f5',
+                    boxShadow: '0px 4px 12px rgba(21, 101, 192, 0.08)',
                 },
             },
         },
         MuiButton: {
             styleOverrides: {
                 root: {
-                    borderRadius: 20, // Bordes más redondeados (más orgánico)
+                    borderRadius: 20,
                     textTransform: 'none',
                     fontWeight: 600,
                 },
@@ -47,40 +46,58 @@ export const lightTheme = createTheme({
         MuiAppBar: {
             styleOverrides: {
                 root: {
-                    backgroundColor: '#2d5a27', // El encabezado llevará el verde fuerte
+                    backgroundColor: '#1565c0',
                 },
             },
         },
     },
-});// Define el tema oscuro
+});
 export const darkTheme = createTheme({
     palette: {
         mode: 'dark',
         background: {
-            default: '#212529',
-            paper: '#343a40',
+            default: '#0d1b2a',
+            paper: '#132338',
         },
         text: {
-            primary: '#f8f9fa',
-            secondary: '#ced4da',
+            primary: '#e8f1fa',
+            secondary: '#90afc8',
         },
         primary: {
-            main: '#0d6efd',
-            light: '#3d8bfd',
-            dark: '#0a58ca',
+            main: '#5e92f3',
+            light: '#90bbff',
+            dark: '#1565c0',
         },
         secondary: {
-            main: '#6c757d', // Puedes cambiarlo si quieres
+            main: '#26c6da',
         },
+        divider: '#1e3a5f',
     },
-    // Define overrides para componentes específicos (ej. Card, Button)
     components: {
         MuiCard: {
             styleOverrides: {
                 root: {
-                    backgroundColor: '#343a40',
-                    color: '#f8f9fa',
-                    borderColor: '#495057',
+                    backgroundColor: '#132338',
+                    color: '#e8f1fa',
+                    borderRadius: 12,
+                    border: '1px solid #1e3a5f',
+                    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.4)',
+                },
+            },
+        },
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 20,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                },
+            },
+        },
+        MuiAppBar: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#0d1b2a',
                 },
             },
         },

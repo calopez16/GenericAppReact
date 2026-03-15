@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
     Box,
     Typography,
@@ -25,9 +25,11 @@ import ConfirmationModal from '@layout/ConfirmationModal';
 import CompanyFormModal from '@views/companies/CompanyFormModal';
 import CompanyCardList from '@views/companies/CompanyCardList';
 import CompanyListTable from '@views/companies/CompanyTableList';
+import { AppContext } from '@helpers/AppContext';
 
 function Index() {
     const { t } = useTranslation();
+    const { isMultiCompanyEnable } = useContext(AppContext);
     const companyDataService = DataAPICompaniesService();
     const [companies, setCompanies] = useState([]);
     const [page, setPage] = useState(0);
@@ -52,6 +54,29 @@ function Index() {
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
+
+    // Single-company mode: load the unique active company for editing
+    const [singleCompany, setSingleCompany] = useState(null);
+    const [singleCompanyLoading, setSingleCompanyLoading] = useState(false);
+
+    useEffect(() => {
+        if (!isMultiCompanyEnable) {
+            const loadSingleCompany = async () => {
+                try {
+                    setSingleCompanyLoading(true);
+                    const response = await companyDataService.getDataActive();
+                    if (response?.success && response?.data?.length > 0) {
+                        setSingleCompany(response.data[0]);
+                    }
+                } catch {
+                    ShowMessage(t('error'), 'error');
+                } finally {
+                    setSingleCompanyLoading(false);
+                }
+            };
+            loadSingleCompany();
+        }
+    }, [isMultiCompanyEnable]);
 
     useEffect(() => {
         const timerId = setTimeout(() => {
@@ -222,6 +247,56 @@ function Index() {
 
     return (
         <Box>
+            {/* Single-company mode: show only the edit form */}
+            {!isMultiCompanyEnable && (
+                <>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 2,
+                            mb: 2,
+                            borderRadius: 2,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                        }}
+                    >
+                        <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 45, height: 45, borderRadius: 2 }}>
+                            <BusinessIcon />
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>{t('company')}</Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                {t('companies_description')}
+                            </Typography>
+                        </Box>
+                    </Paper>
+                    {singleCompanyLoading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
+                    {!singleCompanyLoading && (
+                        <CompanyFormModal
+                            open={true}
+                            handleClose={() => {}}
+                            data={singleCompany}
+                            isEditing={!!singleCompany}
+                            setData={(updater) => {
+                                if (typeof updater === 'function') {
+                                    setSingleCompany(prev => {
+                                        const arr = updater([prev]);
+                                        return arr[0] ?? prev;
+                                    });
+                                }
+                            }}
+                            inline
+                        />
+                    )}
+                </>
+            )}
+
+            {/* Multi-company mode: show full list */}
+            {isMultiCompanyEnable && (
+            <>
             <Paper
                 elevation={0}
                 sx={{
@@ -355,6 +430,8 @@ function Index() {
                 cancelText={t('cancel')}
                 type="danger"
             />
+            </>
+            )}
         </Box>
     );
 }

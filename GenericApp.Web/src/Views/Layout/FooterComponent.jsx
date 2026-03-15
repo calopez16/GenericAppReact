@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Box, Typography } from '@mui/material';
+import { AppContext } from '@helpers/AppContext';
 
 const FooterComponent = () => {
+    const { companySelected } = useContext(AppContext);
+
     return (
         <Box
             component="footer"
@@ -17,7 +20,7 @@ const FooterComponent = () => {
             }}
         >
             <Typography variant="body2" component="p">
-                &copy; Embarques {new Date().getFullYear()}.
+                &copy; {companySelected.name } {new Date().getFullYear()}.
             </Typography>
         </Box>
     );

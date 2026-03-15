@@ -106,6 +106,8 @@ export const AppContextProvider = ({ children }) => {
         localStorage.setItem("themeMode", themeMode);
     }, [themeMode]);
 
+    const isMultiCompanyEnable = appConfig?.isMultiCompanyEnable !== false;
+
     const contextValue = {
         userName,
         setUserName,
@@ -127,6 +129,7 @@ export const AppContextProvider = ({ children }) => {
         appConfig,
         setAppConfig,
         loadAppConfig,
+        isMultiCompanyEnable,
     };
 
     return (
