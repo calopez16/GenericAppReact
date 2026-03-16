@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260315155727_NewFieldsClients")]
+    partial class NewFieldsClients
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -218,9 +220,6 @@ namespace GenericApp.Data.Migrations
                     b.Property<int>("IdCompany")
                         .HasColumnType("int");
 
-                    b.Property<int?>("IdGender")
-                        .HasColumnType("int");
-
                     b.Property<bool?>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -265,8 +264,6 @@ namespace GenericApp.Data.Migrations
                     b.HasIndex("IdCity");
 
                     b.HasIndex("IdCompany");
-
-                    b.HasIndex("IdGender");
 
                     b.ToTable("Clients");
                 });
@@ -386,34 +383,6 @@ namespace GenericApp.Data.Migrations
                             IsActive = true,
                             IsDeleted = false
                         });
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.Gender", b =>
-                {
-                    b.Property<int>("IdGender")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdGender"), 1L, 1);
-
-                    b.Property<string>("Descripcion")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<bool?>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.HasKey("IdGender");
-
-                    b.ToTable("Genders");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Parameter", b =>
@@ -1386,7 +1355,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAELjZWBizlA3KPPVxLUficU8mPE7bLsOGtMgF2e2uxj7MVttcYcwJ57rBmDemsf7DCw==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEMxBBwaHKGyuJS4Jjpl5rSkgOTBsAPO5BCIyIxn3Iqkznq2CC67GZnLbBB92XhBgNg==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
@@ -1515,16 +1484,9 @@ namespace GenericApp.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("GenericApp.Data.Models.Gender", "IdGenderNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdGender")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("IdCityNavigation");
 
                     b.Navigation("IdCompanyNavigation");
-
-                    b.Navigation("IdGenderNavigation");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.State", b =>

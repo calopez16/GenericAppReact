@@ -65,7 +65,7 @@ const ClientListTable = ({
                     <TableRow>
                         <TableCell sx={{ fontWeight: 'bold', width: 10 }} align="center">{t('status')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('name')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>{t('rfc')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('birthDate')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('address')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('phone')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold', width: 200 }} align="center">{t('actions')}</TableCell>
@@ -79,7 +79,7 @@ const ClientListTable = ({
                                     <Skeleton variant="rectangular" width={40} height={20} sx={{ mx: 'auto', borderRadius: 1 }} />
                                 </TableCell>
                                 <TableCell><Skeleton width="70%" /></TableCell>
-                                <TableCell><Skeleton width="50%" /></TableCell>
+                                <TableCell><Skeleton width="40%" /></TableCell>
                                 <TableCell><Skeleton width="60%" /></TableCell>
                                 <TableCell><Skeleton width="40%" /></TableCell>
                                 <TableCell align="center">
@@ -116,12 +116,11 @@ const ClientListTable = ({
                                         </TableCell>
                                         <TableCell>
                                             <Typography variant="body2" color="text.secondary">
-                                                {client.rfc || '-'}
+                                                {client.birthDate ? new Date(client.birthDate).toLocaleDateString() : '-'}
                                             </Typography>
                                         </TableCell>
                                         <TableCell>
-                                            <Typography variant="body2">{client.address}</Typography>
-                                            <Typography variant="caption" color="text.secondary">{client.postalCode}</Typography>
+                                            <Typography variant="body2">{client.address || '-'}</Typography>
                                         </TableCell>
                                         <TableCell>
                                             <Typography variant="body2" color="text.secondary">

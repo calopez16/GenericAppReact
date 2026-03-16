@@ -10,7 +10,7 @@ namespace GenericApp.Models
         public List<string>? Roles { get; set; }
         public string? Token { get; internal set; }
         public int? IdCompany { get; set; }
-        public CompanyDTO Company { get; set; }
+        public CompanyDTO? Company { get; set; }
         public bool IsChangePasswordNeeded { get; set; }
     }
 }

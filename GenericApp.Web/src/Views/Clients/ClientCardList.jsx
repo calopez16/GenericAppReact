@@ -15,6 +15,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import CakeOutlinedIcon from '@mui/icons-material/CakeOutlined';
 import EmptyData from '@layout/EmptyData';
 
 const ClientCardList = ({
@@ -46,10 +47,13 @@ const ClientCardList = ({
                         <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
                             {client.name}
                         </Typography>
-                        {client.rfc && (
-                            <Typography variant="caption" color="text.secondary">
-                                {t('rfc')}: {client.rfc}
-                            </Typography>
+                        {client.birthDate && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.3 }}>
+                                <CakeOutlinedIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                <Typography variant="caption" color="text.secondary">
+                                    {new Date(client.birthDate).toLocaleDateString()}
+                                </Typography>
+                            </Box>
                         )}
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1 }}>
@@ -74,11 +78,11 @@ const ClientCardList = ({
                     </Box>
                 </Box>
 
-                {(client.address || client.postalCode) && (
+                {client.address && (
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
                         <LocationOnOutlinedIcon sx={{ fontSize: 18, color: 'text.secondary', mt: 0.2 }} />
                         <Typography variant="body2" color="text.secondary">
-                            {client.address}{client.postalCode ? `, ${client.postalCode}` : ''}
+                            {client.address}
                         </Typography>
                     </Box>
                 )}

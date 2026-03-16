@@ -247,12 +247,28 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                         color="inherit"
                         aria-label="open drawer"
                         onClick={toggleSidebar}
-                        sx={{ mr: 2, display: { md: 'none' } }}
+                        sx={{ mr: 1, display: { md: 'none' } }}
                     >
                         <MenuIcon />
                     </IconButton>
 
-                    <Box sx={{ flexGrow: 1 }} />
+                    {/* Nombre de la compañía en mobile */}
+                    {companySelected?.name && (
+                        <Typography
+                            variant="subtitle1"
+                            noWrap
+                            sx={{
+                                display: { xs: 'block', md: 'none' },
+                                fontWeight: 700,
+                                flexGrow: 1,
+                                color: 'inherit',
+                            }}
+                        >
+                            {companySelected.name}
+                        </Typography>
+                    )}
+
+                    <Box sx={{ flexGrow: { xs: companySelected?.name ? 0 : 1, md: 1 } }} />
 
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         {isMultiCompanyEnable && canSelectCompany && (

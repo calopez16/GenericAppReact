@@ -60,8 +60,7 @@ namespace GenericApp.API.Controllers
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 query = query.Where(u =>
-                    u.Name.Contains(searchTerm) ||
-                    u.Rfc.Contains(searchTerm));
+                    u.Name.Contains(searchTerm));
             }
 
             var totalRows = query.Count();
@@ -71,15 +70,19 @@ namespace GenericApp.API.Controllers
                 .Select(x => new ClientDTO
                 {
                     Name = x.Name,
-                    Code = x.Code,
+                    BirthDate = x.BirthDate,
+                    MaritalState=x.MaritalState,
+                    Ocupation = x.Ocupation,
+                    Education = x.Education,
+                    Profession = x.Profession,
+                    Religion = x.Religion,
                     Address = x.Address,
                     IdCity = x.IdCity,
                     IdClient = x.IdClient,
                     IsActive = x.IsActive,
                     Notes = x.Notes,
                     Phone = x.Phone,
-                    PostalCode = x.PostalCode,
-                    Rfc = x.Rfc
+                    
                 })
                 .ToList();
 
@@ -123,12 +126,12 @@ namespace GenericApp.API.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> AddClient([FromBody] ClientDTO model)
         {
-            var clientExists = await _repository.FirstOrDefault<Client>(x => (x.Name.ToLower().Equals(model.Name.ToLower()) || (!model.Rfc.IsNullOrEmpty() && x.Rfc.ToLower().Equals(model.Rfc.ToLower()))) && !(x.IsDeleted ?? false));
+            var clientExists = await _repository.FirstOrDefault<Client>(x => (x.Name.ToLower().Equals(model.Name.ToLower())) && !(x.IsDeleted ?? false));
             if (clientExists != null)
                 return Conflict(
                     new ApiResponse
                     {
-                        Conflict = $"{(clientExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}, {(!model.Rfc.IsNullOrEmpty() && clientExists.Rfc.ToLower().Equals(model.Rfc.ToLower()) ? model.Rfc : "")}"
+                        Conflict = $"{(clientExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}"
                     }
                 );
 
@@ -150,22 +153,25 @@ namespace GenericApp.API.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> UpdateClient([FromBody] ClientDTO model)
         {
-            var clientExists = await _repository.FirstOrDefault<Client>(x => x.IdClient != model.IdClient && (x.Name.ToLower().Equals(model.Name.ToLower()) || (!model.Rfc.IsNullOrEmpty() && x.Rfc.ToLower().Equals(model.Rfc.ToLower()))) && !(x.IsDeleted ?? false));
+            var clientExists = await _repository.FirstOrDefault<Client>(x => x.IdClient != model.IdClient && (x.Name.ToLower().Equals(model.Name.ToLower())) && !(x.IsDeleted ?? false));
             if (clientExists != null)
                 return Conflict(
                     new ApiResponse
                     {
-                        Conflict = $"{(clientExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}, {(!clientExists.Rfc.IsNullOrEmpty() && clientExists.Rfc.ToLower().Equals(model.Rfc.ToLower()) ? model.Rfc : "")}"
+                        Conflict = $"{(clientExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}"
                     }
                 );
 
             var clientDB = await _repository.GetById<Client>(model.IdClient ?? 0);
             clientDB.Name = model.Name;
-            clientDB.Code = model.Code;
-            clientDB.Rfc = model.Rfc;
+            clientDB.BirthDate = model.BirthDate;
+            clientDB.MaritalState = model.MaritalState;
             clientDB.Phone = model.Phone;
             clientDB.Address = model.Address;
-            clientDB.PostalCode = model.PostalCode;
+            clientDB.Ocupation = model.Ocupation;
+            clientDB.Education= model.Education;
+            clientDB.Profession = model.Profession;
+            clientDB.Religion = model.Religion;
             clientDB.IdCity = model.IdCity;
             clientDB.Notes = model.Notes;
             var result = await _repository.Update(clientDB);

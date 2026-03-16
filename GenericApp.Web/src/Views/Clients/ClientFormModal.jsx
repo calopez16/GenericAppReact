@@ -37,14 +37,17 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
     const [formData, setFormData] = useState({
         idClient: 0,
-        code: '',
         name: '',
-        rfc: '',
         address: '',
         idCity: null,
-        postalCode: '',
         phone: '',
         notes: '',
+        birthDate: '',
+        maritalState: '',
+        ocupation: '',
+        education: '',
+        profession: '',
+        religion: '',
         idCompany: companySelected?.idCompany ?? null
     });
 
@@ -57,9 +60,8 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     // NUEVO: Estado extendido para validaciones
     const [validationErrors, setValidationErrors] = useState({
         name: false,
-        code: false,
         address: false,
-        postalCode: false,
+        birthDate: false,
         idCity: false
     });
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
@@ -100,25 +102,30 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                 const clientData = { ...data };
                 setFormData({
                     idClient: clientData.idClient || 0,
-                    code: clientData.code || '',
                     name: clientData.name || '',
-                    rfc: clientData.rfc || '',
                     address: clientData.address || '',
                     idCity: clientData.idCity || null,
-                    postalCode: clientData.postalCode || '',
                     phone: clientData.phone || '',
-                    notes: clientData.notes || ''
+                    notes: clientData.notes || '',
+                    birthDate: clientData.birthDate ? clientData.birthDate.substring(0, 10) : '',
+                    maritalState: clientData.maritalState || '',
+                    ocupation: clientData.ocupation || '',
+                    education: clientData.education || '',
+                    profession: clientData.profession || '',
+                    religion: clientData.religion || ''
                 });
             } else if (!isEditing) {
                 setFormData({
                     idClient: 0,
-                    name: '', rfc: '', address: '', idCity: null,
-                    postalCode: '', phone: '', notes: '', code: ''
+                    name: '', address: '', idCity: null,
+                    phone: '', notes: '',
+                    birthDate: '', maritalState: '', ocupation: '',
+                    education: '', profession: '', religion: ''
                 });
             }
             setSelectedCity(null);
             // NUEVO: Resetear errores al abrir
-            setValidationErrors({ name: false, code: false, address: false, postalCode: false, idCity: false });
+            setValidationErrors({ name: false, address: false, birthDate: false, idCity: false });
             setHasAttemptedSubmit(false);
         }
     }, [open, isEditing, data]);
@@ -202,9 +209,8 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const validateForm = () => {
         const errors = {
             name: !formData.name.trim(),
-            code: !formData.code.trim(),
             address: !formData.address.trim(),
-            postalCode: !formData.postalCode.trim(),
+            birthDate: !formData.birthDate,
             idCity: formData.idCity === null,
         };
 
@@ -229,14 +235,17 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
 
             const clientPayload = {
                 idClient: formData.idClient || 0,
-                code: formData.code,
                 name: formData.name,
-                rfc: formData.rfc,
                 address: formData.address,
                 idCity: finalIdCity,
-                postalCode: formData.postalCode,
                 phone: formData.phone,
                 notes: formData.notes,
+                birthDate: formData.birthDate || null,
+                maritalState: formData.maritalState || null,
+                ocupation: formData.ocupation || null,
+                education: formData.education || null,
+                profession: formData.profession || null,
+                religion: formData.religion || null,
                 idCompany: companySelected?.idCompany ?? 0
             };
 
@@ -336,16 +345,16 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 margin="normal"
                                 required
                                 fullWidth
-                                label={t('code')}
-                                name="code"
-                                value={formData.code}
+                                type="date"
+                                label={t('birthDate')}
+                                name="birthDate"
+                                value={formData.birthDate}
                                 onChange={handleChange}
-                                error={validationErrors.code}
-                                helperText={validationErrors.code ? t('requiredField') : ''}
-                                inputProps={{ maxLength: 25 }}
+                                error={validationErrors.birthDate}
+                                helperText={validationErrors.birthDate ? t('requiredField') : ''}
+                                InputLabelProps={{ shrink: true }}
                             />
 
-                            <TextField margin="normal" fullWidth label={t('rfc')} name="rfc" value={formData.rfc} onChange={handleChange} inputProps={{ maxLength: 13 }} />
                             <TextField margin="normal" fullWidth label={t('phone')} name="phone" value={formData.phone} onChange={handleChange} inputProps={{ maxLength: 25 }} />
 
                             <TextField
@@ -360,19 +369,6 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 error={validationErrors.address}
                                 helperText={validationErrors.address ? t('requiredField') : ''}
                                 inputProps={{ maxLength: 250 }}
-                            />
-
-                            <TextField
-                                margin="normal"
-                                required
-                                fullWidth
-                                label={t('postalCode')}
-                                name="postalCode"
-                                value={formData.postalCode}
-                                onChange={handleChange}
-                                error={validationErrors.postalCode}
-                                helperText={validationErrors.postalCode ? t('requiredField') : ''}
-                                inputProps={{ maxLength: 50 }}
                             />
 
                             <Autocomplete
@@ -401,6 +397,12 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 )}
                             />
 
+                            <TextField margin="normal" fullWidth label={t('maritalState')} name="maritalState" value={formData.maritalState} onChange={handleChange} inputProps={{ maxLength: 80 }} />
+                            <TextField margin="normal" fullWidth label={t('ocupation')} name="ocupation" value={formData.ocupation} onChange={handleChange} inputProps={{ maxLength: 80 }} />
+                            <TextField margin="normal" fullWidth label={t('education')} name="education" value={formData.education} onChange={handleChange} inputProps={{ maxLength: 120 }} />
+                            <TextField margin="normal" fullWidth label={t('profession')} name="profession" value={formData.profession} onChange={handleChange} inputProps={{ maxLength: 120 }} />
+                            <TextField margin="normal" fullWidth label={t('religion')} name="religion" value={formData.religion} onChange={handleChange} inputProps={{ maxLength: 120 }} />
+
                             <TextField
                                 margin="normal"
                                 fullWidth
@@ -409,7 +411,7 @@ const ClientFormModal = ({ open, handleClose, data, isEditing, setData }) => {
                                 value={formData.notes}
                                 onChange={handleChange}
                                 multiline
-                                rows={4}
+                                rows={3}
                                 sx={{ gridColumn: { xs: 'span 1', sm: 'span 2' } }}
                                 inputProps={{ maxLength: 250 }}
                             />

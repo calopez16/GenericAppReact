@@ -19,6 +19,7 @@ namespace GenericApp.Data
         public DbSet<Client> Clients { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Country> Countries { get; set; }
+        public DbSet<Gender> Genders { get; set; }
         public DbSet<Parameter> Parameters { get; set; }
         public DbSet<RefreshTokenAspNetUser> RefreshTokenAspNetUser { get; set; }
         public DbSet<State> States { get; set; }
@@ -74,6 +75,14 @@ namespace GenericApp.Data
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
             });
 
+            modelBuilder.Entity<Gender>(b =>
+            {
+                b.HasKey(x => x.IdGender);
+                b.Property(x => x.Descripcion).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            });
+
             modelBuilder.Entity<ApplicationLog>(b =>
             {
                 b.HasKey(x => x.IdApplicationLog);
@@ -116,11 +125,14 @@ namespace GenericApp.Data
             modelBuilder.Entity<Client>(b =>
             {
                 b.HasKey(x => x.IdClient);
-                b.Property(x => x.Code).HasMaxLength(25).IsRequired();
+                b.Property(x => x.BirthDate);
                 b.Property(x => x.Name).HasMaxLength(150).IsRequired();
-                b.Property(x => x.Rfc).HasMaxLength(13);
+                b.Property(x => x.MaritalState).HasMaxLength(80);
                 b.Property(x => x.Address).HasMaxLength(250);
-                b.Property(x => x.PostalCode).HasMaxLength(50);
+                b.Property(x => x.Ocupation).HasMaxLength(80);
+                b.Property(x => x.Education).HasMaxLength(120);
+                b.Property(x => x.Profession).HasMaxLength(120);
+                b.Property(x => x.Religion).HasMaxLength(120);
                 b.Property(x => x.Phone).HasMaxLength(25);
                 b.Property(x => x.Notes).HasMaxLength(250);
                 b.Property(x => x.IsActive).HasDefaultValue(true);
@@ -130,6 +142,11 @@ namespace GenericApp.Data
                     .WithMany()
                     .HasForeignKey(x => x.IdCompany)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(c => c.IdGenderNavigation)
+                  .WithMany()
+                  .HasForeignKey(x => x.IdGender)
+                  .OnDelete(DeleteBehavior.Restrict);
 
                 b.HasOne(lt => lt.IdCityNavigation)
                     .WithMany(l => l.Clients)
