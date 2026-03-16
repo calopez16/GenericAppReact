@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using AutoMapper;
 using GenericApp.API.Models;
 using GenericApp.Data.Models;
 
@@ -9,11 +8,20 @@ namespace GenericApp.API.Utility
     {
         public MappingProfile()
         {
-            CreateMap<Client, ClientDTO>().ReverseMap();
+            CreateMap<Client, ClientDTO>()
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.IdGenderNavigation != null ? src.IdGenderNavigation.Descripcion : null))
+                .ReverseMap()
+                .ForMember(dest => dest.IdGenderNavigation, opt => opt.Ignore())
+                .ForMember(dest => dest.IdGender, opt => opt.Ignore());
             CreateMap<City, CityDTO>().ReverseMap();
             CreateMap<Country, CountryDTO>().ReverseMap();
             CreateMap<State, StateDTO>().ReverseMap();
             CreateMap<Company, CompanyDTO>().ReverseMap();
+            CreateMap<MedicalRecord, MedicalRecordDTO>().ReverseMap();
+            CreateMap<Surgery, SurgeryDTO>().ReverseMap();
+            CreateMap<Allergy, AllergyDTO>().ReverseMap();
+            CreateMap<Disease, DiseaseDTO>().ReverseMap();
+            CreateMap<Consultation, ConsultationDTO>().ReverseMap();
         }
     }
 }

@@ -1,13 +1,21 @@
 [
-{
-  "id": "dashboard",
-  "path": "/",
-  "i18nKey": "home",
-  "i18nKeyDescription": "homepage_description",
-  "icon": "HomeIcon",
-  "exact": true,
-  "roles": [ "Administrator", "User" ]
-},
+  {
+    "id": "dashboard",
+    "path": "/",
+    "i18nKey": "home",
+    "i18nKeyDescription": "homepage_description",
+    "icon": "HomeIcon",
+    "exact": true,
+    "roles": [ "Administrator", "User" ]
+  },
+  {
+    "id": "consultations",
+    "path": "/consultas",
+    "i18nKey": "ch_consultations",
+    "i18nKeyDescription": "ch_consultations_desc",
+    "icon": "EventNoteIcon",
+    "roles": [ "Administrator", "User" ]
+  },
   {
     "id": "administration",
     "path": "/",

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -28,6 +29,7 @@ import ClientListTable from '@views/clients/ClientTableList';
 
 function Index() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const clientDataService = DataAPIClientsService();
     const [clients, setClients] = useState([]);
     const [page, setPage] = useState(0);
@@ -191,9 +193,7 @@ function Index() {
     };
 
     const handleOpenEditClient = (client) => {
-        setSelectedClient(client);
-        setIsEditing(true);
-        setIsModalOpen(true);
+        navigate(`/historia-clinica/${client.idClient}`);
     };
 
     const handleCloseModal = () => {
@@ -207,7 +207,6 @@ function Index() {
         handleOpenEditClient,
         handleToggleClientStatus,
         handleOpenDeleteConfirmation,
-        setSelectedClient,
         deletingId,
         isSearch: searchTerm !== '',
         rowsPerPage

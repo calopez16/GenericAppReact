@@ -107,7 +107,10 @@ namespace GenericApp.API.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ClientDTO>> GetClientById(int id)
         {
-            var client = await _repository.FirstOrDefault<Client>(x => x.IdClient == id && !(x.IsDeleted ?? false));
+            var client = await _repository.FirstOrDefault<Client>(
+                x => x.IdClient == id && !(x.IsDeleted ?? false),
+                x => x.IdGenderNavigation,
+                x => x.IdCityNavigation);
             if (client == null)
                 return NotFound(new ApiResponse());
 
@@ -174,6 +177,17 @@ namespace GenericApp.API.Controllers
             clientDB.Religion = model.Religion;
             clientDB.IdCity = model.IdCity;
             clientDB.Notes = model.Notes;
+
+            if (!string.IsNullOrWhiteSpace(model.Gender))
+            {
+                var gender = await _repository.FirstOrDefault<Gender>(g => g.Descripcion == model.Gender && !(g.IsDeleted ?? false));
+                clientDB.IdGender = gender?.IdGender;
+            }
+            else
+            {
+                clientDB.IdGender = null;
+            }
+
             var result = await _repository.Update(clientDB);
 
             if (!result)

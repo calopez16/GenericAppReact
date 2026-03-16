@@ -36,6 +36,7 @@ import TruckIcon from '@mui/icons-material/FireTruck';
 import BusinessIcon from '@mui/icons-material/Business';
 import ApartmentIcon from '@mui/icons-material/Apartment';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
+import EventNoteIcon from '@mui/icons-material/EventNote';
 
 const drawerWidth = 256;
 
@@ -50,6 +51,7 @@ const iconMap = {
     ApartmentIcon,
     BusinessIcon,
     LocationCityIcon,
+    EventNoteIcon,
 };
 
 const NAV_ITEM_SX = (isSelected) => ({

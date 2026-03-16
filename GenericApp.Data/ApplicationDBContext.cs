@@ -15,14 +15,19 @@ namespace GenericApp.Data
         }
 
         public DbSet<ApplicationLog> ApplicationLogs { get; set; }
+        public DbSet<Allergy> Allergies { get; set; }
         public DbSet<City> Cities { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<Company> Companies { get; set; }
+        public DbSet<Consultation> Consultations { get; set; }
         public DbSet<Country> Countries { get; set; }
+        public DbSet<Disease> Diseases { get; set; }
         public DbSet<Gender> Genders { get; set; }
+        public DbSet<MedicalRecord> MedicalRecords { get; set; }
         public DbSet<Parameter> Parameters { get; set; }
         public DbSet<RefreshTokenAspNetUser> RefreshTokenAspNetUser { get; set; }
         public DbSet<State> States { get; set; }
+        public DbSet<Surgery> Surgeries { get; set; }
         public DbSet<UserDetail> UserDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -151,6 +156,85 @@ namespace GenericApp.Data
                 b.HasOne(lt => lt.IdCityNavigation)
                     .WithMany(l => l.Clients)
                     .HasForeignKey(x => x.IdCity)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<MedicalRecord>(b =>
+            {
+                b.HasKey(x => x.IdMedicalRecord);
+                b.Property(x => x.BloodType).HasMaxLength(5);
+                b.Property(x => x.SmokingHabit).HasMaxLength(50);
+                b.Property(x => x.AlcoholHabit).HasMaxLength(50);
+                b.Property(x => x.DrugHabit).HasMaxLength(50);
+                b.Property(x => x.BloodPressure).HasMaxLength(20);
+                b.Property(x => x.DiabetesStatus).HasMaxLength(50);
+                b.Property(x => x.DiabetesNotes).HasMaxLength(500);
+                b.Property(x => x.CancerStatus).HasMaxLength(50);
+                b.Property(x => x.CancerNotes).HasMaxLength(500);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(m => m.IdClientNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdClient)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Surgery>(b =>
+            {
+                b.HasKey(x => x.IdSurgery);
+                b.Property(x => x.Description).HasMaxLength(500);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(s => s.IdMedicalRecordNavigation)
+                    .WithMany(m => m.Surgeries)
+                    .HasForeignKey(x => x.IdMedicalRecord)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Allergy>(b =>
+            {
+                b.HasKey(x => x.IdAllergy);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(a => a.IdMedicalRecordNavigation)
+                    .WithMany(m => m.Allergies)
+                    .HasForeignKey(x => x.IdMedicalRecord)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Disease>(b =>
+            {
+                b.HasKey(x => x.IdDisease);
+                b.Property(x => x.Description).HasMaxLength(250);
+                b.Property(x => x.Medications).HasMaxLength(500);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(d => d.IdMedicalRecordNavigation)
+                    .WithMany(m => m.Diseases)
+                    .HasForeignKey(x => x.IdMedicalRecord)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Consultation>(b =>
+            {
+                b.HasKey(x => x.IdConsultation);
+                b.Property(x => x.ConsultationDate).IsRequired();
+                b.Property(x => x.Reason).HasMaxLength(1000);
+                b.Property(x => x.CurrentCondition).HasMaxLength(2000);
+                b.Property(x => x.PhysicalExam).HasMaxLength(2000);
+                b.Property(x => x.Diagnosis).HasMaxLength(1000);
+                b.Property(x => x.Treatment).HasMaxLength(2000);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(c => c.IdClientNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdClient)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

@@ -20,5 +20,6 @@ namespace GenericApp.API.Models
         public bool? IsDeleted { get; set; }
         public int IdCompany { get; set; }
         public CityDTO? IdCityNavigation { get; set; }
+        public string? Gender { get; set; }
     }
 }
