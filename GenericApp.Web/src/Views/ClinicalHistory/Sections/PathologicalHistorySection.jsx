@@ -56,13 +56,14 @@ const ALLERGY_SUGGESTIONS = [
     'Colorantes artificiales', 'Conservantes', 'Anestésicos locales',
 ];
 
-const PathologicalHistorySection = ({ medicalRecord, setMedicalRecord, medicalFormData, setMedicalFormData, gender, hideSectionHeader }) => {
+const PathologicalHistorySection = ({ medicalRecord, setMedicalRecord, medicalFormData, setMedicalFormData, gender, activeConsultationId, hideSectionHeader }) => {
 const { t } = useTranslation();
 const service = DataAPIMedicalRecordsService();
 
 const surgeries = medicalRecord?.surgeries ?? [];
 const allergies = medicalRecord?.allergies ?? [];
 const diseases = medicalRecord?.diseases ?? [];
+const bloodPressureHistory = medicalRecord?.bloodPressureRecords ?? [];
 
 const isFemale = gender === 'Femenino';
 
@@ -80,6 +81,10 @@ const [allergyLoading, setAllergyLoading] = useState(false);
 const [diseaseLoading, setDiseaseLoading] = useState(false);
 const [newDisease, setNewDisease] = useState({ description: '', medications: '' });
 
+// Blood pressure history
+const [bpForm, setBpForm] = useState({ value: '', date: new Date().toISOString().substring(0, 10) });
+const [bpSaving, setBpSaving] = useState(false);
+
     const hasMedicalRecord = !!medicalRecord?.idMedicalRecord;
 
     const noRecordWarning = (
@@ -94,6 +99,8 @@ const [newDisease, setNewDisease] = useState({ description: '', medications: '' 
         setMedicalRecord(prev => ({ ...prev, allergies: newList }));
     const updateDiseases = (newList) =>
         setMedicalRecord(prev => ({ ...prev, diseases: newList }));
+    const updateBloodPressureHistory = (newList) =>
+        setMedicalRecord(prev => ({ ...prev, bloodPressureRecords: newList }));
 
     // --- Surgeries ---
     const handleAddSurgery = async () => {
@@ -106,7 +113,7 @@ const [newDisease, setNewDisease] = useState({ description: '', medications: '' 
             const res = await service.addSurgery(medicalRecord.idMedicalRecord, {
                 description: surgeryForm.description,
                 surgeryDate: surgeryForm.surgeryDate || null,
-            });
+            }, activeConsultationId);
             if (res.success && res.data) {
                 setSurgeryDialogOpen(false);
                 setSurgeryForm({ description: '', surgeryDate: '' });
@@ -140,9 +147,9 @@ const [newDisease, setNewDisease] = useState({ description: '', medications: '' 
         try {
             const existingDescriptions = allergies.map(a => a.description?.toLowerCase());
             const newOnes = allergyInput.filter(a => !existingDescriptions.includes(a.toLowerCase()));
-            const results = await Promise.all(newOnes.map(desc =>
-                service.addAllergy(medicalRecord.idMedicalRecord, { description: desc })
-            ));
+             const results = await Promise.all(newOnes.map(desc =>
+                 service.addAllergy(medicalRecord.idMedicalRecord, { description: desc }, activeConsultationId)
+             ));
             const added = results.filter(r => r.success && r.data).map(r => r.data);
             setAllergyInput([]);
             if (added.length > 0) updateAllergies([...allergies, ...added]);
@@ -172,7 +179,7 @@ const [newDisease, setNewDisease] = useState({ description: '', medications: '' 
         }
         setDiseaseLoading(true);
         try {
-            const res = await service.addDisease(medicalRecord.idMedicalRecord, newDisease);
+            const res = await service.addDisease(medicalRecord.idMedicalRecord, newDisease, activeConsultationId);
             if (res.success && res.data) {
                 setNewDisease({ description: '', medications: '' });
                 updateDiseases([...diseases, res.data]);
@@ -192,6 +199,48 @@ const [newDisease, setNewDisease] = useState({ description: '', medications: '' 
             }
         } catch {
             ShowMessage(t('error'), 'error');
+        }
+    };
+
+    const handleToggleDiseaseStatus = async (disease) => {
+        setDiseaseLoading(true);
+        try {
+            const payload = {
+                ...disease,
+                isActive: !(disease.isActive ?? true),
+            };
+            const res = await service.updateDisease(medicalRecord.idMedicalRecord, disease.idDisease, payload, activeConsultationId);
+            if (res.success && res.data) {
+                const updated = diseases.map(d => (d.idDisease === disease.idDisease ? res.data : d));
+                updateDiseases(updated);
+                ShowMessage(t('recordEditedSuccessSingular'), 'success');
+            }
+        } finally {
+            setDiseaseLoading(false);
+        }
+    };
+
+    const handleAddBloodPressureRecord = async () => {
+        if (!bpForm.value.trim()) {
+            ShowMessage(t('emptyFields'), 'warning');
+            return;
+        }
+        setBpSaving(true);
+        try {
+            const payload = {
+                value: bpForm.value,
+                recordedAt: bpForm.date ? new Date(bpForm.date).toISOString() : new Date().toISOString(),
+            };
+            const res = await service.addBloodPressureRecord(medicalRecord.idMedicalRecord, payload, activeConsultationId);
+            if (res.success && res.data) {
+                const current = medicalRecord?.bloodPressureRecords ?? [];
+                const updated = [...current, res.data].sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
+                updateBloodPressureHistory(updated);
+                setBpForm({ value: '', date: new Date().toISOString().substring(0, 10) });
+                ShowMessage(t('recordAddedSuccessSingular'), 'success');
+            }
+        } finally {
+            setBpSaving(false);
         }
     };
 
@@ -230,6 +279,72 @@ const [newDisease, setNewDisease] = useState({ description: '', medications: '' 
                                     <FormControlLabel value="Baja" control={<Radio />} label={t('ch_bp_low')} />
                                 </RadioGroup>
                             </FormControl>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                {/* Blood Pressure History */}
+                <Grid size={{ xs: 12 }}>
+                    <Card variant="outlined">
+                        <CardHeader title={<Typography fontWeight={700}>{t('ch_bp_history')}</Typography>} />
+                        <CardContent>
+                            <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1, mb: 2 }}>
+                                <Table size="small">
+                                    <TableHead sx={{ bgcolor: 'action.hover' }}>
+                                        <TableRow>
+                                            <TableCell sx={{ fontWeight: 700 }}>{t('date')}</TableCell>
+                                            <TableCell sx={{ fontWeight: 700 }}>{t('ch_bp_value')}</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {bloodPressureHistory.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={2} align="center" sx={{ color: 'text.secondary', py: 3 }}>
+                                                    {t('no_records_yet')}
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            bloodPressureHistory.map(bp => (
+                                                <TableRow key={bp.idBloodPressureRecord} hover>
+                                                    <TableCell>{bp.recordedAt ? new Date(bp.recordedAt).toLocaleDateString() : '-'}</TableCell>
+                                                    <TableCell>{bp.value}</TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+
+                            {hasMedicalRecord && (
+                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                                    <TextField
+                                        label={t('ch_bp_value')}
+                                        size="small"
+                                        value={bpForm.value}
+                                        onChange={(e) => setBpForm(prev => ({ ...prev, value: e.target.value }))}
+                                        sx={{ flexGrow: 1, minWidth: 160 }}
+                                        inputProps={{ maxLength: 20 }}
+                                    />
+                                    <TextField
+                                        label={t('date')}
+                                        type="date"
+                                        size="small"
+                                        value={bpForm.date}
+                                        onChange={(e) => setBpForm(prev => ({ ...prev, date: e.target.value }))}
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{ minWidth: 160 }}
+                                    />
+                                    <Button
+                                        variant="contained"
+                                        disableElevation
+                                        startIcon={bpSaving ? null : <AddIcon />}
+                                        onClick={handleAddBloodPressureRecord}
+                                        disabled={bpSaving}
+                                    >
+                                        {bpSaving ? <CircularProgress size={18} color="inherit" /> : t('add')}
+                                    </Button>
+                                </Box>
+                            )}
                         </CardContent>
                     </Card>
                 </Grid>
@@ -413,6 +528,24 @@ const [newDisease, setNewDisease] = useState({ description: '', medications: '' 
                                         <ListItemText
                                             primary={d.description}
                                             secondary={d.medications ? `${t('ch_medications')}: ${d.medications}` : undefined}
+                                        />
+                                        <Chip
+                                            size="small"
+                                            label={d.isActive ? t('ch_disease_active') : t('ch_disease_resolved')}
+                                            color={d.isActive ? 'success' : 'default'}
+                                            sx={{ ml: 1 }}
+                                        />
+                                        <FormControlLabel
+                                            control={
+                                                <Switch
+                                                    checked={d.isActive ?? true}
+                                                    onChange={() => handleToggleDiseaseStatus(d)}
+                                                    size="small"
+                                                    disabled={diseaseLoading}
+                                                />
+                                            }
+                                            label={d.isActive ? t('active') : t('disabled')}
+                                            sx={{ ml: 2 }}
                                         />
                                     </ListItem>
                                 ))}

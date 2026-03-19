@@ -20,10 +20,14 @@ namespace GenericApp.Data.Models
         public string? CancerNotes { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
+        public DateTime? LifestyleLastUpdated { get; set; }
+        public int? LifestyleLastUpdatedConsultationId { get; set; }
 
         public virtual Client? IdClientNavigation { get; set; }
         public virtual ICollection<Surgery> Surgeries { get; set; } = new List<Surgery>();
         public virtual ICollection<Allergy> Allergies { get; set; } = new List<Allergy>();
         public virtual ICollection<Disease> Diseases { get; set; } = new List<Disease>();
+        public virtual ICollection<BloodPressureRecord> BloodPressureRecords { get; set; } = new List<BloodPressureRecord>();
+        public virtual ICollection<MedicalNote> MedicalNotes { get; set; } = new List<MedicalNote>();
     }
 }

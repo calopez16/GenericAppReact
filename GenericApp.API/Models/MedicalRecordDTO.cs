@@ -1,3 +1,7 @@
+using System;
+using System;
+using System.Collections.Generic;
+
 namespace GenericApp.API.Models
 {
     public class MedicalRecordDTO
@@ -17,8 +21,12 @@ namespace GenericApp.API.Models
         public string? CancerNotes { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
+        public DateTime? LifestyleLastUpdated { get; set; }
+        public int? LifestyleLastUpdatedConsultationId { get; set; }
         public List<SurgeryDTO> Surgeries { get; set; } = new();
         public List<AllergyDTO> Allergies { get; set; } = new();
         public List<DiseaseDTO> Diseases { get; set; } = new();
+        public List<BloodPressureRecordDTO> BloodPressureRecords { get; set; } = new();
+        public List<MedicalNoteDTO> MedicalNotes { get; set; } = new();
     }
 }

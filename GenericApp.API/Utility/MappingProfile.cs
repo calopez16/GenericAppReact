@@ -22,6 +22,10 @@ namespace GenericApp.API.Utility
             CreateMap<Allergy, AllergyDTO>().ReverseMap();
             CreateMap<Disease, DiseaseDTO>().ReverseMap();
             CreateMap<Consultation, ConsultationDTO>().ReverseMap();
+            // Map between blood pressure history entities and DTOs
+            CreateMap<BloodPressureRecord, BloodPressureRecordDTO>().ReverseMap();
+            // Map between medical note entities and DTOs
+            CreateMap<MedicalNote, MedicalNoteDTO>().ReverseMap();
         }
     }
 }

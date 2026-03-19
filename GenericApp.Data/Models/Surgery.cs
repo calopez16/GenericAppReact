@@ -10,6 +10,7 @@ namespace GenericApp.Data.Models
         public DateTime? SurgeryDate { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
+       public int? IdConsultation { get; set; }
 
         public virtual MedicalRecord? IdMedicalRecordNavigation { get; set; }
     }

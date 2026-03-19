@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-    Box, Typography, Paper, Button, Avatar, CircularProgress,
-    Divider, IconButton, Tooltip, Skeleton, Chip, Fab, Alert, AlertTitle, LinearProgress,
+	Box, Typography, Paper, Button, Avatar, CircularProgress,
+	Divider, IconButton, Tooltip, Skeleton, Chip, Fab, Alert, AlertTitle, LinearProgress, Tabs, Tab,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -11,7 +11,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import NatureIcon from '@mui/icons-material/Nature';
 import SaveIcon from '@mui/icons-material/Save';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import { DataAPIClientsService } from '@data/Clients/Data';
@@ -43,6 +43,10 @@ function ClinicalHistoryPage() {
 
     const [consultations, setConsultations] = useState([]);
     const [totalConsultations, setTotalConsultations] = useState(0);
+	const [activeTab, setActiveTab] = useState(0);
+	const pendingNotesRef = useRef([]);
+	const [searchParams] = useSearchParams();
+	const activeConsultationId = searchParams.get('consultationId') ? parseInt(searchParams.get('consultationId'), 10) : null;
 
     useEffect(() => { loadAll(); }, [clientId]);
 
@@ -77,7 +81,7 @@ function ClinicalHistoryPage() {
                 });
             }
 
-            if (mrRes.success && mrRes.data) {
+			if (mrRes.success && mrRes.data) {
                 const mr = mrRes.data;
                 setMedicalRecord(mr);
                 setMedicalFormData({
@@ -93,7 +97,9 @@ function ClinicalHistoryPage() {
                     diabetesStatus: mr.diabetesStatus ?? '',
                     diabetesNotes: mr.diabetesNotes ?? '',
                     cancerStatus: mr.cancerStatus ?? '',
-                    cancerNotes: mr.cancerNotes ?? '',
+					cancerNotes: mr.cancerNotes ?? '',
+					lifestyleLastUpdated: mr.lifestyleLastUpdated ?? null,
+					lifestyleLastUpdatedConsultationId: mr.lifestyleLastUpdatedConsultationId ?? null,
                 });
             } else {
                 const emptyPayload = {
@@ -101,7 +107,8 @@ function ClinicalHistoryPage() {
                     idClient: parseInt(clientId),
                     bloodType: '', smokingHabit: '', alcoholHabit: '', drugHabit: '',
                     bloodPressure: '', isPregnant: false, pregnancyMonths: null,
-                    diabetesStatus: '', diabetesNotes: '', cancerStatus: '', cancerNotes: '',
+					diabetesStatus: '', diabetesNotes: '', cancerStatus: '', cancerNotes: '',
+					lifestyleLastUpdated: null, lifestyleLastUpdatedConsultationId: null,
                 };
                 setMedicalFormData(emptyPayload);
                 setIsCreatingMedicalRecord(true);
@@ -144,7 +151,7 @@ function ClinicalHistoryPage() {
                 };
                 saves.push(
                     medicalFormData.idMedicalRecord
-                        ? medicalService.update(payload)
+					? medicalService.update(payload, activeConsultationId)
                         : medicalService.create(payload)
                 );
             }
@@ -152,15 +159,40 @@ function ClinicalHistoryPage() {
             if (clientRes?.success) setClient(prev => ({ ...prev, ...clientForm }));
             if (mrRes?.success && mrRes.data?.idMedicalRecord) {
                 const isNew = !medicalFormData?.idMedicalRecord;
-                const newMr = {
-                    surgeries: [],
-                    allergies: [],
-                    diseases: [],
-                    ...mrRes.data,
-                };
-                setMedicalFormData(prev => ({ ...prev, idMedicalRecord: newMr.idMedicalRecord }));
-                setMedicalRecord(isNew ? newMr : prev => ({ ...prev, ...newMr }));
+                setMedicalFormData(prev => ({ ...prev, idMedicalRecord: mrRes.data.idMedicalRecord }));
+                if (isNew) {
+                    setMedicalRecord({ surgeries: [], allergies: [], diseases: [], medicalNotes: [], bloodPressureRecords: [], ...mrRes.data });
+                } else {
+                    setMedicalRecord(prev => ({
+                        ...prev,
+                        bloodType: mrRes.data.bloodType,
+                        smokingHabit: mrRes.data.smokingHabit,
+                        alcoholHabit: mrRes.data.alcoholHabit,
+                        drugHabit: mrRes.data.drugHabit,
+                        bloodPressure: mrRes.data.bloodPressure,
+                        isPregnant: mrRes.data.isPregnant,
+                        pregnancyMonths: mrRes.data.pregnancyMonths,
+                        diabetesStatus: mrRes.data.diabetesStatus,
+                        cancerStatus: mrRes.data.cancerStatus,
+                        lifestyleLastUpdated: mrRes.data.lifestyleLastUpdated,
+                        lifestyleLastUpdatedConsultationId: mrRes.data.lifestyleLastUpdatedConsultationId,
+                    }));
+                }
             }
+
+            // Save any pending auto-generated notes after the main save
+            const pendingNotes = pendingNotesRef.current ?? [];
+            if (pendingNotes.length > 0 && medicalFormData?.idMedicalRecord) {
+                const noteResults = await Promise.all(
+                    pendingNotes.map(n => medicalService.addNote(medicalFormData.idMedicalRecord, n, activeConsultationId))
+                );
+                const addedNotes = noteResults.filter(r => r?.success && r.data).map(r => r.data);
+                if (addedNotes.length > 0) {
+                    setMedicalRecord(prev => ({ ...prev, medicalNotes: [...(prev?.medicalNotes ?? []), ...addedNotes] }));
+                }
+                pendingNotesRef.current = [];
+            }
+
             ShowMessage(t('recordEditedSuccessPlural'), 'success');
         } catch {
             ShowMessage(t('error'), 'error');
@@ -239,16 +271,7 @@ function ClinicalHistoryPage() {
                 </Button>
             </Paper>
 
-            {/* Patient Info */}
-            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2.5 }}>
-                <SectionHeader
-                    icon={<PersonIcon fontSize="small" />}
-                    color="primary.light"
-                    title={t('ch_section_profile')}
-                />
-                <Divider sx={{ mb: 2.5 }} />
-                <PatientInfoSection clientForm={clientForm} setClientForm={setClientForm} />
-            </Paper>
+         
 
             {/* Banner: creando historial clínico automáticamente */}
             {isCreatingMedicalRecord && (
@@ -263,58 +286,85 @@ function ClinicalHistoryPage() {
                 </Alert>
             )}
 
-            {/* Pathological + Non-Pathological side-by-side on desktop */}
-            <Grid container spacing={2.5}>
-                <Grid size={{ xs: 12, lg: 6 }}>
-                    <Paper variant="outlined" sx={{ p: 3, borderRadius: 2.5, height: '100%' }}>
-                        <SectionHeader
-                            icon={<FavoriteIcon fontSize="small" />}
-                            color="error.light"
-                            title={t('ch_section_pathological')}
-                        />
-                        <Divider sx={{ mb: 2.5 }} />
-                        {medicalFormData && (
-                            <PathologicalHistorySection
-                                medicalRecord={medicalRecord}
-                                setMedicalRecord={setMedicalRecord}
-                                medicalFormData={medicalFormData}
-                                setMedicalFormData={setMedicalFormData}
-                                gender={clientForm?.gender}
-                                hideSectionHeader
-                            />
-                        )}
-                    </Paper>
-                </Grid>
+            {/* Tabs for clinical history sections */}
+            <Paper variant="outlined" sx={{ borderRadius: 2.5 }}>
+                <Tabs
+                    value={activeTab}
+                    onChange={(_, value) => setActiveTab(value)}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    sx={{ borderBottom: 1, borderColor: 'divider', px: 1 }}
+                >
+                    <Tab icon={<PersonIcon fontSize="small" />} iconPosition="start" label={t('ch_step_profile')} />
+                    <Tab icon={<FavoriteIcon fontSize="small" />} iconPosition="start" label={t('ch_step_pathological')} />
+                    <Tab icon={<NatureIcon fontSize="small" />} iconPosition="start" label={t('ch_step_nonpathological')} />
+                    <Tab icon={<EventNoteIcon fontSize="small" />} iconPosition="start" label={t('ch_consultations')} />
+                </Tabs>
+                <Box sx={{ p: 3 }}>
+                    {activeTab === 0 && (
+                        <Paper variant="outlined" sx={{ p: 3, borderRadius: 2.5 }}>
+                            {/* Solo mostramos el formulario de perfil, sin título duplicado */}
+                            <PatientInfoSection clientForm={clientForm} setClientForm={setClientForm} />
+                        </Paper>
+                    )}
 
-                <Grid size={{ xs: 12, lg: 6 }}>
-                    <Paper variant="outlined" sx={{ p: 3, borderRadius: 2.5, height: '100%' }}>
-                        <SectionHeader
-                            icon={<NatureIcon fontSize="small" />}
-                            color="success.light"
-                            title={t('ch_section_nonpathological')}
-                        />
-                        <Divider sx={{ mb: 2.5 }} />
-                        {medicalFormData && (
-                            <NonPathologicalHistorySection
-                                medicalFormData={medicalFormData}
-                                setMedicalFormData={setMedicalFormData}
-                                hasMedicalRecord={!!medicalRecord}
-                                hideSectionHeader
+                    {activeTab === 1 && (
+                        <Paper variant="outlined" sx={{ p: 3, borderRadius: 2.5 }}>
+                            <SectionHeader
+                                icon={<FavoriteIcon fontSize="small" />}
+                                color="error.light"
+                                title={t('ch_section_pathological')}
                             />
-                        )}
-                    </Paper>
-                </Grid>
-            </Grid>
+                            <Divider sx={{ mb: 2.5 }} />
+                            {medicalFormData && (
+                                <PathologicalHistorySection
+                                    medicalRecord={medicalRecord}
+                                    setMedicalRecord={setMedicalRecord}
+                                    medicalFormData={medicalFormData}
+                                    setMedicalFormData={setMedicalFormData}
+                                    gender={clientForm?.gender}
+                                    activeConsultationId={activeConsultationId}
+                                    hideSectionHeader
+                                />
+                            )}
+                        </Paper>
+                    )}
 
-            {/* Consultations */}
-            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2.5 }}>
-                <ConsultationListSection
-                    client={client}
-                    consultations={consultations}
-                    setConsultations={setConsultations}
-                    totalConsultations={totalConsultations}
-                    setTotalConsultations={setTotalConsultations}
-                />
+                    {activeTab === 2 && (
+                        <Paper variant="outlined" sx={{ p: 3, borderRadius: 2.5 }}>
+                            <SectionHeader
+                                icon={<NatureIcon fontSize="small" />}
+                                color="success.light"
+                                title={t('ch_section_nonpathological')}
+                            />
+                            <Divider sx={{ mb: 2.5 }} />
+                            {medicalFormData && (
+                                <NonPathologicalHistorySection
+                                    medicalRecord={medicalRecord}
+                                    setMedicalRecord={setMedicalRecord}
+                                    medicalFormData={medicalFormData}
+                                    setMedicalFormData={setMedicalFormData}
+                                    hasMedicalRecord={!!medicalRecord}
+                                    activeConsultationId={activeConsultationId}
+                                    pendingNotesRef={pendingNotesRef}
+                                    hideSectionHeader
+                                />
+                            )}
+                        </Paper>
+                    )}
+
+                    {activeTab === 3 && (
+                        <Paper variant="outlined" sx={{ p: 3, borderRadius: 2.5 }}>
+                            <ConsultationListSection
+                                client={client}
+                                consultations={consultations}
+                                setConsultations={setConsultations}
+                                totalConsultations={totalConsultations}
+                                setTotalConsultations={setTotalConsultations}
+                            />
+                        </Paper>
+                    )}
+                </Box>
             </Paper>
 
             {/* Botón flotante global de guardar */}

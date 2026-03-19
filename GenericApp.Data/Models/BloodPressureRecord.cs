@@ -1,12 +1,13 @@
+using System;
+
 namespace GenericApp.Data.Models
 {
-    public class Allergy
+    public class BloodPressureRecord
     {
-        public int IdAllergy { get; set; }
+        public int IdBloodPressureRecord { get; set; }
         public int IdMedicalRecord { get; set; }
-        public string? Description { get; set; }
-        public bool? IsActive { get; set; }
-        public bool? IsDeleted { get; set; }
+        public string? Value { get; set; }
+        public DateTime RecordedAt { get; set; }
         public int? IdConsultation { get; set; }
 
         public virtual MedicalRecord? IdMedicalRecordNavigation { get; set; }

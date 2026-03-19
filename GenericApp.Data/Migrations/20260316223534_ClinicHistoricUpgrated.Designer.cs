@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260316223534_ClinicHistoricUpgrated")]
+    partial class ClinicHistoricUpgrated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -55,7 +57,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdMedicalRecord");
 
-                    b.ToTable("Allergies", (string)null);
+                    b.ToTable("Allergies");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.ApplicationLog", b =>
@@ -103,7 +105,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdApplicationLog");
 
-                    b.ToTable("ApplicationLogs", (string)null);
+                    b.ToTable("ApplicationLogs");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.BloodPressureRecord", b =>
@@ -131,7 +133,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdMedicalRecord");
 
-                    b.ToTable("BloodPressureRecords", (string)null);
+                    b.ToTable("BloodPressureRecords");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.City", b =>
@@ -164,7 +166,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdState");
 
-                    b.ToTable("Cities", (string)null);
+                    b.ToTable("Cities");
 
                     b.HasData(
                         new
@@ -332,7 +334,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdGender");
 
-                    b.ToTable("Clients", (string)null);
+                    b.ToTable("Clients");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Company", b =>
@@ -396,7 +398,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdCompany");
 
-                    b.ToTable("Companies", (string)null);
+                    b.ToTable("Companies");
 
                     b.HasData(
                         new
@@ -456,7 +458,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdClient");
 
-                    b.ToTable("Consultations", (string)null);
+                    b.ToTable("Consultations");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Country", b =>
@@ -484,7 +486,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdCountry");
 
-                    b.ToTable("Countries", (string)null);
+                    b.ToTable("Countries");
 
                     b.HasData(
                         new
@@ -542,7 +544,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdMedicalRecord");
 
-                    b.ToTable("Diseases", (string)null);
+                    b.ToTable("Diseases");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Gender", b =>
@@ -570,7 +572,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdGender");
 
-                    b.ToTable("Genders", (string)null);
+                    b.ToTable("Genders");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.MedicalNote", b =>
@@ -604,7 +606,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdMedicalRecord");
 
-                    b.ToTable("MedicalNotes", (string)null);
+                    b.ToTable("MedicalNotes");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.MedicalRecord", b =>
@@ -680,7 +682,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdClient");
 
-                    b.ToTable("MedicalRecords", (string)null);
+                    b.ToTable("MedicalRecords");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Parameter", b =>
@@ -708,7 +710,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdParameter");
 
-                    b.ToTable("Parameters", (string)null);
+                    b.ToTable("Parameters");
 
                     b.HasData(
                         new
@@ -779,7 +781,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdRefreshTokenAspNetUser");
 
-                    b.ToTable("RefreshTokenAspNetUser", (string)null);
+                    b.ToTable("RefreshTokenAspNetUser");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.State", b =>
@@ -812,7 +814,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdCountry");
 
-                    b.ToTable("States", (string)null);
+                    b.ToTable("States");
 
                     b.HasData(
                         new
@@ -1508,7 +1510,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasIndex("IdMedicalRecord");
 
-                    b.ToTable("Surgeries", (string)null);
+                    b.ToTable("Surgeries");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.UserDetail", b =>
@@ -1530,7 +1532,7 @@ namespace GenericApp.Data.Migrations
 
                     b.HasKey("IdUserDetail");
 
-                    b.ToTable("UserDetails", (string)null);
+                    b.ToTable("UserDetails");
 
                     b.HasData(
                         new

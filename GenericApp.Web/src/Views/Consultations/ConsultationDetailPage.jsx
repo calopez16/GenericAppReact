@@ -102,7 +102,7 @@ function ConsultationDetailPage() {
                     <Button
                         variant="outlined"
                         startIcon={<HistoryIcon />}
-                        onClick={() => form && navigate(`/historia-clinica/${form.idClient}`)}
+                        onClick={() => form && navigate(`/historia-clinica/${form.idClient}?consultationId=${form.idConsultation}`)}
                         disabled={loading}
                     >
                         {t('ch_history')}

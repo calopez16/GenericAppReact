@@ -24,6 +24,8 @@ namespace GenericApp.Data
         public DbSet<Disease> Diseases { get; set; }
         public DbSet<Gender> Genders { get; set; }
         public DbSet<MedicalRecord> MedicalRecords { get; set; }
+        public DbSet<BloodPressureRecord> BloodPressureRecords { get; set; }
+        public DbSet<MedicalNote> MedicalNotes { get; set; }
         public DbSet<Parameter> Parameters { get; set; }
         public DbSet<RefreshTokenAspNetUser> RefreshTokenAspNetUser { get; set; }
         public DbSet<State> States { get; set; }
@@ -42,6 +44,31 @@ namespace GenericApp.Data
                 b.Property(x => x.IdUser).HasMaxLength(450);
                 b.Property(x => x.RefreshToken).HasMaxLength(500);
                 b.Property(x => x.IsActive).HasDefaultValueSql("1");
+            });
+
+            modelBuilder.Entity<BloodPressureRecord>(b =>
+            {
+                b.HasKey(x => x.IdBloodPressureRecord);
+                b.Property(x => x.Value).HasMaxLength(20);
+                b.Property(x => x.RecordedAt).IsRequired();
+
+                b.HasOne(bp => bp.IdMedicalRecordNavigation)
+                    .WithMany(m => m.BloodPressureRecords)
+                    .HasForeignKey(x => x.IdMedicalRecord)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<MedicalNote>(b =>
+            {
+                b.HasKey(x => x.IdMedicalNote);
+                b.Property(x => x.NoteType).HasMaxLength(50);
+                b.Property(x => x.Content).HasMaxLength(1000);
+                b.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
+
+                b.HasOne(n => n.IdMedicalRecordNavigation)
+                    .WithMany(m => m.MedicalNotes)
+                    .HasForeignKey(x => x.IdMedicalRecord)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<UserDetail>(b =>
