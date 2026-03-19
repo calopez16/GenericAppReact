@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
 	Box, Typography, Paper, Button, Avatar, CircularProgress,
-	Divider, IconButton, Tooltip, Skeleton, Chip, Fab, Alert, AlertTitle, LinearProgress, Tabs, Tab,
+	Divider, IconButton, Tooltip, Skeleton, Chip, Alert, AlertTitle, LinearProgress, Tabs, Tab,
 } from '@mui/material';
+import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Grid';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
@@ -14,6 +15,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
+import { AppContext } from '@helpers/AppContext';
 import { DataAPIClientsService } from '@data/Clients/Data';
 import { DataAPIMedicalRecordsService } from '@data/MedicalRecords/Data';
 import { DataAPIConsultationsService } from '@data/Consultations/Data';
@@ -23,32 +25,154 @@ import PathologicalHistorySection from './Sections/PathologicalHistorySection';
 import NonPathologicalHistorySection from './Sections/NonPathologicalHistorySection';
 import ConsultationListSection from './Sections/ConsultationListSection';
 
-function ClinicalHistoryPage() {
+function NewClientForm() {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { clientId } = useParams();
     const clientService = DataAPIClientsService();
-    const medicalService = DataAPIMedicalRecordsService();
-    const consultService = DataAPIConsultationsService();
+    const { companySelected } = useContext(AppContext);
 
-    const [isFetching, setIsFetching] = useState(true);
-
-    const [client, setClient] = useState(null);
-    const [clientForm, setClientForm] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [isCreatingMedicalRecord, setIsCreatingMedicalRecord] = useState(false);
+    const [clientForm, setClientForm] = useState({
+        idClient: 0,
+        name: '',
+        address: '',
+        idCity: null,
+        phone: '',
+        notes: '',
+        birthDate: '',
+        gender: '',
+        maritalState: '',
+        ocupation: '',
+        education: '',
+        profession: '',
+        religion: '',
+        idCompany: companySelected?.idCompany ?? null,
+    });
 
-    const [medicalRecord, setMedicalRecord] = useState(null);
-    const [medicalFormData, setMedicalFormData] = useState(null);
+    const handleSave = async () => {
+        if (!clientForm.name?.trim()) {
+            ShowMessage(t('emptyFields'), 'warning');
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const payload = {
+                ...clientForm,
+                idCity: clientForm.idCity ? parseInt(clientForm.idCity) : null,
+                idCompany: companySelected?.idCompany ?? 0,
+            };
+            const res = await clientService.addData(payload, true);
+            if (res.responseCode === 409) {
+                ShowMessage(t('dataAlreadyExists') + ': ' + res.conflict, 'warning');
+                return;
+            }
+            if (res.success && res.data?.idClient) {
+                ShowMessage(t('recordAddedSuccessPlural'), 'success');
+                navigate(`/historia-clinica/${res.data.idClient}`, { replace: true });
+            } else {
+                ShowMessage(t('error'), 'error');
+            }
+        } catch {
+            ShowMessage(t('error'), 'error');
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
-    const [consultations, setConsultations] = useState([]);
-    const [totalConsultations, setTotalConsultations] = useState(0);
-	const [activeTab, setActiveTab] = useState(0);
-	const pendingNotesRef = useRef([]);
-	const [searchParams] = useSearchParams();
-	const activeConsultationId = searchParams.get('consultationId') ? parseInt(searchParams.get('consultationId'), 10) : null;
+    return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider',
+                    display: 'flex', alignItems: 'center', gap: 2,
+                    position: 'sticky', top: 0, zIndex: 10, bgcolor: 'background.paper',
+                }}
+            >
+                <Tooltip title={t('back')}>
+                    <IconButton onClick={() => navigate('/clients')} size="small">
+                        <ArrowBackIcon />
+                    </IconButton>
+                </Tooltip>
+                <Avatar sx={{ bgcolor: 'primary.main', width: 44, height: 44, borderRadius: 2 }}>
+                    <MedicalServicesIcon />
+                </Avatar>
+                <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="h6" fontWeight={700} lineHeight={1.2}>
+                        {t('ch_new_client_history')}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        {t('ch_new_client_history_hint')}
+                    </Typography>
+                </Box>
+            </Paper>
 
-    useEffect(() => { loadAll(); }, [clientId]);
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2.5 }}>
+                <PatientInfoSection clientForm={clientForm} setClientForm={setClientForm} />
+            </Paper>
+
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                }}
+            >
+                <Button
+                    variant="contained"
+                    disableElevation
+                    startIcon={isSaving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 20, boxShadow: 6 }}
+                >
+                    {t('save')}
+                </Button>
+            </Paper>
+        </Box>
+    );
+}
+
+function ClinicalHistoryPage() {
+const { t } = useTranslation();
+const navigate = useNavigate();
+const { clientId } = useParams();
+
+const clientService = DataAPIClientsService();
+const medicalService = DataAPIMedicalRecordsService();
+const consultService = DataAPIConsultationsService();
+
+const [isFetching, setIsFetching] = useState(true);
+
+const [client, setClient] = useState(null);
+const [clientForm, setClientForm] = useState(null);
+const [isSaving, setIsSaving] = useState(false);
+const [isCreatingMedicalRecord, setIsCreatingMedicalRecord] = useState(false);
+
+const [medicalRecord, setMedicalRecord] = useState(null);
+const [medicalFormData, setMedicalFormData] = useState(null);
+
+const [consultations, setConsultations] = useState([]);
+const [totalConsultations, setTotalConsultations] = useState(0);
+const [activeTab, setActiveTab] = useState(0);
+const pendingNotesRef = useRef([]);
+const [searchParams] = useSearchParams();
+const activeConsultationId = searchParams.get('consultationId') ? parseInt(searchParams.get('consultationId'), 10) : null;
+
+useEffect(() => {
+	if (clientId !== 'nuevo') {
+		loadAll();
+	}
+}, [clientId]);
+
+if (clientId === 'nuevo') {
+	return <NewClientForm />;
+}
 
     const loadAll = async () => {
         setIsFetching(true);
@@ -367,19 +491,29 @@ function ClinicalHistoryPage() {
                 </Box>
             </Paper>
 
-            {/* Botón flotante global de guardar */}
-            <Box sx={{ position: 'fixed', bottom: 32, right: 32, zIndex: 20 }}>
-                <Tooltip title={t('save')} placement="left">
-                    <Fab
-                        color="primary"
-                        onClick={handleSaveAll}
-                        disabled={isSaving}
-                        sx={{ boxShadow: 6 }}
-                    >
-                        {isSaving ? <CircularProgress size={24} color="inherit" /> : <SaveIcon />}
-                    </Fab>
-                </Tooltip>
-            </Box>
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    position: 'fixed', bottom: 24, right: 24, zIndex: 20, boxShadow: 6 
+                }}
+            >
+                <Button
+                    variant="contained"
+                    disableElevation
+                    startIcon={isSaving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
+                    onClick={handleSaveAll}
+                    disabled={isSaving}
+                >
+                    {t('save')}
+                </Button>
+            </Paper>
 
         </Box>
     );

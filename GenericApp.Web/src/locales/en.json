@@ -455,5 +455,7 @@
   "ch_no_medical_record_hint": "This patient does not have a clinical record yet. Fill in the profile data and press the Save button to create it.",
   "ch_creating_medical_record": "Creating clinical record...",
   "ch_creating_medical_record_hint": "We are generating the patient's clinical record. Please wait a moment.",
-  "ch_auto_note_change": "{{label}}: {{from}} → {{to}}"
+  "ch_auto_note_change": "{{label}}: {{from}} → {{to}}",
+  "ch_new_client_history": "New Clinical History",
+  "ch_new_client_history_hint": "Fill in the patient's details to create their clinical history"
 }

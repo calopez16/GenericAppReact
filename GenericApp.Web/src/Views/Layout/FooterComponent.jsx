@@ -19,7 +19,6 @@ const FooterComponent = () => {
                     textAlign: 'center',
                     p: 1,
                     width: '100%',
-                    position: 'fixed',
                     bottom: 0,
                     height: `${FOOTER_HEIGHT}px`,
                     display: 'flex',

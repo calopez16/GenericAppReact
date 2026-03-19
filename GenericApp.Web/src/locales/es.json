@@ -455,5 +455,7 @@
   "ch_no_medical_record_hint": "Este paciente aún no tiene un historial clínico. Completa los datos del perfil y presiona el botón Guardar para generarlo.",
   "ch_creating_medical_record": "Creando historial clínico...",
   "ch_creating_medical_record_hint": "Estamos generando el historial clínico del paciente. Por favor espera un momento.",
-  "ch_auto_note_change": "{{label}}: {{from}} → {{to}}"  
+  "ch_auto_note_change": "{{label}}: {{from}} → {{to}}",
+  "ch_new_client_history": "Nueva Historia Clínica",
+  "ch_new_client_history_hint": "Completa los datos del paciente para crear su historia clínica"
 }

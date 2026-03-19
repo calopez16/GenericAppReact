@@ -82,7 +82,7 @@ const PatientInfoSection = ({ clientForm, setClientForm }) => {
                     fullWidth
                     label={t('birthDate')}
                     type="date"
-                    value={clientForm.birthDate}
+                    value={clientForm.birthDate ?? ''}
                     onChange={handleField('birthDate')}
                     InputLabelProps={{ shrink: true }}
                 />
@@ -113,7 +113,7 @@ const PatientInfoSection = ({ clientForm, setClientForm }) => {
                     select
                     fullWidth
                     label={t('maritalState')}
-                    value={clientForm.maritalState}
+                    value={clientForm.maritalState ?? ''}
                     onChange={handleField('maritalState')}
                 >
                     <MenuItem value=""><em>—</em></MenuItem>

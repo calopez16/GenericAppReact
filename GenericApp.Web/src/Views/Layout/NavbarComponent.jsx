@@ -130,12 +130,12 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                 </Box>
             </Box>
             <Divider />
-            {allowLanguage && (
-                <>
-                    <ListSubheader sx={{ lineHeight: '32px', bgcolor: 'transparent' }}>
+            {allowLanguage && [
+                    <ListSubheader key="lang-header" sx={{ lineHeight: '32px', bgcolor: 'transparent' }}>
                         {t('select_language')}
-                    </ListSubheader>
+                    </ListSubheader>,
                     <MenuItem
+                        key="lang-es"
                         onClick={() => { changeLanguage('es'); handleUserMenuClose(); }}
                         sx={{
                             py: 1.2, gap: 1.5,
@@ -149,8 +149,9 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                         <Avatar src={espanishFlag} sx={{ width: 26, height: 26 }} />
                         <Typography variant="body2" sx={{ flexGrow: 1, fontWeight: i18n.language === 'es' ? 700 : 400 }}>{t('language_spanish')}</Typography>
                         {i18n.language === 'es' && <CheckIcon fontSize="small" sx={{ color: '#fff' }} />}
-                    </MenuItem>
+                    </MenuItem>,
                     <MenuItem
+                        key="lang-en"
                         onClick={() => { changeLanguage('en'); handleUserMenuClose(); }}
                         sx={{
                             py: 1.2, gap: 1.5,
@@ -163,17 +164,15 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                     >
                         <Avatar src={englishFlag} sx={{ width: 26, height: 26 }} />
                         <Typography variant="body2" sx={{ flexGrow: 1, fontWeight: i18n.language === 'en' ? 700 : 400 }}>{t('language_english')}</Typography>
-                        {i18n.language === 'en' && <CheckIcon fontSize="small" sx={{ color: '#fff' }} />}
-                    </MenuItem>
-                    <Divider />
-                </>
-            )}
-            {allowTheme && (
-                <>
-                    <ListSubheader sx={{ lineHeight: '32px', bgcolor: 'transparent' }}>
+                     {i18n.language === 'en' && <CheckIcon fontSize="small" sx={{ color: '#fff' }} />}
+                    </MenuItem>,
+                    <Divider key="lang-divider" />
+            ]}
+            {allowTheme && [
+                    <ListSubheader key="theme-header" sx={{ lineHeight: '32px', bgcolor: 'transparent' }}>
                         {t('configuration')}
-                    </ListSubheader>
-                    <Box sx={{ display: 'flex', gap: 1, px: 1.5, pb: 1.5 }}>
+                    </ListSubheader>,
+                    <Box key="theme-switcher" sx={{ display: 'flex', gap: 1, px: 1.5, pb: 1.5 }}>
                         <Box
                             onClick={() => { setThemeMode('light'); handleUserMenuClose(); }}
                             sx={{
@@ -193,7 +192,7 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                                 '&:hover': {
                                     borderColor: 'primary.main',
                                     bgcolor: themeMode === 'light' ? 'primary.dark' : 'action.hover',
-                                },
+                                }
                             }}
                         >
                             <WbSunnyIcon fontSize="small" />
@@ -220,7 +219,7 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                                 '&:hover': {
                                     borderColor: 'primary.main',
                                     bgcolor: themeMode === 'dark' ? 'primary.dark' : 'action.hover',
-                                },
+                                }
                             }}
                         >
                             <DarkModeIcon fontSize="small" />
@@ -228,10 +227,9 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                                 {t('select_theme_dark')}
                             </Typography>
                         </Box>
-                    </Box>
-                    <Divider />
-                </>
-            )}
+                    </Box>,
+                    <Divider key="theme-divider" />
+            ]}
             <MenuItem onClick={() => { handleUserMenuClose(); handleLogout(); }} sx={{ mt: 1 }} >
                 <LogoutIcon sx={{ mr: 1 }} />
                 {t('logout')}

@@ -266,8 +266,9 @@ const [bpSaving, setBpSaving] = useState(false);
                 {/* Blood Pressure */}
                 <Grid size={{ xs: 12 }}>
                     <Card variant="outlined">
+                        <CardHeader title={<Typography fontWeight={700}>{t('ch_bp_history')}</Typography>} />
                         <CardContent>
-                            <FormControl>
+                            <FormControl sx={{ mb: 2 }}>
                                 <FormLabel>{t('ch_blood_pressure')}</FormLabel>
                                 <RadioGroup
                                     row
@@ -279,15 +280,7 @@ const [bpSaving, setBpSaving] = useState(false);
                                     <FormControlLabel value="Baja" control={<Radio />} label={t('ch_bp_low')} />
                                 </RadioGroup>
                             </FormControl>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Blood Pressure History */}
-                <Grid size={{ xs: 12 }}>
-                    <Card variant="outlined">
-                        <CardHeader title={<Typography fontWeight={700}>{t('ch_bp_history')}</Typography>} />
-                        <CardContent>
+                            <Divider sx={{ mb: 2 }} />
                             <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1, mb: 2 }}>
                                 <Table size="small">
                                     <TableHead sx={{ bgcolor: 'action.hover' }}>

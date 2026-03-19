@@ -23,7 +23,6 @@ import { DataAPIClientsService } from '@data/Clients/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import ConfirmationModal from '@layout/ConfirmationModal';
-import ClientFormModal from '@views/clients/ClientFormModal';
 import ClientCardList from '@views/clients/ClientCardList';
 import ClientListTable from '@views/clients/ClientTableList';
 
@@ -42,10 +41,6 @@ function Index() {
     const searchInputRef = useRef(null);
 
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedClient, setSelectedClient] = useState(null);
-    const [isEditing, setIsEditing] = useState(false);
-
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [clientToDelete, setClientToDelete] = useState(null);
 
@@ -187,17 +182,11 @@ function Index() {
     };
 
     const handleOpenAddClient = () => {
-        setSelectedClient(null);
-        setIsEditing(false);
-        setIsModalOpen(true);
+        navigate('/historia-clinica/nuevo');
     };
 
     const handleOpenEditClient = (client) => {
         navigate(`/historia-clinica/${client.idClient}`);
-    };
-
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
     };
 
     const commonListProps = {
@@ -327,14 +316,6 @@ function Index() {
                 labelDisplayedRows={({ from, to, count }) =>
                     `${from}-${to} ${t('of')} ${count !== -1 ? count : `${t('moreThan')} ${to}`}`
                 }
-            />
-
-            <ClientFormModal
-                open={isModalOpen}
-                handleClose={handleCloseModal}
-                data={selectedClient}
-                isEditing={isEditing}
-                setData={setClients}
             />
 
             <ConfirmationModal
