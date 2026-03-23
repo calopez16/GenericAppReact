@@ -19,7 +19,7 @@ import { DataAPIMedicalRecordsService } from '@data/MedicalRecords/Data';
 
 const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-const NonPathologicalHistorySection = ({ medicalRecord, setMedicalRecord, medicalFormData, setMedicalFormData, hasMedicalRecord, activeConsultationId, pendingNotesRef, hideSectionHeader }) => {
+const NonPathologicalHistorySection = ({ medicalRecord, setMedicalRecord, medicalFormData, setMedicalFormData, hasMedicalRecord, activeConsultationId, pendingNotesRef, savedFlagRef: savedCounter, hideSectionHeader }) => {
 const { t } = useTranslation();
 const service = DataAPIMedicalRecordsService();
 
@@ -44,6 +44,17 @@ useEffect(() => {
         };
     }
 }, [medicalFormData?.idMedicalRecord]);
+
+useEffect(() => {
+    if (!savedCounter || !medicalFormData) return;
+    originalValuesRef.current = {
+        smokingHabit: medicalFormData.smokingHabit,
+        alcoholHabit: medicalFormData.alcoholHabit,
+        drugHabit: medicalFormData.drugHabit,
+        diabetesStatus: medicalFormData.diabetesStatus,
+        cancerStatus: medicalFormData.cancerStatus,
+    };
+}, [savedCounter]);
 
 const getFieldLabelKey = (field) => {
     const map = {

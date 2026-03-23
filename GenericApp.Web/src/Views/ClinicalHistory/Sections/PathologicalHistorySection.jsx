@@ -43,7 +43,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ScalpelIcon from '@mui/icons-material/ContentCut';
 import AllergyIcon from '@mui/icons-material/Coronavirus';
 import SickIcon from '@mui/icons-material/Sick';
-import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
@@ -67,9 +66,7 @@ const bloodPressureHistory = medicalRecord?.bloodPressureRecords ?? [];
 
 const isFemale = gender === 'Femenino';
 
-// Surgery dialog
-const [surgeryDialogOpen, setSurgeryDialogOpen] = useState(false);
-const [surgeryForm, setSurgeryForm] = useState({ description: '', surgeryDate: '' });
+const [surgeryForm, setSurgeryForm] = useState({ description: '', surgeryDate: new Date().toISOString().substring(0, 10) });
 const [surgeryLoading, setSurgeryLoading] = useState(null);
 const [surgerySaving, setSurgerySaving] = useState(false);
 
@@ -115,8 +112,7 @@ const [bpSaving, setBpSaving] = useState(false);
                 surgeryDate: surgeryForm.surgeryDate || null,
             }, activeConsultationId);
             if (res.success && res.data) {
-                setSurgeryDialogOpen(false);
-                setSurgeryForm({ description: '', surgeryDate: '' });
+                setSurgeryForm({ description: '', surgeryDate: new Date().toISOString().substring(0, 10) });
                 updateSurgeries([...surgeries, res.data]);
                 ShowMessage(t('recordAddedSuccessSingular'), 'success');
             }
@@ -311,14 +307,6 @@ const [bpSaving, setBpSaving] = useState(false);
                             {hasMedicalRecord && (
                                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
                                     <TextField
-                                        label={t('ch_bp_value')}
-                                        size="small"
-                                        value={bpForm.value}
-                                        onChange={(e) => setBpForm(prev => ({ ...prev, value: e.target.value }))}
-                                        sx={{ flexGrow: 1, minWidth: 160 }}
-                                        inputProps={{ maxLength: 20 }}
-                                    />
-                                    <TextField
                                         label={t('date')}
                                         type="date"
                                         size="small"
@@ -327,6 +315,14 @@ const [bpSaving, setBpSaving] = useState(false);
                                         InputLabelProps={{ shrink: true }}
                                         sx={{ minWidth: 160 }}
                                     />
+                                    <TextField
+                                        label={t('ch_bp_value')}
+                                        size="small"
+                                        value={bpForm.value}
+                                        onChange={(e) => setBpForm(prev => ({ ...prev, value: e.target.value }))}
+                                        sx={{ flexGrow: 1, minWidth: 160 }}
+                                        inputProps={{ maxLength: 20 }}
+                                    />                                  
                                     <Button
                                         variant="contained"
                                         disableElevation
@@ -382,19 +378,6 @@ const [bpSaving, setBpSaving] = useState(false);
                         <CardHeader
                             avatar={<Avatar sx={{ bgcolor: 'warning.light', width: 32, height: 32 }}><ScalpelIcon fontSize="small" /></Avatar>}
                             title={<Typography fontWeight={700}>{t('ch_surgeries')}</Typography>}
-                            action={
-                                hasMedicalRecord && (
-                                    <Button
-                                        startIcon={<AddIcon />}
-                                        variant="contained"
-                                        size="small"
-                                        disableElevation
-                                        onClick={() => setSurgeryDialogOpen(true)}
-                                    >
-                                        {t('add')}
-                                    </Button>
-                                )
-                            }
                         />
                         <CardContent>
                             {surgerySaving && (
@@ -439,6 +422,36 @@ const [bpSaving, setBpSaving] = useState(false);
                                     </TableBody>
                                 </Table>
                             </TableContainer>
+                            )}
+                            {hasMedicalRecord && (
+                                <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                                    <TextField
+                                        label={t('date')}
+                                        type="date"
+                                        size="small"
+                                        value={surgeryForm.surgeryDate}
+                                        onChange={(e) => setSurgeryForm(prev => ({ ...prev, surgeryDate: e.target.value }))}
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{ minWidth: 160 }}
+                                    />
+                                    <TextField
+                                        label={t('description')}
+                                        size="small"
+                                        value={surgeryForm.description}
+                                        onChange={(e) => setSurgeryForm(prev => ({ ...prev, description: e.target.value }))}
+                                        sx={{ flexGrow: 1, minWidth: 200 }}
+                                        inputProps={{ maxLength: 500 }}
+                                    />
+                                    <Button
+                                        variant="contained"
+                                        disableElevation
+                                        startIcon={surgerySaving ? null : <AddIcon />}
+                                        onClick={handleAddSurgery}
+                                        disabled={surgerySaving}
+                                    >
+                                        {surgerySaving ? <CircularProgress size={18} color="inherit" /> : t('add')}
+                                    </Button>
+                                </Box>
                             )}
                         </CardContent>
                     </Card>
@@ -576,52 +589,6 @@ const [bpSaving, setBpSaving] = useState(false);
                     </Card>
                 </Grid>
             </Grid>
-
-            {/* Surgery Dialog */}
-            <Dialog open={surgeryDialogOpen} onClose={() => setSurgeryDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    {t('ch_add_surgery')}
-                    <IconButton onClick={() => setSurgeryDialogOpen(false)} size="small">
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent>
-                    <TextField
-                        fullWidth
-                        label={t('description')}
-                        value={surgeryForm.description}
-                        onChange={(e) => setSurgeryForm(prev => ({ ...prev, description: e.target.value }))}
-                        margin="normal"
-                        multiline
-                        rows={2}
-                        inputProps={{ maxLength: 500 }}
-                        required
-                    />
-                    <TextField
-                        fullWidth
-                        label={t('date')}
-                        type="date"
-                        value={surgeryForm.surgeryDate}
-                        onChange={(e) => setSurgeryForm(prev => ({ ...prev, surgeryDate: e.target.value }))}
-                        margin="normal"
-                        InputLabelProps={{ shrink: true }}
-                    />
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={() => setSurgeryDialogOpen(false)} color="error" variant="outlined">
-                        {t('cancel')}
-                    </Button>
-                    <Button
-                        onClick={handleAddSurgery}
-                        variant="contained"
-                        disableElevation
-                        disabled={surgerySaving}
-                        endIcon={surgerySaving ? null : <SaveIcon />}
-                    >
-                        {t('save')}
-                    </Button>
-                </DialogActions>
-            </Dialog>
         </Box>
     );
 };

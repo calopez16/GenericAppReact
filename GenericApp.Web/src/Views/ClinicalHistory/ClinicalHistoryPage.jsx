@@ -3,8 +3,6 @@ import {
 	Box, Typography, Paper, Button, Avatar, CircularProgress,
 	Divider, IconButton, Tooltip, Skeleton, Chip, Alert, AlertTitle, LinearProgress, Tabs, Tab,
 } from '@mui/material';
-import TextField from '@mui/material/TextField';
-import Grid from '@mui/material/Grid';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -161,6 +159,7 @@ const [consultations, setConsultations] = useState([]);
 const [totalConsultations, setTotalConsultations] = useState(0);
 const [activeTab, setActiveTab] = useState(0);
 const pendingNotesRef = useRef([]);
+const [savedCounter, setSavedCounter] = useState(0);
 const [searchParams] = useSearchParams();
 const activeConsultationId = searchParams.get('consultationId') ? parseInt(searchParams.get('consultationId'), 10) : null;
 
@@ -316,6 +315,7 @@ if (clientId === 'nuevo') {
                 }
                 pendingNotesRef.current = [];
             }
+            setSavedCounter(c => c + 1);
 
             ShowMessage(t('recordEditedSuccessPlural'), 'success');
         } catch {
@@ -470,7 +470,8 @@ if (clientId === 'nuevo') {
                                     setMedicalFormData={setMedicalFormData}
                                     hasMedicalRecord={!!medicalRecord}
                                     activeConsultationId={activeConsultationId}
-                                    pendingNotesRef={pendingNotesRef}
+                    pendingNotesRef={pendingNotesRef}
+                                    savedFlagRef={savedCounter}
                                     hideSectionHeader
                                 />
                             )}
