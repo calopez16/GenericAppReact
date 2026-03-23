@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
 Box,
 TextField,
@@ -10,10 +10,6 @@ CardContent,
 CardHeader,
 Button,
 CircularProgress,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     IconButton,
     Chip,
     List,
@@ -48,13 +44,6 @@ import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import { DataAPIMedicalRecordsService } from '@data/MedicalRecords/Data';
 
-const ALLERGY_SUGGESTIONS = [
-    'Penicilina', 'Aspirina', 'Ibuprofeno', 'Sulfamidas', 'Látex',
-    'Polen', 'Mariscos', 'Nueces', 'Leche', 'Huevo', 'Soya',
-    'Trigo / Gluten', 'Ácaros del polvo', 'Hongos', 'Picadura de abeja',
-    'Colorantes artificiales', 'Conservantes', 'Anestésicos locales',
-];
-
 const PathologicalHistorySection = ({ medicalRecord, setMedicalRecord, medicalFormData, setMedicalFormData, gender, activeConsultationId, hideSectionHeader }) => {
 const { t } = useTranslation();
 const service = DataAPIMedicalRecordsService();
@@ -73,6 +62,7 @@ const [surgerySaving, setSurgerySaving] = useState(false);
 // Allergy
 const [allergyInput, setAllergyInput] = useState([]);
 const [allergyLoading, setAllergyLoading] = useState(false);
+const [allergySuggestions, setAllergySuggestions] = useState([]);
 
 // Disease
 const [diseaseLoading, setDiseaseLoading] = useState(false);
@@ -81,6 +71,21 @@ const [newDisease, setNewDisease] = useState({ description: '', medications: '' 
 // Blood pressure history
 const [bpForm, setBpForm] = useState({ value: '', date: new Date().toISOString().substring(0, 10) });
 const [bpSaving, setBpSaving] = useState(false);
+
+    useEffect(() => {
+        const loadAllergyCatalog = async () => {
+            try {
+                const res = await service.getAllergyCatalog();
+                if (res.success && Array.isArray(res.data)) {
+                    setAllergySuggestions(res.data);
+                }
+            } catch {
+                setAllergySuggestions([]);
+            }
+        };
+
+        loadAllergyCatalog();
+    }, []);
 
     const hasMedicalRecord = !!medicalRecord?.idMedicalRecord;
 
@@ -149,6 +154,12 @@ const [bpSaving, setBpSaving] = useState(false);
             const added = results.filter(r => r.success && r.data).map(r => r.data);
             setAllergyInput([]);
             if (added.length > 0) updateAllergies([...allergies, ...added]);
+            if (added.length > 0) {
+                setAllergySuggestions(prev => Array.from(new Set([
+                    ...prev,
+                    ...added.map(a => a.description).filter(Boolean),
+                ])).sort((a, b) => a.localeCompare(b)));
+            }
             ShowMessage(t('recordAddedSuccessPlural'), 'success');
         } finally {
             setAllergyLoading(false);
@@ -482,7 +493,7 @@ const [bpSaving, setBpSaving] = useState(false);
                                     <Autocomplete
                                         multiple
                                         freeSolo
-                                        options={ALLERGY_SUGGESTIONS}
+                                        options={allergySuggestions}
                                         value={allergyInput}
                                         onChange={(_, val) => setAllergyInput(val)}
                                         renderTags={(value, getTagProps) =>
@@ -502,7 +513,7 @@ const [bpSaving, setBpSaving] = useState(false);
                                         onClick={handleSaveAllergies}
                                         startIcon={<SaveIcon />}
                                     >
-                                        {t('save')}
+                                        {t('add')}
                                     </Button>
                                 </Box>
                             )}

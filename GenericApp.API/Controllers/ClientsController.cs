@@ -71,7 +71,6 @@ namespace GenericApp.API.Controllers
                 {
                     Name = x.Name,
                     BirthDate = x.BirthDate,
-                    MaritalState=x.MaritalState,
                     Ocupation = x.Ocupation,
                     Education = x.Education,
                     Profession = x.Profession,
@@ -82,7 +81,8 @@ namespace GenericApp.API.Controllers
                     IsActive = x.IsActive,
                     Notes = x.Notes,
                     Phone = x.Phone,
-                    
+                    IdMaritalStatus = x.IdMaritalStatus,
+
                 })
                 .ToList();
 
@@ -118,6 +118,44 @@ namespace GenericApp.API.Controllers
 
             return Ok(new ApiResponse { Data = clientDTO });
 
+        }
+
+        [HttpGet("catalog-options")]
+        public async Task<ActionResult> GetCatalogOptions()
+        {
+            try
+            {
+
+
+                var genderQuery = await _repository.Query<Gender>();
+                var maritalQuery = await _repository.Query<MaritalStatus>();
+
+                var genders = await genderQuery
+                    .Where(x => !(x.IsDeleted ?? false) && (x.IsActive ?? false) && !string.IsNullOrWhiteSpace(x.Descripcion))
+                    .OrderBy(x => x.Descripcion)
+                    .Select(x => x.Descripcion!)
+                    .ToListAsync();
+
+                var maritalStates = await maritalQuery
+                    .Where(x => !(x.IsDeleted ?? false) && (x.IsActive ?? false) && !string.IsNullOrWhiteSpace(x.Description))
+                    .OrderBy(x => x.Description)
+                    .Select(x => new MaritalStatusOptionDTO { IdMaritalStatus = x.IdMaritalStatus, Description = x.Description! })
+                    .ToListAsync();
+
+                return Ok(new ApiResponse
+                {
+                    Data = new ClientCatalogOptionsDTO
+                    {
+                        Genders = genders,
+                        MaritalStates = maritalStates
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
         }
 
         /// <summary>
@@ -168,15 +206,15 @@ namespace GenericApp.API.Controllers
             var clientDB = await _repository.GetById<Client>(model.IdClient ?? 0);
             clientDB.Name = model.Name;
             clientDB.BirthDate = model.BirthDate;
-            clientDB.MaritalState = model.MaritalState;
             clientDB.Phone = model.Phone;
             clientDB.Address = model.Address;
             clientDB.Ocupation = model.Ocupation;
-            clientDB.Education= model.Education;
+            clientDB.Education = model.Education;
             clientDB.Profession = model.Profession;
             clientDB.Religion = model.Religion;
             clientDB.IdCity = model.IdCity;
             clientDB.Notes = model.Notes;
+            clientDB.IdMaritalStatus = model.IdMaritalStatus;
 
             if (!string.IsNullOrWhiteSpace(model.Gender))
             {

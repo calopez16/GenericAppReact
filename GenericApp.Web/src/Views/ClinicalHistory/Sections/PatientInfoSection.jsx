@@ -1,21 +1,60 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { TextField, Autocomplete, CircularProgress, MenuItem } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { useTranslation } from 'react-i18next';
-import { AppContext } from '@helpers/AppContext';
 import { DataAPICitiesService } from '@data/Cities/Data';
+import { DataAPIClientsService } from '@data/Clients/Data';
 
-const MARITAL_OPTIONS = ['Soltero(a)', 'Casado(a)', 'Divorciado(a)', 'Viudo(a)', 'Unión libre'];
-const GENDER_OPTIONS = ['Masculino', 'Femenino'];
+const REQUIRED_FIELDS = ['name', 'birthDate', 'gender', 'idMaritalStatus'];
 
-const PatientInfoSection = ({ clientForm, setClientForm }) => {
+const initialErrors = { name: false, birthDate: false, gender: false, idMaritalStatus: false };
+
+const PatientInfoSection = forwardRef(({ clientForm, setClientForm }, ref) => {
     const { t } = useTranslation();
     const citiesService = DataAPICitiesService();
+    const clientsService = DataAPIClientsService();
 
     const [cities, setCities] = useState([]);
     const [selectedCity, setSelectedCity] = useState(null);
     const [isCitiesLoading, setIsCitiesLoading] = useState(false);
+    const [genderOptions, setGenderOptions] = useState([]);
+    const [maritalOptions, setMaritalOptions] = useState([]);
+    const [isCatalogLoading, setIsCatalogLoading] = useState(false);
     const debounceRef = useRef(null);
+
+    const [errors, setErrors] = useState(initialErrors);
+    const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+
+    const validateAll = (form) => {
+        return {
+            name: !form?.name?.trim(),
+            birthDate: !form?.birthDate,
+            gender: !form?.gender,
+            idMaritalStatus: form?.idMaritalStatus === null || form?.idMaritalStatus === undefined || form?.idMaritalStatus === '',
+        };
+    };
+
+    useImperativeHandle(ref, () => ({
+        validate() {
+            setHasAttemptedSubmit(true);
+            const newErrors = validateAll(clientForm);
+            setErrors(newErrors);
+            return !Object.values(newErrors).some(Boolean);
+        },
+    }));
+
+    const fetchCatalogOptions = async () => {
+        setIsCatalogLoading(true);
+        try {
+            const res = await clientsService.getCatalogOptions();
+            if (res.success) {
+                setGenderOptions(Array.isArray(res.data?.genders) ? res.data.genders : []);
+                setMaritalOptions(Array.isArray(res.data?.maritalStates) ? res.data.maritalStates : []);
+            }
+        } finally {
+            setIsCatalogLoading(false);
+        }
+    };
 
     const fetchCities = async (search = '') => {
         setIsCitiesLoading(true);
@@ -39,6 +78,7 @@ const PatientInfoSection = ({ clientForm, setClientForm }) => {
 
     useEffect(() => {
         fetchCities();
+        fetchCatalogOptions();
     }, []);
 
     useEffect(() => {
@@ -48,8 +88,18 @@ const PatientInfoSection = ({ clientForm, setClientForm }) => {
         }
     }, [clientForm?.idCity, cities]);
 
-    const handleField = (field) => (e) =>
-        setClientForm(prev => ({ ...prev, [field]: e.target.value }));
+    const handleField = (field) => (e) => {
+        const value = e.target.value;
+        setClientForm(prev => ({ ...prev, [field]: value }));
+        if (hasAttemptedSubmit && REQUIRED_FIELDS.includes(field)) {
+            setErrors(prev => ({
+                ...prev,
+                [field]: field === 'idMaritalStatus'
+                    ? value === null || value === undefined || value === ''
+                    : !value?.trim?.(),
+            }));
+        }
+    };
 
     const handleCityInput = (_, value) => {
         clearTimeout(debounceRef.current);
@@ -75,28 +125,35 @@ const PatientInfoSection = ({ clientForm, setClientForm }) => {
                     value={clientForm.name}
                     onChange={handleField('name')}
                     inputProps={{ maxLength: 150 }}
+                    error={errors.name}
+                    helperText={errors.name ? t('requiredField') : ''}
                 />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
-                    fullWidth
+                    fullWidth required
                     label={t('birthDate')}
                     type="date"
                     value={clientForm.birthDate ?? ''}
                     onChange={handleField('birthDate')}
                     InputLabelProps={{ shrink: true }}
+                    error={errors.birthDate}
+                    helperText={errors.birthDate ? t('requiredField') : ''}
                 />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
                 <TextField
                     select
-                    fullWidth
+                    fullWidth required
                     label={t('gender')}
                     value={clientForm.gender ?? ''}
                     onChange={handleField('gender')}
+                    disabled={isCatalogLoading}
+                    error={errors.gender}
+                    helperText={errors.gender ? t('requiredField') : ''}
                 >
-                    <MenuItem value=""><em>—</em></MenuItem>
-                    {GENDER_OPTIONS.map(o => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+                    <MenuItem value="">{t('select')}</MenuItem>
+                    {genderOptions.map(o => <MenuItem key={o} value={o}>{o}</MenuItem>)}
                 </TextField>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -111,13 +168,16 @@ const PatientInfoSection = ({ clientForm, setClientForm }) => {
             <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                     select
-                    fullWidth
+                    fullWidth required
                     label={t('maritalState')}
-                    value={clientForm.maritalState ?? ''}
-                    onChange={handleField('maritalState')}
+                    value={clientForm.idMaritalStatus ?? ''}
+                    onChange={handleField('idMaritalStatus')}
+                    disabled={isCatalogLoading}
+                    error={errors.idMaritalStatus}
+                    helperText={errors.idMaritalStatus ? t('requiredField') : ''}
                 >
-                    <MenuItem value=""><em>—</em></MenuItem>
-                    {MARITAL_OPTIONS.map(o => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+                    <MenuItem value="">{t('select')}</MenuItem>
+                    {maritalOptions.map(o => <MenuItem key={o.idMaritalStatus} value={o.idMaritalStatus}>{o.description}</MenuItem>)}
                 </TextField>
             </Grid>
             <Grid size={{ xs: 12 }}>
@@ -202,6 +262,8 @@ const PatientInfoSection = ({ clientForm, setClientForm }) => {
             </Grid>
         </Grid>
     );
-};
+});
+
+PatientInfoSection.displayName = 'PatientInfoSection';
 
 export default PatientInfoSection;

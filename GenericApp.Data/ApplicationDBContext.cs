@@ -23,6 +23,7 @@ namespace GenericApp.Data
         public DbSet<Country> Countries { get; set; }
         public DbSet<Disease> Diseases { get; set; }
         public DbSet<Gender> Genders { get; set; }
+        public DbSet<MaritalStatus> MaritalStatuses { get; set; }
         public DbSet<MedicalRecord> MedicalRecords { get; set; }
         public DbSet<BloodPressureRecord> BloodPressureRecords { get; set; }
         public DbSet<MedicalNote> MedicalNotes { get; set; }
@@ -159,7 +160,6 @@ namespace GenericApp.Data
                 b.HasKey(x => x.IdClient);
                 b.Property(x => x.BirthDate);
                 b.Property(x => x.Name).HasMaxLength(150).IsRequired();
-                b.Property(x => x.MaritalState).HasMaxLength(80);
                 b.Property(x => x.Address).HasMaxLength(250);
                 b.Property(x => x.Ocupation).HasMaxLength(80);
                 b.Property(x => x.Education).HasMaxLength(120);
@@ -179,6 +179,11 @@ namespace GenericApp.Data
                   .WithMany()
                   .HasForeignKey(x => x.IdGender)
                   .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(c => c.IdMaritalStatusNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdMaritalStatus)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 b.HasOne(lt => lt.IdCityNavigation)
                     .WithMany(l => l.Clients)
@@ -206,7 +211,14 @@ namespace GenericApp.Data
                     .HasForeignKey(x => x.IdClient)
                     .OnDelete(DeleteBehavior.Restrict);
             });
-
+            modelBuilder.Entity<MaritalStatus>(b =>
+            {
+                b.ToTable("MaritalStatus");
+                b.HasKey(x => x.IdMaritalStatus);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            });
             modelBuilder.Entity<Surgery>(b =>
             {
                 b.HasKey(x => x.IdSurgery);
@@ -423,6 +435,37 @@ namespace GenericApp.Data
                     NormalizedName = "MULTIEMPRESA",
                     ConcurrencyStamp = MULTICOMPANY_ID
                 }
+            );
+
+            modelBuilder.Entity<MaritalStatus>().HasData(
+                new MaritalStatus
+                {
+                    IdMaritalStatus = 1,
+                    Description = "Soltero(a)",
+                    IsActive = true,
+                    IsDeleted = false
+                },
+                 new MaritalStatus
+                 {
+                     IdMaritalStatus = 2,
+                     Description = "Casado(a)",
+                     IsActive = true,
+                     IsDeleted = false
+                 },
+                 new MaritalStatus
+                 {
+                     IdMaritalStatus = 3,
+                     Description = "Divorciado(a)",
+                     IsActive = true,
+                     IsDeleted = false
+                 },
+                  new MaritalStatus
+                  {
+                      IdMaritalStatus = 4,
+                      Description = "Viudo(a)",
+                      IsActive = true,
+                      IsDeleted = false
+                  }
             );
 
             modelBuilder.Entity<Parameter>().HasData(

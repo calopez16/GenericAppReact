@@ -1,4 +1,5 @@
 import createApiMethodsService from '@data/GenericApiMethods';
+import { GET } from '@data/GenericApiCalls';
 
 const moduleSource = "clients";
 
@@ -10,6 +11,7 @@ export const DataAPIClientsService = () => {
     const genericService = createApiMethodsService(moduleSource, dataMapper);
 
     return {
-        ...genericService
+        ...genericService,
+        getCatalogOptions: () => GET(`${moduleSource}/catalog-options`)
     };
 };

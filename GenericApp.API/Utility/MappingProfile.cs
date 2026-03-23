@@ -10,9 +10,11 @@ namespace GenericApp.API.Utility
         {
             CreateMap<Client, ClientDTO>()
                 .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.IdGenderNavigation != null ? src.IdGenderNavigation.Descripcion : null))
+                .ForMember(dest => dest.MaritalStatus, opt => opt.MapFrom(src => src.IdMaritalStatusNavigation != null ? src.IdMaritalStatusNavigation.Description : null))
                 .ReverseMap()
                 .ForMember(dest => dest.IdGenderNavigation, opt => opt.Ignore())
-                .ForMember(dest => dest.IdGender, opt => opt.Ignore());
+                .ForMember(dest => dest.IdGender, opt => opt.Ignore())
+                .ForMember(dest => dest.IdMaritalStatusNavigation, opt => opt.Ignore());
             CreateMap<City, CityDTO>().ReverseMap();
             CreateMap<Country, CountryDTO>().ReverseMap();
             CreateMap<State, StateDTO>().ReverseMap();

@@ -25,6 +25,7 @@
   "changePassword": "Cambiar contraseña",
   "changePasswordNeeded": "Es necesario realizar cambio de contraseña",
   "chismografo": "Chismografo",
+  "select": "Seleccione",
   "cities": "Ciudades",
   "cities_description": "Módulo para administrar las ciudades del sistema",
   "city": "Ciudad",
@@ -401,18 +402,39 @@
   "ch_habit_moderate": "Moderado",
   "ch_habit_frequent": "Frecuente",
   "ch_habit_options": [
-    { "value": "Nunca", "label": "Nunca" },
-    { "value": "Ocasional", "label": "Ocasional" },
-    { "value": "Moderado", "label": "Moderado" },
-    { "value": "Frecuente", "label": "Frecuente" }
+    {
+      "value": "Nunca",
+      "label": "Nunca"
+    },
+    {
+      "value": "Ocasional",
+      "label": "Ocasional"
+    },
+    {
+      "value": "Moderado",
+      "label": "Moderado"
+    },
+    {
+      "value": "Frecuente",
+      "label": "Frecuente"
+    }
   ],
   "ch_yesno_no": "No",
   "ch_yesno_yes": "Sí",
   "ch_yesno_family_history": "Antecedentes familiares",
   "ch_yesno_options": [
-    { "value": "No", "label": "No" },
-    { "value": "Sí", "label": "Sí" },
-    { "value": "Antecedentes familiares", "label": "Antecedentes familiares" }
+    {
+      "value": "No",
+      "label": "No"
+    },
+    {
+      "value": "Sí",
+      "label": "Sí"
+    },
+    {
+      "value": "Antecedentes familiares",
+      "label": "Antecedentes familiares"
+    }
   ],
   "ch_lifestyle": "Estilo de vida",
   "ch_smoking": "Tabaquismo",
@@ -442,6 +464,9 @@
   "ch_consultations": "Consultas",
   "ch_consultations_desc": "Listado de las últimas consultas médicas",
   "ch_new_consultation_desc": "Busca al paciente y registra la consulta",
+  "ch_continue_consultation": "Continuar consulta",
+  "ch_review_history_before_consultation": "Revisa y actualiza el historial clínico del paciente antes de iniciar la consulta. Una vez listo, haz clic en \"Continuar consulta\".",
+  "step": "Paso",
   "ch_search_patient": "Buscar paciente",
   "ch_search_patient_placeholder": "Nombre del paciente...",
   "ch_patient_selected": "Paciente seleccionado",

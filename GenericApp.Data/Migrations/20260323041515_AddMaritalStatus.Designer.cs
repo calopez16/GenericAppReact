@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260323041515_AddMaritalStatus")]
+    partial class AddMaritalStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -285,9 +287,6 @@ namespace GenericApp.Data.Migrations
                     b.Property<int?>("IdGender")
                         .HasColumnType("int");
 
-                    b.Property<int?>("IdMaritalStatus")
-                        .HasColumnType("int");
-
                     b.Property<bool?>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -297,6 +296,10 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<string>("MaritalState")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -330,8 +333,6 @@ namespace GenericApp.Data.Migrations
                     b.HasIndex("IdCompany");
 
                     b.HasIndex("IdGender");
-
-                    b.HasIndex("IdMaritalStatus");
 
                     b.ToTable("Clients");
                 });
@@ -1750,7 +1751,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEBW/5OlbtNF8Y15BYnEUkzO7qW5TPaMC6wXDcbFNI2Mo+GA24vMMj2TB8PEUBZByOQ==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEPtC/RhzMwUXwoCD9udn7VZmC8SQdNyIYc8CjKFR9Vpqh/drazHqywBP/qsCF4JQgA==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
@@ -1906,18 +1907,11 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("IdGender")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("GenericApp.Data.Models.MaritalStatus", "IdMaritalStatusNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdMaritalStatus")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("IdCityNavigation");
 
                     b.Navigation("IdCompanyNavigation");
 
                     b.Navigation("IdGenderNavigation");
-
-                    b.Navigation("IdMaritalStatusNavigation");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.Consultation", b =>

@@ -4,6 +4,7 @@ const moduleSource = 'medical-records';
 
 export const DataAPIMedicalRecordsService = () => ({
     getByClientId: (clientId) => GET(`${moduleSource}/client/${clientId}`),
+    getAllergyCatalog: () => GET(`${moduleSource}/allergies/catalog`),
     create: (data) => POST(moduleSource, data, true),
     update: (data, consultationId) => PUT(consultationId ? `${moduleSource}?consultationId=${consultationId}` : moduleSource, data, true),
 

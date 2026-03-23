@@ -11,7 +11,8 @@ namespace GenericApp.API.Models
         public string? Phone { get; set; }
         public string? Notes { get; set; }
         public DateTime BirthDate { get; set; }
-        public string? MaritalState { get; set; }
+        public int? IdMaritalStatus { get; set; }
+        public string? MaritalStatus { get; set; }
         public string? Ocupation { get; set; }
         public string? Education { get; set; }
         public string? Profession { get; set; }

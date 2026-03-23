@@ -209,6 +209,22 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = _mapper.Map<AllergyDTO>(entity) });
         }
 
+        [HttpGet("allergies/catalog")]
+        public async Task<ActionResult> GetAllergyCatalog()
+        {
+            var allergies = await _repository.FindBy<Allergy>(
+                x => !(x.IsDeleted ?? false) && !string.IsNullOrWhiteSpace(x.Description));
+
+            var list = allergies
+                .Select(x => x.Description!.Trim())
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x)
+                .ToList();
+
+            return Ok(new ApiResponse { Data = list });
+        }
+
         // --- Disease sub-endpoints ---
         [HttpPost("{medicalRecordId}/diseases")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
