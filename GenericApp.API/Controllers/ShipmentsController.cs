@@ -346,7 +346,7 @@ namespace GenericApp.API.Controllers
                 // --- SECCIÓN: INFORMACIÓN OPERATIVA ---
                 col.Item().PaddingBottom(5).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Column(infoCol =>
                 {
-                    infoCol.Item().Text($"INFORMACIÓN DE REMISION #{shipment.IdShipment:D4}").Bold().FontSize(8);
+                    infoCol.Item().Text($"INFORMACIÓN DE REMISION #{manifest.ManifestNo:D4}").Bold().FontSize(8);
                     infoCol.Item().PaddingTop(1).PaddingBottom(1).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
 
                     var labelStyle = TextStyle.Default.FontSize(7).Bold();
@@ -1105,7 +1105,7 @@ namespace GenericApp.API.Controllers
                             });
 
                             // Fila 1
-                            table.Cell().Text(t => { t.Span("No. Manifiesto: ").Bold(); t.Span($"{manifest.IdManifest}"); });
+                            table.Cell().Text(t => { t.Span("No. Manifiesto: ").Bold(); t.Span($"{manifest.ManifestNo:D4}"); });
                             table.Cell().Text(t => { t.Span("Línea: ").Bold(); t.Span("CORRECAMINOS"); });
 
                             // Fila 2

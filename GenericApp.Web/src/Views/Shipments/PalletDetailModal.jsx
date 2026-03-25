@@ -248,11 +248,11 @@ const labelService = DataAPILabelsService();
                             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
                                 PALLET #{position}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                {currentLabel?.description
-                                    ? currentLabel.description
-                                    : t('label')}
-                            </Typography>
+                            {/*<Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>*/}
+                            {/*    {currentLabel?.description*/}
+                            {/*        ? currentLabel.description*/}
+                            {/*        : t('label')}*/}
+                            {/*</Typography>*/}
                         </Box>
                     </Box>
 
@@ -280,7 +280,7 @@ const labelService = DataAPILabelsService();
 
             {/* ── CONTENIDO ── */}
             <DialogContent>
-                <Box sx={{ mt: 1 }}>
+                <Box sx={{ mt: 4 }}>
                     <Grid container spacing={2}>
                         {/* Temperatura */}
                         <Grid size={{ xs: 7 }}>
