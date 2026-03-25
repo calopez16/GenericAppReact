@@ -20,6 +20,7 @@ import { DataAPIClientsService } from '@data/Clients/Data';
 import { DataAPIConsultationsService } from '@data/Consultations/Data';
 import { DataAPIMedicalRecordsService } from '@data/MedicalRecords/Data';
 import EmptyData from '@layout/EmptyData';
+import DentalChart from '@views/Consultations/DentalChart';
 import PatientInfoSection from '@views/ClinicalHistory/Sections/PatientInfoSection';
 import PathologicalHistorySection from '@views/ClinicalHistory/Sections/PathologicalHistorySection';
 import NonPathologicalHistorySection from '@views/ClinicalHistory/Sections/NonPathologicalHistorySection';
@@ -77,6 +78,9 @@ function NewConsultationPage() {
     const [historyTab, setHistoryTab] = useState(0);
     const pendingNotesRef = useRef([]);
     const [savedCounter, setSavedCounter] = useState(0);
+
+    // Step 3: dental procedures
+    const [dentalProcedures, setDentalProcedures] = useState([]);
 
     // Step 3: consultation form
     const [form, setForm] = useState({
@@ -249,6 +253,7 @@ function NewConsultationPage() {
             const res = await consultService.create({
                 idClient: selectedClient.idClient,
                 ...form,
+                dentalProcedures: dentalProcedures.length > 0 ? JSON.stringify(dentalProcedures) : null,
             });
             if (res.success) {
                 ShowMessage(t('recordAddedSuccessSingular'), 'success');
@@ -552,8 +557,18 @@ function NewConsultationPage() {
                             </Grid>
                         </Grid>
                     </Paper>
+
+                    {/* Dental Chart */}
+                    <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2.5, mt: 2 }}>
+                        <DentalChart
+                            procedures={dentalProcedures}
+                            onChange={setDentalProcedures}
+                        />
+                    </Paper>
                 </Box>
             )}
+
+
         </Box>
     );
 }
