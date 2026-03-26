@@ -110,6 +110,12 @@ namespace GenericApp.API.Controllers
                 Mixed = s.Mixed,
                 IdShipmentStatus = s.IdShipmentStatus,
                 Comments = s.Comments,
+                IdCompanyNavigation = new CompanyDTO
+                {
+                    RegFdaNo = s.IdCompanyNavigation.RegFdaNo,
+                    GnnNumber = s.IdCompanyNavigation.GnnNumber,
+                    Empaque = s.IdCompanyNavigation.Empaque
+                },
                 Manifests = s.Manifests.Where(wmp => !(wmp.IsDeleted ?? false)).Select(m => new ManifestDTO
                 {
                     IdManifest = m.IdManifest,
@@ -367,7 +373,7 @@ namespace GenericApp.API.Controllers
                         t.Cell().Text(shipment.Mixed == true ? "SÍ" : "NO").FontSize(7).Style(valueStyle);
 
                         t.Cell().PaddingBottom(1).Text("EMPAQUE:").FontSize(8).Style(labelStyle);
-                        t.Cell().Text(manifest.Empaque ?? "-").FontSize(7).Style(valueStyle);
+                        t.Cell().Text(shipment.IdCompanyNavigation?.Empaque ?? "-").FontSize(7).Style(valueStyle);
 
                         t.Cell().PaddingBottom(1).Text("FECHA:").FontSize(8).Style(labelStyle);
                         t.Cell().Text($"{shipment.ShipmentDate?.ToString("dd/MM/yyyy") ?? "-"}").FontSize(7).Style(valueStyle);
@@ -538,7 +544,7 @@ namespace GenericApp.API.Controllers
 
                         subRow.RelativeItem().Column(stack =>
                         {
-                            stack.Item().Text($"EMPAQUE {shipment.IdCompanyNavigation?.Empaque?.ToUpper() ?? "EMPAQUE"}").Bold().FontSize(12).FontColor(Colors.Blue.Darken2);
+                            stack.Item().Text($"EMPAQUE {shipment.IdCompanyNavigation?.Empaque?.ToUpper() ?? ""}").Bold().FontSize(12).FontColor(Colors.Blue.Darken2);
                             stack.Item().Text(shipment.IdCompanyNavigation?.RazonSocial?.ToUpper() ?? "").FontSize(7).FontColor(Colors.Grey.Darken1);
                             stack.Item().Text(shipment.IdCompanyNavigation?.Address?.ToUpper() ?? "").FontSize(7).FontColor(Colors.Grey.Darken1);
                         });
@@ -1109,8 +1115,8 @@ namespace GenericApp.API.Controllers
                             table.Cell().Text(t => { t.Span("Línea: ").Bold(); t.Span("CORRECAMINOS"); });
 
                             // Fila 2
-                            table.Cell().Text(t => { t.Span("Empaque: ").Bold(); t.Span("MISION"); });
-                            table.Cell().Text(t => { t.Span("Destino: ").Bold(); t.Span($"{shipment.Address ?? "CENTRO, CA"}"); });
+                            table.Cell().Text(t => { t.Span("Empaque: ").Bold(); t.Span($"{manifest.IdCompanyNavigation.Empaque}"); });
+                            table.Cell().Text(t => { t.Span("Destino: ").Bold(); t.Span($"{shipment.Address}"); });
 
                             // Fila 3
                             table.Cell().Text(t => { t.Span("Fecha: ").Bold(); t.Span($"{shipment.ShipmentDate.ToString("dd/MM/yyyy")}"); });

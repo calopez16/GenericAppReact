@@ -82,6 +82,7 @@ const initialFormData = {
     isActive: true,
     comments: '',
     idCompany: 0,
+    idCompanyNavigation: null,
     manifests: [{ ...initialManifestStructure }]
 };
 
@@ -337,11 +338,11 @@ function ShipmentAddOrEdit() {
         if (!formData.shipmentDate) newErrors.shipmentDate = true;
         if (!formData.idClient) newErrors.idClient = true;
 
-        
+
         if (!currentManifest.idShippingCompany) newErrors.idShippingCompany = true;
         if (!currentManifest.idDriver) newErrors.idDriver = true;
         if (!currentManifest.exitDate) newErrors.exitDate = true;
-                if (!currentManifest.temperatureTrailerBoxF) newErrors.temperatureTrailerBoxF = true;
+        if (!currentManifest.temperatureTrailerBoxF) newErrors.temperatureTrailerBoxF = true;
         if (!currentManifest.trailerPlateEconomicNumber) newErrors.trailerPlateEconomicNumber = true;
         if (!currentManifest.trailerPlate) newErrors.trailerPlate = true;
         if (!currentManifest.trailerBoxPlateEconomicNumber) newErrors.trailerBoxPlateEconomicNumber = true;
@@ -694,6 +695,7 @@ function ShipmentAddOrEdit() {
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <TextField fullWidth label={t('empaque')} name="empaque" value={formData.manifests[activeTab]?.empaque || ''} onChange={handleManifestChange} />
+                        {console.log(formData.manifests[activeTab])}
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Autocomplete
