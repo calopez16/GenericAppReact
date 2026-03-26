@@ -377,10 +377,10 @@ const ShipmentDetail = () => {
                                     <DetailItem label={t('Season')} value={manifest.seasonYear} />
                                 </Grid>
                                 <Grid size={{ xs: 5, md: 4, xl: 2 }}>
-                                    <DetailItem label={t('RegFdaNo')} value={manifest.regFdaNo} />
+                                    <DetailItem label={t('RegFdaNo')} value={shipment.idCompanyNavigation?.regFdaNo || manifest.regFdaNo} />
                                 </Grid>
                                 <Grid size={{ xs: 4, md: 4, xl: 2 }}>
-                                    <DetailItem label={t('Empaque')} value={manifest.empaque} />
+                                    <DetailItem label={t('Empaque')} value={shipment.idCompanyNavigation?.empaque || manifest.empaque} />
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 4, xl: 2 }}>
                                     <DetailItem icon={<LocalShippingIcon />} label={t('shippingCompany')} value={manifest.idShippingCompanyNavigation?.name || manifest.idShippingCompanyNavigation?.description} />

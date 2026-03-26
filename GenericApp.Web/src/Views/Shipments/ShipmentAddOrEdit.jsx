@@ -180,9 +180,12 @@ function ShipmentAddOrEdit() {
                         let data = response.data;
                         if (data.shipmentDate) data.shipmentDate = data.shipmentDate.split('T')[0];
                         if (data.manifests) {
+                            const companyNav = data.idCompanyNavigation;
                             data.manifests = data.manifests.map(m => ({
                                 ...m,
-                                exitDate: m.exitDate?.includes('T') ? m.exitDate.split('T')[1].slice(0, 5) : m.exitDate
+                                exitDate: m.exitDate?.includes('T') ? m.exitDate.split('T')[1].slice(0, 5) : m.exitDate,
+                                regFdaNo: companyNav?.regFdaNo || m.regFdaNo || '',
+                                empaque: companyNav?.empaque || m.empaque || '',
                             }));
                         }
 
