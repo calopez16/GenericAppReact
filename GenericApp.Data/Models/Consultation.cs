@@ -15,8 +15,10 @@ namespace GenericApp.Data.Models
         public string? Treatment { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
+        public int? IdOralHygiene { get; set; }
 
         public virtual Client? IdClientNavigation { get; set; }
+        public virtual OralHygiene? IdOralHygieneNavigation { get; set; }
         public virtual ICollection<ConsultationTreatment> ConsultationTreatments { get; set; } = new List<ConsultationTreatment>();
     }
 }

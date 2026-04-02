@@ -488,5 +488,6 @@
   "ch_register_treatment": "Register treatment",
   "ch_tooth": "Tooth(teeth)",
   "ch_catalog_loading": "Loading catalog...",
-  "ch_child_patient": "Pediatric patient"
+  "ch_child_patient": "Pediatric patient",
+  "ch_oral_hygiene": "Oral hygiene"
 }

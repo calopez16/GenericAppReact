@@ -82,7 +82,7 @@ namespace GenericApp.API.Controllers
                     Notes = x.Notes,
                     Phone = x.Phone,
                     IdMaritalStatus = x.IdMaritalStatus,
-
+                    Child = x.Child,
                 })
                 .ToList();
 
@@ -215,6 +215,7 @@ namespace GenericApp.API.Controllers
             clientDB.IdCity = model.IdCity;
             clientDB.Notes = model.Notes;
             clientDB.IdMaritalStatus = model.IdMaritalStatus;
+            clientDB.Child = model.Child;
 
             if (!string.IsNullOrWhiteSpace(model.Gender))
             {

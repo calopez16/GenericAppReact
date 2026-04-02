@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { TextField, Autocomplete, CircularProgress, MenuItem } from '@mui/material';
+import { TextField, Autocomplete, CircularProgress, MenuItem, FormControlLabel, Checkbox } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { useTranslation } from 'react-i18next';
 import { DataAPICitiesService } from '@data/Cities/Data';
@@ -90,7 +90,15 @@ const PatientInfoSection = forwardRef(({ clientForm, setClientForm }, ref) => {
 
     const handleField = (field) => (e) => {
         const value = e.target.value;
-        setClientForm(prev => ({ ...prev, [field]: value }));
+        setClientForm(prev => {
+            const updated = { ...prev, [field]: value };
+            // When birthDate changes, auto-suggest child flag based on age < 15
+            if (field === 'birthDate' && value) {
+                const age = Math.floor((new Date() - new Date(value)) / (365.25 * 24 * 60 * 60 * 1000));
+                updated.child = age >= 0 && age < 15;
+            }
+            return updated;
+        });
         if (hasAttemptedSubmit && REQUIRED_FIELDS.includes(field)) {
             setErrors(prev => ({
                 ...prev,
@@ -258,6 +266,18 @@ const PatientInfoSection = forwardRef(({ clientForm, setClientForm }, ref) => {
                     value={clientForm.notes}
                     onChange={handleField('notes')}
                     inputProps={{ maxLength: 500 }}
+                />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={!!clientForm.child}
+                            onChange={(e) => setClientForm(prev => ({ ...prev, child: e.target.checked }))}
+                            color="primary"
+                        />
+                    }
+                    label={t('ch_child_patient')}
                 />
             </Grid>
         </Grid>

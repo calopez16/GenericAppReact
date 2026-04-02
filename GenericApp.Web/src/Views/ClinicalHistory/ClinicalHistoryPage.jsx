@@ -10,6 +10,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import NatureIcon from '@mui/icons-material/Nature';
 import SaveIcon from '@mui/icons-material/Save';
+import ChildCareIcon from '@mui/icons-material/ChildCare';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
@@ -39,11 +40,12 @@ function NewClientForm() {
         notes: '',
         birthDate: '',
         gender: '',
-        maritalState: '',
+        idMaritalStatus: '',
         ocupation: '',
         education: '',
         profession: '',
         religion: '',
+        child: false,
         idCompany: companySelected?.idCompany ?? null,
     });
 
@@ -192,12 +194,13 @@ if (clientId === 'nuevo') {
                     phone: c.phone ?? '',
                     birthDate: c.birthDate ? c.birthDate.substring(0, 10) : '',
                     gender: c.gender ?? '',
-                    maritalState: c.maritalState ?? '',
+                    idMaritalStatus: c.idMaritalStatus ?? '',
                     ocupation: c.ocupation ?? '',
                     education: c.education ?? '',
                     profession: c.profession ?? '',
                     religion: c.religion ?? '',
                     notes: c.notes ?? '',
+                    child: c.child ?? false,
                     idCity: c.idCity ?? null,
                     idCityNavigation: c.idCityNavigation ?? null,
                     idCompany: c.idCompany ?? null,
@@ -380,6 +383,16 @@ if (clientId === 'nuevo') {
                                 size="small"
                                 variant="outlined"
                                 label={`${Math.floor((new Date() - new Date(client.birthDate)) / (365.25 * 24 * 60 * 60 * 1000))} ${t('ch_years')}`}
+                                sx={{ height: 18, fontSize: 11 }}
+                            />
+                        )}
+                        {client?.child && (
+                            <Chip
+                                icon={<ChildCareIcon sx={{ fontSize: 13 }} />}
+                                label={t('ch_child_patient')}
+                                size="small"
+                                variant="outlined"
+                                color="warning"
                                 sx={{ height: 18, fontSize: 11 }}
                             />
                         )}

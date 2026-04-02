@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Paper, Button, Avatar, CircularProgress,
-    TextField, IconButton, Tooltip, Divider, Chip, Skeleton,
+    TextField, IconButton, Tooltip, Divider, Chip, Skeleton, MenuItem,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -13,6 +13,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import { DataAPIConsultationsService } from '@data/Consultations/Data';
+import { DataAPIClientsService } from '@data/Clients/Data';
 import DentalChart from '@views/Consultations/DentalChart';
 
 function ConsultationDetailPage() {
@@ -20,17 +21,23 @@ function ConsultationDetailPage() {
     const navigate = useNavigate();
     const { id } = useParams();
     const service = DataAPIConsultationsService();
+    const clientService = DataAPIClientsService();
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [form, setForm] = useState(null);
     const [dentalProcedures, setDentalProcedures] = useState([]);
     const [catalogTreatments, setCatalogTreatments] = useState([]);
+    const [oralHygieneOptions, setOralHygieneOptions] = useState([]);
+    const [isChild, setIsChild] = useState(false);
 
     useEffect(() => {
         loadConsultation();
         service.getCatalogOptions().then(res => {
-            if (res.success && res.data) setCatalogTreatments(res.data.treatments ?? []);
+            if (res.success && res.data) {
+                setCatalogTreatments(res.data.treatments ?? []);
+                setOralHygieneOptions(res.data.oralHygienes ?? []);
+            }
         });
     }, [id]);
 
@@ -50,6 +57,7 @@ function ConsultationDetailPage() {
                     physicalExam: d.physicalExam ?? '',
                     diagnosis: d.diagnosis ?? '',
                     treatment: d.treatment ?? '',
+                    idOralHygiene: d.idOralHygiene ?? '',
                 });
                 setDentalProcedures((d.consultationTreatments ?? []).map(ct => ({
                     idConsultationTreatment: ct.idConsultationTreatment,
@@ -58,6 +66,10 @@ function ConsultationDetailPage() {
                     treatmentCode: ct.treatmentCode,
                     treatmentDescription: ct.treatmentDescription,
                 })));
+                // Fetch client to get the child flag for the odontogram
+                clientService.getDataById(d.idClient).then(cr => {
+                    if (cr.success && cr.data) setIsChild(cr.data.child ?? false);
+                });
             } else {
                 ShowMessage(t('records_notFound'), 'error');
                 navigate('/consultas');
@@ -75,6 +87,7 @@ function ConsultationDetailPage() {
         try {
             const res = await service.update({
                 ...form,
+                idOralHygiene: form.idOralHygiene !== '' ? form.idOralHygiene : null,
                 consultationTreatments: dentalProcedures.map(p => ({
                     idTreatment: p.idTreatment,
                     toothNumber: p.toothNumber,
@@ -165,6 +178,20 @@ function ConsultationDetailPage() {
                                 InputLabelProps={{ shrink: true }}
                             />
                         </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <TextField
+                                select
+                                fullWidth
+                                label={t('ch_oral_hygiene')}
+                                value={form.idOralHygiene ?? ''}
+                                onChange={handleFieldChange('idOralHygiene')}
+                            >
+                                <MenuItem value="">{t('select')}</MenuItem>
+                                {oralHygieneOptions.map(o => (
+                                    <MenuItem key={o.idOralHygiene} value={o.idOralHygiene}>{o.description}</MenuItem>
+                                ))}
+                            </TextField>
+                        </Grid>
                         <Grid size={{ xs: 12 }}>
                             <TextField
                                 fullWidth multiline rows={3}
@@ -220,6 +247,7 @@ function ConsultationDetailPage() {
                     procedures={dentalProcedures}
                     onChange={setDentalProcedures}
                     catalogTreatments={catalogTreatments}
+                    isChild={isChild}
                 />
             </Paper>
         </Box>

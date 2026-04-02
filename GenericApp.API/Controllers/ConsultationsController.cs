@@ -185,6 +185,7 @@ namespace GenericApp.API.Controllers
                     TreatmentDescription = tr?.Description,
                 };
             }).ToList();
+            dto.IdOralHygiene = entity.IdOralHygiene;
 
             return Ok(new ApiResponse { Data = dto });
         }
@@ -196,6 +197,7 @@ namespace GenericApp.API.Controllers
             var entity = _mapper.Map<Consultation>(model);
             entity.IsActive = true;
             entity.IsDeleted = false;
+            entity.IdOralHygiene = model.IdOralHygiene;
 
             var result = await _repository.Add(entity);
             if (!result)
@@ -235,6 +237,7 @@ namespace GenericApp.API.Controllers
             entity.PhysicalExam = model.PhysicalExam;
             entity.Diagnosis = model.Diagnosis;
             entity.Treatment = model.Treatment;
+            entity.IdOralHygiene = model.IdOralHygiene;
 
             var result = await _repository.Update(entity);
             if (!result)

@@ -172,7 +172,7 @@ namespace GenericApp.Data
                 b.Property(x => x.Notes).HasMaxLength(250);
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
-                b.Property(x => x.Child).HasDefaultValue(false);
+                b.Property(x => x.Child).HasDefaultValue(false).ValueGeneratedNever();
 
                 b.HasOne(c => c.IdCompanyNavigation)
                     .WithMany()
@@ -278,6 +278,11 @@ namespace GenericApp.Data
                 b.HasOne(c => c.IdClientNavigation)
                     .WithMany()
                     .HasForeignKey(x => x.IdClient)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(c => c.IdOralHygieneNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdOralHygiene)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

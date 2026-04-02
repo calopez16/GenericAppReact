@@ -22,5 +22,6 @@ namespace GenericApp.API.Models
         public int IdCompany { get; set; }
         public CityDTO? IdCityNavigation { get; set; }
         public string? Gender { get; set; }
+        public bool Child { get; set; }
     }
 }

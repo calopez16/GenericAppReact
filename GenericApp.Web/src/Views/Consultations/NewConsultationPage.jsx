@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import {
     Box, Typography, Paper, Button, Avatar, LinearProgress,
-    TextField, IconButton, Tooltip, Divider, CircularProgress, Chip, Tabs, Tab, Alert,
+    TextField, IconButton, Tooltip, Divider, CircularProgress, Chip, Tabs, Tab, Alert, MenuItem
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -12,6 +12,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import SaveIcon from '@mui/icons-material/Save';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import NatureIcon from '@mui/icons-material/Nature';
+import ChildCareIcon from '@mui/icons-material/ChildCare';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
@@ -44,6 +45,9 @@ function PatientBanner({ client }) {
                     )}
                     {client.gender && (
                         <Chip label={client.gender} size="small" variant="outlined" color="primary" sx={{ height: 18, fontSize: 11 }} />
+                    )}
+                    {client.child && (
+                        <Chip icon={<ChildCareIcon sx={{ fontSize: 13 }} />} label={t('ch_child_patient')} size="small" variant="outlined" color="warning" sx={{ height: 18, fontSize: 11 }} />
                     )}
                 </Box>
             </Box>
@@ -92,7 +96,9 @@ function NewConsultationPage() {
         physicalExam: '',
         diagnosis: '',
         treatment: '',
+        idOralHygiene: '',
     });
+    const [oralHygieneOptions, setOralHygieneOptions] = useState([]);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
@@ -104,7 +110,12 @@ function NewConsultationPage() {
         if (step === 3 && catalogTreatments.length === 0) {
             setCatalogLoading(true);
             consultService.getCatalogOptions()
-                .then(res => { if (res.success && res.data) setCatalogTreatments(res.data.treatments ?? []); })
+                .then(res => {
+                    if (res.success && res.data) {
+                        setCatalogTreatments(res.data.treatments ?? []);
+                        setOralHygieneOptions(res.data.oralHygienes ?? []);
+                    }
+                })
                 .finally(() => setCatalogLoading(false));
         }
     }, [step]);
@@ -144,16 +155,18 @@ function NewConsultationPage() {
                     phone: cd.phone ?? '',
                     birthDate: cd.birthDate ? cd.birthDate.substring(0, 10) : '',
                     gender: cd.gender ?? '',
-                    maritalState: cd.maritalState ?? '',
+                    idMaritalStatus: cd.idMaritalStatus ?? '',
                     ocupation: cd.ocupation ?? '',
                     education: cd.education ?? '',
                     profession: cd.profession ?? '',
                     religion: cd.religion ?? '',
                     notes: cd.notes ?? '',
+                    child: cd.child ?? false,
                     idCity: cd.idCity ?? null,
                     idCityNavigation: cd.idCityNavigation ?? null,
                     idCompany: cd.idCompany ?? null,
                 });
+                setSelectedClient(prev => ({ ...prev, child: cd.child ?? false }));
             }
             if (mrRes.success && mrRes.data) {
                 const mr = mrRes.data;
@@ -215,7 +228,7 @@ function NewConsultationPage() {
             }
             const [clientRes, mrRes] = await Promise.all(saves);
             if (clientRes?.success) {
-                setSelectedClient(prev => ({ ...prev, name: clientForm.name, gender: clientForm.gender, birthDate: clientForm.birthDate }));
+                setSelectedClient(prev => ({ ...prev, name: clientForm.name, gender: clientForm.gender, birthDate: clientForm.birthDate, child: clientForm.child }));
             }
             if (mrRes?.success && mrRes.data?.idMedicalRecord) {
                 setMedicalFormData(prev => ({ ...prev, idMedicalRecord: mrRes.data.idMedicalRecord }));
@@ -264,6 +277,7 @@ function NewConsultationPage() {
             const res = await consultService.create({
                 idClient: selectedClient.idClient,
                 ...form,
+                idOralHygiene: form.idOralHygiene !== '' ? form.idOralHygiene : null,
                 consultationTreatments: dentalProcedures.map(p => ({
                     idTreatment: p.idTreatment,
                     toothNumber: p.toothNumber,
@@ -523,6 +537,21 @@ function NewConsultationPage() {
                                     onChange={handleFieldChange('consultationDate')}
                                     InputLabelProps={{ shrink: true }}
                                 />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 4 }}>
+                                <TextField
+                                    select
+                                    fullWidth
+                                    label={t('ch_oral_hygiene')}
+                                    value={form.idOralHygiene}
+                                    onChange={handleFieldChange('idOralHygiene')}
+                                    disabled={catalogLoading}
+                                >
+                                    <MenuItem value="">{t('select')}</MenuItem>
+                                    {oralHygieneOptions.map(o => (
+                                        <MenuItem key={o.idOralHygiene} value={o.idOralHygiene}>{o.description}</MenuItem>
+                                    ))}
+                                </TextField>
                             </Grid>
                             <Grid size={{ xs: 12 }}>
                                 <TextField
