@@ -30,26 +30,22 @@ const CONDITION_COLORS = [
     { fill: '#78909c33', outline: '#78909c' },
 ];
 
-const QUICK_PROCEDURES = [
-    'Extracción', 'Obturación', 'Endodoncia', 'Corona',
-    'Limpieza', 'Blanqueamiento', 'Implante', 'Puente',
-    'Sellador', 'Fluorización', 'Ortodoncia', 'Prótesis',
-];
+// Treatments are provided via props from the parent (loaded from the API catalog)
 
 /**
- * Groups procedures by label into teethConditions for react-odontogram,
- * assigning a unique color per unique procedure label.
+ * Groups procedures by treatment code into teethConditions for react-odontogram,
+ * assigning a unique color per unique treatment.
  */
 function buildTeethConditions(procedures) {
     const map = new Map();
     procedures.forEach((p) => {
-        const key = p.procedure;
-        if (!map.has(key)) map.set(key, []);
-        map.get(key).push(`teeth-${p.toothNumber}`);
+        const key = p.treatmentCode ?? String(p.idTreatment);
+        if (!map.has(key)) map.set(key, { teeth: [], label: p.treatmentDescription ?? key });
+        map.get(key).teeth.push(`teeth-${p.toothNumber}`);
     });
     const conditions = [];
     let idx = 0;
-    map.forEach((teeth, label) => {
+    map.forEach(({ teeth, label }) => {
         const color = CONDITION_COLORS[idx % CONDITION_COLORS.length];
         conditions.push({ label, teeth, fillColor: color.fill, outlineColor: color.outline });
         idx++;
@@ -58,7 +54,7 @@ function buildTeethConditions(procedures) {
 }
 
 function ToothButton({ number, procedures, onClick, size = 'md' }) {
-    const toothProcedures = procedures.filter(p => String(p.toothNumber) === String(number));
+const toothProcedures = procedures.filter(p => String(p.toothNumber) === String(number));  // procedures are ConsultationTreatment objects
     const hasProcedures = toothProcedures.length > 0;
     const dotSize = size === 'sm' ? 6 : 8;
     const btnSize = size === 'sm' ? 36 : 44;
@@ -164,17 +160,17 @@ function ClassicDentalChart({ mode, procedures, onSelectTooth }) {
     );
 }
 
-function AddProcedureDialog({ open, selectedTeeth, onClose, onAdd }) {
-    const [procedure, setProcedure] = useState('');
+function AddProcedureDialog({ open, selectedTeeth, onClose, onAdd, catalogTreatments = [] }) {
+    const [selectedTreatment, setSelectedTreatment] = useState(null);
 
     const handleAdd = () => {
-        if (!procedure.trim()) return;
-        onAdd(selectedTeeth, procedure.trim());
-        setProcedure('');
+        if (!selectedTreatment) return;
+        onAdd(selectedTeeth, selectedTreatment);
+        setSelectedTreatment(null);
     };
 
     const handleClose = () => {
-        setProcedure('');
+        setSelectedTreatment(null);
         onClose();
     };
 
@@ -183,40 +179,29 @@ function AddProcedureDialog({ open, selectedTeeth, onClose, onAdd }) {
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
             <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
-                Registrar procedimiento
+                Registrar tratamiento
                 <Typography variant="caption" display="block" color="text.secondary">
                     Diente(s): {teethLabels}
                 </Typography>
             </DialogTitle>
             <DialogContent>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, mb: 2, mt: 0.5 }}>
-                    {QUICK_PROCEDURES.map(p => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, mb: 1, mt: 0.5 }}>
+                    {catalogTreatments.map(t => (
                         <Chip
-                            key={p}
-                            label={p}
+                            key={t.idTreatment}
+                            label={`${t.code} – ${t.description}`}
                             size="small"
-                            onClick={() => setProcedure(p)}
-                            variant={procedure === p ? 'filled' : 'outlined'}
-                            color={procedure === p ? 'primary' : 'default'}
+                            onClick={() => setSelectedTreatment(t)}
+                            variant={selectedTreatment?.idTreatment === t.idTreatment ? 'filled' : 'outlined'}
+                            color={selectedTreatment?.idTreatment === t.idTreatment ? 'primary' : 'default'}
                             sx={{ cursor: 'pointer' }}
                         />
                     ))}
                 </Box>
-                <TextField
-                    fullWidth
-                    size="small"
-                    label="Procedimiento"
-                    value={procedure}
-                    onChange={e => setProcedure(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && procedure.trim()) handleAdd(); }}
-                    placeholder="Escribe o selecciona un procedimiento"
-                    inputProps={{ maxLength: 200 }}
-                    autoFocus
-                />
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleClose}>Cancelar</Button>
-                <Button variant="contained" onClick={handleAdd} disabled={!procedure.trim()} disableElevation>
+                <Button variant="contained" onClick={handleAdd} disabled={!selectedTreatment} disableElevation>
                     Agregar
                 </Button>
             </DialogActions>
@@ -225,14 +210,16 @@ function AddProcedureDialog({ open, selectedTeeth, onClose, onAdd }) {
 }
 
 /**
-* DentalChart
+ * DentalChart
  *
  * Props:
- *  - procedures: Array<{ toothNumber: string|number, procedure: string }>
+ *  - procedures: Array<{ idTreatment, toothNumber, treatmentCode, treatmentDescription }>
  *  - onChange: (updatedProcedures) => void
+ *  - catalogTreatments: Array<{ idTreatment, code, description }> — from API catalog
+ *  - isChild: boolean — pre-select child mode
  */
-export default function DentalChart({ procedures = [], onChange }) {
-    const [mode, setMode] = useState('adult'); // 'adult' | 'child'
+export default function DentalChart({ procedures = [], onChange, catalogTreatments = [], isChild = false }) {
+    const [mode, setMode] = useState(isChild ? 'child' : 'adult'); // 'adult' | 'child'
     const [viewType, setViewType] = useState('react'); // 'react' | 'classic'
     const [dialogOpen, setDialogOpen] = useState(false);
     const [pendingTeeth, setPendingTeeth] = useState([]);
@@ -253,10 +240,12 @@ export default function DentalChart({ procedures = [], onChange }) {
         setDialogOpen(true);
     };
 
-    const handleAddProcedure = (selectedTeeth, procedure) => {
+    const handleAddProcedure = (selectedTeeth, treatment) => {
         const newEntries = selectedTeeth.map(t => ({
-            toothNumber: t.notations?.fdi ?? t.id.replace('teeth-', ''),
-            procedure,
+            idTreatment: treatment.idTreatment,
+            toothNumber: Number(t.notations?.fdi ?? t.id.replace('teeth-', '')),
+            treatmentCode: treatment.code,
+            treatmentDescription: treatment.description,
         }));
         onChange?.([...procedures, ...newEntries]);
         setDialogOpen(false);
@@ -361,7 +350,7 @@ export default function DentalChart({ procedures = [], onChange }) {
                                 <Chip
                                     key={i}
                                     size="small"
-                                    label={`D${p.toothNumber} – ${p.procedure}`}
+                                    label={`D${p.toothNumber} – ${p.treatmentCode ?? ''} ${p.treatmentDescription ?? ''}`}
                                     onDelete={() => handleRemoveProcedure(i)}
                                     deleteIcon={<DeleteIcon fontSize="small" />}
                                     sx={{
@@ -382,6 +371,7 @@ export default function DentalChart({ procedures = [], onChange }) {
                 selectedTeeth={pendingTeeth}
                 onClose={handleCloseDialog}
                 onAdd={handleAddProcedure}
+                catalogTreatments={catalogTreatments}
             />
         </Box>
     );

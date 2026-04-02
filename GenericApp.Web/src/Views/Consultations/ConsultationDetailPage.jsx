@@ -13,6 +13,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import { DataAPIConsultationsService } from '@data/Consultations/Data';
+import DentalChart from '@views/Consultations/DentalChart';
 
 function ConsultationDetailPage() {
     const { t } = useTranslation();
@@ -23,9 +24,14 @@ function ConsultationDetailPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [form, setForm] = useState(null);
+    const [dentalProcedures, setDentalProcedures] = useState([]);
+    const [catalogTreatments, setCatalogTreatments] = useState([]);
 
     useEffect(() => {
         loadConsultation();
+        service.getCatalogOptions().then(res => {
+            if (res.success && res.data) setCatalogTreatments(res.data.treatments ?? []);
+        });
     }, [id]);
 
     const loadConsultation = async () => {
@@ -45,6 +51,13 @@ function ConsultationDetailPage() {
                     diagnosis: d.diagnosis ?? '',
                     treatment: d.treatment ?? '',
                 });
+                setDentalProcedures((d.consultationTreatments ?? []).map(ct => ({
+                    idConsultationTreatment: ct.idConsultationTreatment,
+                    idTreatment: ct.idTreatment,
+                    toothNumber: ct.toothNumber,
+                    treatmentCode: ct.treatmentCode,
+                    treatmentDescription: ct.treatmentDescription,
+                })));
             } else {
                 ShowMessage(t('records_notFound'), 'error');
                 navigate('/consultas');
@@ -60,7 +73,13 @@ function ConsultationDetailPage() {
         if (!form.consultationDate) { ShowMessage(t('emptyFields'), 'warning'); return; }
         setSaving(true);
         try {
-            const res = await service.update(form);
+            const res = await service.update({
+                ...form,
+                consultationTreatments: dentalProcedures.map(p => ({
+                    idTreatment: p.idTreatment,
+                    toothNumber: p.toothNumber,
+                })),
+            });
             if (res.success) {
                 ShowMessage(t('recordEditedSuccessPlural'), 'success');
             } else {
@@ -193,6 +212,15 @@ function ConsultationDetailPage() {
                         </Grid>
                     </Grid>
                 )}
+            </Paper>
+
+            {/* Dental Chart */}
+            <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2.5, mt: 2 }}>
+                <DentalChart
+                    procedures={dentalProcedures}
+                    onChange={setDentalProcedures}
+                    catalogTreatments={catalogTreatments}
+                />
             </Paper>
         </Box>
     );

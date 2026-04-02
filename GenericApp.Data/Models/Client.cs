@@ -25,6 +25,7 @@ namespace GenericApp.Data.Models
         public int IdCompany { get; set; }
         public int? IdGender { get; set; }
         public int? IdMaritalStatus { get; set; }
+        public bool Child { get; set; }
         public virtual MaritalStatus? IdMaritalStatusNavigation { get; set; }
         public virtual Gender? IdGenderNavigation { get; set; }
         public virtual Company? IdCompanyNavigation { get; set; }

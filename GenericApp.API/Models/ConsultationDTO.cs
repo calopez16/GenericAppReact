@@ -13,6 +13,7 @@ namespace GenericApp.API.Models
         public string? Treatment { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
+        public List<ConsultationTreatmentDTO> ConsultationTreatments { get; set; } = new();
     }
 }
 

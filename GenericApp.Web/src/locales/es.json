@@ -482,5 +482,11 @@
   "ch_creating_medical_record_hint": "Estamos generando el historial clínico del paciente. Por favor espera un momento.",
   "ch_auto_note_change": "{{label}}: {{from}} → {{to}}",
   "ch_new_client_history": "Nueva Historia Clínica",
-  "ch_new_client_history_hint": "Completa los datos del paciente para crear su historia clínica"
+  "ch_new_client_history_hint": "Completa los datos del paciente para crear su historia clínica",
+  "ch_dental_chart": "Odontograma",
+  "ch_treatments_registered": "Tratamientos registrados",
+  "ch_register_treatment": "Registrar tratamiento",
+  "ch_tooth": "Diente(s)",
+  "ch_catalog_loading": "Cargando catálogo...",
+  "ch_child_patient": "Paciente pediátrico"
 }

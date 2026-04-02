@@ -6,6 +6,7 @@ using GenericApp.Data.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GenericApp.API.Controllers
 {
@@ -21,6 +22,34 @@ namespace GenericApp.API.Controllers
         {
             _repository = repository;
             _mapper = mapper;
+        }
+
+        [HttpGet("catalog-options")]
+        public async Task<ActionResult> GetCatalogOptions()
+        {
+            var treatmentQuery = await _repository.Query<Treatment>();
+            var oralHygieneQuery = await _repository.Query<OralHygiene>();
+
+            var treatments = await treatmentQuery
+                .Where(x => !(x.IsDeleted ?? false) && (x.IsActive ?? false))
+                .OrderBy(x => x.Code)
+                .Select(x => new TreatmentDTO { IdTreatment = x.IdTreatment, Code = x.Code, Description = x.Description, IsActive = x.IsActive })
+                .ToListAsync();
+
+            var oralHygienes = await oralHygieneQuery
+                .Where(x => !(x.IsDeleted ?? false) && (x.IsActive ?? false))
+                .OrderBy(x => x.IdOralHygiene)
+                .Select(x => new OralHygieneDTO { IdOralHygiene = x.IdOralHygiene, Description = x.Description })
+                .ToListAsync();
+
+            return Ok(new ApiResponse
+            {
+                Data = new ConsultationCatalogOptionsDTO
+                {
+                    Treatments = treatments,
+                    OralHygienes = oralHygienes
+                }
+            });
         }
 
         [HttpGet("recent")]
@@ -126,14 +155,36 @@ namespace GenericApp.API.Controllers
         public async Task<ActionResult> GetById(int id)
         {
             var entity = await _repository.FirstOrDefault<Consultation>(
-                x => x.IdConsultation == id && !(x.IsDeleted ?? false));
+                x => x.IdConsultation == id && !(x.IsDeleted ?? false),
+                x => x.ConsultationTreatments);
 
             if (entity == null)
                 return NotFound(new ApiResponse());
 
             var client = await _repository.FirstOrDefault<Client>(x => x.IdClient == entity.IdClient);
+
+            var treatmentIds = entity.ConsultationTreatments.Select(ct => ct.IdTreatment).Distinct().ToList();
+            var treatmentQuery = await _repository.Query<Treatment>();
+            var treatments = await treatmentQuery
+                .Where(t => treatmentIds.Contains(t.IdTreatment))
+                .ToListAsync();
+            var treatmentMap = treatments.ToDictionary(t => t.IdTreatment);
+
             var dto = _mapper.Map<ConsultationDTO>(entity);
             dto.ClientName = client?.Name;
+            dto.ConsultationTreatments = entity.ConsultationTreatments.Select(ct =>
+            {
+                treatmentMap.TryGetValue(ct.IdTreatment, out var tr);
+                return new ConsultationTreatmentDTO
+                {
+                    IdConsultationTreatment = ct.IdConsultationTreatment,
+                    IdConsultation = ct.IdConsultation,
+                    IdTreatment = ct.IdTreatment,
+                    ToothNumber = ct.ToothNumber,
+                    TreatmentCode = tr?.Code,
+                    TreatmentDescription = tr?.Description,
+                };
+            }).ToList();
 
             return Ok(new ApiResponse { Data = dto });
         }
@@ -149,6 +200,17 @@ namespace GenericApp.API.Controllers
             var result = await _repository.Add(entity);
             if (!result)
                 return BadRequest(new ApiResponse());
+
+            if (model.ConsultationTreatments.Count > 0)
+            {
+                var ctEntities = model.ConsultationTreatments.Select(ct => new ConsultationTreatment
+                {
+                    IdConsultation = entity.IdConsultation,
+                    IdTreatment = ct.IdTreatment,
+                    ToothNumber = ct.ToothNumber,
+                }).ToList();
+                await _repository.AddRange(ctEntities);
+            }
 
             var client = await _repository.FirstOrDefault<Client>(x => x.IdClient == entity.IdClient);
             var dto = _mapper.Map<ConsultationDTO>(entity);
@@ -177,6 +239,22 @@ namespace GenericApp.API.Controllers
             var result = await _repository.Update(entity);
             if (!result)
                 return BadRequest(new ApiResponse());
+
+            // Replace consultation treatments: delete existing then insert new ones
+            var existingCTs = await _repository.FindBy<ConsultationTreatment>(ct => ct.IdConsultation == entity.IdConsultation);
+            if (existingCTs.Any())
+                await _repository.RemoveRange(existingCTs);
+
+            if (model.ConsultationTreatments.Count > 0)
+            {
+                var ctEntities = model.ConsultationTreatments.Select(ct => new ConsultationTreatment
+                {
+                    IdConsultation = entity.IdConsultation,
+                    IdTreatment = ct.IdTreatment,
+                    ToothNumber = ct.ToothNumber,
+                }).ToList();
+                await _repository.AddRange(ctEntities);
+            }
 
             return Ok(new ApiResponse { Data = _mapper.Map<ConsultationDTO>(entity) });
         }

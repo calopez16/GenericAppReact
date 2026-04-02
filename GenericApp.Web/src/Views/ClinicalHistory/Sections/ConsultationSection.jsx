@@ -17,6 +17,7 @@ import {
     DialogContent,
     DialogActions,
     TablePagination,
+    MenuItem,
 } from '@mui/material';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import AddIcon from '@mui/icons-material/Add';
@@ -47,6 +48,7 @@ const ConsultationSection = ({ client, consultations, setConsultations, totalCon
         physicalExam: '',
         diagnosis: '',
         treatment: '',
+        oralHygiene: '',
     };
 
     const [form, setForm] = useState(emptyForm);
@@ -67,6 +69,7 @@ const ConsultationSection = ({ client, consultations, setConsultations, totalCon
             physicalExam: consultation.physicalExam ?? '',
             diagnosis: consultation.diagnosis ?? '',
             treatment: consultation.treatment ?? '',
+            oralHygiene: consultation.oralHygiene ?? '',
         });
         setIsEditing(true);
         setDialogOpen(true);

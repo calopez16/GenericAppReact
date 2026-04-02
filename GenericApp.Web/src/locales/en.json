@@ -482,5 +482,11 @@
   "welcome_page_options_title": "App options",
   "welcome_page_subtitle": "General description of the system where you can perform different tasks",
   "welcome_page_title": "Welcome",
-  "yes": "Yes"
+  "yes": "Yes",
+  "ch_dental_chart": "Dental chart",
+  "ch_treatments_registered": "Registered treatments",
+  "ch_register_treatment": "Register treatment",
+  "ch_tooth": "Tooth(teeth)",
+  "ch_catalog_loading": "Loading catalog...",
+  "ch_child_patient": "Pediatric patient"
 }

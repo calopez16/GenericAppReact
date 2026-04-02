@@ -81,6 +81,8 @@ function NewConsultationPage() {
 
     // Step 3: dental procedures
     const [dentalProcedures, setDentalProcedures] = useState([]);
+    const [catalogTreatments, setCatalogTreatments] = useState([]);
+    const [catalogLoading, setCatalogLoading] = useState(false);
 
     // Step 3: consultation form
     const [form, setForm] = useState({
@@ -97,6 +99,15 @@ function NewConsultationPage() {
         const timer = setTimeout(() => setDebouncedSearch(searchTerm), 400);
         return () => clearTimeout(timer);
     }, [searchTerm]);
+
+    useEffect(() => {
+        if (step === 3 && catalogTreatments.length === 0) {
+            setCatalogLoading(true);
+            consultService.getCatalogOptions()
+                .then(res => { if (res.success && res.data) setCatalogTreatments(res.data.treatments ?? []); })
+                .finally(() => setCatalogLoading(false));
+        }
+    }, [step]);
 
     useEffect(() => {
         if (debouncedSearch.trim().length < 2) { setClients([]); return; }
@@ -253,7 +264,10 @@ function NewConsultationPage() {
             const res = await consultService.create({
                 idClient: selectedClient.idClient,
                 ...form,
-                dentalProcedures: dentalProcedures.length > 0 ? JSON.stringify(dentalProcedures) : null,
+                consultationTreatments: dentalProcedures.map(p => ({
+                    idTreatment: p.idTreatment,
+                    toothNumber: p.toothNumber,
+                })),
             });
             if (res.success) {
                 ShowMessage(t('recordAddedSuccessSingular'), 'success');
@@ -563,6 +577,8 @@ function NewConsultationPage() {
                         <DentalChart
                             procedures={dentalProcedures}
                             onChange={setDentalProcedures}
+                            catalogTreatments={catalogTreatments}
+                            isChild={selectedClient?.child ?? false}
                         />
                     </Paper>
                 </Box>

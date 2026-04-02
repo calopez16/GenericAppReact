@@ -3,6 +3,7 @@ import { GET, POST, PUT, DELETE } from '@data/GenericApiCalls';
 const moduleSource = 'consultations';
 
 export const DataAPIConsultationsService = () => ({
+    getCatalogOptions: () => GET(`${moduleSource}/catalog-options`),
     getRecent: (pageNumber = 1, pageSize = 10, searchTerm = '', idCompany = null) => {
         let url = `${moduleSource}/recent?pageNumber=${pageNumber}&pageSize=${pageSize}&searchTerm=${searchTerm}`;
         if (idCompany) url += `&idCompany=${idCompany}`;

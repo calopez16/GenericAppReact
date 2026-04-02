@@ -20,6 +20,9 @@ namespace GenericApp.Data
         public DbSet<Client> Clients { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Consultation> Consultations { get; set; }
+        public DbSet<ConsultationTreatment> ConsultationTreatments { get; set; }
+        public DbSet<Treatment> Treatments { get; set; }
+        public DbSet<OralHygiene> OralHygienes { get; set; }
         public DbSet<Country> Countries { get; set; }
         public DbSet<Disease> Diseases { get; set; }
         public DbSet<Gender> Genders { get; set; }
@@ -169,6 +172,7 @@ namespace GenericApp.Data
                 b.Property(x => x.Notes).HasMaxLength(250);
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
+                b.Property(x => x.Child).HasDefaultValue(false);
 
                 b.HasOne(c => c.IdCompanyNavigation)
                     .WithMany()
@@ -276,6 +280,59 @@ namespace GenericApp.Data
                     .HasForeignKey(x => x.IdClient)
                     .OnDelete(DeleteBehavior.Restrict);
             });
+
+            modelBuilder.Entity<Treatment>(b =>
+            {
+                b.HasKey(x => x.IdTreatment);
+                b.Property(x => x.Code).HasMaxLength(10).IsRequired();
+                b.Property(x => x.Description).HasMaxLength(150);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            });
+
+            modelBuilder.Entity<OralHygiene>(b =>
+            {
+                b.HasKey(x => x.IdOralHygiene);
+                b.Property(x => x.Description).HasMaxLength(150).IsRequired();
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            });
+
+            modelBuilder.Entity<ConsultationTreatment>(b =>
+            {
+                b.HasKey(x => x.IdConsultationTreatment);
+
+                b.HasOne(ct => ct.IdConsultationNavigation)
+                    .WithMany(c => c.ConsultationTreatments)
+                    .HasForeignKey(ct => ct.IdConsultation)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(ct => ct.IdTreatmentNavigation)
+                    .WithMany(t => t.ConsultationTreatments)
+                    .HasForeignKey(ct => ct.IdTreatment)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Treatment>().HasData(
+                new Treatment { IdTreatment = 1,  Code = "C",   Description = "Corona",              IsActive = true, IsDeleted = false },
+                new Treatment { IdTreatment = 2,  Code = "Et",  Description = "Extracción",          IsActive = true, IsDeleted = false },
+                new Treatment { IdTreatment = 3,  Code = "R",   Description = "Restauración",        IsActive = true, IsDeleted = false },
+                new Treatment { IdTreatment = 4,  Code = "Ei",  Description = "Endodoncia inferior", IsActive = true, IsDeleted = false },
+                new Treatment { IdTreatment = 5,  Code = "Au",  Description = "Amalgama",            IsActive = true, IsDeleted = false },
+                new Treatment { IdTreatment = 6,  Code = "S",   Description = "Sellante",            IsActive = true, IsDeleted = false },
+                new Treatment { IdTreatment = 7,  Code = "Fa",  Description = "Funda acrílica",      IsActive = true, IsDeleted = false },
+                new Treatment { IdTreatment = 8,  Code = "Hip", Description = "Hipersensibilidad",   IsActive = true, IsDeleted = false },
+                new Treatment { IdTreatment = 9,  Code = "Dt",  Description = "Diente temporal",     IsActive = true, IsDeleted = false },
+                new Treatment { IdTreatment = 10, Code = "Dr",  Description = "Diente roto",         IsActive = true, IsDeleted = false },
+                new Treatment { IdTreatment = 11, Code = "X",   Description = "Extracción indicada", IsActive = true, IsDeleted = false }
+            );
+
+            modelBuilder.Entity<OralHygiene>().HasData(
+                new OralHygiene { IdOralHygiene = 1, Description = "Excelente", IsActive = true, IsDeleted = false },
+                new OralHygiene { IdOralHygiene = 2, Description = "Buena",     IsActive = true, IsDeleted = false },
+                new OralHygiene { IdOralHygiene = 3, Description = "Regular",   IsActive = true, IsDeleted = false },
+                new OralHygiene { IdOralHygiene = 4, Description = "Mala",      IsActive = true, IsDeleted = false }
+            );
 
             modelBuilder.Entity<Company>().HasData(new Company
             {

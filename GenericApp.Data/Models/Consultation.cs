@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace GenericApp.Data.Models
 {
@@ -16,5 +17,6 @@ namespace GenericApp.Data.Models
         public bool? IsDeleted { get; set; }
 
         public virtual Client? IdClientNavigation { get; set; }
+        public virtual ICollection<ConsultationTreatment> ConsultationTreatments { get; set; } = new List<ConsultationTreatment>();
     }
 }
