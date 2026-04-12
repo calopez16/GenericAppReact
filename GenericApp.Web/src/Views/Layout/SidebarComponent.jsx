@@ -189,6 +189,7 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
     const isAdmin = userRoleList.includes('Administrator');
 
     const isItemAllowed = (item) => {
+        if (item.enabled === false) return false;
         const hasRole = !item.roles || item.roles.some(r => userRoleList.includes(r));
         if (!hasRole) return false;
         if (item.allowedUsers) return item.allowedUsers.includes(userName);
