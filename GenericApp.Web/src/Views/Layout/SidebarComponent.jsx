@@ -41,6 +41,7 @@ import DateRangeIcon from '@mui/icons-material/DateRange';
 import BadgeIcon from '@mui/icons-material/Badge';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import WidgetsIcon from '@mui/icons-material/Widgets';
+import ArticleIcon from '@mui/icons-material/Article';
 
 const drawerWidth = 256;
 
@@ -60,6 +61,7 @@ const iconMap = {
     BadgeIcon,
     LocalShippingIcon,
     WidgetsIcon,
+    ArticleIcon,
 };
 
 const NAV_ITEM_SX = (isSelected) => ({

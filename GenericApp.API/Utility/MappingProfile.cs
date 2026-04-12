@@ -27,6 +27,7 @@ namespace GenericApp.API.Utility
             CreateMap<ManifestStatus, ManifestStatusDTO>().ReverseMap();
             CreateMap<Shipment, ShipmentDTO>().ReverseMap();
             CreateMap<ShipmentStatus, ShipmentStatusDTO>().ReverseMap();
+            CreateMap<ContractTemplate, ContractTemplateDTO>().ReverseMap();
             
         }
     }

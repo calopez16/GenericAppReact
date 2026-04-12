@@ -99,6 +99,14 @@
         "i18nKeyDescription": "trailerBoxTypes_description",
         "icon": "TruckIcon",
         "enabled": true
+      },
+      {
+        "id": "contractTemplates",
+        "path": "/contract-templates",
+        "i18nKey": "contractTemplates",
+        "i18nKeyDescription": "contractTemplates_description",
+        "icon": "ArticleIcon",
+        "enabled": true
       }
     ]
   },

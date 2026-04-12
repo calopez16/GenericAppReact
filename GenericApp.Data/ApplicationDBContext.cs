@@ -16,6 +16,7 @@ namespace GenericApp.Data
 
         public DbSet<ApplicationLog> ApplicationLogs { get; set; }
         public DbSet<City> Cities { get; set; }
+        public DbSet<ContractTemplate> ContractTemplates { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Country> Countries { get; set; }
@@ -147,6 +148,20 @@ namespace GenericApp.Data
                       .WithMany(c => c.Cities)
                       .HasForeignKey(s => s.IdState)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<ContractTemplate>(b =>
+            {
+                b.HasKey(x => x.IdTemplate);
+                b.Property(x => x.Name).HasMaxLength(150).IsRequired();
+                b.Property(x => x.Description).HasMaxLength(500);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(ct => ct.IdCompanyNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdCompany)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Client>(b =>

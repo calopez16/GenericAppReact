@@ -104,6 +104,7 @@ export const AppContextProvider = ({ children }) => {
 
     useEffect(() => {
         localStorage.setItem("themeMode", themeMode);
+        document.body.classList.toggle('dark-mode', themeMode === 'dark');
     }, [themeMode]);
 
     const isMultiCompanyEnable = appConfig?.isMultiCompanyEnable !== false;

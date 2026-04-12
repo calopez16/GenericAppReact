@@ -1,6 +1,193 @@
 /* ----------------------------------------------------------- */
+/* ----------------------------------------------------------- */
+/* --- TIPTAP EDITOR GLOBAL STYLES                        --- */
+/* ----------------------------------------------------------- */
+
+/* Placeholder text via Tiptap v3 extension-placeholder */
+.tiptap p.is-editor-empty:first-child::before {
+    color: rgba(128, 128, 128, 0.6);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+}
+
+/* Variable highlight inside editor */
+.tiptap-variable {
+    display: inline-block;
+    background-color: rgba(45, 90, 39, 0.12);
+    color: #2d5a27;
+    border: 1px solid rgba(45, 90, 39, 0.35);
+    border-radius: 4px;
+    padding: 0 4px;
+    font-size: 0.82em;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+/* Dark mode: yellow text so variables are readable on dark backgrounds */
+.dark-mode .tiptap-variable {
+    color: #facc15;
+    background-color: rgba(250, 204, 21, 0.1);
+    border-color: rgba(250, 204, 21, 0.4);
+}
+
+/* Table styles — used both in the editor and the preview modal */
+.tiptap table,
+.tiptap-preview table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 8px 0;
+    table-layout: fixed;
+}
+
+.tiptap th,
+.tiptap td,
+.tiptap-preview th,
+.tiptap-preview td {
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    padding: 6px 10px;
+    vertical-align: top;
+    min-width: 60px;
+    position: relative;
+}
+
+.tiptap th,
+.tiptap-preview th {
+    background-color: rgba(0, 0, 0, 0.04);
+    font-weight: 700;
+    text-align: left;
+}
+
+/* Dark-theme table borders */
+@media (prefers-color-scheme: dark) {
+    .tiptap th,
+    .tiptap td,
+    .tiptap-preview th,
+    .tiptap-preview td {
+        border-color: rgba(255, 255, 255, 0.18);
+    }
+    .tiptap th,
+    .tiptap-preview th {
+        background-color: rgba(255, 255, 255, 0.06);
+    }
+}
+
+/* Selected cell highlight (table editing) */
+.tiptap .selectedCell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(45, 90, 39, 0.15);
+    pointer-events: none;
+}
+
+/* Resize handle */
+.tiptap .column-resize-handle {
+    position: absolute;
+    right: -2px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: rgba(45, 90, 39, 0.4);
+    cursor: col-resize;
+    pointer-events: all;
+}
+
+/* Images */
+.tiptap img,
+.tiptap-preview img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    display: block;
+    margin: 4px 0;
+}
+
+/* ?? Image resize container (ResizableNodeView) ?????????????????????????? */
+
+/* The outer wrapper that Tiptap injects around the <img> */
+.tiptap [data-resize-container] {
+    display: inline-block;
+    position: relative;
+    max-width: 100%;
+    /* show a subtle border when the image is being interacted with */
+}
+.tiptap [data-resize-container]:hover,
+.tiptap [data-resize-container][data-resize-state="true"] {
+    outline: 2px solid #0d6efd;
+    outline-offset: 1px;
+    border-radius: 4px;
+}
+
+/* The inner wrapper that holds the <img> itself */
+.tiptap [data-resize-wrapper] {
+    display: block;
+    position: relative;
+}
+
+/* All resize handles share these base styles */
+.tiptap [data-resize-handle] {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #ffffff;
+    border: 2px solid #0d6efd;
+    border-radius: 50%;
+    z-index: 10;
+    opacity: 0;                     /* hidden until hover */
+    transition: opacity 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* Make handles visible on hover / while resizing */
+.tiptap [data-resize-container]:hover [data-resize-handle],
+.tiptap [data-resize-container][data-resize-state="true"] [data-resize-handle] {
+    opacity: 1;
+}
+
+/* Corner handle cursors & positions */
+.tiptap [data-resize-handle="bottom-right"] {
+    bottom: -6px;
+    right: -6px;
+    cursor: se-resize;
+}
+.tiptap [data-resize-handle="bottom-left"] {
+    bottom: -6px;
+    left: -6px;
+    cursor: sw-resize;
+}
+.tiptap [data-resize-handle="top-right"] {
+    top: -6px;
+    right: -6px;
+    cursor: ne-resize;
+}
+.tiptap [data-resize-handle="top-left"] {
+    top: -6px;
+    left: -6px;
+    cursor: nw-resize;
+}
+
+/* Suppress text selection while dragging a handle */
+.tiptap [data-resize-container][data-resize-state="true"] {
+    user-select: none;
+}
+
+
+
+/* Headings */
+.tiptap h1, .tiptap-preview h1 { font-size: 1.8em; font-weight: 700; margin: 0.5em 0 0.3em; }
+.tiptap h2, .tiptap-preview h2 { font-size: 1.4em;  font-weight: 700; margin: 0.5em 0 0.3em; }
+.tiptap h3, .tiptap-preview h3 { font-size: 1.15em; font-weight: 700; margin: 0.5em 0 0.3em; }
+
+
+
+/* ----------------------------------------------------------- */
 /* --- ESTILOS PARA LA VISTA 2D DEL CAMIÓN (TRUCK2DVIEW) --- */
 /* ----------------------------------------------------------- */
+
 
 /* Contenedor Principal: Ocupa el 100% del espacio disponible y usa flexbox */
 .truck-container {

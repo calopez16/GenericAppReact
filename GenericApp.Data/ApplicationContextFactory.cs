@@ -14,7 +14,7 @@ namespace GenericApp.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDBContext>();
 
-            optionsBuilder.UseSqlServer("Server=localhost;Database=GenericApi;User=sa;Pwd=saadmin;");
+            optionsBuilder.UseSqlServer("Server=localhost;Database=Contratos;User=sa;Pwd=saadmin;");
 
             return new ApplicationDBContext(optionsBuilder.Options);
         }
