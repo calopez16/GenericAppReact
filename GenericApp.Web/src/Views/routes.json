@@ -6,6 +6,7 @@
     "i18nKeyDescription": "homepage_description",
     "icon": "HomeIcon",
     "exact": true,
+    "enabled": true,
     "roles": [ "Administrator", "User" ]
   },
   {
@@ -15,6 +16,7 @@
     "i18nKeyDescription": "shipments_description",
     "icon": "TruckIcon",
     "exact": true,
+    "enabled": true,
     "roles": [ "Administrator", "User" ]
   },
   {
@@ -23,6 +25,7 @@
     "i18nKey": "administration",
     "i18nKeyDescription": "administration_description",
     "icon": "SettingsIcon",
+    "enabled": true,
     "roles": [ "Administrator" ],
     "submenu": [
       {
@@ -30,63 +33,72 @@
         "path": "/users",
         "i18nKey": "users",
         "i18nKeyDescription": "users_description",
-        "icon": "PeopleIcon"
+        "icon": "PeopleIcon",
+        "enabled": true
       },
       {
         "id": "labels",
         "path": "/labels",
         "i18nKey": "labels",
         "i18nKeyDescription": "labels_description",
-        "icon": "LabelIcon"
+        "icon": "LabelIcon",
+        "enabled": true
       },
       {
         "id": "companies",
         "path": "/companies",
         "i18nKey": "companies",
         "i18nKeyDescription": "companies_description",
-        "icon": "ApartmentIcon"
+        "icon": "ApartmentIcon",
+        "enabled": true
       },
       {
         "id": "clients",
         "path": "/clients",
         "i18nKey": "clients",
         "i18nKeyDescription": "clients_description",
-        "icon": "PeopleAltIcon"
+        "icon": "PeopleAltIcon",
+        "enabled": true
       },
       {
         "id": "cities",
         "path": "/cities",
         "i18nKey": "cities",
         "i18nKeyDescription": "cities_description",
-        "icon": "LocationCityIcon"
+        "icon": "LocationCityIcon",
+        "enabled": true
       },
       {
         "id": "seasons",
         "path": "/seasons",
         "i18nKey": "seasons",
         "i18nKeyDescription": "seasons_description",
-        "icon": "DateRangeIcon"
+        "icon": "DateRangeIcon",
+        "enabled": true
       },
       {
         "id": "drivers",
         "path": "/drivers",
         "i18nKey": "drivers",
         "i18nKeyDescription": "drivers_description",
-        "icon": "BadgeIcon"
+        "icon": "BadgeIcon",
+        "enabled": true
       },
       {
         "id": "shippingCompanies",
         "path": "/shipping-companies",
         "i18nKey": "shippingCompanies",
         "i18nKeyDescription": "shippingCompanies_description",
-        "icon": "LocalShippingIcon"
+        "icon": "LocalShippingIcon",
+        "enabled": true
       },
       {
         "id": "trailerboxtypes",
         "path": "/trailerboxtypes",
         "i18nKey": "trailerBoxTypes",
         "i18nKeyDescription": "trailerBoxTypes_description",
-        "icon": "TruckIcon"
+        "icon": "TruckIcon",
+        "enabled": true
       }
     ]
   },
@@ -97,6 +109,7 @@
     "i18nKeyDescription": "configuration_description",
     "icon": "SettingsIcon",
     "exact": true,
+    "enabled": true,
     "roles": [ "Administrator" ],
     "allowedUsers": [ "admin" ]
   }
