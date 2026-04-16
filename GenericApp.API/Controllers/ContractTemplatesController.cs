@@ -319,15 +319,25 @@ namespace GenericApp.API.Controllers
             switch (el.TagName.ToUpper())
             {
                 case "P":
-                    col.Item().ExtendHorizontal().PaddingBottom(4).Text(t =>
+                    // Always render paragraph (even if empty) so line breaks are respected
+                    var textContent = el.TextContent?.Trim() ?? "";
+                    if (string.IsNullOrEmpty(textContent))
                     {
-                        ApplyTextAlign(t, el);
-                        BuildInlineSpans(t, el);
-                    });
+                        // Empty <p> = explicit line break between blocks
+                        col.Item().Height(10);
+                    }
+                    else
+                    {
+                        col.Item().ExtendHorizontal().PaddingBottom(8).Text(t =>
+                        {
+                            ApplyTextAlign(t, el);
+                            BuildInlineSpans(t, el);
+                        });
+                    }
                     break;
 
                 case "H1":
-                    col.Item().ExtendHorizontal().PaddingBottom(6).PaddingTop(4)
+                    col.Item().ExtendHorizontal().PaddingTop(6).PaddingBottom(8)
                         .DefaultTextStyle(s => s.FontSize(22).Bold())
                         .Text(t =>
                         {
@@ -337,7 +347,7 @@ namespace GenericApp.API.Controllers
                     break;
 
                 case "H2":
-                    col.Item().ExtendHorizontal().PaddingBottom(5).PaddingTop(3)
+                    col.Item().ExtendHorizontal().PaddingTop(5).PaddingBottom(7)
                         .DefaultTextStyle(s => s.FontSize(17).Bold())
                         .Text(t =>
                         {
@@ -347,7 +357,7 @@ namespace GenericApp.API.Controllers
                     break;
 
                 case "H3":
-                    col.Item().ExtendHorizontal().PaddingBottom(4).PaddingTop(2)
+                    col.Item().ExtendHorizontal().PaddingTop(4).PaddingBottom(6)
                         .DefaultTextStyle(s => s.FontSize(13).Bold())
                         .Text(t =>
                         {
@@ -358,7 +368,7 @@ namespace GenericApp.API.Controllers
 
                 case "BLOCKQUOTE":
                     col.Item().BorderLeft(3).BorderColor(Colors.Grey.Lighten1)
-                        .PaddingLeft(8).PaddingVertical(4).Column(inner =>
+                        .PaddingLeft(8).PaddingVertical(4).PaddingBottom(8).Column(inner =>
                         {
                             RenderNodes(inner, el.ChildNodes);
                         });
@@ -371,14 +381,16 @@ namespace GenericApp.API.Controllers
 
                 case "TABLE":
                     RenderTable(col, el);
+                    col.Item().Height(8); // spacing after table
                     break;
 
                 case "BR":
-                    col.Item().PaddingBottom(4).Text("");
+                    // Block-level <br> adds vertical spacing
+                    col.Item().Height(10);
                     break;
 
                 case "HR":
-                    col.Item().PaddingVertical(4).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+                    col.Item().PaddingVertical(6).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
                     break;
 
                 case "IMG":
@@ -410,15 +422,52 @@ namespace GenericApp.API.Controllers
             var isOrdered = listEl.TagName.Equals("OL", StringComparison.OrdinalIgnoreCase);
             var items = listEl.QuerySelectorAll("li");
             int counter = 1;
-            foreach (var li in items)
+
+            col.Item().PaddingBottom(8).Column(listCol =>
             {
-                var bullet = isOrdered ? $"{counter++}." : "•";
-                col.Item().Row(row =>
+                foreach (var li in items)
                 {
-                    row.ConstantItem(20).Text(bullet).FontSize(11);
-                    row.RelativeItem().Text(t => BuildInlineSpans(t, li));
-                });
-            }
+                    var bullet = isOrdered ? $"{counter++}." : "•";
+
+                    // A <li> may contain block children (e.g. <p>, <br>) or just inline text.
+                    // If it has block-level children, render them inside a nested column
+                    // so that <br> and multiple <p> inside one <li> are respected.
+                    var hasBlockChildren = li.ChildNodes
+                        .OfType<AsDom.IElement>()
+                        .Any(c =>
+                        {
+                            var tag = c.TagName.ToUpper();
+                            return tag == "P" || tag == "UL" || tag == "OL"
+                                || tag == "H1" || tag == "H2" || tag == "H3"
+                                || tag == "BLOCKQUOTE" || tag == "TABLE" || tag == "HR";
+                        });
+
+                    listCol.Item().PaddingBottom(2).Row(row =>
+                    {
+                        row.ConstantItem(20).Text(bullet).FontSize(11);
+
+                        if (hasBlockChildren)
+                        {
+                            // Render each block child (P, BR…) in a nested column
+                            row.RelativeItem().Column(liCol =>
+                            {
+                                RenderNodes(liCol, li.ChildNodes);
+                            });
+                        }
+                        else
+                        {
+                            // Pure inline content — single text span
+                            var paragraph = li.QuerySelector("p");
+                            row.RelativeItem().Text(t =>
+                            {
+                                if (paragraph != null)
+                                    ApplyTextAlign(t, paragraph);
+                                BuildInlineSpans(t, li);
+                            });
+                        }
+                    });
+                }
+            });
         }
 
         private static void RenderTable(ColumnDescriptor col, AsDom.IElement tableEl)
@@ -465,11 +514,33 @@ namespace GenericApp.API.Controllers
                             ? cellContainer.Background(Colors.Grey.Lighten3).Padding(5)
                             : cellContainer.Padding(5);
 
-                        paddedCell.Text(t =>
+                        // Detect block-level children (img, p, ul, etc.) that cannot
+                        // be rendered inside a TextDescriptor — use a Column instead.
+                        bool cellHasBlockContent = cell.ChildNodes
+                            .OfType<AsDom.IElement>()
+                            .Any(c =>
+                            {
+                                var tag = c.TagName.ToUpper();
+                                return tag == "IMG" || tag == "P" || tag == "UL" || tag == "OL"
+                                    || tag == "H1" || tag == "H2" || tag == "H3"
+                                    || tag == "TABLE" || tag == "HR" || tag == "BLOCKQUOTE";
+                            });
+
+                        if (cellHasBlockContent)
                         {
-                            BuildInlineSpans(t, cell);
-                            if (isHeader) t.DefaultTextStyle(s => s.Bold());
-                        });
+                            paddedCell.Column(cellCol =>
+                            {
+                                RenderNodes(cellCol, cell.ChildNodes);
+                            });
+                        }
+                        else
+                        {
+                            paddedCell.Text(t =>
+                            {
+                                BuildInlineSpans(t, cell);
+                                if (isHeader) t.DefaultTextStyle(s => s.Bold());
+                            });
+                        }
                     }
                 }
             });
@@ -478,8 +549,13 @@ namespace GenericApp.API.Controllers
         /// <summary>
         /// Recursively builds QuestPDF inline text spans for an element's children,
         /// honouring bold, italic, underline, strike, color and font-size.
+        /// <paramref name="inherited"/> carries the accumulated parent style so all
+        /// ancestor properties (font-size, font-family, bold…) compose correctly.
         /// </summary>
-        private static void BuildInlineSpans(TextDescriptor t, AsDom.IElement el)
+        private static void BuildInlineSpans(
+            TextDescriptor t,
+            AsDom.IElement el,
+            Func<TextSpanDescriptor, TextSpanDescriptor>? inherited = null)
         {
             foreach (var child in el.ChildNodes)
             {
@@ -487,7 +563,10 @@ namespace GenericApp.API.Controllers
                 {
                     var content = textNode.TextContent;
                     if (!string.IsNullOrEmpty(content))
-                        t.Span(content);
+                    {
+                        var s = t.Span(content);
+                        inherited?.Invoke(s);
+                    }
                     continue;
                 }
 
@@ -496,33 +575,68 @@ namespace GenericApp.API.Controllers
                 switch (childEl.TagName.ToUpper())
                 {
                     case "STRONG": case "B":
-                        ApplyFormattedChildren(t, childEl, s => s.Bold());
+                    {
+                        // Build a style that first applies inherited, then adds Bold
+                        Func<TextSpanDescriptor, TextSpanDescriptor> boldStyle = s =>
+                        {
+                            if (inherited != null) s = inherited(s);
+                            return s.Bold();
+                        };
+                        ApplyFormattedChildren(t, childEl, boldStyle);
                         break;
+                    }
                     case "EM": case "I":
-                        ApplyFormattedChildren(t, childEl, s => s.Italic());
+                    {
+                        Func<TextSpanDescriptor, TextSpanDescriptor> italicStyle = s =>
+                        {
+                            if (inherited != null) s = inherited(s);
+                            return s.Italic();
+                        };
+                        ApplyFormattedChildren(t, childEl, italicStyle);
                         break;
+                    }
                     case "U":
-                        ApplyFormattedChildren(t, childEl, s => s.Underline());
+                    {
+                        Func<TextSpanDescriptor, TextSpanDescriptor> underlineStyle = s =>
+                        {
+                            if (inherited != null) s = inherited(s);
+                            return s.Underline();
+                        };
+                        ApplyFormattedChildren(t, childEl, underlineStyle);
                         break;
+                    }
                     case "S": case "DEL":
-                        ApplyFormattedChildren(t, childEl, s => s.Strikethrough());
+                    {
+                        Func<TextSpanDescriptor, TextSpanDescriptor> strikeStyle = s =>
+                        {
+                            if (inherited != null) s = inherited(s);
+                            return s.Strikethrough();
+                        };
+                        ApplyFormattedChildren(t, childEl, strikeStyle);
                         break;
+                    }
                     case "CODE":
-                        t.Span(GetText(childEl))
+                    {
+                        var codeSpan = t.Span(GetText(childEl))
                             .FontFamily(Fonts.CourierNew)
                             .BackgroundColor(Colors.Grey.Lighten3);
+                        inherited?.Invoke(codeSpan);
                         break;
+                    }
                     case "SPAN":
-                        ApplySpanStyle(t, childEl);
+                        ApplySpanStyle(t, childEl, inherited);
                         break;
                     case "A":
-                        t.Hyperlink(GetText(childEl), childEl.GetAttribute("href") ?? "#");
+                    {
+                        var linkSpan = t.Hyperlink(GetText(childEl), childEl.GetAttribute("href") ?? "#");
+                        inherited?.Invoke(linkSpan);
                         break;
+                    }
                     case "BR":
-                        t.Line("");
+                        t.Span("\n");
                         break;
                     default:
-                        BuildInlineSpans(t, childEl);
+                        BuildInlineSpans(t, childEl, inherited);
                         break;
                 }
             }
@@ -530,8 +644,9 @@ namespace GenericApp.API.Controllers
 
         /// <summary>
         /// Emits one span per text node inside <paramref name="el"/>, applying
-        /// <paramref name="style"/> to each. This avoids calling t.Span() with
-        /// a flat GetText() that would lose nested inline formatting.
+        /// <paramref name="style"/> to each. When recursing into nested inline
+        /// elements, passes <paramref name="style"/> as the inherited context so
+        /// descendant spans receive all ancestor styles.
         /// </summary>
         private static void ApplyFormattedChildren(
             TextDescriptor t,
@@ -544,12 +659,25 @@ namespace GenericApp.API.Controllers
                 {
                     var content = txt.TextContent;
                     if (!string.IsNullOrEmpty(content))
-                        style(t.Span(content));
+                    {
+                        var s = t.Span(content);
+                        style(s);
+                    }
                 }
                 else if (child is AsDom.IElement nested)
                 {
-                    // Recurse — inner element may add its own style on top
-                    BuildInlineSpans(t, nested);
+                    switch (nested.TagName.ToUpper())
+                    {
+                        case "BR":
+                            t.Span("\n");
+                            break;
+                        default:
+                            // Pass the full composite style as inherited so nested
+                            // elements (e.g. <em> inside <strong>) keep all ancestor
+                            // styles (bold + font-size, etc.).
+                            BuildInlineSpans(t, nested, style);
+                            break;
+                    }
                 }
             }
         }
@@ -575,50 +703,62 @@ namespace GenericApp.API.Controllers
             }
         }
 
-        private static void ApplySpanStyle(TextDescriptor t, AsDom.IElement span)
+        private static void ApplySpanStyle(
+            TextDescriptor t,
+            AsDom.IElement span,
+            Func<TextSpanDescriptor, TextSpanDescriptor>? inherited = null)
         {
             var style = span.GetAttribute("style") ?? "";
-            var text = GetText(span);
-            if (string.IsNullOrEmpty(text)) return;
 
-            var spanEl = t.Span(text);
-
-            // color
+            // Parse all CSS properties from the style attribute
             var colorMatch = System.Text.RegularExpressions.Regex
                 .Match(style, @"color:\s*(#[0-9a-fA-F]{3,6}|rgb\([^)]+\))");
-            if (colorMatch.Success)
-            {
-                var hex = CssColorToHex(colorMatch.Groups[1].Value);
-                if (hex != null) spanEl.FontColor(hex);
-            }
-
-            // font-size
             var sizeMatch = System.Text.RegularExpressions.Regex
                 .Match(style, @"font-size:\s*([\d.]+)px");
-            if (sizeMatch.Success && float.TryParse(sizeMatch.Groups[1].Value,
-                System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out var px))
-            {
-                spanEl.FontSize(px * 0.75f); // px → pt
-            }
-
-            // font-family
             var familyMatch = System.Text.RegularExpressions.Regex
                 .Match(style, @"font-family:\s*([^;]+)");
-            if (familyMatch.Success)
-            {
-                var family = NormalizeFontFamily(familyMatch.Groups[1].Value);
-                if (family != null) spanEl.FontFamily(family);
-            }
 
-            if (style.Contains("font-weight: bold") || style.Contains("font-weight:bold"))
-                spanEl.Bold();
-            if (style.Contains("font-style: italic") || style.Contains("font-style:italic"))
-                spanEl.Italic();
-            if (style.Contains("text-decoration: underline") || style.Contains("text-decoration:underline"))
-                spanEl.Underline();
-            if (style.Contains("text-decoration: line-through") || style.Contains("text-decoration:line-through"))
-                spanEl.Strikethrough();
+            bool hasBold = style.Contains("font-weight: bold") || style.Contains("font-weight:bold");
+            bool hasItalic = style.Contains("font-style: italic") || style.Contains("font-style:italic");
+            bool hasUnderline = style.Contains("text-decoration: underline") || style.Contains("text-decoration:underline");
+            bool hasStrike = style.Contains("text-decoration: line-through") || style.Contains("text-decoration:line-through");
+
+            // Build a composite style: first apply inherited parent styles,
+            // then overlay this span's own CSS properties on top.
+            Func<TextSpanDescriptor, TextSpanDescriptor> styleFunc = s =>
+            {
+                if (inherited != null) s = inherited(s);
+
+                if (colorMatch.Success)
+                {
+                    var hex = CssColorToHex(colorMatch.Groups[1].Value);
+                    if (hex != null) s = s.FontColor(hex);
+                }
+
+                if (sizeMatch.Success && float.TryParse(sizeMatch.Groups[1].Value,
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var px))
+                {
+                    s = s.FontSize(px * 0.75f); // px → pt
+                }
+
+                if (familyMatch.Success)
+                {
+                    var family = NormalizeFontFamily(familyMatch.Groups[1].Value);
+                    if (family != null) s = s.FontFamily(family);
+                }
+
+                if (hasBold) s = s.Bold();
+                if (hasItalic) s = s.Italic();
+                if (hasUnderline) s = s.Underline();
+                if (hasStrike) s = s.Strikethrough();
+
+                return s;
+            };
+
+            // styleFunc becomes the inherited context for any nested elements
+            // (strong, em, span…) so they receive all accumulated styles.
+            ApplyFormattedChildren(t, span, styleFunc);
         }
 
         /// <summary>
