@@ -645,8 +645,8 @@ namespace GenericApp.API.Controllers
         /// <summary>
         /// Emits one span per text node inside <paramref name="el"/>, applying
         /// <paramref name="style"/> to each. When recursing into nested inline
-        /// elements, passes <paramref name="style"/> as the inherited context so
-        /// descendant spans receive all ancestor styles.
+        /// elements, composes <paramref name="style"/> with the element-specific
+        /// style so descendant spans receive all ancestor styles.
         /// </summary>
         private static void ApplyFormattedChildren(
             TextDescriptor t,
@@ -666,15 +666,59 @@ namespace GenericApp.API.Controllers
                 }
                 else if (child is AsDom.IElement nested)
                 {
+                    // Must handle all inline formatting tags here too.
+                    // Calling BuildInlineSpans(t, nested, style) with nested=<strong>
+                    // would make <strong> the "el" parameter, so its text children
+                    // would only receive `style` (inherited) and never get Bold applied.
                     switch (nested.TagName.ToUpper())
                     {
                         case "BR":
                             t.Span("\n");
                             break;
+                        case "STRONG": case "B":
+                        {
+                            Func<TextSpanDescriptor, TextSpanDescriptor> composed = s =>
+                            {
+                                s = style(s);
+                                return s.Bold();
+                            };
+                            ApplyFormattedChildren(t, nested, composed);
+                            break;
+                        }
+                        case "EM": case "I":
+                        {
+                            Func<TextSpanDescriptor, TextSpanDescriptor> composed = s =>
+                            {
+                                s = style(s);
+                                return s.Italic();
+                            };
+                            ApplyFormattedChildren(t, nested, composed);
+                            break;
+                        }
+                        case "U":
+                        {
+                            Func<TextSpanDescriptor, TextSpanDescriptor> composed = s =>
+                            {
+                                s = style(s);
+                                return s.Underline();
+                            };
+                            ApplyFormattedChildren(t, nested, composed);
+                            break;
+                        }
+                        case "S": case "DEL":
+                        {
+                            Func<TextSpanDescriptor, TextSpanDescriptor> composed = s =>
+                            {
+                                s = style(s);
+                                return s.Strikethrough();
+                            };
+                            ApplyFormattedChildren(t, nested, composed);
+                            break;
+                        }
+                        case "SPAN":
+                            ApplySpanStyle(t, nested, style);
+                            break;
                         default:
-                            // Pass the full composite style as inherited so nested
-                            // elements (e.g. <em> inside <strong>) keep all ancestor
-                            // styles (bold + font-size, etc.).
                             BuildInlineSpans(t, nested, style);
                             break;
                     }
