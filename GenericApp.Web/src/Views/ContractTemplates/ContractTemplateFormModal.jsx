@@ -48,6 +48,7 @@ import ViewWeekIcon from '@mui/icons-material/ViewWeek';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import BorderAllIcon from '@mui/icons-material/BorderAll';
 import BorderClearIcon from '@mui/icons-material/BorderClear';
+import BorderStyleIcon from '@mui/icons-material/BorderStyle';
 import TableRowsIcon from '@mui/icons-material/TableRows';
 import { AppContext } from '@helpers/AppContext';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -57,8 +58,114 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { Color, FontFamily, FontSize, TextStyle } from '@tiptap/extension-text-style';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
-import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
+import { Table as TiptapTable, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
+
+// ---------------------------------------------------------------------------
+// Extended Table: tracks `borderless` state + exposes toggleTableBorders command
+// ---------------------------------------------------------------------------
+const Table = TiptapTable.extend({
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            borderless: {
+                default: false,
+                parseHTML: element => element.getAttribute('data-borderless') === 'true',
+                renderHTML: attributes => attributes.borderless ? { 'data-borderless': 'true' } : {},
+            },
+        };
+    },
+    addCommands() {
+        return {
+            ...this.parent?.(),
+            toggleTableBorders: () => ({ tr, state, dispatch }) => {
+                const { $from } = state.selection;
+                let tableDepth = -1;
+                for (let d = $from.depth; d >= 0; d--) {
+                    if ($from.node(d).type.name === 'table') { tableDepth = d; break; }
+                }
+                if (tableDepth === -1) return false;
+                const tablePos = $from.before(tableDepth);
+                const tableNode = $from.node(tableDepth);
+                const borderless = !tableNode.attrs.borderless;
+                tr.setNodeMarkup(tablePos, undefined, { ...tableNode.attrs, borderless });
+                tableNode.descendants((node, pos) => {
+                    if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+                        tr.setNodeMarkup(tablePos + 1 + pos, undefined, { ...node.attrs, borderless });
+                    }
+                });
+                if (dispatch) dispatch(tr);
+                return true;
+            },
+        };
+    },
+});
+
+// ---------------------------------------------------------------------------
+// TableCell / TableHeader extended with inline `style` when borderless
+// ---------------------------------------------------------------------------
+const BorderlessTableCell = TableCell.extend({
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            borderless: {
+                default: false,
+                parseHTML: element => element.getAttribute('data-borderless') === 'true',
+                renderHTML: (attributes) => {
+                    if (!attributes.borderless) return {};
+                    return { 'data-borderless': 'true', style: 'border: none;' };
+                },
+            },
+        };
+    },
+});
+
+const BorderlessTableHeader = TableHeader.extend({
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            borderless: {
+                default: false,
+                parseHTML: element => element.getAttribute('data-borderless') === 'true',
+                renderHTML: (attributes) => {
+                    if (!attributes.borderless) return {};
+                    return { 'data-borderless': 'true', style: 'border: none; background: transparent;' };
+                },
+            },
+        };
+    },
+});
 import Image from '@tiptap/extension-image';
+
+// ---------------------------------------------------------------------------
+// Extended Image node with horizontal alignment (left / center / right)
+// ---------------------------------------------------------------------------
+const AlignableImage = Image.extend({
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            textAlign: {
+                default: 'left',
+                parseHTML: element => element.getAttribute('data-align') ?? 'left',
+                renderHTML: attributes => {
+                    const align = attributes.textAlign ?? 'left';
+                    const marginMap = { left: '4px 0', center: '4px auto', right: '4px 0 4px auto' };
+                    return {
+                        'data-align': align,
+                        style: `display: block; margin: ${marginMap[align] ?? '4px 0'}`,
+                    };
+                },
+            },
+        };
+    },
+    addCommands() {
+        return {
+            ...this.parent?.(),
+            setImageAlign: (align) => ({ commands }) =>
+                commands.updateAttributes(this.name, { textAlign: align }),
+        };
+    },
+});
+
 import { DataAPIContractTemplatesService } from '@data/ContractTemplates/Data';
 import { AVAILABLE_VARIABLES } from '@data/ContractTemplates/Variables';
 import { useTranslation } from 'react-i18next';
@@ -528,12 +635,67 @@ const EditorToolbar = ({ editor, t }) => {
 
                     <ToolbarDivider />
 
+                    {/* Toggle borders */}
+                    <Tooltip title={editor.getAttributes('table').borderless ? t('contractTemplate_toolbar_showBorders') : t('contractTemplate_toolbar_hideBorders')}>
+                        <IconButton
+                            size="small"
+                            onClick={() => editor.chain().focus().toggleTableBorders().run()}
+                            sx={useBtnSx(editor.getAttributes('table').borderless)}
+                        >
+                            <BorderStyleIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+
+                    <ToolbarDivider />
+
                     {/* Delete table */}
                     <Tooltip title={t('contractTemplate_toolbar_deleteTable')}>
                         <IconButton size="small" onClick={() => editor.chain().focus().deleteTable().run()} sx={{ ...useBtnSx(false), flexShrink: 0, color: 'error.main', borderColor: 'error.light', '&:hover': { bgcolor: 'error.main', color: 'white' } }}>
                             <DeleteForeverIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
+                </Box>
+            </Collapse>
+
+            {/* Image context sub-bar (slides in when an image is selected) */}
+            <Collapse in={editor.isActive('image')}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        px: 1,
+                        py: 0.4,
+                        overflowX: 'auto',
+                        flexWrap: 'nowrap',
+                        scrollbarWidth: 'none',
+                        '&::-webkit-scrollbar': { display: 'none' },
+                        borderTop: '1px dashed',
+                        borderColor: 'divider',
+                        bgcolor: 'background.paper',
+                    }}
+                >
+                    <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 700, fontSize: '0.68rem', flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {t('contractTemplate_toolbar_imageContext')}
+                    </Typography>
+                    <ToolbarDivider />
+                    <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                        <Tooltip title={t('contractTemplate_toolbar_alignLeft')}>
+                            <IconButton size="small" onClick={() => editor.chain().focus().setImageAlign('left').run()} sx={useBtnSx(!editor.getAttributes('image').textAlign || editor.getAttributes('image').textAlign === 'left')}>
+                                <FormatAlignLeftIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title={t('contractTemplate_toolbar_alignCenter')}>
+                            <IconButton size="small" onClick={() => editor.chain().focus().setImageAlign('center').run()} sx={useBtnSx(editor.getAttributes('image').textAlign === 'center')}>
+                                <FormatAlignCenterIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title={t('contractTemplate_toolbar_alignRight')}>
+                            <IconButton size="small" onClick={() => editor.chain().focus().setImageAlign('right').run()} sx={useBtnSx(editor.getAttributes('image').textAlign === 'right')}>
+                                <FormatAlignRightIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
                 </Box>
             </Collapse>
         </Box>
@@ -580,9 +742,9 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
             }),
             Table.configure({ resizable: true }),
             TableRow,
-            TableHeader,
-            TableCell,
-            Image.configure({
+            BorderlessTableHeader,
+            BorderlessTableCell,
+            AlignableImage.configure({
                 inline: false,
                 allowBase64: true,
                 resize: {
@@ -857,9 +1019,12 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                                 maxWidth: '100%',
                                 height: 'auto',
                                 borderRadius: '4px',
-                                display: 'block',
+                                display: 'block !important',
                                 margin: '4px 0',
                             },
+                            '& .tiptap img[data-align="center"]': { margin: '4px auto !important' },
+                            '& .tiptap img[data-align="right"]': { margin: '4px 0 4px auto !important' },
+                            '& .tiptap img[data-align="left"]': { margin: '4px auto 4px 0 !important' },
                             '& .tiptap table': {
                                 borderCollapse: 'collapse',
                                 width: '100%',
@@ -883,6 +1048,7 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                                 bgcolor: 'primary.light',
                                 opacity: 0.3,
                             },
+
                         }}
                     >
                         <EditorContent editor={editor} />

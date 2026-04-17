@@ -404,7 +404,14 @@ namespace GenericApp.API.Controllers
                             var bytes = Convert.FromBase64String(base64);
                             var widthAttr = el.GetAttribute("width");
                             float imgWidth = float.TryParse(widthAttr, out var w) ? w : 400;
-                            col.Item().PaddingVertical(4).MaxWidth(imgWidth).Image(bytes);
+                            var alignAttr = el.GetAttribute("data-align") ?? "left";
+                            var item = col.Item().PaddingVertical(4);
+                            switch (alignAttr)
+                            {
+                                case "center": item.AlignCenter().MaxWidth(imgWidth).Image(bytes); break;
+                                case "right":  item.AlignRight().MaxWidth(imgWidth).Image(bytes);  break;
+                                default:       item.AlignLeft().MaxWidth(imgWidth).Image(bytes);   break;
+                            }
                         }
                         catch { /* skip unreadable images */ }
                     }
@@ -479,6 +486,8 @@ namespace GenericApp.API.Controllers
             int colCount = rows.Max(r => r.QuerySelectorAll("td, th").Length);
             if (colCount == 0) return;
 
+            bool tableBorderless = tableEl.GetAttribute("data-borderless") == "true";
+
             col.Item().PaddingVertical(6).Table(table =>
             {
                 table.ColumnsDefinition(cd =>
@@ -500,17 +509,22 @@ namespace GenericApp.API.Controllers
                     {
                         if (cell is null)
                         {
-                            table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(4).Text("");
+                            var emptyContainer = tableBorderless
+                                ? table.Cell().Border(0).Padding(4)
+                                : table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(4);
+                            emptyContainer.Text("");
                             continue;
                         }
 
+                        bool cellBorderless = tableBorderless || cell.GetAttribute("data-borderless") == "true";
+
                         // Build the full fluent chain in one shot — never split a
                         // single-child container across two statements.
-                        var cellContainer = table.Cell()
-                            .Border(0.5f)
-                            .BorderColor(Colors.Grey.Lighten1);
+                        var cellContainer = cellBorderless
+                            ? table.Cell().Border(0)
+                            : table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1);
 
-                        var paddedCell = isHeader
+                        var paddedCell = isHeader && !cellBorderless
                             ? cellContainer.Background(Colors.Grey.Lighten3).Padding(5)
                             : cellContainer.Padding(5);
 
