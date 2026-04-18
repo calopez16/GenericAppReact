@@ -6,6 +6,8 @@ export interface TemplateVariable {
 
 export const AVAILABLE_VARIABLES: TemplateVariable[] = [
     // -- Datos del trabajador --
+    { key: "{{nombre_empresa}}",    label: "Nombre de la empresa",              sample: "MISION DEL BISANI SA DE CV" },
+    { key: "{{fecha_hoy}}",    label: "Fecha de hoy",              sample: "20/03/2026" },
     { key: "{{clave_trabajador}}",    label: "Clave del trabajador",              sample: "021058" },
     { key: "{{nombre}}",              label: "Nombre",                            sample: "VICTOR DANIEL ALVAREZ AYALA" },
     { key: "{{nacionalidad}}",        label: "Nacionalidad",                      sample: "MEXICANA" },

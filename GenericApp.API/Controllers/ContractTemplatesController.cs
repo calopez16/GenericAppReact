@@ -26,11 +26,13 @@ namespace GenericApp.API.Controllers
     {
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IWebHostEnvironment _env;
 
-        public ContractTemplatesController(IRepository repository, IMapper mapper)
+        public ContractTemplatesController(IRepository repository, IMapper mapper, IWebHostEnvironment env)
         {
             _repository = repository;
             _mapper = mapper;
+            _env = env;
         }
 
         /// <summary>
@@ -61,6 +63,7 @@ namespace GenericApp.API.Controllers
                     Name = x.Name,
                     Description = x.Description,
                     Content = x.Content,
+                    IsHeaderEnable = x.IsHeaderEnable,
                     IsActive = x.IsActive,
                     IsDeleted = x.IsDeleted,
                     IdCompany = x.IdCompany
@@ -153,6 +156,7 @@ namespace GenericApp.API.Controllers
             templateDB.Name = model.Name;
             templateDB.Description = model.Description;
             templateDB.Content = model.Content;
+            templateDB.IsHeaderEnable = model.IsHeaderEnable;
 
             var result = await _repository.Update(templateDB);
 
@@ -231,17 +235,19 @@ namespace GenericApp.API.Controllers
         /// Generates a PDF for a contract template, rendering its HTML content.
         /// </summary>
         [HttpGet("pdf/{id}")]
-        public async Task<IActionResult> GetContractTemplatePdf(int id)
+        public async Task<IActionResult> GetContractTemplatePdf(int id, [FromQuery] int? idCompany = null)
         {
-            try
-            {
-
-           
             var template = await _repository.FirstOrDefault<ContractTemplate>(
                 x => x.IdTemplate == id && !(x.IsDeleted ?? false));
 
             if (template == null)
                 return NotFound(new ApiResponse());
+
+            // Load company only when header is enabled and an idCompany was provided
+            Company? company = null;
+            if ((template.IsHeaderEnable ?? false) && idCompany.HasValue)
+                company = await _repository.FirstOrDefault<Company>(
+                    x => x.IdCompany == idCompany.Value && !(x.IsDeleted ?? false));
 
             QuestPDF.Settings.License = LicenseType.Community;
 
@@ -256,7 +262,7 @@ namespace GenericApp.API.Controllers
                 container.Page(page =>
                 {
                     page.Size(PageSizes.Letter);
-                    page.MarginTop(2, Unit.Centimetre);
+                    page.MarginTop(1, Unit.Centimetre);
                     page.MarginBottom(2, Unit.Centimetre);
                     page.MarginLeft(2.5f, Unit.Centimetre);
                     page.MarginRight(2.5f, Unit.Centimetre);
@@ -264,9 +270,11 @@ namespace GenericApp.API.Controllers
 
                     page.Content().Column(col =>
                     {
+                        if (company != null)
+                            col.Item().Element(header => ComposeTemplateHeader(header, company, template.Name));
+
                         RenderNodes(col, body.ChildNodes);
                     });
-
                     page.Footer().AlignCenter().Text(t =>
                     {
                         t.Span(template.Name ?? "").FontSize(8).FontColor(Colors.Grey.Darken1);
@@ -284,15 +292,57 @@ namespace GenericApp.API.Controllers
 
             var fileName = $"{SanitizeFileName(template.Name ?? "contrato")}.pdf";
             return File(stream, "application/pdf", fileName);
-            }
-            catch (Exception ex)
-            {
-
-                throw;
-            }
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────
+
+        private void ComposeTemplateHeader(IContainer container, Company company, string? templateName)
+        {
+            container.Column(column =>
+            {
+                // Row: logo left | template name centered | empty right (mirror of logo width)
+                column.Item().PaddingBottom(4).Row(row =>
+                {
+                    // LEFT — logo
+                    const float logoHeight = 48;
+                    const float logoColWidth = 80;
+
+                    var logoName = company.LogoName;
+                    bool hasLogo = !string.IsNullOrEmpty(logoName);
+                    string? logoPath = hasLogo
+                        ? Path.Combine(_env.WebRootPath, "img", "logos", logoName!)
+                        : null;
+                    bool logoExists = logoPath != null && System.IO.File.Exists(logoPath);
+
+                    row.ConstantItem(logoColWidth).AlignMiddle().AlignLeft()
+                        .Element(e =>
+                        {
+                            if (logoExists)
+                                e.Height(logoHeight).Image(logoPath!);
+                        });
+
+                    // CENTER — document name (large, bold, centered)
+                    row.RelativeItem().AlignMiddle().Column(col =>
+                    {
+                        col.Item().AlignCenter().Text((templateName ?? "").ToUpper())
+                            .Bold().FontSize(14).FontColor(Colors.Black);
+
+                        var subtitleDocument = company.RazonSocial ?? company.Name;
+
+                        if (!string.IsNullOrWhiteSpace(subtitleDocument))
+                            col.Item().AlignCenter().PaddingTop(2)
+                                .Text(subtitleDocument.ToUpper())
+                                .FontSize(9).FontColor(Colors.Grey.Darken2);
+                    });
+
+                    // RIGHT — mirror spacer so center stays truly centered
+                    row.ConstantItem(logoColWidth);
+                });
+
+                // Bottom separator line
+                column.Item().PaddingBottom(4).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+            });
+        }
 
         private static string SanitizeFileName(string name)
         {
@@ -482,8 +532,13 @@ namespace GenericApp.API.Controllers
             var rows = tableEl.QuerySelectorAll("tr").ToList();
             if (rows.Count == 0) return;
 
-            // Determine column count from the row with most cells
-            int colCount = rows.Max(r => r.QuerySelectorAll("td, th").Length);
+            // Determine column count accounting for colspan values
+            int colCount = rows.Max(r =>
+                r.QuerySelectorAll("td, th").Sum(c =>
+                {
+                    var cs = c.GetAttribute("colspan");
+                    return int.TryParse(cs, out var n) && n > 1 ? n : 1;
+                }));
             if (colCount == 0) return;
 
             bool tableBorderless = tableEl.GetAttribute("data-borderless") == "true";
@@ -501,28 +556,33 @@ namespace GenericApp.API.Controllers
                     var cells = row.QuerySelectorAll("td, th").ToList();
                     bool isHeader = cells.Any(c => c.TagName.Equals("TH", StringComparison.OrdinalIgnoreCase));
 
-                    // Pad missing cells
-                    while (cells.Count < colCount)
-                        cells.Add(null!);
+                    // Calculate columns already consumed by explicit cells (with colspan)
+                    int consumed = cells.Sum(c =>
+                    {
+                        var cs = c.GetAttribute("colspan");
+                        return int.TryParse(cs, out var n) && n > 1 ? n : 1;
+                    });
+
+                    // Pad remaining empty columns
+                    int emptyCols = colCount - consumed;
 
                     foreach (var cell in cells)
                     {
-                        if (cell is null)
-                        {
-                            var emptyContainer = tableBorderless
-                                ? table.Cell().Border(0).Padding(4)
-                                : table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(4);
-                            emptyContainer.Text("");
-                            continue;
-                        }
+                        var colspanAttr = cell.GetAttribute("colspan");
+                        int colspan = int.TryParse(colspanAttr, out var cs) && cs > 1 ? cs : 1;
+
+                        var rowspanAttr = cell.GetAttribute("rowspan");
+                        int rowspan = int.TryParse(rowspanAttr, out var rs) && rs > 1 ? rs : 1;
 
                         bool cellBorderless = tableBorderless || cell.GetAttribute("data-borderless") == "true";
 
-                        // Build the full fluent chain in one shot — never split a
-                        // single-child container across two statements.
+                        var cellBase = table.Cell();
+                        if (colspan > 1) cellBase = cellBase.ColumnSpan((uint)colspan);
+                        if (rowspan > 1) cellBase = cellBase.RowSpan((uint)rowspan);
+
                         var cellContainer = cellBorderless
-                            ? table.Cell().Border(0)
-                            : table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1);
+                            ? cellBase.Border(0)
+                            : cellBase.Border(0.5f).BorderColor(Colors.Grey.Lighten1);
 
                         var paddedCell = isHeader && !cellBorderless
                             ? cellContainer.Background(Colors.Grey.Lighten3).Padding(5)
@@ -555,6 +615,15 @@ namespace GenericApp.API.Controllers
                                 if (isHeader) t.DefaultTextStyle(s => s.Bold());
                             });
                         }
+                    }
+
+                    // Fill remaining columns with empty cells
+                    for (int i = 0; i < emptyCols; i++)
+                    {
+                        var emptyContainer = tableBorderless
+                            ? table.Cell().Border(0).Padding(4)
+                            : table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(4);
+                        emptyContainer.Text("");
                     }
                 }
             });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
     Box,
     Typography,
@@ -18,6 +18,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import ArticleIcon from '@mui/icons-material/Article';
 import CloseIcon from '@mui/icons-material/Close';
+import { AppContext } from '@helpers/AppContext';
 import { DataAPIContractTemplatesService } from '@data/ContractTemplates/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
@@ -28,6 +29,7 @@ import ContractTemplateTableList from '@views/ContractTemplates/ContractTemplate
 
 function ContractTemplatesIndex() {
     const { t } = useTranslation();
+    const { companySelected } = useContext(AppContext);
     const templateDataService = DataAPIContractTemplatesService();
 
     const [templates, setTemplates] = useState([]);
@@ -189,7 +191,7 @@ function ContractTemplatesIndex() {
         try {
             setIsPdfLoading(true);
             ShowMessage(t('generatingPdf'), 'info');
-            const response = await templateDataService.getPdfById(template.idTemplate);
+            const response = await templateDataService.getPdfById(template.idTemplate, companySelected?.idCompany);
             const fileData = response.data ? response.data : response;
             const blob = new Blob([fileData], { type: 'application/pdf' });
             const pdfUrl = window.URL.createObjectURL(blob);

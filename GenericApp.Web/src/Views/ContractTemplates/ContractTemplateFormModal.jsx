@@ -21,6 +21,8 @@ import {
     Paper,
     Collapse,
 } from '@mui/material';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import CancelIcon from '@mui/icons-material/Clear';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
@@ -37,7 +39,9 @@ import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
 import FormatAlignJustifyIcon from '@mui/icons-material/FormatAlignJustify';
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
+import TableViewIcon from '@mui/icons-material/TableView';
 import TableChartIcon from '@mui/icons-material/TableChart';
+import ViewListIcon from '@mui/icons-material/ViewList';
 import ImageIcon from '@mui/icons-material/Image';
 import CodeIcon from '@mui/icons-material/Code';
 // Table-operation icons
@@ -49,6 +53,8 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import BorderAllIcon from '@mui/icons-material/BorderAll';
 import BorderClearIcon from '@mui/icons-material/BorderClear';
 import BorderStyleIcon from '@mui/icons-material/BorderStyle';
+import BorderOuterIcon from '@mui/icons-material/BorderOuter';
+import BorderVerticalIcon from '@mui/icons-material/BorderVertical';
 import TableRowsIcon from '@mui/icons-material/TableRows';
 import { AppContext } from '@helpers/AppContext';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -134,6 +140,25 @@ const BorderlessTableHeader = TableHeader.extend({
         };
     },
 });
+// ---------------------------------------------------------------------------
+// TableRow extended with a persisted `height` attribute (row resize support)
+// ---------------------------------------------------------------------------
+const ResizableTableRow = TableRow.extend({
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            height: {
+                default: null,
+                parseHTML: element => element.style.height || null,
+                renderHTML: attributes => {
+                    if (!attributes.height) return {};
+                    return { style: `height: ${attributes.height}` };
+                },
+            },
+        };
+    },
+});
+
 import Image from '@tiptap/extension-image';
 
 // ---------------------------------------------------------------------------
@@ -543,7 +568,7 @@ const EditorToolbar = ({ editor, t }) => {
                     <input ref={imageInputRef} type="file" accept="image/*" hidden onChange={handleImageFile} />
                     <Tooltip title={t('contractTemplate_toolbar_table')}>
                         <IconButton size="small" onClick={insertTable} sx={useBtnSx(editor.isActive('table'))}>
-                            <TableChartIcon fontSize="small" />
+                            <TableViewIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
                 </Box>
@@ -597,12 +622,12 @@ const EditorToolbar = ({ editor, t }) => {
                     <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
                         <Tooltip title={t('contractTemplate_toolbar_addColBefore')}>
                             <IconButton size="small" onClick={() => editor.chain().focus().addColumnBefore().run()} sx={useBtnSx(false)}>
-                                <ViewWeekIcon fontSize="small" sx={{ transform: 'scaleX(-1)' }} />
+                                <ViewListIcon fontSize="small"  />
                             </IconButton>
                         </Tooltip>
                         <Tooltip title={t('contractTemplate_toolbar_addColAfter')}>
                             <IconButton size="small" onClick={() => editor.chain().focus().addColumnAfter().run()} sx={useBtnSx(false)}>
-                                <ViewWeekIcon fontSize="small" />
+                                <ViewListIcon fontSize="small" sx={{ transform: 'scaleX(-1)' }} />
                             </IconButton>
                         </Tooltip>
                         <Tooltip title={t('contractTemplate_toolbar_deleteCol')}>
@@ -618,17 +643,17 @@ const EditorToolbar = ({ editor, t }) => {
                     <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
                         <Tooltip title={t('contractTemplate_toolbar_toggleHeader')}>
                             <IconButton size="small" onClick={() => editor.chain().focus().toggleHeaderRow().run()} sx={useBtnSx(false)}>
-                                <TableRowsIcon fontSize="small" />
+                                <TableChartIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
                         <Tooltip title={t('contractTemplate_toolbar_mergeCells')}>
                             <IconButton size="small" onClick={() => editor.chain().focus().mergeCells().run()} sx={useBtnSx(false)}>
-                                <BorderAllIcon fontSize="small" />
+                                <BorderOuterIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
                         <Tooltip title={t('contractTemplate_toolbar_splitCell')}>
                             <IconButton size="small" onClick={() => editor.chain().focus().splitCell().run()} sx={useBtnSx(false)}>
-                                <BorderClearIcon fontSize="small" />
+                                <BorderVerticalIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
                     </Box>
@@ -642,7 +667,7 @@ const EditorToolbar = ({ editor, t }) => {
                             onClick={() => editor.chain().focus().toggleTableBorders().run()}
                             sx={useBtnSx(editor.getAttributes('table').borderless)}
                         >
-                            <BorderStyleIcon fontSize="small" />
+                            <BorderClearIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
 
@@ -717,6 +742,7 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
         name: '',
         description: '',
         content: '',
+        isHeaderEnable: false,
         idCompany: companySelected?.idCompany ?? null,
     });
     const [isLoading, setIsLoading] = useState(false);
@@ -741,7 +767,7 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                 types: ['heading', 'paragraph'],
             }),
             Table.configure({ resizable: true }),
-            TableRow,
+            ResizableTableRow,
             BorderlessTableHeader,
             BorderlessTableCell,
             AlignableImage.configure({
@@ -771,6 +797,7 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                 name: data.name ?? '',
                 description: data.description ?? '',
                 content: data.content ?? '',
+                isHeaderEnable: data.isHeaderEnable ?? false,
                 idCompany: data.idCompany ?? companySelected?.idCompany ?? null,
             });
         } else {
@@ -779,6 +806,7 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                 name: '',
                 description: '',
                 content: '',
+                isHeaderEnable: false,
                 idCompany: companySelected?.idCompany ?? null,
             });
         }
@@ -799,6 +827,92 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
             editor.commands.setContent(contentToLoad, false);
         });
     }, [open, isEditing, data, editor]);
+
+    // 3. Row resize: drag the bottom border of any table row to change its height.
+    useEffect(() => {
+        if (!editor) return;
+        const editorEl = editor.view.dom;
+
+        let isResizing = false;
+        let startY = 0;
+        let startHeight = 0;
+        let targetRow = null;
+
+        // Returns the <tr> if the pointer is within 10 px of its bottom edge.
+        const getResizableRow = (e) => {
+            const tr = e.target.closest('tr');
+            if (!tr) return null;
+            const rect = tr.getBoundingClientRect();
+            return e.clientY >= rect.bottom - 10 ? tr : null;
+        };
+
+        // Cursor hint while hovering (only when not already dragging).
+        const handleEditorMouseMove = (e) => {
+            if (isResizing) return;
+            editorEl.style.cursor = getResizableRow(e) ? 'row-resize' : '';
+        };
+
+        const handleMouseDown = (e) => {
+            const tr = getResizableRow(e);
+            if (!tr) return;
+            e.preventDefault();
+            e.stopPropagation();
+            isResizing = true;
+            startY = e.clientY;
+            startHeight = tr.getBoundingClientRect().height;
+            targetRow = tr;
+            document.body.style.cursor = 'row-resize';
+            editorEl.style.cursor = 'row-resize';
+        };
+
+        // Live feedback during drag (attached to document so it works outside editor bounds).
+        const handleDocMouseMove = (e) => {
+            if (!isResizing || !targetRow) return;
+            const newHeight = Math.max(24, startHeight + (e.clientY - startY));
+            targetRow.style.height = `${newHeight}px`;
+        };
+
+        const handleMouseUp = () => {
+            if (!isResizing || !targetRow) return;
+            isResizing = false;
+            document.body.style.cursor = '';
+            editorEl.style.cursor = '';
+
+            const height = targetRow.style.height;
+            const { state } = editor;
+
+            // Walk ProseMirror doc to find the tableRow whose DOM node matches targetRow.
+            let found = false;
+            state.doc.descendants((node, pos) => {
+                if (found) return false;
+                if (node.type.name === 'tableRow') {
+                    try {
+                        if (editor.view.nodeDOM(pos) === targetRow) {
+                            editor.view.dispatch(
+                                state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, height })
+                            );
+                            found = true;
+                            return false;
+                        }
+                    } catch (_) { /* skip */ }
+                }
+            });
+
+            targetRow = null;
+        };
+
+        editorEl.addEventListener('mousemove', handleEditorMouseMove);
+        editorEl.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mousemove', handleDocMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        return () => {
+            editorEl.removeEventListener('mousemove', handleEditorMouseMove);
+            editorEl.removeEventListener('mousedown', handleMouseDown);
+            document.removeEventListener('mousemove', handleDocMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [editor]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -940,6 +1054,22 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                         rows={3}
                     />
 
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={formData.isHeaderEnable ?? false}
+                                onChange={(e) => setFormData(prev => ({ ...prev, isHeaderEnable: e.target.checked }))}
+                                size="small"
+                                color="primary"
+                            />
+                        }
+                        label={
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {t('contractTemplate_enablePrintHeader')}
+                            </Typography>
+                        }
+                    />
+
                     <Box>
                         <Typography
                             variant="caption"
@@ -1047,6 +1177,25 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                             '& .tiptap .selectedCell': {
                                 bgcolor: 'primary.light',
                                 opacity: 0.3,
+                            },
+                            '& .tiptap tr': { position: 'relative' },
+                            '& .tableWrapper': {
+                                overflowX: 'auto',
+                            },
+                            '& .column-resize-handle': {
+                                position: 'absolute',
+                                right: -2,
+                                top: 0,
+                                bottom: 0,
+                                width: 4,
+                                bgcolor: 'primary.main',
+                                opacity: 0.6,
+                                cursor: 'col-resize',
+                                pointerEvents: 'none',
+                                zIndex: 10,
+                            },
+                            '& .resize-cursor': {
+                                cursor: 'col-resize',
                             },
 
                         }}

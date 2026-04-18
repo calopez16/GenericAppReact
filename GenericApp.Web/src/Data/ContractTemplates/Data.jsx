@@ -12,7 +12,7 @@ export const DataAPIContractTemplatesService = () => {
 
     return {
         ...genericService,
-        getPdfById: (id) => GET(`${moduleSource}/pdf/${id}`, { responseType: 'blob' }),
+        getPdfById: (id, idCompany) => GET(`${moduleSource}/pdf/${id}${idCompany ? `?idCompany=${idCompany}` : ''}`, { responseType: 'blob' }),
     };
 };
 

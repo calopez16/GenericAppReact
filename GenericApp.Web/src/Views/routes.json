@@ -6,7 +6,7 @@
     "i18nKeyDescription": "homepage_description",
     "icon": "HomeIcon",
     "exact": true,
-    "enabled": true,
+    "enabled": false,
     "roles": [ "Administrator", "User" ]
   },
   {
@@ -16,7 +16,7 @@
     "i18nKeyDescription": "shipments_description",
     "icon": "TruckIcon",
     "exact": true,
-    "enabled": true,
+    "enabled": false,
     "roles": [ "Administrator", "User" ]
   },
   {
@@ -42,7 +42,7 @@
         "i18nKey": "labels",
         "i18nKeyDescription": "labels_description",
         "icon": "LabelIcon",
-        "enabled": true
+        "enabled": false
       },
       {
         "id": "companies",
@@ -58,7 +58,7 @@
         "i18nKey": "clients",
         "i18nKeyDescription": "clients_description",
         "icon": "PeopleAltIcon",
-        "enabled": true
+        "enabled": false
       },
       {
         "id": "cities",
@@ -66,7 +66,7 @@
         "i18nKey": "cities",
         "i18nKeyDescription": "cities_description",
         "icon": "LocationCityIcon",
-        "enabled": true
+        "enabled": false
       },
       {
         "id": "seasons",
@@ -74,7 +74,7 @@
         "i18nKey": "seasons",
         "i18nKeyDescription": "seasons_description",
         "icon": "DateRangeIcon",
-        "enabled": true
+        "enabled": false
       },
       {
         "id": "drivers",
@@ -82,7 +82,7 @@
         "i18nKey": "drivers",
         "i18nKeyDescription": "drivers_description",
         "icon": "BadgeIcon",
-        "enabled": true
+        "enabled": false
       },
       {
         "id": "shippingCompanies",
@@ -90,7 +90,7 @@
         "i18nKey": "shippingCompanies",
         "i18nKeyDescription": "shippingCompanies_description",
         "icon": "LocalShippingIcon",
-        "enabled": true
+        "enabled": false
       },
       {
         "id": "trailerboxtypes",
@@ -98,7 +98,7 @@
         "i18nKey": "trailerBoxTypes",
         "i18nKeyDescription": "trailerBoxTypes_description",
         "icon": "TruckIcon",
-        "enabled": true
+        "enabled": false
       },
       {
         "id": "contractTemplates",
