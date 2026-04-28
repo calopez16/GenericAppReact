@@ -2,6 +2,7 @@ export interface TemplateVariable {
     key: string;
     label: string;
     sample: string;
+    type?: 'text' | 'image';
 }
 
 export const AVAILABLE_VARIABLES: TemplateVariable[] = [
@@ -24,6 +25,8 @@ export const AVAILABLE_VARIABLES: TemplateVariable[] = [
     { key: "{{salario_diario_base}}", label: "Salario diario base",               sample: "440.87" },
     { key: "{{fecha_inicio}}",        label: "Fecha de inicio de temporada",      sample: "20/03/2026" },
     { key: "{{fecha_terminacion}}",   label: "Fecha de terminacion de temporada", sample: "30/04/2026" },
+    // -- Firma --
+    { key: "{{firma_empleado}}",      label: "Firma del empleado",                sample: "[Firma]", type: 'image' },
 ];
 
 /**

@@ -17,6 +17,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DrawIcon from '@mui/icons-material/Draw';
 import EmptyData from '@layout/EmptyData';
 
 const ANIMATION_DURATION = 500;
@@ -44,13 +45,14 @@ const ContractTemplateTableList = ({
     handleToggleTemplateStatus,
     handleOpenDeleteConfirmation,
     handleOpenPreview,
+    handleOpenSignature,
     deletingId,
     isSearch = false,
     rowsPerPage = 5
 }) => {
 
     const rowHeight = 65;
-    const colSpan = 5;
+    const colSpan = 6;
 
     const emptyRows = !loading && templates?.length > 0
         ? Math.max(0, rowsPerPage - templates.length)
@@ -69,6 +71,7 @@ const ContractTemplateTableList = ({
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('name')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('description')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold', width: 80 }} align="center">{t('contractTemplate_preview_col')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', width: 60 }} align="center">{t('signature') || 'Firma'}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold', width: 160 }} align="center">{t('actions')}</TableCell>
                     </TableRow>
                 </TableHead>
@@ -81,6 +84,9 @@ const ContractTemplateTableList = ({
                                 </TableCell>
                                 <TableCell><Skeleton variant="text" width="70%" /></TableCell>
                                 <TableCell><Skeleton variant="text" width="50%" /></TableCell>
+                                <TableCell align="center">
+                                    <Skeleton variant="circular" width={30} height={30} sx={{ mx: 'auto' }} />
+                                </TableCell>
                                 <TableCell align="center">
                                     <Skeleton variant="circular" width={30} height={30} sx={{ mx: 'auto' }} />
                                 </TableCell>
@@ -138,6 +144,18 @@ const ContractTemplateTableList = ({
                                                     sx={{ color: 'white', bgcolor: 'info.main', '&:hover': { bgcolor: 'info.dark' } }}
                                                 >
                                                     <VisibilityIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            <Tooltip title={t('signatureTopaz') || 'Firma Topaz'}>
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={() => handleOpenSignature(template)}
+                                                    disabled={isDeleting}
+                                                    sx={{ color: 'white', bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark' } }}
+                                                >
+                                                    <DrawIcon fontSize="small" />
                                                 </IconButton>
                                             </Tooltip>
                                         </TableCell>

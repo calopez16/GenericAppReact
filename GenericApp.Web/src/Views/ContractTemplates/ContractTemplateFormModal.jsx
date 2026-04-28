@@ -56,6 +56,7 @@ import BorderStyleIcon from '@mui/icons-material/BorderStyle';
 import BorderOuterIcon from '@mui/icons-material/BorderOuter';
 import BorderVerticalIcon from '@mui/icons-material/BorderVertical';
 import TableRowsIcon from '@mui/icons-material/TableRows';
+import GestureIcon from '@mui/icons-material/Gesture';
 import { AppContext } from '@helpers/AppContext';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { Node, mergeAttributes } from '@tiptap/core';
@@ -140,25 +141,6 @@ const BorderlessTableHeader = TableHeader.extend({
         };
     },
 });
-// ---------------------------------------------------------------------------
-// TableRow extended with a persisted `height` attribute (row resize support)
-// ---------------------------------------------------------------------------
-const ResizableTableRow = TableRow.extend({
-    addAttributes() {
-        return {
-            ...this.parent?.(),
-            height: {
-                default: null,
-                parseHTML: element => element.style.height || null,
-                renderHTML: attributes => {
-                    if (!attributes.height) return {};
-                    return { style: `height: ${attributes.height}` };
-                },
-            },
-        };
-    },
-});
-
 import Image from '@tiptap/extension-image';
 
 // ---------------------------------------------------------------------------
@@ -229,11 +211,58 @@ const TemplateVariable = Node.create({
         return {
             insertVariable:
                 (key) =>
-                ({ chain }) =>
-                    chain()
-                        .insertContent({ type: this.name, attrs: { key } })
-                        .insertContent(' ')
-                        .run(),
+                ({ commands }) =>
+                    commands.insertContent([
+                        { type: this.name, attrs: { key } },
+                        { type: 'text', text: ' ' },
+                    ]),
+        };
+    },
+});
+
+// ---------------------------------------------------------------------------
+// Custom block Node: renders {{firma_empleado}} as an image-like placeholder
+// ---------------------------------------------------------------------------
+const SignatureVariablePlaceholder = Node.create({
+    name: 'signatureVariablePlaceholder',
+    group: 'block',
+    atom: true,
+    draggable: true,
+
+    addAttributes() {
+        return {
+            variable: { default: '{{firma_empleado}}' },
+            label:    { default: 'Firma del empleado'  },
+        };
+    },
+
+    parseHTML() {
+        return [{ tag: 'div[data-variable-type="image"]' }];
+    },
+
+    renderHTML({ node }) {
+        return [
+            'div',
+            {
+                'data-variable':      node.attrs.variable,
+                'data-variable-type': 'image',
+                'data-label':         node.attrs.label,
+                class: 'tiptap-variable-image',
+                contenteditable: 'false',
+            },
+            node.attrs.label,
+        ];
+    },
+
+    addCommands() {
+        return {
+            insertSignatureVariable:
+                (variable, label) =>
+                ({ commands }) =>
+                    commands.insertContent({
+                        type: this.name,
+                        attrs: { variable, label },
+                    }),
         };
     },
 });
@@ -755,6 +784,7 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
         extensions: [
             StarterKit,
             TemplateVariable,
+            SignatureVariablePlaceholder,
             Placeholder.configure({
                 placeholder: t('contractTemplate_placeholder'),
             }),
@@ -767,7 +797,7 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                 types: ['heading', 'paragraph'],
             }),
             Table.configure({ resizable: true }),
-            ResizableTableRow,
+            TableRow,
             BorderlessTableHeader,
             BorderlessTableCell,
             AlignableImage.configure({
@@ -828,92 +858,6 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
         });
     }, [open, isEditing, data, editor]);
 
-    // 3. Row resize: drag the bottom border of any table row to change its height.
-    useEffect(() => {
-        if (!editor) return;
-        const editorEl = editor.view.dom;
-
-        let isResizing = false;
-        let startY = 0;
-        let startHeight = 0;
-        let targetRow = null;
-
-        // Returns the <tr> if the pointer is within 10 px of its bottom edge.
-        const getResizableRow = (e) => {
-            const tr = e.target.closest('tr');
-            if (!tr) return null;
-            const rect = tr.getBoundingClientRect();
-            return e.clientY >= rect.bottom - 10 ? tr : null;
-        };
-
-        // Cursor hint while hovering (only when not already dragging).
-        const handleEditorMouseMove = (e) => {
-            if (isResizing) return;
-            editorEl.style.cursor = getResizableRow(e) ? 'row-resize' : '';
-        };
-
-        const handleMouseDown = (e) => {
-            const tr = getResizableRow(e);
-            if (!tr) return;
-            e.preventDefault();
-            e.stopPropagation();
-            isResizing = true;
-            startY = e.clientY;
-            startHeight = tr.getBoundingClientRect().height;
-            targetRow = tr;
-            document.body.style.cursor = 'row-resize';
-            editorEl.style.cursor = 'row-resize';
-        };
-
-        // Live feedback during drag (attached to document so it works outside editor bounds).
-        const handleDocMouseMove = (e) => {
-            if (!isResizing || !targetRow) return;
-            const newHeight = Math.max(24, startHeight + (e.clientY - startY));
-            targetRow.style.height = `${newHeight}px`;
-        };
-
-        const handleMouseUp = () => {
-            if (!isResizing || !targetRow) return;
-            isResizing = false;
-            document.body.style.cursor = '';
-            editorEl.style.cursor = '';
-
-            const height = targetRow.style.height;
-            const { state } = editor;
-
-            // Walk ProseMirror doc to find the tableRow whose DOM node matches targetRow.
-            let found = false;
-            state.doc.descendants((node, pos) => {
-                if (found) return false;
-                if (node.type.name === 'tableRow') {
-                    try {
-                        if (editor.view.nodeDOM(pos) === targetRow) {
-                            editor.view.dispatch(
-                                state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, height })
-                            );
-                            found = true;
-                            return false;
-                        }
-                    } catch (_) { /* skip */ }
-                }
-            });
-
-            targetRow = null;
-        };
-
-        editorEl.addEventListener('mousemove', handleEditorMouseMove);
-        editorEl.addEventListener('mousedown', handleMouseDown);
-        document.addEventListener('mousemove', handleDocMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-
-        return () => {
-            editorEl.removeEventListener('mousemove', handleEditorMouseMove);
-            editorEl.removeEventListener('mousedown', handleMouseDown);
-            document.removeEventListener('mousemove', handleDocMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [editor]);
-
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -922,7 +866,13 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
     };
 
     const insertVariable = useCallback(
-        (key) => { editor?.chain().focus().insertVariable(key).run(); },
+        (variable) => {
+            if (variable.type === 'image') {
+                editor?.chain().focus().insertSignatureVariable(variable.key, variable.label).run();
+            } else {
+                editor?.chain().focus().insertVariable(variable.key).run();
+            }
+        },
         [editor]
     );
 
@@ -1084,11 +1034,14 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                                     <Chip
                                         label={v.label}
                                         size="small"
-                                        onClick={() => insertVariable(v.key)}
+                                        onClick={() => insertVariable(v)}
                                         clickable
                                         variant="outlined"
-                                        color="primary"
-                                        icon={<AddIcon style={{ fontSize: 14 }} />}
+                                        color={v.type === 'image' ? 'secondary' : 'primary'}
+                                        icon={v.type === 'image'
+                                            ? <GestureIcon style={{ fontSize: 14 }} />
+                                            : <AddIcon style={{ fontSize: 14 }} />
+                                        }
                                         sx={{ fontWeight: 500 }}
                                     />
                                 </Tooltip>
@@ -1178,24 +1131,22 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                                 bgcolor: 'primary.light',
                                 opacity: 0.3,
                             },
-                            '& .tiptap tr': { position: 'relative' },
-                            '& .tableWrapper': {
-                                overflowX: 'auto',
-                            },
-                            '& .column-resize-handle': {
-                                position: 'absolute',
-                                right: -2,
-                                top: 0,
-                                bottom: 0,
-                                width: 4,
-                                bgcolor: 'primary.main',
-                                opacity: 0.6,
-                                cursor: 'col-resize',
-                                pointerEvents: 'none',
-                                zIndex: 10,
-                            },
-                            '& .resize-cursor': {
-                                cursor: 'col-resize',
+                            '& .tiptap .tiptap-variable-image': {
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: 260,
+                                height: 80,
+                                border: '2px dashed #9c27b0',
+                                borderRadius: '6px',
+                                color: '#9c27b0',
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                cursor: 'default',
+                                userSelect: 'none',
+                                my: 1,
+                                bgcolor: 'rgba(156,39,176,0.05)',
+                                letterSpacing: '0.03em',
                             },
 
                         }}

@@ -13,6 +13,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DrawIcon from '@mui/icons-material/Draw';
 import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
 import EmptyData from '@layout/EmptyData';
 
@@ -24,6 +25,7 @@ const ContractTemplateCardList = ({
     handleToggleTemplateStatus,
     handleOpenDeleteConfirmation,
     handleOpenPreview,
+    handleOpenSignature,
     deletingId,
     isSearch = false,
     rowsPerPage = 5
@@ -55,6 +57,15 @@ const ContractTemplateCardList = ({
                                 sx={{ color: 'white', bgcolor: 'info.main', '&:hover': { bgcolor: 'info.dark' }, p: 1 }}
                             >
                                 <VisibilityIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title={t('signatureTopaz') || 'Firma Topaz'}>
+                            <IconButton
+                                onClick={() => handleOpenSignature(template)}
+                                disabled={isDeleting}
+                                sx={{ color: 'white', bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark' }, p: 1 }}
+                            >
+                                <DrawIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
                         <Tooltip title={t('edit')}>

@@ -26,6 +26,7 @@ import ConfirmationModal from '@layout/ConfirmationModal';
 import ContractTemplateFormModal from '@views/ContractTemplates/ContractTemplateFormModal';
 import ContractTemplateCardList from '@views/ContractTemplates/ContractTemplateCardList';
 import ContractTemplateTableList from '@views/ContractTemplates/ContractTemplateTableList';
+import SignaturePadModal from '@views/ContractTemplates/SignaturePadModal';
 
 function ContractTemplatesIndex() {
     const { t } = useTranslation();
@@ -54,6 +55,9 @@ function ContractTemplatesIndex() {
     const ANIMATION_DURATION = 500;
 
     const [isPdfLoading, setIsPdfLoading] = useState(false);
+
+    const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+    const [selectedTemplateForSignature, setSelectedTemplateForSignature] = useState(null);
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
@@ -204,6 +208,17 @@ function ContractTemplatesIndex() {
         }
     };
 
+    const handleOpenSignature = (template) => {
+        setSelectedTemplateForSignature(template);
+        setIsSignatureModalOpen(true);
+    };
+
+    const handleSignatureSave = ({ base64, sigString }) => {
+        console.log('Firma guardada para plantilla:', selectedTemplateForSignature?.name, { base64, sigString });
+        setIsSignatureModalOpen(false);
+        setSelectedTemplateForSignature(null);
+    };
+
     const commonListProps = {
         templates,
         loading: loading || isPdfLoading,
@@ -212,6 +227,7 @@ function ContractTemplatesIndex() {
         handleToggleTemplateStatus,
         handleOpenDeleteConfirmation,
         handleOpenPreview: handleOpenPdf,
+        handleOpenSignature,
         setSelectedTemplate,
         deletingId,
         isSearch: searchTerm !== '',
@@ -359,6 +375,12 @@ function ContractTemplatesIndex() {
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
                 type="danger"
+            />
+
+            <SignaturePadModal
+                open={isSignatureModalOpen}
+                onClose={() => { setIsSignatureModalOpen(false); setSelectedTemplateForSignature(null); }}
+                onSave={handleSignatureSave}
             />
         </Box>
     );
