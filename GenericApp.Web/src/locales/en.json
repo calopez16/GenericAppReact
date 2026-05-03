@@ -87,6 +87,7 @@
   "contractTemplate_toolbar_deleteTable": "Delete table",
   "contractTemplate_toolbar_hideBorders": "Remove table borders",
   "contractTemplate_toolbar_showBorders": "Restore table borders",
+  "contractTemplate_toolbar_rowHeightAuto": "Auto",
   "contractTemplate_toolbar_underline": "Underline",
   "contractTemplate_enablePrintHeader": "Enable print header",
   "contractTemplate_variables": "Insert variable",

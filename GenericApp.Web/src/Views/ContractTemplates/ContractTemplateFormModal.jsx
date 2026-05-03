@@ -141,6 +141,46 @@ const BorderlessTableHeader = TableHeader.extend({
         };
     },
 });
+// ---------------------------------------------------------------------------
+// Extended TableRow: supports per-row height
+// ---------------------------------------------------------------------------
+const ResizableTableRow = TableRow.extend({
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            height: {
+                default: null,
+                parseHTML: element => element.getAttribute('data-row-height') || null,
+                renderHTML: attributes => {
+                    if (!attributes.height) return {};
+                    return {
+                        'data-row-height': attributes.height,
+                        style: `--row-height: ${attributes.height}; height: ${attributes.height}`,
+                    };
+                },
+            },
+        };
+    },
+    addCommands() {
+        return {
+            ...this.parent?.(),
+            setRowHeight: (height) => ({ tr, state, dispatch }) => {
+                const { $from } = state.selection;
+                let rowDepth = -1;
+                for (let d = $from.depth; d >= 0; d--) {
+                    if ($from.node(d).type.name === 'tableRow') { rowDepth = d; break; }
+                }
+                if (rowDepth === -1) return false;
+                const rowPos = $from.before(rowDepth);
+                const rowNode = $from.node(rowDepth);
+                tr.setNodeMarkup(rowPos, undefined, { ...rowNode.attrs, height: height || null });
+                if (dispatch) dispatch(tr);
+                return true;
+            },
+        };
+    },
+});
+
 import Image from '@tiptap/extension-image';
 
 // ---------------------------------------------------------------------------
@@ -331,6 +371,26 @@ const EditorToolbar = ({ editor, t }) => {
         '#f4cccc', '#fce5cd', '#fff2cc', '#d9ead3', '#d0e0e3', '#cfe2f3', '#d9d2e9', '#ead1dc',
         '#ea9999', '#f9cb9c', '#ffe599', '#b6d7a8', '#a2c4c9', '#9fc5e8', '#b4a7d6', '#ea9999',
     ];
+
+    // -- Row height helper --
+    const ROW_HEIGHTS = [
+        { label: t('contractTemplate_toolbar_rowHeightAuto'), value: '' },
+        { label: '20px', value: '20px' },
+        { label: '30px', value: '30px' },
+        { label: '40px', value: '40px' },
+        { label: '50px', value: '50px' },
+        { label: '60px', value: '60px' },
+        { label: '80px', value: '80px' },
+        { label: '100px', value: '100px' },
+    ];
+    const getCurrentRowHeight = () => {
+        if (!editor) return '';
+        const { $from } = editor.state.selection;
+        for (let d = $from.depth; d >= 0; d--) {
+            if ($from.node(d).type.name === 'tableRow') return $from.node(d).attrs.height ?? '';
+        }
+        return '';
+    };
 
     // ?? Image upload ????????????????????????????????????????????????????????
     const handleImageFile = (e) => {
@@ -689,6 +749,35 @@ const EditorToolbar = ({ editor, t }) => {
 
                     <ToolbarDivider />
 
+                    {/* Row height */}
+                    <Select
+                        size="small"
+                        value={getCurrentRowHeight()}
+                        onChange={(e) => editor.chain().focus().setRowHeight(e.target.value).run()}
+                        variant="outlined"
+                        displayEmpty
+                        renderValue={(v) => (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <TableRowsIcon sx={{ fontSize: 14 }} />
+                                <span>{v || t('contractTemplate_toolbar_rowHeightAuto')}</span>
+                            </Box>
+                        )}
+                        sx={{
+                            fontSize: '0.75rem',
+                            height: 28,
+                            minWidth: 90,
+                            flexShrink: 0,
+                            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+                            '& .MuiSelect-select': { pr: '20px !important' },
+                        }}
+                    >
+                        {ROW_HEIGHTS.map(h => (
+                            <MenuItem key={h.value} value={h.value} sx={{ fontSize: '0.85rem' }}>{h.label}</MenuItem>
+                        ))}
+                    </Select>
+
+                    <ToolbarDivider />
+
                     {/* Toggle borders */}
                     <Tooltip title={editor.getAttributes('table').borderless ? t('contractTemplate_toolbar_showBorders') : t('contractTemplate_toolbar_hideBorders')}>
                         <IconButton
@@ -797,7 +886,7 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                 types: ['heading', 'paragraph'],
             }),
             Table.configure({ resizable: true }),
-            TableRow,
+            ResizableTableRow,
             BorderlessTableHeader,
             BorderlessTableCell,
             AlignableImage.configure({
@@ -1113,6 +1202,19 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                                 width: '100%',
                                 margin: '8px 0',
                                 tableLayout: 'fixed',
+                            },
+                            '& .tiptap tr[data-row-height] > td, & .tiptap tr[data-row-height] > th': {
+                                height: 'var(--row-height)',
+                                maxHeight: 'var(--row-height)',
+                                overflow: 'hidden',
+                                padding: '0 10px',
+                                boxSizing: 'border-box',
+                                verticalAlign: 'middle',
+                            },
+                            '& .tiptap tr[data-row-height] > td > p, & .tiptap tr[data-row-height] > th > p': {
+                                margin: '0 !important',
+                                lineHeight: '1 !important',
+                                overflow: 'hidden',
                             },
                             '& .tiptap th, & .tiptap td': {
                                 border: '1px solid',

@@ -292,6 +292,7 @@ namespace GenericApp.API.Controllers
 
             var fileName = $"{SanitizeFileName(template.Name ?? "contrato")}.pdf";
             return File(stream, "application/pdf", fileName);
+
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────
@@ -351,13 +352,13 @@ namespace GenericApp.API.Controllers
         }
 
         /// <summary>Walks a node list and writes items into a QuestPDF ColumnDescriptor.</summary>
-        private static void RenderNodes(ColumnDescriptor col, AsDom.INodeList nodes)
+        private static void RenderNodes(ColumnDescriptor col, AsDom.INodeList nodes, bool compact = false)
         {
             foreach (var node in nodes)
-                RenderNode(col, node);
+                RenderNode(col, node, compact);
         }
 
-        private static void RenderNode(ColumnDescriptor col, AsDom.INode node)
+        private static void RenderNode(ColumnDescriptor col, AsDom.INode node, bool compact = false)
         {
             // Skip bare text nodes at block level — they are only inter-element
             // whitespace in Tiptap HTML (newlines between <p>, <h1>, etc.).
@@ -373,12 +374,14 @@ namespace GenericApp.API.Controllers
                     var textContent = el.TextContent?.Trim() ?? "";
                     if (string.IsNullOrEmpty(textContent))
                     {
-                        // Empty <p> = explicit line break between blocks
-                        col.Item().Height(10);
+                        // Empty <p> = explicit line break between blocks (suppressed in compact mode)
+                        if (!compact) col.Item().Height(10);
                     }
                     else
                     {
-                        col.Item().ExtendHorizontal().PaddingBottom(8).Text(t =>
+                        var pItem = col.Item().ExtendHorizontal();
+                        if (!compact) pItem = pItem.PaddingBottom(8);
+                        pItem.Text(t =>
                         {
                             ApplyTextAlign(t, el);
                             BuildInlineSpans(t, el);
@@ -420,7 +423,7 @@ namespace GenericApp.API.Controllers
                     col.Item().BorderLeft(3).BorderColor(Colors.Grey.Lighten1)
                         .PaddingLeft(8).PaddingVertical(4).PaddingBottom(8).Column(inner =>
                         {
-                            RenderNodes(inner, el.ChildNodes);
+                            RenderNodes(inner, el.ChildNodes, compact);
                         });
                     break;
 
@@ -431,12 +434,12 @@ namespace GenericApp.API.Controllers
 
                 case "TABLE":
                     RenderTable(col, el);
-                    col.Item().Height(8); // spacing after table
+                    if (!compact) col.Item().Height(8); // spacing after table
                     break;
 
                 case "BR":
-                    // Block-level <br> adds vertical spacing
-                    col.Item().Height(10);
+                    // Block-level <br> adds vertical spacing (suppressed in compact mode)
+                    if (!compact) col.Item().Height(10);
                     break;
 
                 case "HR":
@@ -459,8 +462,8 @@ namespace GenericApp.API.Controllers
                             switch (alignAttr)
                             {
                                 case "center": item.AlignCenter().MaxWidth(imgWidth).Image(bytes); break;
-                                case "right":  item.AlignRight().MaxWidth(imgWidth).Image(bytes);  break;
-                                default:       item.AlignLeft().MaxWidth(imgWidth).Image(bytes);   break;
+                                case "right": item.AlignRight().MaxWidth(imgWidth).Image(bytes); break;
+                                default: item.AlignLeft().MaxWidth(imgWidth).Image(bytes); break;
                             }
                         }
                         catch { /* skip unreadable images */ }
@@ -469,7 +472,7 @@ namespace GenericApp.API.Controllers
 
                 default:
                     // Dive into any other container elements
-                    RenderNodes(col, el.ChildNodes);
+                    RenderNodes(col, el.ChildNodes, compact);
                     break;
             }
         }
@@ -556,6 +559,19 @@ namespace GenericApp.API.Controllers
                     var cells = row.QuerySelectorAll("td, th").ToList();
                     bool isHeader = cells.Any(c => c.TagName.Equals("TH", StringComparison.OrdinalIgnoreCase));
 
+                    // Parse optional fixed row height (e.g. data-row-height="40px")
+                    float? rowHeightPt = null;
+                    var rowHeightAttr = row.GetAttribute("data-row-height");
+                    if (!string.IsNullOrWhiteSpace(rowHeightAttr))
+                    {
+                        var digits = rowHeightAttr.Replace("px", "").Trim();
+                        if (float.TryParse(digits,
+                            System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            out var px))
+                            rowHeightPt = px * 0.75f; // CSS px → PDF points
+                    }
+
                     // Calculate columns already consumed by explicit cells (with colspan)
                     int consumed = cells.Sum(c =>
                     {
@@ -580,13 +596,19 @@ namespace GenericApp.API.Controllers
                         if (colspan > 1) cellBase = cellBase.ColumnSpan((uint)colspan);
                         if (rowspan > 1) cellBase = cellBase.RowSpan((uint)rowspan);
 
-                        var cellContainer = cellBorderless
+                        // Border first (ITableCellContainer → IContainer)
+                        IContainer cellContainer = cellBorderless
                             ? cellBase.Border(0)
                             : cellBase.Border(0.5f).BorderColor(Colors.Grey.Lighten1);
 
+                        // Apply fixed row height on IContainer (where MinHeight lives)
+                        if (rowHeightPt.HasValue)
+                            cellContainer = cellContainer.MinHeight(rowHeightPt.Value);
+
+                        float cellPadding = rowHeightPt.HasValue ? 2 : 5;
                         var paddedCell = isHeader && !cellBorderless
-                            ? cellContainer.Background(Colors.Grey.Lighten3).Padding(5)
-                            : cellContainer.Padding(5);
+                            ? cellContainer.Background(Colors.Grey.Lighten3).Padding(cellPadding)
+                            : cellContainer.Padding(cellPadding);
 
                         // Detect block-level children (img, p, ul, etc.) that cannot
                         // be rendered inside a TextDescriptor — use a Column instead.
@@ -600,7 +622,24 @@ namespace GenericApp.API.Controllers
                                     || tag == "TABLE" || tag == "HR" || tag == "BLOCKQUOTE";
                             });
 
-                        if (cellHasBlockContent)
+                        if (rowHeightPt.HasValue)
+                        {
+                            // Compact: render inline directly, font scaled to fit the row
+                            // available = rowHeight - top padding - bottom padding
+                            float availableForText = rowHeightPt.Value - cellPadding * 2;
+                            // QuestPDF needs ~1.3× the font size for a single text line
+                            float compactFontSize = Math.Clamp(availableForText / 1.3f, 5f, 11f);
+                            var firstP = cell.QuerySelector("p");
+                            paddedCell
+                                .DefaultTextStyle(s => s.FontSize(compactFontSize))
+                                .Text(t =>
+                                {
+                                    if (firstP != null) ApplyTextAlign(t, firstP);
+                                    BuildInlineSpans(t, cell);
+                                    if (isHeader) t.DefaultTextStyle(s => s.Bold());
+                                });
+                        }
+                        else if (cellHasBlockContent)
                         {
                             paddedCell.Column(cellCol =>
                             {
@@ -620,10 +659,12 @@ namespace GenericApp.API.Controllers
                     // Fill remaining columns with empty cells
                     for (int i = 0; i < emptyCols; i++)
                     {
-                        var emptyContainer = tableBorderless
-                            ? table.Cell().Border(0).Padding(4)
-                            : table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(4);
-                        emptyContainer.Text("");
+                        IContainer emptyCell = tableBorderless
+                            ? table.Cell().Border(0)
+                            : table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1);
+                        if (rowHeightPt.HasValue)
+                            emptyCell = emptyCell.MinHeight(rowHeightPt.Value);
+                        emptyCell.Padding(rowHeightPt.HasValue ? 2 : 4).Text("");
                     }
                 }
             });
@@ -657,64 +698,67 @@ namespace GenericApp.API.Controllers
 
                 switch (childEl.TagName.ToUpper())
                 {
-                    case "STRONG": case "B":
-                    {
-                        // Build a style that first applies inherited, then adds Bold
-                        Func<TextSpanDescriptor, TextSpanDescriptor> boldStyle = s =>
+                    case "STRONG":
+                    case "B":
                         {
-                            if (inherited != null) s = inherited(s);
-                            return s.Bold();
-                        };
-                        ApplyFormattedChildren(t, childEl, boldStyle);
-                        break;
-                    }
-                    case "EM": case "I":
-                    {
-                        Func<TextSpanDescriptor, TextSpanDescriptor> italicStyle = s =>
+                            // Build a style that first applies inherited, then adds Bold
+                            Func<TextSpanDescriptor, TextSpanDescriptor> boldStyle = s =>
+                            {
+                                if (inherited != null) s = inherited(s);
+                                return s.Bold();
+                            };
+                            ApplyFormattedChildren(t, childEl, boldStyle);
+                            break;
+                        }
+                    case "EM":
+                    case "I":
                         {
-                            if (inherited != null) s = inherited(s);
-                            return s.Italic();
-                        };
-                        ApplyFormattedChildren(t, childEl, italicStyle);
-                        break;
-                    }
+                            Func<TextSpanDescriptor, TextSpanDescriptor> italicStyle = s =>
+                            {
+                                if (inherited != null) s = inherited(s);
+                                return s.Italic();
+                            };
+                            ApplyFormattedChildren(t, childEl, italicStyle);
+                            break;
+                        }
                     case "U":
-                    {
-                        Func<TextSpanDescriptor, TextSpanDescriptor> underlineStyle = s =>
                         {
-                            if (inherited != null) s = inherited(s);
-                            return s.Underline();
-                        };
-                        ApplyFormattedChildren(t, childEl, underlineStyle);
-                        break;
-                    }
-                    case "S": case "DEL":
-                    {
-                        Func<TextSpanDescriptor, TextSpanDescriptor> strikeStyle = s =>
+                            Func<TextSpanDescriptor, TextSpanDescriptor> underlineStyle = s =>
+                            {
+                                if (inherited != null) s = inherited(s);
+                                return s.Underline();
+                            };
+                            ApplyFormattedChildren(t, childEl, underlineStyle);
+                            break;
+                        }
+                    case "S":
+                    case "DEL":
                         {
-                            if (inherited != null) s = inherited(s);
-                            return s.Strikethrough();
-                        };
-                        ApplyFormattedChildren(t, childEl, strikeStyle);
-                        break;
-                    }
+                            Func<TextSpanDescriptor, TextSpanDescriptor> strikeStyle = s =>
+                            {
+                                if (inherited != null) s = inherited(s);
+                                return s.Strikethrough();
+                            };
+                            ApplyFormattedChildren(t, childEl, strikeStyle);
+                            break;
+                        }
                     case "CODE":
-                    {
-                        var codeSpan = t.Span(GetText(childEl))
-                            .FontFamily(Fonts.CourierNew)
-                            .BackgroundColor(Colors.Grey.Lighten3);
-                        inherited?.Invoke(codeSpan);
-                        break;
-                    }
+                        {
+                            var codeSpan = t.Span(GetText(childEl))
+                                .FontFamily(Fonts.CourierNew)
+                                .BackgroundColor(Colors.Grey.Lighten3);
+                            inherited?.Invoke(codeSpan);
+                            break;
+                        }
                     case "SPAN":
                         ApplySpanStyle(t, childEl, inherited);
                         break;
                     case "A":
-                    {
-                        var linkSpan = t.Hyperlink(GetText(childEl), childEl.GetAttribute("href") ?? "#");
-                        inherited?.Invoke(linkSpan);
-                        break;
-                    }
+                        {
+                            var linkSpan = t.Hyperlink(GetText(childEl), childEl.GetAttribute("href") ?? "#");
+                            inherited?.Invoke(linkSpan);
+                            break;
+                        }
                     case "BR":
                         t.Span("\n");
                         break;
@@ -758,46 +802,49 @@ namespace GenericApp.API.Controllers
                         case "BR":
                             t.Span("\n");
                             break;
-                        case "STRONG": case "B":
-                        {
-                            Func<TextSpanDescriptor, TextSpanDescriptor> composed = s =>
+                        case "STRONG":
+                        case "B":
                             {
-                                s = style(s);
-                                return s.Bold();
-                            };
-                            ApplyFormattedChildren(t, nested, composed);
-                            break;
-                        }
-                        case "EM": case "I":
-                        {
-                            Func<TextSpanDescriptor, TextSpanDescriptor> composed = s =>
+                                Func<TextSpanDescriptor, TextSpanDescriptor> composed = s =>
+                                {
+                                    s = style(s);
+                                    return s.Bold();
+                                };
+                                ApplyFormattedChildren(t, nested, composed);
+                                break;
+                            }
+                        case "EM":
+                        case "I":
                             {
-                                s = style(s);
-                                return s.Italic();
-                            };
-                            ApplyFormattedChildren(t, nested, composed);
-                            break;
-                        }
+                                Func<TextSpanDescriptor, TextSpanDescriptor> composed = s =>
+                                {
+                                    s = style(s);
+                                    return s.Italic();
+                                };
+                                ApplyFormattedChildren(t, nested, composed);
+                                break;
+                            }
                         case "U":
-                        {
-                            Func<TextSpanDescriptor, TextSpanDescriptor> composed = s =>
                             {
-                                s = style(s);
-                                return s.Underline();
-                            };
-                            ApplyFormattedChildren(t, nested, composed);
-                            break;
-                        }
-                        case "S": case "DEL":
-                        {
-                            Func<TextSpanDescriptor, TextSpanDescriptor> composed = s =>
+                                Func<TextSpanDescriptor, TextSpanDescriptor> composed = s =>
+                                {
+                                    s = style(s);
+                                    return s.Underline();
+                                };
+                                ApplyFormattedChildren(t, nested, composed);
+                                break;
+                            }
+                        case "S":
+                        case "DEL":
                             {
-                                s = style(s);
-                                return s.Strikethrough();
-                            };
-                            ApplyFormattedChildren(t, nested, composed);
-                            break;
-                        }
+                                Func<TextSpanDescriptor, TextSpanDescriptor> composed = s =>
+                                {
+                                    s = style(s);
+                                    return s.Strikethrough();
+                                };
+                                ApplyFormattedChildren(t, nested, composed);
+                                break;
+                            }
                         case "SPAN":
                             ApplySpanStyle(t, nested, style);
                             break;
@@ -823,10 +870,10 @@ namespace GenericApp.API.Controllers
 
             switch (match.Groups[1].Value.ToLowerInvariant())
             {
-                case "center":  t.AlignCenter();  break;
-                case "right":   t.AlignRight();   break;
-                case "justify": t.Justify();      break;
-                // "left" is the default — nothing to do
+                case "center": t.AlignCenter(); break;
+                case "right": t.AlignRight(); break;
+                case "justify": t.Justify(); break;
+                    // "left" is the default — nothing to do
             }
         }
 
@@ -904,17 +951,17 @@ namespace GenericApp.API.Controllers
             // Map common aliases to canonical names understood by Skia/OS fonts
             return first.ToLowerInvariant() switch
             {
-                "lato"                              => Fonts.Lato,
-                "arial"                             => "Arial",
-                "helvetica"                         => "Arial",  // fallback
-                "helvetica neue"                    => "Arial",
-                "times new roman" or "times"        => "Times New Roman",
-                "courier new" or "courier"          => Fonts.CourierNew,
-                "georgia"                           => "Georgia",
-                "verdana"                           => Fonts.Verdana,
-                "trebuchet ms" or "trebuchet"       => "Trebuchet MS",
-                "tahoma"                            => "Tahoma",
-                "calibri"                           => "Calibri",
+                "lato" => Fonts.Lato,
+                "arial" => "Arial",
+                "helvetica" => "Arial",  // fallback
+                "helvetica neue" => "Arial",
+                "times new roman" or "times" => "Times New Roman",
+                "courier new" or "courier" => Fonts.CourierNew,
+                "georgia" => "Georgia",
+                "verdana" => Fonts.Verdana,
+                "trebuchet ms" or "trebuchet" => "Trebuchet MS",
+                "tahoma" => "Tahoma",
+                "calibri" => "Calibri",
                 "sans-serif" or "serif" or "monospace" or "cursive" or "fantasy" => null,
                 _ => string.IsNullOrWhiteSpace(first) ? null : first
             };
