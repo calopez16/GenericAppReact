@@ -20,9 +20,16 @@ namespace GenericApp.Data
         public DbSet<Client> Clients { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Country> Countries { get; set; }
-        public DbSet<Driver> Drivers { get; set; }
         public DbSet<Parameter> Parameters { get; set; }
         public DbSet<RefreshTokenAspNetUser> RefreshTokenAspNetUser { get; set; }
+        public DbSet<Contract> Contracts { get; set; }
+        public DbSet<ContractSigned> ContractsSigned { get; set; }
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<EmployeeBeneficiarie> EmployeeBeneficiaries { get; set; }
+        public DbSet<EmployeeDependents> EmployeeDependents { get; set; }
+        public DbSet<EmployeeEmergencyContact> EmployeeEmergencyContacts { get; set; }
+        public DbSet<EmployeeRelationshipType> EmployeeRelationshipTypes { get; set; }
+        public DbSet<EmployeeWorkInformation> EmployeeWorkInformations { get; set; }
         public DbSet<Season> Seasons { get; set; }
         public DbSet<State> States { get; set; }
         public DbSet<UserDetail> UserDetails { get; set; }
@@ -154,18 +161,132 @@ namespace GenericApp.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            modelBuilder.Entity<Driver>(b =>
+
+            modelBuilder.Entity<EmployeeRelationshipType>(b =>
             {
-                b.HasKey(x => x.IdDriver);
-                b.Property(x => x.Name).HasMaxLength(150).IsRequired();
+                b.HasKey(x => x.IdEmployeeRelationshipType);
+                b.Property(x => x.Description).HasMaxLength(150);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            });
+
+            modelBuilder.Entity<Employee>(b =>
+            {
+                b.HasKey(x => x.IdEmployee);
+                b.Property(x => x.ApellidoPaterno).HasMaxLength(100);
+                b.Property(x => x.ApellidoMaterno).HasMaxLength(100);
+                b.Property(x => x.Nombre).HasMaxLength(100);
+                b.Property(x => x.Address).HasMaxLength(250);
+                b.Property(x => x.RFC).HasMaxLength(13);
+                b.Property(x => x.CURP).HasMaxLength(18);
+                b.Property(x => x.IMSS).HasMaxLength(11);
+                b.Property(x => x.Genre).HasMaxLength(1);
+                b.Property(x => x.CivilStatus).HasMaxLength(50);
+                b.Property(x => x.Position).HasMaxLength(150);
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
 
-                b.HasOne(d => d.IdCompanyNavigation)
+                b.HasOne(e => e.IdCompanyNavigation)
                     .WithMany()
-                    .HasForeignKey(x => x.IdCompany)
-                    .OnDelete(DeleteBehavior.Restrict)
-                    .IsRequired();
+                    .HasForeignKey(e => e.IdCompany)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<EmployeeWorkInformation>(b =>
+            {
+                b.HasKey(x => x.IdEmployeeWorkInformation);
+                b.Property(x => x.DailySalary).HasColumnType("decimal(18,2)");
+                b.Property(x => x.IntegralSalary).HasColumnType("decimal(18,2)");
+                b.Property(x => x.PayType).HasMaxLength(50);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(e => e.IdEmployeeNavigation)
+                    .WithMany(e => e.EmployeeWorkInformations)
+                    .HasForeignKey(e => e.IdEmployee)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<EmployeeBeneficiarie>(b =>
+            {
+                b.HasKey(x => x.IdEmployeeBeneficiarie);
+                b.Property(x => x.Name).HasMaxLength(150);
+                b.Property(x => x.Percentage).HasColumnType("decimal(5,2)");
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(e => e.IdEmployeeNavigation)
+                    .WithMany(e => e.Beneficiaries)
+                    .HasForeignKey(e => e.IdEmployee)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(e => e.IdEmployeeRelationshipTypeNavigation)
+                    .WithMany()
+                    .HasForeignKey(e => e.IdEmployeeRelationshipType)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<EmployeeDependents>(b =>
+            {
+                b.HasKey(x => x.IdEmployeeDependents);
+                b.Property(x => x.Name).HasMaxLength(150);
+                b.Property(x => x.LastName).HasMaxLength(150);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(e => e.IdEmployeeNavigation)
+                    .WithMany(e => e.Dependents)
+                    .HasForeignKey(e => e.IdEmployee)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(e => e.IdEmployeeRelationshipTypeNavigation)
+                    .WithMany()
+                    .HasForeignKey(e => e.IdEmployeeRelationshipType)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<EmployeeEmergencyContact>(b =>
+            {
+                b.HasKey(x => x.IdEmployeeEmergencyContact);
+                b.Property(x => x.Name).HasMaxLength(150);
+                b.Property(x => x.Relationship).HasMaxLength(100);
+                b.Property(x => x.Phone).HasMaxLength(25);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(e => e.IdEmployeeNavigation)
+                    .WithMany(e => e.EmployeeEmergencyContacts)
+                    .HasForeignKey(e => e.IdEmployee)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Contract>(b =>
+            {
+                b.HasKey(x => x.IdContract);
+                b.Property(x => x.DocumentName).HasMaxLength(250);
+                b.Property(x => x.VirtualPath).HasMaxLength(500);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(c => c.IdCompanyNavigation)
+                    .WithMany()
+                    .HasForeignKey(c => c.IdCompany)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<ContractSigned>(b =>
+            {
+                b.HasKey(x => x.IdContractSigned);
+
+                b.HasOne(cs => cs.IdContractNavigation)
+                    .WithMany(c => c.ContractSigned)
+                    .HasForeignKey(cs => cs.IdContract)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(cs => cs.IdContractTemplateNavigation)
+                    .WithMany()
+                    .HasForeignKey(cs => cs.IdContractTemplate)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Season>(b =>

@@ -91,6 +91,8 @@
   "contractTemplate_toolbar_underline": "Subrayado",
   "contractTemplate_enablePrintHeader": "Habilitar encabezado de impresión",
   "contractTemplate_variables": "Insertar variable",
+  "contracts": "Contratos",
+  "contracts_description": "Módulo para administrar contratos de empleados",
   "contractTemplates": "Plantillas de contrato",
   "contractTemplates_description": "Módulo para administrar plantillas de contrato",
   "no_contract_templates_yet": "Aún no hay plantillas de contrato",

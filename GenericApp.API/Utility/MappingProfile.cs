@@ -15,10 +15,16 @@ namespace GenericApp.API.Utility
             CreateMap<Country, CountryDTO>().ReverseMap();
             CreateMap<State, StateDTO>().ReverseMap();
             CreateMap<Company, CompanyDTO>().ReverseMap();
-            CreateMap<Driver, DriverDTO>().ReverseMap();
             CreateMap<Season, SeasonDTO>().ReverseMap();
             CreateMap<ContractTemplate, ContractTemplateDTO>().ReverseMap();
-            
+            CreateMap<Employee, EmployeeDTO>().ReverseMap();
+            CreateMap<EmployeeWorkInformation, EmployeeWorkInformationDTO>().ReverseMap();
+            CreateMap<EmployeeBeneficiarie, EmployeeBeneficiarieDTO>().ReverseMap();
+            CreateMap<EmployeeDependents, EmployeeDependentsDTO>().ReverseMap();
+            CreateMap<EmployeeEmergencyContact, EmployeeEmergencyContactDTO>().ReverseMap();
+            CreateMap<EmployeeRelationshipType, EmployeeRelationshipTypeDTO>().ReverseMap();
+            CreateMap<Contract, ContractDTO>().ReverseMap();
+            CreateMap<ContractSigned, ContractSignedDTO>().ReverseMap();
         }
     }
 }

@@ -91,6 +91,8 @@
   "contractTemplate_toolbar_underline": "Underline",
   "contractTemplate_enablePrintHeader": "Enable print header",
   "contractTemplate_variables": "Insert variable",
+  "contracts": "Contracts",
+  "contracts_description": "Module to manage employee contracts",
   "contractTemplates": "Contract Templates",
   "contractTemplates_description": "Module to manage contract templates",
   "no_contract_templates_yet": "No contract templates yet",

@@ -20,6 +20,16 @@
     "roles": [ "Administrator", "User" ]
   },
   {
+    "id": "contracts",
+    "path": "/contracts",
+    "i18nKey": "contracts",
+    "i18nKeyDescription": "contracts_description",
+    "icon": "ArticleIcon",
+    "exact": true,
+    "enabled": true,
+    "roles": [ "Administrator", "User" ]
+  },
+  {
     "id": "administration",
     "path": "/",
     "i18nKey": "administration",

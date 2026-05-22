@@ -5,40 +5,40 @@ export const lightTheme = createTheme({
     palette: {
         mode: 'light',
         background: {
-            default: '#fdfbf7', // Un tono "hueso/arena" muy suave, más natural que el blanco
+            default: '#f0f2f5', // Gris neutro corporativo
             paper: '#ffffff',
         },
         text: {
-            primary: '#1a2e1a',   // Verde muy oscuro, casi negro, para el texto
-            secondary: '#5c635c',
+            primary: '#212121',   // Casi negro, máxima legibilidad
+            secondary: '#616161',
         },
         primary: {
-            main: '#2d5a27',      // Verde Espárrago (Fuerte y orgánico)
-            light: '#568351',
-            dark: '#1b3a18',
+            main: '#37474f',      // Gris azulado oscuro (pizarra) — neutro y elegante
+            light: '#62727b',
+            dark: '#102027',
             contrastText: '#ffffff',
         },
         secondary: {
-            main: '#a67c52',      // Color tierra/madera para acentos
+            main: '#b71c1c',      // Rojo vino — acento de autoridad y firma
         },
-        divider: '#e8e2d9',
+        divider: '#e0e0e0',
     },
     components: {
         MuiCard: {
             styleOverrides: {
                 root: {
                     backgroundColor: '#ffffff',
-                    color: '#1a2e1a',
-                    borderRadius: 12,
-                    border: '1px solid #e8e2d9', // Borde sutil color arena
-                    boxShadow: '0px 4px 12px rgba(27, 58, 24, 0.04)', // Sombra con tinte verde
+                    color: '#212121',
+                    borderRadius: 4,
+                    border: '1px solid #e0e0e0',
+                    boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.10)',
                 },
             },
         },
         MuiButton: {
             styleOverrides: {
                 root: {
-                    borderRadius: 20, // Bordes más redondeados (más orgánico)
+                    borderRadius: 4,
                     textTransform: 'none',
                     fontWeight: 600,
                 },
@@ -47,12 +47,12 @@ export const lightTheme = createTheme({
         MuiAppBar: {
             styleOverrides: {
                 root: {
-                    backgroundColor: '#2d5a27', // El encabezado llevará el verde fuerte
+                    backgroundColor: '#37474f',
                 },
             },
         },
     },
-});// Define el tema oscuro
+});
 export const darkTheme = createTheme({
     palette: {
         mode: 'dark',
