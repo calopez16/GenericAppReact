@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace GenericApp.Data.Models
 {
-    public class ManifestStatus
+    public class EmployeeRelationshipType
     {
-        public int IdManifestStatus { get; set; }
+        public int IdEmployeeRelationshipType { get; set; }
         public string? Description { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
