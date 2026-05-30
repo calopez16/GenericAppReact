@@ -18,6 +18,5 @@ namespace GenericApp.Data.Models
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
         public virtual Employee IdEmployeeNavigation { get; set; }
-        public virtual List<EmployeeBeneficiarie> Beneficiaries{ get; set; }
     }
 }

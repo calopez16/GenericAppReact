@@ -20,6 +20,16 @@
     "roles": [ "Administrator", "User" ]
   },
   {
+    "id": "employees",
+    "path": "/employees",
+    "i18nKey": "employees",
+    "i18nKeyDescription": "employees_description",
+    "icon": "BadgeIcon",
+    "exact": true,
+    "enabled": true,
+    "roles": [ "Administrator", "User" ]
+  },
+  {
     "id": "contracts",
     "path": "/contracts",
     "i18nKey": "contracts",

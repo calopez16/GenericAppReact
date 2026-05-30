@@ -18,5 +18,10 @@ namespace GenericApp.API.Models
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
         public int? IdCompany { get; set; }
+        public CompanyDTO? IdCompanyNavigation { get; set; }
+        public List<EmployeeWorkInformationDTO>? EmployeeWorkInformations { get; set; }
+        public List<EmployeeBeneficiarieDTO>? Beneficiaries { get; set; }
+        public List<EmployeeDependentsDTO>? Dependents { get; set; }
+        public List<EmployeeEmergencyContactDTO>? EmployeeEmergencyContacts { get; set; }
     }
 }
