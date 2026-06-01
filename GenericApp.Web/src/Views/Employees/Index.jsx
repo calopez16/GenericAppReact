@@ -8,6 +8,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import BadgeIcon from '@mui/icons-material/Badge';
 import CloseIcon from '@mui/icons-material/Close';
+import TableViewIcon from '@mui/icons-material/TableView';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import { AppContext } from '@helpers/AppContext';
@@ -16,6 +17,7 @@ import ConfirmationModal from '@views/Layout/ConfirmationModal';
 import EmployeeFormModal from './EmployeeFormModal';
 import EmployeeCardList from './EmployeeCardList';
 import EmployeeTableList from './EmployeeTableList';
+import EmployeeExcelModal from './EmployeeExcelModal';
 
 function Index() {
     const { t } = useTranslation();
@@ -37,6 +39,7 @@ function Index() {
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
+    const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
@@ -220,6 +223,15 @@ function Index() {
                     </ClickAwayListener>
 
                     <Button
+                        variant="outlined"
+                        disableElevation
+                        startIcon={<TableViewIcon />}
+                        onClick={() => setIsExcelModalOpen(true)}
+                        sx={{ whiteSpace: 'nowrap', ml: 1 }}
+                    >
+                        {t('excel_load')}
+                    </Button>
+                    <Button
                         variant="contained"
                         disableElevation
                         endIcon={<AddIcon />}
@@ -268,6 +280,11 @@ function Index() {
                 onConfirm={handleDeleteEmployee}
                 title={t('delete')}
                 message={t('question_areYouSureDelete')}
+            />
+
+            <EmployeeExcelModal
+                open={isExcelModalOpen}
+                handleClose={() => setIsExcelModalOpen(false)}
             />
         </Box>
     );

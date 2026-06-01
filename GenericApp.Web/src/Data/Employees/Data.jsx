@@ -20,5 +20,8 @@ export const DataAPIEmployeesService = () => {
         disableEmployee: (id) => PUT(`${moduleSource}/disable/${id}`),
         enableEmployee: (id) => PUT(`${moduleSource}/enable/${id}`),
         deleteEmployee: (id) => DELETE(`${moduleSource}/${id}`),
+        getRelationshipTypes: () => GET(`${moduleSource}/relationship-types`),
+        addRelationshipType: (data) => POST(`${moduleSource}/relationship-types`, data, true),
+        uploadExcel: (formData) => POST(`${moduleSource}/upload-excel`, formData, true),
     };
 };

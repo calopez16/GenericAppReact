@@ -19,7 +19,11 @@ const EmployeeCardList = ({
     isSearch = false,
 }) => {
     if (!loading && (!employees || employees.length === 0)) {
-        return <EmptyData isSearch={isSearch} />;
+        return <EmptyData
+            isSearch={isSearch}
+            title={isSearch ? t('records_notFound') : t('no_employees_yet')}
+            description={isSearch ? t('try_another_search_term') : t('start_by_adding_employee')}
+        />;
     }
 
     const MobileEmployeeCard = ({ employee }) => {

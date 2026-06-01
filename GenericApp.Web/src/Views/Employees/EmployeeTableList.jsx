@@ -125,22 +125,26 @@ const EmployeeTableList = ({
                                     </TableRow>
                                 );
                             })}
-                            {employees?.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={6}>
-                                        <EmptyData isSearch={isSearch} />
-                                    </TableCell>
-                                </TableRow>
-                            )}
                             {emptyRows > 0 && (
                                 <TableRow style={{ height: rowHeight * emptyRows }}>
                                     <TableCell colSpan={6} />
                                 </TableRow>
                             )}
-                        </>
+                        </>  
                     )}
                 </TableBody>
             </Table>
+
+            {!loading && employees?.length === 0 && (
+                <Box sx={{ mt: 2 }}>
+                    <EmptyData
+                        isSearch={isSearch}
+                        title={isSearch ? t('records_notFound') : t('no_employees_yet')}
+                        description={isSearch ? t('try_another_search_term') : t('start_by_adding_employee')}
+                        actionLabel={t('add')}
+                    />
+                </Box>
+            )}
         </TableContainer>
     );
 };

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using System.Data;
 
 namespace GenericApp.API.Controllers
@@ -34,6 +35,106 @@ namespace GenericApp.API.Controllers
         {
             _repository = repository;
             _mapper = mapper;
+        }
+
+        [HttpGet("relationship-types")]
+        public async Task<ActionResult> GetRelationshipTypes()
+        {
+            var types = await _repository.FindBy<EmployeeRelationshipType>(x => !(x.IsDeleted ?? false));
+            return Ok(new ApiResponse { Data = types.Select(x => _mapper.Map<EmployeeRelationshipTypeDTO>(x)) });
+        }
+
+        [HttpPost("relationship-types")]
+        public async Task<ActionResult> AddRelationshipType([FromBody] EmployeeRelationshipTypeDTO dto)
+        {
+            var entity = new EmployeeRelationshipType
+            {
+                Description = dto.Description,
+                IsActive = true,
+                IsDeleted = false,
+            };
+            await _repository.Add(entity);
+            return Ok(new ApiResponse { Data = _mapper.Map<EmployeeRelationshipTypeDTO>(entity) });
+        }
+
+        [HttpPost("upload-excel")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
+        public ActionResult UploadExcel([FromForm] IFormFile file, [FromForm] int dataStartRow = 2)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new ApiResponse { Message = "No file provided" });
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            var rows = new List<EmployeeExcelRowDTO>();
+
+            using var stream = file.OpenReadStream();
+            using var package = new ExcelPackage(stream);
+            var sheet = package.Workbook.Worksheets[0];
+            if (sheet == null)
+                return BadRequest(new ApiResponse { Message = "No worksheet found" });
+
+            int lastRow = sheet.Dimension?.End.Row ?? 0;
+
+            string? GetVal(int row, int col)
+            {
+                var v = sheet.Cells[row, col].Text?.Trim();
+                return string.IsNullOrEmpty(v) ? null : v;
+            }
+
+            for (int r = dataStartRow; r <= lastRow; r++)
+            {
+                if (string.IsNullOrWhiteSpace(sheet.Cells[r, 1].Text) &&
+                    string.IsNullOrWhiteSpace(sheet.Cells[r, 4].Text))
+                    continue;
+
+                rows.Add(new EmployeeExcelRowDTO
+                {
+                    RowNumber = r,
+                    Clave = GetVal(r, 1),
+                    ApellidoPaterno = GetVal(r, 2),
+                    ApellidoMaterno = GetVal(r, 3),
+                    Nombre = GetVal(r, 4),
+                    LugarNacimiento = GetVal(r, 5),
+                    Direccion = GetVal(r, 6),
+                    Telefono = GetVal(r, 7),
+                    Ciudad = GetVal(r, 8),
+                    Estado = GetVal(r, 9),
+                    RFC = GetVal(r, 10),
+                    CURP = GetVal(r, 11),
+                    IMSS = GetVal(r, 12),
+                    Sexo = GetVal(r, 13),
+                    EstadoCivil = GetVal(r, 14),
+                    Puesto = GetVal(r, 15),
+                    FechaNacimiento = GetVal(r, 16),
+                    FechaIngreso = GetVal(r, 17),
+                    FechaBaja = GetVal(r, 18),
+                    CausaBaja = GetVal(r, 19),
+                    Activo = GetVal(r, 23),
+                    SalarioDiario = GetVal(r, 25),
+                    SalarioIntegrado = GetVal(r, 26),
+                    CorreoElectronico = GetVal(r, 34),
+                    FormaDePago = GetVal(r, 38),
+                    Beneficiario1 = GetVal(r, 39),
+                    Parentesco1 = GetVal(r, 40),
+                    Porcentaje1 = GetVal(r, 41),
+                    Beneficiario2 = GetVal(r, 42),
+                    Parentesco2 = GetVal(r, 43),
+                    Porcentaje2 = GetVal(r, 44),
+                    Beneficiario3 = GetVal(r, 45),
+                    Parentesco3 = GetVal(r, 46),
+                    Porcentaje3 = GetVal(r, 47),
+                    CelularTrabajador = GetVal(r, 83),
+                    ContactoEmergencia = GetVal(r, 86),
+                    ParentescoContacto = GetVal(r, 87),
+                    CelularContacto = GetVal(r, 88),
+                    FechaInicioContrato = GetVal(r, 94),
+                    FechaVencimientoContrato = GetVal(r, 95),
+                    CodigoPostal = GetVal(r, 100),
+                });
+            }
+
+            return Ok(new ApiResponse { Data = rows });
         }
 
         /// <summary>
@@ -110,14 +211,19 @@ namespace GenericApp.API.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<EmployeeDTO>> GetEmployeeById(int id)
         {
-            var employee = await _repository.FirstOrDefault<Employee>(x => x.IdEmployee == id && !(x.IsDeleted ?? false));
+            var employee = await _repository.FirstOrDefault<Employee>(
+                x => x.IdEmployee == id && !(x.IsDeleted ?? false),
+                x => x.EmployeeWorkInformations,
+                x => x.Beneficiaries,
+                x => x.Dependents,
+                x => x.EmployeeEmergencyContacts);
+
             if (employee == null)
                 return NotFound(new ApiResponse());
 
             var employeeDTO = _mapper.Map<EmployeeDTO>(employee);
 
             return Ok(new ApiResponse { Data = employeeDTO });
-
         }
 
         /// <summary>
@@ -143,12 +249,29 @@ namespace GenericApp.API.Controllers
                 );
 
             var employeeDB = _mapper.Map<Employee>(model);
+            employeeDB.EmployeeWorkInformations = new List<EmployeeWorkInformation>();
+            employeeDB.Beneficiaries = new List<EmployeeBeneficiarie>();
+            employeeDB.Dependents = new List<EmployeeDependents>();
+            employeeDB.EmployeeEmergencyContacts = new List<EmployeeEmergencyContact>();
+
+            if (model.EmployeeWorkInformations?.Any() == true)
+                employeeDB.EmployeeWorkInformations.Add(_mapper.Map<EmployeeWorkInformation>(model.EmployeeWorkInformations.First()));
+
+            if (model.Beneficiaries?.Any() == true)
+                employeeDB.Beneficiaries = model.Beneficiaries.Select(b => _mapper.Map<EmployeeBeneficiarie>(b)).ToList();
+
+            if (model.Dependents?.Any() == true)
+                employeeDB.Dependents = model.Dependents.Select(d => _mapper.Map<EmployeeDependents>(d)).ToList();
+
+            if (model.EmployeeEmergencyContacts?.Any() == true)
+                employeeDB.EmployeeEmergencyContacts = model.EmployeeEmergencyContacts.Select(e => _mapper.Map<EmployeeEmergencyContact>(e)).ToList();
+
             var result = await _repository.Add(employeeDB);
 
             if (!result)
                 return BadRequest(new ApiResponse());
 
-            return Ok(new ApiResponse { Data = employeeDB });
+            return Ok(new ApiResponse { Data = _mapper.Map<EmployeeDTO>(employeeDB) });
         }
 
         /// <summary>
@@ -174,7 +297,16 @@ namespace GenericApp.API.Controllers
                     }
                 );
 
-            var employeeDB = await _repository.GetById<Employee>(model.IdEmployee ?? 0);
+            var employeeDB = await _repository.FirstOrDefault<Employee>(
+                x => x.IdEmployee == (model.IdEmployee ?? 0),
+                x => x.EmployeeWorkInformations,
+                x => x.Beneficiaries,
+                x => x.Dependents,
+                x => x.EmployeeEmergencyContacts);
+
+            if (employeeDB == null)
+                return NotFound(new ApiResponse());
+
             employeeDB.Clave = model.Clave ?? employeeDB.Clave;
             employeeDB.Nombre = model.Nombre;
             employeeDB.ApellidoPaterno = model.ApellidoPaterno;
@@ -188,12 +320,36 @@ namespace GenericApp.API.Controllers
             employeeDB.Position = model.Position;
             employeeDB.BirthDate = model.BirthDate ?? employeeDB.BirthDate;
             employeeDB.IdCompany = model.IdCompany ?? employeeDB.IdCompany;
+
+            // WorkInformation: solo un registro
+            employeeDB.EmployeeWorkInformations.Clear();
+            if (model.EmployeeWorkInformations?.Any() == true)
+                employeeDB.EmployeeWorkInformations.Add(_mapper.Map<EmployeeWorkInformation>(model.EmployeeWorkInformations.First()));
+
+            // Beneficiaries
+            employeeDB.Beneficiaries.Clear();
+            if (model.Beneficiaries?.Any() == true)
+                foreach (var b in model.Beneficiaries)
+                    employeeDB.Beneficiaries.Add(_mapper.Map<EmployeeBeneficiarie>(b));
+
+            // Dependents
+            employeeDB.Dependents.Clear();
+            if (model.Dependents?.Any() == true)
+                foreach (var d in model.Dependents)
+                    employeeDB.Dependents.Add(_mapper.Map<EmployeeDependents>(d));
+
+            // EmergencyContacts
+            employeeDB.EmployeeEmergencyContacts.Clear();
+            if (model.EmployeeEmergencyContacts?.Any() == true)
+                foreach (var e in model.EmployeeEmergencyContacts)
+                    employeeDB.EmployeeEmergencyContacts.Add(_mapper.Map<EmployeeEmergencyContact>(e));
+
             var result = await _repository.Update(employeeDB);
 
             if (!result)
                 return BadRequest(new ApiResponse());
 
-            return Ok(new ApiResponse { Data = employeeDB });
+            return Ok(new ApiResponse { Data = _mapper.Map<EmployeeDTO>(employeeDB) });
         }
 
         /// <summary>
