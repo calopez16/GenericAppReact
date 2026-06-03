@@ -26,6 +26,36 @@ namespace GenericApp.API.Models
         public string? SalarioDiario { get; set; }
         public string? SalarioIntegrado { get; set; }
         public string? FormaDePago { get; set; }
+        // Padres
+        public string? Padre { get; set; }
+        public string? FechaNacimientoPadre { get; set; }
+        public string? PadreVive { get; set; }
+        public string? Madre { get; set; }
+        public string? FechaNacimientoMadre { get; set; }
+        public string? MadreVive { get; set; }
+        // Cónyuge
+        public string? Conyugue { get; set; }
+        public string? ConyugueFechaNacimiento { get; set; }
+        public string? ConyugeVive { get; set; }
+        // Hijos
+        public string? Hijo1 { get; set; }
+        public string? Hijo1FechaNacimiento { get; set; }
+        public string? Hijo1Sexo { get; set; }
+        public string? Hijo2 { get; set; }
+        public string? Hijo2FechaNacimiento { get; set; }
+        public string? Hijo2Sexo { get; set; }
+        public string? Hijo3 { get; set; }
+        public string? Hijo3FechaNacimiento { get; set; }
+        public string? Hijo3Sexo { get; set; }
+        public string? Hijo4 { get; set; }
+        public string? Hijo4FechaNacimiento { get; set; }
+        public string? Hijo4Sexo { get; set; }
+        public string? Hijo5 { get; set; }
+        public string? Hijo5FechaNacimiento { get; set; }
+        public string? Hijo5Sexo { get; set; }
+        public string? Hijo6 { get; set; }
+        public string? Hijo6FechaNacimiento { get; set; }
+        public string? Hijo6Sexo { get; set; }
         // Beneficiarios
         public string? Beneficiario1 { get; set; }
         public string? Parentesco1 { get; set; }

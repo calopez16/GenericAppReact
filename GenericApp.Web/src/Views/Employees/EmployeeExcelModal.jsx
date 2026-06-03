@@ -14,42 +14,74 @@ import { ShowMessage } from '@helpers/NotificationService';
 import { DataAPIEmployeesService } from '@data/Employees/Data';
 
 const PREVIEW_COLUMNS = [
-    { key: 'rowNumber', label: '#Fila', width: 60 },
-    { key: 'clave', label: 'Clave' },
-    { key: 'apellidoPaterno', label: 'Paterno' },
-    { key: 'apellidoMaterno', label: 'Materno' },
-    { key: 'nombre', label: 'Nombre' },
-    { key: 'rfc', label: 'RFC' },
-    { key: 'curp', label: 'CURP' },
-    { key: 'imss', label: 'IMSS' },
-    { key: 'sexo', label: 'Sexo' },
-    { key: 'puesto', label: 'Puesto' },
-    { key: 'estadoCivil', label: 'Edo. Civil' },
-    { key: 'fechaNacimiento', label: 'F. Nacimiento' },
-    { key: 'fechaIngreso', label: 'F. Ingreso' },
-    { key: 'salarioDiario', label: 'Sal. Diario' },
-    { key: 'salarioIntegrado', label: 'Sal. Integrado' },
-    { key: 'formaDePago', label: 'Forma Pago' },
-    { key: 'direccion', label: 'Dirección' },
-    { key: 'ciudad', label: 'Ciudad' },
-    { key: 'estado', label: 'Estado' },
-    { key: 'codigoPostal', label: 'C.P.' },
-    { key: 'correoElectronico', label: 'Correo' },
-    { key: 'celularTrabajador', label: 'Celular' },
-    { key: 'beneficiario1', label: 'Beneficiario 1' },
-    { key: 'parentesco1', label: 'Parentesco 1' },
-    { key: 'porcentaje1', label: '%1' },
-    { key: 'beneficiario2', label: 'Beneficiario 2' },
-    { key: 'parentesco2', label: 'Parentesco 2' },
-    { key: 'porcentaje2', label: '%2' },
-    { key: 'beneficiario3', label: 'Beneficiario 3' },
-    { key: 'parentesco3', label: 'Parentesco 3' },
-    { key: 'porcentaje3', label: '%3' },
-    { key: 'contactoEmergencia', label: 'Contacto Emerg.' },
-    { key: 'parentescoContacto', label: 'Parentesco Emerg.' },
-    { key: 'celularContacto', label: 'Cel. Emerg.' },
-    { key: 'fechaInicioContrato', label: 'Inicio Contrato' },
-    { key: 'fechaVencimientoContrato', label: 'Venc. Contrato' },
+    { key: 'rowNumber', labelKey: 'col_rowNumber', width: 60 },
+    { key: 'clave', labelKey: 'col_clave' },
+    { key: 'apellidoPaterno', labelKey: 'col_apellidoPaterno' },
+    { key: 'apellidoMaterno', labelKey: 'col_apellidoMaterno' },
+    { key: 'nombre', labelKey: 'col_nombre' },
+    { key: 'rfc', labelKey: 'col_rfc' },
+    { key: 'curp', labelKey: 'col_curp' },
+    { key: 'imss', labelKey: 'col_imss' },
+    { key: 'sexo', labelKey: 'col_sexo' },
+    { key: 'puesto', labelKey: 'col_puesto' },
+    { key: 'estadoCivil', labelKey: 'col_estadoCivil' },
+    { key: 'fechaNacimiento', labelKey: 'col_fechaNacimiento' },
+    { key: 'fechaIngreso', labelKey: 'col_fechaIngreso' },
+    { key: 'fechaBaja', labelKey: 'col_fechaBaja' },
+    { key: 'causaBaja', labelKey: 'col_causaBaja' },
+    { key: 'activo', labelKey: 'col_activo' },
+    { key: 'salarioDiario', labelKey: 'col_salarioDiario' },
+    { key: 'salarioIntegrado', labelKey: 'col_salarioIntegrado' },
+    { key: 'formaDePago', labelKey: 'col_formaDePago' },
+    { key: 'lugarNacimiento', labelKey: 'col_lugarNacimiento' },
+    { key: 'direccion', labelKey: 'col_direccion' },
+    { key: 'telefono', labelKey: 'col_telefono' },
+    { key: 'ciudad', labelKey: 'col_ciudad' },
+    { key: 'estado', labelKey: 'col_estado' },
+    { key: 'codigoPostal', labelKey: 'col_codigoPostal' },
+    { key: 'correoElectronico', labelKey: 'col_correoElectronico' },
+    { key: 'celularTrabajador', labelKey: 'col_celularTrabajador' },
+    { key: 'beneficiario1', labelKey: 'col_beneficiario1' },
+    { key: 'parentesco1', labelKey: 'col_parentesco1' },
+    { key: 'porcentaje1', labelKey: 'col_porcentaje1' },
+    { key: 'beneficiario2', labelKey: 'col_beneficiario2' },
+    { key: 'parentesco2', labelKey: 'col_parentesco2' },
+    { key: 'porcentaje2', labelKey: 'col_porcentaje2' },
+    { key: 'beneficiario3', labelKey: 'col_beneficiario3' },
+    { key: 'parentesco3', labelKey: 'col_parentesco3' },
+    { key: 'porcentaje3', labelKey: 'col_porcentaje3' },
+    { key: 'conyugue', labelKey: 'col_conyugue' },
+    { key: 'conyugueFechaNacimiento', labelKey: 'col_conyugueFechaNacimiento' },
+    { key: 'conyugeVive', labelKey: 'col_conyugeVive' },
+    { key: 'hijo1', labelKey: 'col_hijo1' },
+    { key: 'hijo1FechaNacimiento', labelKey: 'col_hijo1FechaNacimiento' },
+    { key: 'hijo1Sexo', labelKey: 'col_hijo1Sexo' },
+    { key: 'hijo2', labelKey: 'col_hijo2' },
+    { key: 'hijo2FechaNacimiento', labelKey: 'col_hijo2FechaNacimiento' },
+    { key: 'hijo2Sexo', labelKey: 'col_hijo2Sexo' },
+    { key: 'hijo3', labelKey: 'col_hijo3' },
+    { key: 'hijo3FechaNacimiento', labelKey: 'col_hijo3FechaNacimiento' },
+    { key: 'hijo3Sexo', labelKey: 'col_hijo3Sexo' },
+    { key: 'hijo4', labelKey: 'col_hijo4' },
+    { key: 'hijo4FechaNacimiento', labelKey: 'col_hijo4FechaNacimiento' },
+    { key: 'hijo4Sexo', labelKey: 'col_hijo4Sexo' },
+    { key: 'hijo5', labelKey: 'col_hijo5' },
+    { key: 'hijo5FechaNacimiento', labelKey: 'col_hijo5FechaNacimiento' },
+    { key: 'hijo5Sexo', labelKey: 'col_hijo5Sexo' },
+    { key: 'hijo6', labelKey: 'col_hijo6' },
+    { key: 'hijo6FechaNacimiento', labelKey: 'col_hijo6FechaNacimiento' },
+    { key: 'hijo6Sexo', labelKey: 'col_hijo6Sexo' },
+    { key: 'padre', labelKey: 'col_padre' },
+    { key: 'fechaNacimientoPadre', labelKey: 'col_fechaNacimientoPadre' },
+    { key: 'padreVive', labelKey: 'col_padreVive' },
+    { key: 'madre', labelKey: 'col_madre' },
+    { key: 'fechaNacimientoMadre', labelKey: 'col_fechaNacimientoMadre' },
+    { key: 'madreVive', labelKey: 'col_madreVive' },
+    { key: 'contactoEmergencia', labelKey: 'col_contactoEmergencia' },
+    { key: 'parentescoContacto', labelKey: 'col_parentescoContacto' },
+    { key: 'celularContacto', labelKey: 'col_celularContacto' },
+    { key: 'fechaInicioContrato', labelKey: 'col_fechaInicioContrato' },
+    { key: 'fechaVencimientoContrato', labelKey: 'col_fechaVencimientoContrato' },
 ];
 
 const EmployeeExcelModal = ({ open, handleClose }) => {
@@ -58,7 +90,10 @@ const EmployeeExcelModal = ({ open, handleClose }) => {
     const fileInputRef = useRef(null);
 
     const [file, setFile] = useState(null);
-    const [dataStartRow, setDataStartRow] = useState(2);
+    const [dataStartRow, setDataStartRow] = useState(() => {
+        const saved = localStorage.getItem('employee_excel_dataStartRow');
+        return saved ? parseInt(saved) : 7;
+    });
     const [dragging, setDragging] = useState(false);
     const [loading, setLoading] = useState(false);
     const [previewData, setPreviewData] = useState(null);
@@ -109,7 +144,8 @@ const EmployeeExcelModal = ({ open, handleClose }) => {
     const handleReset = () => {
         setFile(null);
         setPreviewData(null);
-        setDataStartRow(2);
+        const saved = localStorage.getItem('employee_excel_dataStartRow');
+        setDataStartRow(saved ? parseInt(saved) : 7);
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
@@ -150,7 +186,11 @@ const EmployeeExcelModal = ({ open, handleClose }) => {
                                 type="number"
                                 size="small"
                                 value={dataStartRow}
-                                onChange={e => setDataStartRow(Math.max(1, parseInt(e.target.value) || 1))}
+                                onChange={e => {
+                                    const val = Math.max(1, parseInt(e.target.value) || 1);
+                                    setDataStartRow(val);
+                                    localStorage.setItem('employee_excel_dataStartRow', val);
+                                }}
                                 inputProps={{ min: 1 }}
                                 sx={{ width: 180 }}
                                 helperText={t('excel_dataStartRowHint')}
@@ -212,8 +252,8 @@ const EmployeeExcelModal = ({ open, handleClose }) => {
                                             <TableCell
                                                 key={col.key}
                                                 sx={{ fontWeight: 'bold', bgcolor: 'action.hover', whiteSpace: 'nowrap', minWidth: col.width ?? 120 }}
-                                            >
-                                                {col.label}
+                                                    >
+                                                        {t(col.labelKey)}
                                             </TableCell>
                                         ))}
                                     </TableRow>
@@ -238,7 +278,7 @@ const EmployeeExcelModal = ({ open, handleClose }) => {
             <Divider />
             <DialogActions sx={{ px: 3, py: 2, gap: 1, justifyContent: 'flex-end' }}>
                 {previewData && (
-                    <Button variant="outlined" onClick={handleReset}>
+                    <Button variant="contained" disableElevation onClick={handleReset}>
                         {t('excel_loadAnother')}
                     </Button>
                 )}

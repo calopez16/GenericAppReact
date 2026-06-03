@@ -300,7 +300,7 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
                 {tab === 1 && (
                     <Box sx={{ mt: 1 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-                            <Button size="small" startIcon={<AddIcon />} variant="outlined"
+                            <Button size="small" endIcon={<AddIcon />} variant="contained" disableElevation
                                 onClick={() => handleListAdd('beneficiaries', INITIAL_BENEFICIARY)}>
                                 {t('add')}
                             </Button>
@@ -375,7 +375,7 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
                 {tab === 2 && (
                     <Box sx={{ mt: 1 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-                            <Button size="small" startIcon={<AddIcon />} variant="outlined"
+                            <Button size="small" endIcon={<AddIcon />} variant="contained" disableElevation
                                 onClick={() => handleListAdd('dependents', INITIAL_DEPENDENT)}>
                                 {t('add')}
                             </Button>
@@ -461,7 +461,7 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
                 {tab === 3 && (
                     <Box sx={{ mt: 1 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-                            <Button size="small" startIcon={<AddIcon />} variant="outlined"
+                            <Button size="small" endIcon={<AddIcon />} variant="contained" disableElevation
                                 onClick={() => handleListAdd('employeeEmergencyContacts', INITIAL_EMERGENCY)}>
                                 {t('add')}
                             </Button>
@@ -522,10 +522,10 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
             </DialogContent>
             <Divider />
             <DialogActions sx={{ px: 3, py: 2, gap: 1, justifyContent: 'flex-end' }}>
-                <Button variant="outlined" startIcon={<CancelIcon />} onClick={handleClose} disabled={loading}>
+                <Button variant="outlined" endIcon={<CancelIcon />} onClick={handleClose} disabled={loading}>
                     {t('cancel')}
                 </Button>
-                <Button variant="contained" disableElevation startIcon={<SaveIcon />} onClick={handleSubmit} disabled={loading}>
+                <Button variant="contained" disableElevation endIcon={<SaveIcon />} onClick={handleSubmit} disabled={loading}>
                     {t(isEditing ? 'update' : 'save')}
                 </Button>
             </DialogActions>

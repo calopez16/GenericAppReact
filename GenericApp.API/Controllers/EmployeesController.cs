@@ -110,27 +110,66 @@ namespace GenericApp.API.Controllers
                     FechaIngreso = GetVal(r, 17),
                     FechaBaja = GetVal(r, 18),
                     CausaBaja = GetVal(r, 19),
-                    Activo = GetVal(r, 23),
-                    SalarioDiario = GetVal(r, 25),
-                    SalarioIntegrado = GetVal(r, 26),
-                    CorreoElectronico = GetVal(r, 34),
-                    FormaDePago = GetVal(r, 38),
-                    Beneficiario1 = GetVal(r, 39),
-                    Parentesco1 = GetVal(r, 40),
-                    Porcentaje1 = GetVal(r, 41),
-                    Beneficiario2 = GetVal(r, 42),
-                    Parentesco2 = GetVal(r, 43),
-                    Porcentaje2 = GetVal(r, 44),
-                    Beneficiario3 = GetVal(r, 45),
-                    Parentesco3 = GetVal(r, 46),
-                    Porcentaje3 = GetVal(r, 47),
-                    CelularTrabajador = GetVal(r, 83),
-                    ContactoEmergencia = GetVal(r, 86),
-                    ParentescoContacto = GetVal(r, 87),
-                    CelularContacto = GetVal(r, 88),
-                    FechaInicioContrato = GetVal(r, 94),
-                    FechaVencimientoContrato = GetVal(r, 95),
-                    CodigoPostal = GetVal(r, 100),
+                    Activo = GetVal(r, 24),
+                    SalarioDiario = GetVal(r, 26),
+                    SalarioIntegrado = GetVal(r, 27),
+                    Padre = GetVal(r, 28),
+                    Madre = GetVal(r, 29),
+                    CorreoElectronico = GetVal(r, 35),
+                    FormaDePago = GetVal(r, 40),
+
+                    Beneficiario1 = GetVal(r, 41),
+                    Parentesco1 = GetVal(r, 42),
+                    Porcentaje1 = GetVal(r, 43),
+
+                    Beneficiario2 = GetVal(r, 44),
+                    Parentesco2 = GetVal(r, 45),
+                    Porcentaje2 = GetVal(r, 46),
+
+                    Beneficiario3 = GetVal(r, 47),
+                    Parentesco3 = GetVal(r, 48),
+                    Porcentaje3 = GetVal(r, 49),
+                    Conyugue = GetVal(r, 50),
+                    ConyugueFechaNacimiento = GetVal(r, 51),
+
+                    Hijo1 = GetVal(r, 52),
+                    Hijo1FechaNacimiento = GetVal(r, 53),
+                    Hijo1Sexo = GetVal(r, 54),
+
+                    Hijo2 = GetVal(r, 55),
+                    Hijo2FechaNacimiento = GetVal(r, 56),
+                    Hijo2Sexo = GetVal(r, 57),
+
+                    Hijo3 = GetVal(r, 58),
+                    Hijo3FechaNacimiento = GetVal(r, 59),
+                    Hijo3Sexo = GetVal(r, 60),
+
+                    Hijo4 = GetVal(r, 61),
+                    Hijo4FechaNacimiento = GetVal(r, 62),
+                    Hijo4Sexo = GetVal(r, 63),
+
+                    Hijo5 = GetVal(r, 64),
+                    Hijo5FechaNacimiento = GetVal(r, 65),
+                    Hijo5Sexo = GetVal(r, 66),
+
+                    Hijo6 = GetVal(r, 67),
+                    Hijo6FechaNacimiento = GetVal(r, 68),
+                    Hijo6Sexo = GetVal(r, 69),
+
+                    FechaNacimientoPadre = GetVal(r, 71),
+                    FechaNacimientoMadre = GetVal(r, 73),
+
+                    PadreVive = GetVal(r, 87),
+                    MadreVive = GetVal(r, 88),
+                    ConyugeVive = GetVal(r, 89),
+
+                    CelularTrabajador = GetVal(r, 82),
+                    ContactoEmergencia = GetVal(r, 90),
+                    ParentescoContacto = GetVal(r, 91),
+                    CelularContacto = GetVal(r, 92),
+
+                    FechaInicioContrato = GetVal(r, 97),
+                    FechaVencimientoContrato = GetVal(r, 98)
                 });
             }
 

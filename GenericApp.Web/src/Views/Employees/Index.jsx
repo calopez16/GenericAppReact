@@ -223,10 +223,11 @@ function Index() {
                     </ClickAwayListener>
 
                     <Button
-                        variant="outlined"
+                        variant="contained"
                         disableElevation
-                        startIcon={<TableViewIcon />}
+                        endIcon={<TableViewIcon />}
                         onClick={() => setIsExcelModalOpen(true)}
+                        color="success"
                         sx={{ whiteSpace: 'nowrap', ml: 1 }}
                     >
                         {t('excel_load')}
