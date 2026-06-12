@@ -173,14 +173,14 @@ namespace GenericApp.Data
             modelBuilder.Entity<Employee>(b =>
             {
                 b.HasKey(x => x.IdEmployee);
-                b.Property(x => x.ApellidoPaterno).HasMaxLength(100);
-                b.Property(x => x.ApellidoMaterno).HasMaxLength(100);
-                b.Property(x => x.Nombre).HasMaxLength(100);
+                b.Property(x => x.ApellidoPaterno).HasMaxLength(150);
+                b.Property(x => x.ApellidoMaterno).HasMaxLength(150);
+                b.Property(x => x.Nombre).HasMaxLength(150);
                 b.Property(x => x.Address).HasMaxLength(250);
-                b.Property(x => x.RFC).HasMaxLength(13);
-                b.Property(x => x.CURP).HasMaxLength(18);
-                b.Property(x => x.IMSS).HasMaxLength(11);
-                b.Property(x => x.Genre).HasMaxLength(1);
+                b.Property(x => x.RFC).HasMaxLength(50);
+                b.Property(x => x.CURP).HasMaxLength(50);
+                b.Property(x => x.IMSS).HasMaxLength(50);
+                b.Property(x => x.Genre).HasMaxLength(50);
                 b.Property(x => x.CivilStatus).HasMaxLength(50);
                 b.Property(x => x.Position).HasMaxLength(150);
                 b.Property(x => x.IsActive).HasDefaultValue(true);
@@ -230,7 +230,6 @@ namespace GenericApp.Data
             {
                 b.HasKey(x => x.IdEmployeeDependents);
                 b.Property(x => x.Name).HasMaxLength(150);
-                b.Property(x => x.LastName).HasMaxLength(150);
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
 
@@ -249,7 +248,6 @@ namespace GenericApp.Data
             {
                 b.HasKey(x => x.IdEmployeeEmergencyContact);
                 b.Property(x => x.Name).HasMaxLength(150);
-                b.Property(x => x.Relationship).HasMaxLength(100);
                 b.Property(x => x.Phone).HasMaxLength(25);
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
@@ -258,6 +256,11 @@ namespace GenericApp.Data
                     .WithMany(e => e.EmployeeEmergencyContacts)
                     .HasForeignKey(e => e.IdEmployee)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(e => e.IdEmployeeRelationshipTypeNavigation)
+                   .WithMany()
+                   .HasForeignKey(e => e.IdEmployeeRelationshipType)
+                   .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Contract>(b =>

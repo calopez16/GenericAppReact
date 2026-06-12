@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260607195649_AddOrder")]
+    partial class AddOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -628,6 +630,10 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<string>("LastName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
                     b.Property<string>("Name")
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
@@ -658,9 +664,6 @@ namespace GenericApp.Data.Migrations
                     b.Property<int>("IdEmployee")
                         .HasColumnType("int");
 
-                    b.Property<int?>("IdEmployeeRelationshipType")
-                        .HasColumnType("int");
-
                     b.Property<bool?>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -679,11 +682,13 @@ namespace GenericApp.Data.Migrations
                         .HasMaxLength(25)
                         .HasColumnType("nvarchar(25)");
 
+                    b.Property<string>("Relationship")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("IdEmployeeEmergencyContact");
 
                     b.HasIndex("IdEmployee");
-
-                    b.HasIndex("IdEmployeeRelationshipType");
 
                     b.ToTable("EmployeeEmergencyContacts");
                 });
@@ -1743,7 +1748,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEAPwN4HHRLLqBR7XoBC/p8Hv6aZTYM9K1xx5cXKsT2ZMdVHKcelyq53jOsxcdNU4Rg==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEK24dVQdc1FCdqsGkbxi5aoT+U1sh+LQHW9g/b/mw90CbysbyTkt5hPWb5tBmpLYfg==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
@@ -1973,14 +1978,7 @@ namespace GenericApp.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("GenericApp.Data.Models.EmployeeRelationshipType", "IdEmployeeRelationshipTypeNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdEmployeeRelationshipType")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("IdEmployeeNavigation");
-
-                    b.Navigation("IdEmployeeRelationshipTypeNavigation");
                 });
 
             modelBuilder.Entity("GenericApp.Data.Models.EmployeeWorkInformation", b =>

@@ -60,31 +60,31 @@ const EmployeeTableList = ({
                     ) : (
                         <>
                             {employees?.map((employee) => {
-                                const fullName = `${employee.nombre ?? ''} ${employee.apellidoPaterno ?? ''} ${employee.apellidoMaterno ?? ''}`.trim();
-                                const initials = (employee.nombre?.charAt(0) ?? '') + (employee.apellidoPaterno?.charAt(0) ?? '');
+                                const fullName = `${employee?.nombre ?? ''} ${employee?.apellidoPaterno ?? ''} ${employee?.apellidoMaterno ?? ''}`.trim();
+                                const initials = (employee?.nombre?.charAt(0) ?? '') + (employee?.apellidoPaterno?.charAt(0) ?? '');
                                 return (
                                     <TableRow
-                                        key={employee.idEmployee}
+                                        key={employee?.idEmployee}
                                         hover
                                         sx={{ '&:last-child td, &:last-child th': { border: 0 }, height: rowHeight }}
                                     >
                                         <TableCell align="center">
                                             <Switch
                                                 size="medium"
-                                                checked={employee.isActive ?? false}
+                                                checked={employee?.isActive ?? false}
                                                 onChange={() => handleToggleEmployeeStatus(employee)}
                                             />
                                         </TableCell>
                                         <TableCell>
                                             <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                                {employee.clave}
+                                                {employee?.clave}
                                             </Typography>
                                         </TableCell>
                                         <TableCell>
                                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                                 <Avatar
                                                     sx={{
-                                                        bgcolor: employee.isActive ? 'primary.main' : 'grey.400',
+                                                        bgcolor: employee?.isActive ? 'primary.main' : 'grey.400',
                                                         mr: 1.5, width: 36, height: 36, fontSize: '0.85rem'
                                                     }}
                                                 >
@@ -97,29 +97,36 @@ const EmployeeTableList = ({
                                         </TableCell>
                                         <TableCell>
                                             <Typography variant="body2" color="text.secondary">
-                                                {employee.rfc ?? '—'}
+                                                {employee?.rfc ?? '—'}
                                             </Typography>
                                         </TableCell>
                                         <TableCell>
                                             <Typography variant="body2" color="text.secondary">
-                                                {employee.position ?? '—'}
+                                                {employee?.position ?? '—'}
                                             </Typography>
                                         </TableCell>
                                         <TableCell align="center">
                                             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
                                                 <Tooltip title={t('edit')}>
-                                                    <IconButton size="small" onClick={() => handleOpenEditEmployee(employee)}
-                                                        sx={{ color: 'primary.main' }}>
+                                                    <IconButton
+                                                        onClick={() => handleOpenEditEmployee(employee)}
+                                                        sx={{
+                                                            color: 'white',
+                                                            bgcolor: 'primary.main',
+                                                            '&:hover': { bgcolor: 'primary.dark' },
+                                                            p: 1
+                                                        }}
+                                                    >
                                                         <EditIcon fontSize="small" />
                                                     </IconButton>
                                                 </Tooltip>
                                                 <Tooltip title={t('delete')}>
-                                                    <IconButton size="small"
+                                                    <IconButton
                                                         onClick={() => { setSelectedEmployee(employee); setIsConfirmDeleteModalOpen(true); }}
-                                                        sx={{ color: 'error.main' }}>
+                                                        sx={{ color: 'white', bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' }}}>
                                                         <DeleteIcon fontSize="small" />
                                                     </IconButton>
-                                                </Tooltip>
+                                                </Tooltip>                                               
                                             </Box>
                                         </TableCell>
                                     </TableRow>

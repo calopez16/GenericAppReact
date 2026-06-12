@@ -11,12 +11,14 @@ namespace GenericApp.Data.Models
         public int IdEmployeeEmergencyContact { get; set; }
         public int IdEmployee { get; set; }
         public string? Name { get; set; }
-        public string? Relationship { get; set; }
         public string? Phone { get; set; }
+        public int? IdEmployeeRelationshipType { get; set; }
         public DateTime? BirthDate { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
         public virtual Employee IdEmployeeNavigation { get; set; }
+        public virtual EmployeeRelationshipType? IdEmployeeRelationshipTypeNavigation { get; set; }
+
 
     }
 }

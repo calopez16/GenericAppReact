@@ -12,7 +12,8 @@ namespace GenericApp.Data.Models
         public int IdEmployee { get; set; }
         public string? Name { get; set; }
         public int? IdEmployeeRelationshipType { get; set; }
-        public decimal? Percentage { get; set; }        
+        public decimal? Percentage { get; set; }
+        public int Order { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
 

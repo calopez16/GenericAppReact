@@ -57,7 +57,7 @@ const INITIAL_WORK_INFO = {
 
 const INITIAL_BENEFICIARY = { idEmployeeBeneficiarie: null, name: '', idEmployeeRelationshipType: '', percentage: '', isActive: true, isDeleted: false };
 const INITIAL_DEPENDENT = { idEmployeeDependents: null, name: '', lastName: '', birthDate: '', idEmployeeRelationshipType: '', isAlive: true, isActive: true, isDeleted: false };
-const INITIAL_EMERGENCY = { idEmployeeEmergencyContact: null, name: '', relationship: '', phone: '', birthDate: '', isActive: true, isDeleted: false };
+const INITIAL_EMERGENCY = { idEmployeeEmergencyContact: null, name: '', relationship: '', idEmployeeRelationshipType: '', phone: '', birthDate: '', isActive: true, isDeleted: false };
 
 const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idCompany }) => {
     const { t } = useTranslation();
@@ -94,7 +94,7 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
                         : [],
                     beneficiaries: data.beneficiaries ?? [],
                     dependents: data.dependents?.map(d => ({ ...d, birthDate: d.birthDate?.substring(0, 10) ?? '' })) ?? [],
-                    employeeEmergencyContacts: data.employeeEmergencyContacts?.map(e => ({ ...e, birthDate: e.birthDate?.substring(0, 10) ?? '' })) ?? [],
+                    employeeEmergencyContacts: data.employeeEmergencyContacts?.map(e => ({ ...e, birthDate: e.birthDate?.substring(0, 10) ?? '', idEmployeeRelationshipType: e.idEmployeeRelationshipType ?? '' })) ?? [],
                 });
             } else {
                 setFormData({ ...INITIAL_FORM, idCompany });
@@ -137,7 +137,11 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
             setRelationshipTypes(prev => [...prev, newType]);
             setFormData(prev => {
                 const list = [...prev[field]];
-                list[index] = { ...list[index], idEmployeeRelationshipType: newType.idEmployeeRelationshipType };
+                if (field === 'employeeEmergencyContacts') {
+                    list[index] = { ...list[index], relationship: newType.description, idEmployeeRelationshipType: newType.idEmployeeRelationshipType };
+                } else {
+                    list[index] = { ...list[index], idEmployeeRelationshipType: newType.idEmployeeRelationshipType };
+                }
                 return { ...prev, [field]: list };
             });
         } else {
@@ -156,6 +160,13 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
                 ...formData,
                 clave: formData.clave ? Number(formData.clave) : 0,
                 birthDate: formData.birthDate || null,
+                dependents: formData.dependents.map(d => ({ ...d, birthDate: d.birthDate || null })),
+                employeeEmergencyContacts: formData.employeeEmergencyContacts.map(e => ({ ...e, birthDate: e.birthDate || null, idEmployeeRelationshipType: e.idEmployeeRelationshipType ? Number(e.idEmployeeRelationshipType) : null })),
+                employeeWorkInformations: formData.employeeWorkInformations.map(w => ({
+                    ...w,
+                    initialDate: w.initialDate || null,
+                    contractExpiration: w.contractExpiration || null,
+                })),
             };
             const result = isEditing
                 ? await service.updateEmployee(payload)
@@ -164,7 +175,7 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
             if (result.success) {
                 ShowMessage(t(isEditing ? 'recordUpdated' : 'recordAdded'), 'success');
                 setData(prev => isEditing
-                    ? prev.map(e => e.idEmployee === formData.idEmployee ? result.data : e)
+                    ? prev.map(e => e.idEmployee === formData.idEmployee ? { ...e, ...(result.data ?? {}), ...{ clave: formData.clave ? Number(formData.clave) : e.clave, nombre: formData.nombre, apellidoPaterno: formData.apellidoPaterno, apellidoMaterno: formData.apellidoMaterno, address: formData.address, rfc: formData.rfc, curp: formData.curp, imss: formData.imss, genre: formData.genre, civilStatus: formData.civilStatus, position: formData.position, birthDate: formData.birthDate || null, isActive: formData.isActive } } : e)
                     : [result.data, ...prev]
                 );
                 handleClose();
@@ -205,94 +216,94 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
                 {/* TAB 0 – Datos Generales */}
                 {tab === 0 && (
                     <>
-                    <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }} sx={{ mt: 0.5 }}>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_clave')} name="clave" value={formData.clave}
-                                onChange={handleChange} type="number" size="small" />
+                        <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }} sx={{ mt: 0.5 }}>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_clave')} name="clave" value={formData.clave}
+                                    onChange={handleChange} type="number" size="small" />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth required label={t('employee_nombre')} name="nombre" value={formData.nombre}
+                                    onChange={handleChange} size="small" />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth required label={t('employee_apellidoPaterno')} name="apellidoPaterno"
+                                    value={formData.apellidoPaterno} onChange={handleChange} size="small" />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_apellidoMaterno')} name="apellidoMaterno"
+                                    value={formData.apellidoMaterno} onChange={handleChange} size="small" />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_rfc')} name="rfc" value={formData.rfc}
+                                    onChange={handleChange} size="small" inputProps={{ maxLength: 13 }} />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_curp')} name="curp" value={formData.curp}
+                                    onChange={handleChange} size="small" inputProps={{ maxLength: 18 }} />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_imss')} name="imss" value={formData.imss}
+                                    onChange={handleChange} size="small" inputProps={{ maxLength: 11 }} />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>{t('employee_genre')}</InputLabel>
+                                    <Select name="genre" value={formData.genre} label={t('employee_genre')} onChange={handleChange}>
+                                        <MenuItem value="M">{t('employee_genre_m')}</MenuItem>
+                                        <MenuItem value="F">{t('employee_genre_f')}</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_civilStatus')} name="civilStatus"
+                                    value={formData.civilStatus} onChange={handleChange} size="small" />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_position')} name="position"
+                                    value={formData.position} onChange={handleChange} size="small" />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_birthDate')} name="birthDate"
+                                    value={formData.birthDate} onChange={handleChange} size="small" type="date"
+                                    InputLabelProps={{ shrink: true }} />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 8, md: 12 }}>
+                                <TextField fullWidth label={t('address')} name="address" value={formData.address}
+                                    onChange={handleChange} size="small" />
+                            </Grid>
                         </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth required label={t('employee_nombre')} name="nombre" value={formData.nombre}
-                                onChange={handleChange} size="small" />
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth required label={t('employee_apellidoPaterno')} name="apellidoPaterno"
-                                value={formData.apellidoPaterno} onChange={handleChange} size="small" />
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_apellidoMaterno')} name="apellidoMaterno"
-                                value={formData.apellidoMaterno} onChange={handleChange} size="small" />
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_rfc')} name="rfc" value={formData.rfc}
-                                onChange={handleChange} size="small" inputProps={{ maxLength: 13 }} />
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_curp')} name="curp" value={formData.curp}
-                                onChange={handleChange} size="small" inputProps={{ maxLength: 18 }} />
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_imss')} name="imss" value={formData.imss}
-                                onChange={handleChange} size="small" inputProps={{ maxLength: 11 }} />
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <FormControl fullWidth size="small">
-                                <InputLabel>{t('employee_genre')}</InputLabel>
-                                <Select name="genre" value={formData.genre} label={t('employee_genre')} onChange={handleChange}>
-                                    <MenuItem value="M">{t('employee_genre_m')}</MenuItem>
-                                    <MenuItem value="F">{t('employee_genre_f')}</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_civilStatus')} name="civilStatus"
-                                value={formData.civilStatus} onChange={handleChange} size="small" />
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_position')} name="position"
-                                value={formData.position} onChange={handleChange} size="small" />
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_birthDate')} name="birthDate"
-                                value={formData.birthDate} onChange={handleChange} size="small" type="date"
-                                InputLabelProps={{ shrink: true }} />
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 8, md: 12 }}>
-                            <TextField fullWidth label={t('address')} name="address" value={formData.address}
-                                onChange={handleChange} size="small" />
-                        </Grid>
-                    </Grid>
 
-                    {/* Sección – Información Laboral */}
-                    <Box sx={{ mt: 3, mb: 1 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                            {t('employee_workInfo')}
-                        </Typography>
-                        <Divider sx={{ mb: 2 }} />
-                    </Box>
-                    <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_dailySalary')} name="dailySalary"
-                                value={workInfo.dailySalary} onChange={handleWorkInfoChange} size="small" type="number" />
+                        {/* Sección – Información Laboral */}
+                        <Box sx={{ mt: 3, mb: 1 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                                {t('employee_workInfo')}
+                            </Typography>
+                            <Divider sx={{ mb: 2 }} />
+                        </Box>
+                        <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_dailySalary')} name="dailySalary"
+                                    value={workInfo.dailySalary} onChange={handleWorkInfoChange} size="small" type="number" />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_integralSalary')} name="integralSalary"
+                                    value={workInfo.integralSalary} onChange={handleWorkInfoChange} size="small" type="number" />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_payType')} name="payType"
+                                    value={workInfo.payType} onChange={handleWorkInfoChange} size="small" />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_initialDate')} name="initialDate"
+                                    value={workInfo.initialDate} onChange={handleWorkInfoChange} size="small" type="date"
+                                    InputLabelProps={{ shrink: true }} />
+                            </Grid>
+                            <Grid size={{ xs: 4, sm: 4, md: 4 }}>
+                                <TextField fullWidth label={t('employee_contractExpiration')} name="contractExpiration"
+                                    value={workInfo.contractExpiration} onChange={handleWorkInfoChange} size="small" type="date"
+                                    InputLabelProps={{ shrink: true }} />
+                            </Grid>
                         </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_integralSalary')} name="integralSalary"
-                                value={workInfo.integralSalary} onChange={handleWorkInfoChange} size="small" type="number" />
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_payType')} name="payType"
-                                value={workInfo.payType} onChange={handleWorkInfoChange} size="small" />
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_initialDate')} name="initialDate"
-                                value={workInfo.initialDate} onChange={handleWorkInfoChange} size="small" type="date"
-                                InputLabelProps={{ shrink: true }} />
-                        </Grid>
-                        <Grid size={{ xs: 4, sm: 4, md: 4 }}>
-                            <TextField fullWidth label={t('employee_contractExpiration')} name="contractExpiration"
-                                value={workInfo.contractExpiration} onChange={handleWorkInfoChange} size="small" type="date"
-                                InputLabelProps={{ shrink: true }} />
-                        </Grid>
-                    </Grid>
                     </>
                 )}
 
@@ -386,7 +397,6 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
                                 <TableHead sx={{ bgcolor: 'action.hover' }}>
                                     <TableRow>
                                         <TableCell sx={{ fontWeight: 'bold' }}>{t('employee_dependent_name')}</TableCell>
-                                        <TableCell sx={{ fontWeight: 'bold' }}>{t('employee_dependent_lastName')}</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>{t('employee_dependent_birthDate')}</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>{t('employee_relationshipType')}</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>{t('employee_dependent_isAlive')}</TableCell>
@@ -399,11 +409,6 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
                                             <TableCell>
                                                 <TextField size="small" name="name" value={d.name}
                                                     placeholder={t('employee_dependent_name')}
-                                                    onChange={e => handleListChange('dependents', i, e)} fullWidth />
-                                            </TableCell>
-                                            <TableCell>
-                                                <TextField size="small" name="lastName" value={d.lastName}
-                                                    placeholder={t('employee_dependent_lastName')}
                                                     onChange={e => handleListChange('dependents', i, e)} fullWidth />
                                             </TableCell>
                                             <TableCell>
@@ -487,9 +492,36 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
                                                     onChange={e => handleListChange('employeeEmergencyContacts', i, e)} fullWidth />
                                             </TableCell>
                                             <TableCell>
-                                                <TextField size="small" name="relationship" value={ec.relationship}
-                                                    placeholder={t('employee_emergencyContact_relationship')}
-                                                    onChange={e => handleListChange('employeeEmergencyContacts', i, e)} fullWidth />
+                                                <Autocomplete
+                                                    size="small"
+                                                    options={relationshipTypes}
+                                                    getOptionLabel={o => o.description ?? ''}
+                                                    isOptionEqualToValue={(o, v) => o.idEmployeeRelationshipType === v.idEmployeeRelationshipType}
+                                                    value={relationshipTypes.find(r => r.idEmployeeRelationshipType === ec.idEmployeeRelationshipType) ?? null}
+                                                    onChange={(_, newVal) => {
+                                                        if (newVal?.inputValue) {
+                                                            handleRelationshipTypeCreate(newVal.inputValue, 'employeeEmergencyContacts', i);
+                                                        } else {
+                                                            setFormData(prev => {
+                                                                const list = [...prev.employeeEmergencyContacts];
+                                                                list[i] = {
+                                                                    ...list[i],
+                                                                    idEmployeeRelationshipType: newVal?.idEmployeeRelationshipType ?? '',
+                                                                    relationship: newVal?.description ?? ''
+                                                                };
+                                                                return { ...prev, employeeEmergencyContacts: list };
+                                                            });
+                                                        }
+                                                    }}
+                                                    filterOptions={(options, params) => {
+                                                        const filtered = options.filter(o => o.description?.toLowerCase().includes(params.inputValue.toLowerCase()));
+                                                        if (params.inputValue !== '' && !filtered.length) {
+                                                            filtered.push({ inputValue: params.inputValue, description: `${t('add')}: "${params.inputValue}"` });
+                                                        }
+                                                        return filtered;
+                                                    }}
+                                                    renderInput={params => <TextField {...params} placeholder={t('employee_emergencyContact_relationship')} />}
+                                                />
                                             </TableCell>
                                             <TableCell>
                                                 <TextField size="small" name="phone" value={ec.phone}

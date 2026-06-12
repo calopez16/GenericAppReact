@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Data;
+using System.Threading.Tasks;
 
 namespace GenericApp.API.Controllers
 {
@@ -176,6 +177,228 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = rows });
         }
 
+        [HttpPost("import-excel")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+        public async Task<ActionResult> ImportExcel([FromBody] EmployeeImportRequestDTO request)
+        {
+            if (request?.Rows == null || !request.Rows.Any())
+                return BadRequest(new ApiResponse { Message = "No rows to import" });
+
+            int inserted = 0;
+            int updated = 0;
+
+            foreach (var row in request.Rows)
+            {
+                if (!int.TryParse(row.Clave, out int clave))
+                    continue;
+
+                var existing = await _repository.FirstOrDefault<Employee>(
+                    x => x.Clave == clave && x.IdCompany == request.IdCompany && !(x.IsDeleted ?? false),
+                    x => x.EmployeeWorkInformations,
+                    x => x.Beneficiaries,
+                    x => x.Dependents,
+                    x => x.EmployeeEmergencyContacts);
+
+                DateTime ParseDate(string? val) =>
+                    DateTime.TryParse(val, out var d) ? d : DateTime.MinValue;
+
+                DateTime? ParseDateNullable(string? val) =>
+                    DateTime.TryParse(val, out var d) ? d : null;
+
+                decimal ParseDecimal(string? val) =>
+                    decimal.TryParse(val?.Replace(",", "."), System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out var n) ? n : 0;
+
+                if (existing == null)
+                {
+                    var employee = new Employee
+                    {
+                        Clave = clave,
+                        IdCompany = request.IdCompany,
+                        ApellidoPaterno = row.ApellidoPaterno,
+                        ApellidoMaterno = row.ApellidoMaterno,
+                        Nombre = row.Nombre,
+                        Address = row.Direccion,
+                        RFC = row.RFC,
+                        CURP = row.CURP,
+                        IMSS = row.IMSS,
+                        Genre = NormalizeGenre(row.Sexo),
+                        CivilStatus = row.EstadoCivil,
+                        Position = row.Puesto,
+                        BirthDate = ParseDate(row.FechaNacimiento),
+                        IsActive = row.Activo?.ToUpper() is "SI" or "S" or "1" or "TRUE" or "YES",
+                        IsDeleted = false,
+                        EmployeeWorkInformations = new List<EmployeeWorkInformation>(),
+                        Beneficiaries = new List<EmployeeBeneficiarie>(),
+                        Dependents = new List<EmployeeDependents>(),
+                        EmployeeEmergencyContacts = new List<EmployeeEmergencyContact>(),
+                    };
+
+                    await MapRelatedData(employee, row, ParseDate, ParseDateNullable, ParseDecimal);
+                    await _repository.Add(employee);
+                    inserted++;
+                }
+                else
+                {
+                    existing.ApellidoPaterno = row.ApellidoPaterno ?? existing.ApellidoPaterno;
+                    existing.ApellidoMaterno = row.ApellidoMaterno ?? existing.ApellidoMaterno;
+                    existing.Nombre = row.Nombre ?? existing.Nombre;
+                    existing.Address = row.Direccion ?? existing.Address;
+                    existing.RFC = row.RFC ?? existing.RFC;
+                    existing.CURP = row.CURP ?? existing.CURP;
+                    existing.IMSS = row.IMSS ?? existing.IMSS;
+                    existing.Genre = NormalizeGenre(row.Sexo) ?? existing.Genre;
+                    existing.CivilStatus = row.EstadoCivil ?? existing.CivilStatus;
+                    existing.Position = row.Puesto ?? existing.Position;
+                    if (row.FechaNacimiento != null) existing.BirthDate = ParseDate(row.FechaNacimiento);
+                    if (row.Activo != null)
+                        existing.IsActive = row.Activo.ToUpper() is "SI" or "S" or "1" or "TRUE" or "YES";
+
+                    // Eliminar todos los registros relacionados y agregarlos de nuevo
+                    await _repository.RemoveRange(existing.EmployeeWorkInformations.ToList());
+                    await _repository.RemoveRange(existing.Beneficiaries.ToList());
+                    await _repository.RemoveRange(existing.Dependents.ToList());
+                    await _repository.RemoveRange(existing.EmployeeEmergencyContacts.ToList());
+
+                    existing.EmployeeWorkInformations.Clear();
+                    existing.Beneficiaries.Clear();
+                    existing.Dependents.Clear();
+                    existing.EmployeeEmergencyContacts.Clear();
+
+                    await MapRelatedData(existing, row, ParseDate, ParseDateNullable, ParseDecimal);
+                    await _repository.Update(existing);
+                    updated++;
+                }
+            }
+
+            return Ok(new ApiResponse { Data = new { Inserted = inserted, Updated = updated } });
+        }
+
+        private static string? NormalizeGenre(string? val)
+        {
+            if (string.IsNullOrWhiteSpace(val)) return null;
+            var upper = val.Trim().ToUpper();
+            if (upper.StartsWith("M")) return "M";
+            if (upper.StartsWith("F")) return "F";
+            return val;
+        }
+
+        /// <summary>
+        /// Busca un tipo de parentesco por descripción. Si no existe, lo crea y devuelve el ID.
+        /// </summary>
+        private async Task<int?> GetOrCreateRelationshipTypeAsync(string? description)
+        {
+            if (string.IsNullOrWhiteSpace(description)) return null;
+
+            var normalized = description.Trim();
+            var existing = await _repository.FirstOrDefault<EmployeeRelationshipType>(
+                x => x.Description != null &&
+                     x.Description.ToLower() == normalized.ToLower() &&
+                     !(x.IsDeleted ?? false));
+
+            if (existing != null)
+                return existing.IdEmployeeRelationshipType;
+
+            var newType = new EmployeeRelationshipType
+            {
+                Description = normalized,
+                IsActive = true,
+                IsDeleted = false,
+            };
+            await _repository.Add(newType);
+            return newType.IdEmployeeRelationshipType;
+        }
+
+        private async Task MapRelatedData(
+            Employee employee,
+            EmployeeExcelRowDTO row,
+            Func<string?, DateTime> parseDate,
+            Func<string?, DateTime?> parseDateNullable,
+            Func<string?, decimal> parseDecimal)
+        {
+            // Work information
+            if (!string.IsNullOrEmpty(row.SalarioDiario) || !string.IsNullOrEmpty(row.FechaIngreso))
+            {
+                employee.EmployeeWorkInformations.Add(new EmployeeWorkInformation
+                {
+                    DailySalary = parseDecimal(row.SalarioDiario),
+                    IntegralSalary = parseDecimal(row.SalarioIntegrado),
+                    PayType = row.FormaDePago,
+                    InitialDate = parseDate(row.FechaIngreso),
+                    ContractExpiration = parseDate(row.FechaVencimientoContrato),
+                    IsActive = true,
+                    IsDeleted = false
+                });
+            }
+
+            // Beneficiaries
+            var beneficiaryData = new[]
+            {
+                (Name: row.Beneficiario1, Pct: row.Porcentaje1, Parentesco: row.Parentesco1),
+                (Name: row.Beneficiario2, Pct: row.Porcentaje2, Parentesco: row.Parentesco2),
+                (Name: row.Beneficiario3, Pct: row.Porcentaje3, Parentesco: row.Parentesco3),
+            };
+            foreach (var (name, pct, parentesco) in beneficiaryData)
+            {
+                if (!string.IsNullOrEmpty(name))
+                {
+                    var relationshipTypeId = await GetOrCreateRelationshipTypeAsync(parentesco);
+                    employee.Beneficiaries.Add(new EmployeeBeneficiarie
+                    {
+                        Name = name,
+                        Percentage = parseDecimal(pct),
+                        IdEmployeeRelationshipType = relationshipTypeId,
+                        IsActive = true,
+                        IsDeleted = false,
+                    });
+                }
+            }
+
+            // Emergency contact
+            if (!string.IsNullOrEmpty(row.ContactoEmergencia))
+            {
+                var relationshipTypeId = await GetOrCreateRelationshipTypeAsync(row.ParentescoContacto);
+
+                employee.EmployeeEmergencyContacts.Add(new EmployeeEmergencyContact
+                {
+                    Name = row.ContactoEmergencia,
+                    IdEmployeeRelationshipType = relationshipTypeId,
+                    Phone = row.CelularContacto,
+                    IsActive = true,
+                    IsDeleted = false,
+                });
+            }
+
+            // Dependents: cónyuge, hijos, padre, madre
+            async Task AddDependent(string? name, string? birthDate, string? relationship, bool? isAlive = null)
+            {
+                if (string.IsNullOrEmpty(name)) return;
+                var relationshipTypeId = await GetOrCreateRelationshipTypeAsync(relationship);
+                employee.Dependents.Add(new EmployeeDependents
+                {
+                    Name = name,
+                    BirthDate = parseDateNullable(birthDate),
+                    IdEmployeeRelationshipType = relationshipTypeId,
+                    IsAlive = isAlive ?? true,
+                    IsActive = true,
+                    IsDeleted = false,
+                });
+            }
+
+            await AddDependent(row.Conyugue, row.ConyugueFechaNacimiento, "CONYUGE",
+                row.ConyugeVive != null ? row.ConyugeVive.ToUpper() is "SI" or "S" or "1" or "TRUE" : null);
+            await AddDependent(row.Hijo1, row.Hijo1FechaNacimiento, "HIJO");
+            await AddDependent(row.Hijo2, row.Hijo2FechaNacimiento, "HIJO");
+            await AddDependent(row.Hijo3, row.Hijo3FechaNacimiento, "HIJO");
+            await AddDependent(row.Hijo4, row.Hijo4FechaNacimiento, "HIJO");
+            await AddDependent(row.Hijo5, row.Hijo5FechaNacimiento, "HIJO");
+            await AddDependent(row.Hijo6, row.Hijo6FechaNacimiento, "HIJO");
+            await AddDependent(row.Padre, row.FechaNacimientoPadre, "PADRE",
+                row.PadreVive != null ? row.PadreVive.ToUpper() is "SI" or "S" or "1" or "TRUE" : null);
+            await AddDependent(row.Madre, row.FechaNacimientoMadre, "MADRE",
+                row.MadreVive != null ? row.MadreVive.ToUpper() is "SI" or "S" or "1" or "TRUE" : null);
+        }
+
         /// <summary>
         /// Obtiene una lista paginada de employeees activos, permitiendo la búsqueda por nombre o RFC.
         /// </summary>
@@ -200,13 +423,15 @@ namespace GenericApp.API.Controllers
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 query = query.Where(u =>
+                    (u.Clave.ToString() != null && u.Clave.ToString().Contains(searchTerm)) ||
                     (u.Nombre != null && u.Nombre.Contains(searchTerm)) ||
                     (u.ApellidoPaterno != null && u.ApellidoPaterno.Contains(searchTerm)) ||
                     (u.RFC != null && u.RFC.Contains(searchTerm)));
             }
 
             var totalRows = query.Count();
-            var data = query
+            var data = query.
+                OrderBy(x => x.Nombre)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .Select(x => new EmployeeDTO
@@ -360,28 +585,93 @@ namespace GenericApp.API.Controllers
             employeeDB.BirthDate = model.BirthDate ?? employeeDB.BirthDate;
             employeeDB.IdCompany = model.IdCompany ?? employeeDB.IdCompany;
 
-            // WorkInformation: solo un registro
-            employeeDB.EmployeeWorkInformations.Clear();
-            if (model.EmployeeWorkInformations?.Any() == true)
-                employeeDB.EmployeeWorkInformations.Add(_mapper.Map<EmployeeWorkInformation>(model.EmployeeWorkInformations.First()));
+            // WorkInformation: siempre debe existir un único registro — actualizar si ya existe, agregar si no
+            var incomingWorkInfo = model.EmployeeWorkInformations?.FirstOrDefault();
+            if (employeeDB.EmployeeWorkInformations.Any())
+            {
+                var existing = employeeDB.EmployeeWorkInformations.First();
+                existing.DailySalary = incomingWorkInfo?.DailySalary ?? existing.DailySalary;
+                existing.IntegralSalary = incomingWorkInfo?.IntegralSalary ?? existing.IntegralSalary;
+                existing.PayType = incomingWorkInfo?.PayType ?? existing.PayType;
+                existing.InitialDate = incomingWorkInfo?.InitialDate ?? existing.InitialDate;
+                existing.ContractExpiration = incomingWorkInfo?.ContractExpiration ?? existing.ContractExpiration;
+            }
+            else if (incomingWorkInfo != null)
+            {
+                employeeDB.EmployeeWorkInformations.Add(_mapper.Map<EmployeeWorkInformation>(incomingWorkInfo));
+            }
 
             // Beneficiaries
-            employeeDB.Beneficiaries.Clear();
+            var incomingBeneficiaryIds = model.Beneficiaries?.Select(b => b.IdEmployeeBeneficiarie).Where(id => id > 0).ToList();
+            var beneficiariesToDelete = employeeDB.Beneficiaries.Where(b => !incomingBeneficiaryIds.Contains(b.IdEmployeeBeneficiarie)).ToList();
+            if (beneficiariesToDelete.Any())
+            {
+                await _repository.RemoveRange(beneficiariesToDelete);
+                foreach (var b in beneficiariesToDelete) employeeDB.Beneficiaries.Remove(b);
+            }
             if (model.Beneficiaries?.Any() == true)
+            {
                 foreach (var b in model.Beneficiaries)
-                    employeeDB.Beneficiaries.Add(_mapper.Map<EmployeeBeneficiarie>(b));
+                {
+                    if (b.IdEmployeeBeneficiarie > 0)
+                    {
+                        var existing = employeeDB.Beneficiaries.FirstOrDefault(x => x.IdEmployeeBeneficiarie == b.IdEmployeeBeneficiarie);
+                        if (existing != null) _mapper.Map(b, existing);
+                    }
+                    else
+                    {
+                        employeeDB.Beneficiaries.Add(_mapper.Map<EmployeeBeneficiarie>(b));
+                    }
+                }
+            }
 
             // Dependents
-            employeeDB.Dependents.Clear();
+            var incomingDependentIds = model.Dependents?.Select(d => d.IdEmployeeDependents).Where(id => id > 0).ToList();
+            var dependentsToDelete = employeeDB.Dependents.Where(d => !incomingDependentIds.Contains(d.IdEmployeeDependents)).ToList();
+            if (dependentsToDelete.Any())
+            {
+                await _repository.RemoveRange(dependentsToDelete);
+                foreach (var d in dependentsToDelete) employeeDB.Dependents.Remove(d);
+            }
             if (model.Dependents?.Any() == true)
+            {
                 foreach (var d in model.Dependents)
-                    employeeDB.Dependents.Add(_mapper.Map<EmployeeDependents>(d));
+                {
+                    if (d.IdEmployeeDependents > 0)
+                    {
+                        var existing = employeeDB.Dependents.FirstOrDefault(x => x.IdEmployeeDependents == d.IdEmployeeDependents);
+                        if (existing != null) _mapper.Map(d, existing);
+                    }
+                    else
+                    {
+                        employeeDB.Dependents.Add(_mapper.Map<EmployeeDependents>(d));
+                    }
+                }
+            }
 
             // EmergencyContacts
-            employeeDB.EmployeeEmergencyContacts.Clear();
+            var incomingEmergencyIds = model.EmployeeEmergencyContacts?.Select(e => e.IdEmployeeEmergencyContact).Where(id => id > 0).ToList();
+            var emergencyToDelete = employeeDB.EmployeeEmergencyContacts.Where(e => !incomingEmergencyIds.Contains(e.IdEmployeeEmergencyContact)).ToList();
+            if (emergencyToDelete.Any())
+            {
+                await _repository.RemoveRange(emergencyToDelete);
+                foreach (var e in emergencyToDelete) employeeDB.EmployeeEmergencyContacts.Remove(e);
+            }
             if (model.EmployeeEmergencyContacts?.Any() == true)
+            {
                 foreach (var e in model.EmployeeEmergencyContacts)
-                    employeeDB.EmployeeEmergencyContacts.Add(_mapper.Map<EmployeeEmergencyContact>(e));
+                {
+                    if (e.IdEmployeeEmergencyContact > 0)
+                    {
+                        var existing = employeeDB.EmployeeEmergencyContacts.FirstOrDefault(x => x.IdEmployeeEmergencyContact == e.IdEmployeeEmergencyContact);
+                        if (existing != null) _mapper.Map(e, existing);
+                    }
+                    else
+                    {
+                        employeeDB.EmployeeEmergencyContacts.Add(_mapper.Map<EmployeeEmergencyContact>(e));
+                    }
+                }
+            }
 
             var result = await _repository.Update(employeeDB);
 

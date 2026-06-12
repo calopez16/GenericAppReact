@@ -130,7 +130,23 @@ function Index() {
     };
 
     const handleOpenAdd = () => { setSelectedEmployee(null); setIsEditing(false); setIsModalOpen(true); };
-    const handleOpenEdit = (employee) => { setSelectedEmployee(employee); setIsEditing(true); setIsModalOpen(true); };
+    const handleOpenEdit = async (employee) => {
+        try {
+            setLoading(true);
+            const result = await service.getEmployeeById(employee.idEmployee);
+            if (result?.success !== false && result?.data) {
+                setSelectedEmployee(result.data);
+                setIsEditing(true);
+                setIsModalOpen(true);
+            } else {
+                ShowMessage(t('error'), 'error');
+            }
+        } catch {
+            ShowMessage(t('error'), 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
     const handleCloseModal = () => setIsModalOpen(false);
 
     const commonListProps = {
@@ -276,7 +292,7 @@ function Index() {
 
             <ConfirmationModal
                 open={isConfirmDeleteModalOpen}
-                type="error"
+                type="danger"
                 onClose={() => setIsConfirmDeleteModalOpen(false)}
                 onConfirm={handleDeleteEmployee}
                 title={t('delete')}
@@ -286,6 +302,7 @@ function Index() {
             <EmployeeExcelModal
                 open={isExcelModalOpen}
                 handleClose={() => setIsExcelModalOpen(false)}
+                idCompany={companySelected?.idCompany}
             />
         </Box>
     );

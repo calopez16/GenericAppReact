@@ -262,7 +262,7 @@ function Index() {
 
             <UserFormModal open={isModalOpen} handleClose={handleCloseModal} data={selectedUser} isEditing={isEditing} setData={setUsers} />
             <PasswordModal open={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} password={assignedPassword} />
-            <ConfirmationResetPasswordModal open={isConfirmResetPasswordModalOpen} type="warning" onClose={() => setIsConfirmResetPasswordModalOpen(false)} onConfirm={() => handleResetPassword(selectedUser)} title={t("resetPassword")} message={t("question_areYouSureResetPassword")} />
+            <ConfirmationResetPasswordModal open={isConfirmResetPasswordModalOpen} type="danger" onClose={() => setIsConfirmResetPasswordModalOpen(false)} onConfirm={() => handleResetPassword(selectedUser)} title={t("resetPassword")} message={t("question_areYouSureResetPassword")} />
         </Box>
     );
 }

@@ -3,12 +3,13 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, Box, Typography, IconButton, Divider, TextField,
     LinearProgress, Paper, Table, TableBody, TableCell,
-    TableContainer, TableHead, TableRow, Chip, Tooltip
+    TableContainer, TableHead, TableRow, Chip, Tooltip, CircularProgress
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import TableViewIcon from '@mui/icons-material/TableView';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SaveIcon from '@mui/icons-material/Save';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import { DataAPIEmployeesService } from '@data/Employees/Data';
@@ -84,7 +85,7 @@ const PREVIEW_COLUMNS = [
     { key: 'fechaVencimientoContrato', labelKey: 'col_fechaVencimientoContrato' },
 ];
 
-const EmployeeExcelModal = ({ open, handleClose }) => {
+const EmployeeExcelModal = ({ open, handleClose, idCompany }) => {
     const { t } = useTranslation();
     const service = DataAPIEmployeesService();
     const fileInputRef = useRef(null);
@@ -152,6 +153,27 @@ const EmployeeExcelModal = ({ open, handleClose }) => {
     const handleModalClose = () => {
         handleReset();
         handleClose();
+    };
+
+    const [saving, setSaving] = useState(false);
+
+    const handleSave = async () => {
+        if (!previewData?.length) return;
+        setSaving(true);
+        try {
+            const result = await service.importExcel({ idCompany, rows: previewData });
+            if (result?.success !== false) {
+                const { inserted = 0, updated = 0 } = result?.data ?? {};
+                ShowMessage(t('excel_importSuccess', { inserted, updated }), 'success');
+                handleModalClose();
+            } else {
+                ShowMessage(t('error'), 'error');
+            }
+        } catch {
+            ShowMessage(t('error'), 'error');
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -252,8 +274,8 @@ const EmployeeExcelModal = ({ open, handleClose }) => {
                                             <TableCell
                                                 key={col.key}
                                                 sx={{ fontWeight: 'bold', bgcolor: 'action.hover', whiteSpace: 'nowrap', minWidth: col.width ?? 120 }}
-                                                    >
-                                                        {t(col.labelKey)}
+                                            >
+                                                {t(col.labelKey)}
                                             </TableCell>
                                         ))}
                                     </TableRow>
@@ -277,14 +299,22 @@ const EmployeeExcelModal = ({ open, handleClose }) => {
 
             <Divider />
             <DialogActions sx={{ px: 3, py: 2, gap: 1, justifyContent: 'flex-end' }}>
+                <Button variant="outlined" onClick={handleModalClose} disabled={saving}>
+                    {t('cancel')}
+                </Button>
                 {previewData && (
-                    <Button variant="contained" disableElevation onClick={handleReset}>
+                    <Button variant="contained" disableElevation onClick={handleReset} disabled={saving}>
                         {t('excel_loadAnother')}
                     </Button>
                 )}
-                <Button variant="outlined" onClick={handleModalClose}>
-                    {t('cancel')}
-                </Button>
+                {previewData && (
+                    <Button variant="contained" disableElevation color="success"
+                        endIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
+                        onClick={handleSave} disabled={saving}>
+                        {saving ? t('loading') : t('excel_saveData')}
+                    </Button>
+                )}
+
             </DialogActions>
         </Dialog>
     );
