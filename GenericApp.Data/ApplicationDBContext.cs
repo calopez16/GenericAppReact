@@ -23,7 +23,6 @@ namespace GenericApp.Data
         public DbSet<Parameter> Parameters { get; set; }
         public DbSet<RefreshTokenAspNetUser> RefreshTokenAspNetUser { get; set; }
         public DbSet<Contract> Contracts { get; set; }
-        public DbSet<ContractSigned> ContractsSigned { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<EmployeeBeneficiarie> EmployeeBeneficiaries { get; set; }
         public DbSet<EmployeeDependents> EmployeeDependents { get; set; }
@@ -274,21 +273,6 @@ namespace GenericApp.Data
                 b.HasOne(c => c.IdCompanyNavigation)
                     .WithMany()
                     .HasForeignKey(c => c.IdCompany)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<ContractSigned>(b =>
-            {
-                b.HasKey(x => x.IdContractSigned);
-
-                b.HasOne(cs => cs.IdContractNavigation)
-                    .WithMany(c => c.ContractSigned)
-                    .HasForeignKey(cs => cs.IdContract)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(cs => cs.IdContractTemplateNavigation)
-                    .WithMany()
-                    .HasForeignKey(cs => cs.IdContractTemplate)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
