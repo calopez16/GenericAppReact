@@ -17,6 +17,7 @@ namespace GenericApp.Data
         public DbSet<ApplicationLog> ApplicationLogs { get; set; }
         public DbSet<City> Cities { get; set; }
         public DbSet<ContractTemplate> ContractTemplates { get; set; }
+        public DbSet<ContractTemplateVariable> ContractTemplateVariables { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Country> Countries { get; set; }
@@ -134,6 +135,16 @@ namespace GenericApp.Data
                     .WithMany()
                     .HasForeignKey(x => x.IdCompany)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<ContractTemplateVariable>(b =>
+            {
+                b.HasKey(x => x.IdContractTemplateVariable);
+                b.Property(x => x.Code).HasMaxLength(150).IsRequired();
+                b.Property(x => x.Description).HasMaxLength(180);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
             });
 
             modelBuilder.Entity<Client>(b =>
@@ -427,6 +438,49 @@ namespace GenericApp.Data
                 new City { IdCity = 9, IdState = 37, Description = "San Diego", IsActive = true, IsDeleted = false },
                 new City { IdCity = 10, IdState = 37, Description = "San Jose", IsActive = true, IsDeleted = false },
                 new City { IdCity = 11, IdState = 37, Description = "Calexico", IsActive = true, IsDeleted = false }
+            );
+            
+            modelBuilder.Entity<ContractTemplateVariable>().HasData(
+                new ContractTemplateVariable { IdContractTemplateVariable = 1, Code = "nombreEmpresa", Description = "Nombre de la empresa", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 2, Code = "fechaActualContrato", Description = "Fecha actual contrato", Type = "DateTime", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 3, Code = "clave", Description = "Clave", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 4, Code = "nombre", Description = "Nombre", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 5, Code = "nacionalidad", Description = "Nacionalidad", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 6, Code = "edad", Description = "Edad", Type = "int", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 7, Code = "sexo", Description = "Sexo", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 8, Code = "estadoCivil", Description = "Estado Civil", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 9, Code = "curp", Description = "CURP", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 10, Code = "rfc", Description = "RFC", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 11, Code = "numeroAfiliacionImss", Description = "Número de Afiliación IMSS", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 12, Code = "domicilio", Description = "Domicilio", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 13, Code = "puesto", Description = "Puesto", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 14, Code = "turno", Description = "Turno", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 15, Code = "salarioDiarioBase", Description = "Salario Diario Base", Type = "decimal", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 16, Code = "fechaInicioContrato", Description = "Fecha de Inicio del Contrato", Type = "DateTime", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 17, Code = "fechaTerminacionContrato", Description = "Fecha de Terminación del Contrato", Type = "DateTime", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 18, Code = "fechaActualFormatoCorto", Description = "Fecha Actual Formato Corto", Type = "DateTime", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 19, Code = "fechaActualFormatoLargo", Description = "Fecha Actual Formato Largo", Type = "DateTime", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 20, Code = "firmaContrato", Description = "Firma del Contrato", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 21, Code = "Beneficiario1", Description = "Beneficiario 1", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 22, Code = "Beneficiario1_Domicilio", Description = "Domicilio del Beneficiario 1", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 23, Code = "Beneficiario1_FechaNacimiento", Description = "Fecha de Nacimiento del Beneficiario 1", Type = "DateTime", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 24, Code = "Beneficiario1_Telefono", Description = "Teléfono del Beneficiario 1", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 25, Code = "Beneficiario1_Porcentaje", Description = "Porcentaje del Beneficiario 1", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 26, Code = "Beneficiario2", Description = "Beneficiario 2", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 27, Code = "Beneficiario2_Domicilio", Description = "Domicilio del Beneficiario 2", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 28, Code = "Beneficiario2_FechaNacimiento", Description = "Fecha de Nacimiento del Beneficiario 2", Type = "DateTime", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 29, Code = "Beneficiario2_Telefono", Description = "Teléfono del Beneficiario 2", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 30, Code = "Beneficiario2_Porcentaje", Description = "Porcentaje del Beneficiario 2", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 31, Code = "Beneficiario3", Description = "Beneficiario 3", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 32, Code = "Beneficiario3_Domicilio", Description = "Domicilio del Beneficiario 3", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 33, Code = "Beneficiario3_FechaNacimiento", Description = "Fecha de Nacimiento del Beneficiario 3", Type = "DateTime", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 34, Code = "Beneficiario3_Telefono", Description = "Teléfono del Beneficiario 3", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 35, Code = "Beneficiario3_Porcentaje", Description = "Porcentaje del Beneficiario 3", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 36, Code = "Beneficiario4", Description = "Beneficiario 4", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 37, Code = "Beneficiario4_Domicilio", Description = "Domicilio del Beneficiario 4", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 38, Code = "Beneficiario4_FechaNacimiento", Description = "Fecha de Nacimiento del Beneficiario 4", Type = "DateTime", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 39, Code = "Beneficiario4_Telefono", Description = "Teléfono del Beneficiario 4", Type = "string", IsActive = true, IsDeleted = false },
+                new ContractTemplateVariable { IdContractTemplateVariable = 40, Code = "Beneficiario4_Porcentaje", Description = "Porcentaje del Beneficiario 4", Type = "string", IsActive = true, IsDeleted = false }
             );
 
             modelBuilder.Entity<IdentityRole>().HasData(

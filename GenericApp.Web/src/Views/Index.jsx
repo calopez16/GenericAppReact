@@ -19,6 +19,7 @@ const ConfigurationPage = lazy(() => import('@views/Configuration'));
 const UnathorizePage = lazy(() => import('@views/Pages/Unauthorized'));
 const ContractTemplatesPage = lazy(() => import('@views/ContractTemplates/Index'));
 const EmployeesPage = lazy(() => import('@views/Employees/Index'));
+const ContractsPage = lazy(() => import('@views/Contracts/Index'));
 
 const ProtectedRoute = ({ roles, allowedUsers, children }) => {
     const { userRoles, userName } = useContext(AppContext);
@@ -44,6 +45,7 @@ function App() {
                 <Route path="/trailerboxtypes" element={<TrailerBoxTypesPage />} />
                 <Route path="/contract-templates" element={<ContractTemplatesPage />} />
                 <Route path="/employees" element={<EmployeesPage />} />
+                <Route path="/contracts" element={<ContractsPage />} />
                 <Route path="/unauthorized" element={<UnathorizePage />} />
                 <Route path="/configuration" element={
                     <ProtectedRoute roles={['Administrator']} allowedUsers={['admin']}>

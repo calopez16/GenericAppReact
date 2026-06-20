@@ -227,6 +227,21 @@ namespace GenericApp.API.Controllers
             return Ok(new ApiResponse { Data = _mapper.Map<ContractTemplateDTO>(template) });
         }
 
+
+        /// <summary>
+        /// Returns a specific contract template by ID.
+        /// </summary>
+        [HttpGet("variables")]
+        public async Task<ActionResult<ContractTemplateVariableDTO>> GetContractTemplateVariables(int id)
+        {
+            var contractTemplateVariables = await _repository.FindBy<ContractTemplateVariable>(x => (bool)x.IsActive && !(x.IsDeleted ?? false));
+            if (contractTemplateVariables == null)
+                return NotFound(new ApiResponse());
+
+            return Ok(new ApiResponse { Data = _mapper.Map<List<ContractTemplateVariableDTO>>(contractTemplateVariables) });
+        }
+
+
         // ─────────────────────────────────────────────────────────────────────
         // PDF generation
         // ─────────────────────────────────────────────────────────────────────

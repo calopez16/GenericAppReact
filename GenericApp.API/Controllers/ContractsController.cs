@@ -1,6 +1,7 @@
 ﻿using AngleSharp;
+using AngleSharp;
+using AngleSharp.Common;
 using AngleSharp.Html.Dom;
-using AsDom = AngleSharp.Dom;
 using AutoMapper;
 using GenericApp.API.Constants;
 using GenericApp.API.Models;
@@ -9,9 +10,13 @@ using GenericApp.Data.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Storage;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using System.Globalization;
+using System.Text.RegularExpressions;
+using AsDom = AngleSharp.Dom;
 
 namespace GenericApp.API.Controllers
 {
@@ -36,9 +41,500 @@ namespace GenericApp.API.Controllers
         }
 
         /// <summary>
-        /// Returns a paginated list of contract templates, optionally filtered by name.
+        /// Returns a paginated list of signed contracts ordered by creation date descending.
         /// </summary>
         [HttpGet("pagination")]
+        public async Task<ActionResult> GetContractsPagination(
+            [FromQuery] int idCompany,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? searchTerm = null)
+        {
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var query = await _repository.Query<Contract>();
+            query = query.Where(x => x.IdCompany == idCompany && !(x.IsDeleted ?? false));
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+                query = query.Where(x => (x.DocumentName != null && x.DocumentName.Contains(searchTerm)));
+
+            query = query.OrderByDescending(x => x.SignatureDate ?? x.CreateDate);
+
+            var totalRows = query.Count();
+            var data = query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new ContractDTO
+                {
+                    IdContract = x.IdContract,
+                    IdEmployee = x.IdEmployee,
+                    CreateDate = x.CreateDate,
+                    SignatureDate = x.SignatureDate,
+                    DocumentName = x.DocumentName,
+                    VirtualPath = x.VirtualPath,
+                    IsActive = x.IsActive,
+                    IsDeleted = x.IsDeleted,
+                    IdCompany = x.IdCompany
+                })
+                .ToList();
+
+            var paginatedResponse = new
+            {
+                TotalCount = totalRows,
+                PageSize = pageSize,
+                CurrentPage = pageNumber,
+                TotalPages = (int)System.Math.Ceiling((double)totalRows / pageSize),
+                Data = data
+            };
+
+            return Ok(new ApiResponse { Data = paginatedResponse });
+        }
+
+        /// <summary>
+        /// Creates a new signed contract with multiple templates and saves PDF to disk.
+        /// </summary>
+        [HttpPost]
+        public async Task<ActionResult> CreateSignedContract([FromBody] CreateContractDTO model)
+        {
+            try
+            {
+                if (model.TemplateIds == null || model.TemplateIds.Count == 0)
+                    return BadRequest(new ApiResponse { Message = "At least one template is required" });
+
+                var employee = await _repository.GetById<Employee>(model.IdEmployee);
+                if (employee == null)
+                    return NotFound(new ApiResponse { Message = "Employee not found" });
+
+                var templates = new List<ContractTemplate>();
+                foreach (var templateId in model.TemplateIds)
+                {
+                    var template = await _repository.FirstOrDefault<ContractTemplate>(
+                        x => x.IdTemplate == templateId && !(x.IsDeleted ?? false));
+                    if (template != null)
+                        templates.Add(template);
+                }
+
+                if (templates.Count == 0)
+                    return BadRequest(new ApiResponse { Message = "No valid templates found" });
+
+                var documentName = $"Contrato_{employee.Nombre}_{employee.ApellidoPaterno}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                var contractsFolder = Path.Combine(_env.WebRootPath, "contratos");
+
+                if (!Directory.Exists(contractsFolder))
+                    Directory.CreateDirectory(contractsFolder);
+
+                var filePath = Path.Combine(contractsFolder, documentName);
+
+                QuestPDF.Settings.License = LicenseType.Community;
+
+                var company = await _repository.FirstOrDefault<Company>(
+                    x => x.IdCompany == model.IdCompany && !(x.IsDeleted ?? false));
+
+                // Pre-process template content with variable replacement
+                var processedTemplates = new List<(ContractTemplate Template, string ProcessedContent)>();
+                foreach (var template in templates)
+                {
+                    var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company);
+                    processedTemplates.Add((template, contentWithData));
+                }
+
+                var pdfDocument = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.Letter);
+                        page.MarginTop(1, Unit.Centimetre);
+                        page.MarginBottom(2, Unit.Centimetre);
+                        page.MarginLeft(2.5f, Unit.Centimetre);
+                        page.MarginRight(2.5f, Unit.Centimetre);
+                        page.DefaultTextStyle(x => x.FontSize(11).FontFamily(Fonts.Lato));
+
+                        page.Content().Column(col =>
+                        {
+                            if (company != null)
+                            {
+                                col.Item().Element(header => ComposeContractHeader(header, company, employee));
+                                col.Item().PaddingBottom(10);
+                            }
+
+                            foreach (var (template, processedContent) in processedTemplates)
+                            {
+                                if (processedTemplates.IndexOf((template, processedContent)) > 0)
+                                {
+                                    col.Item().PageBreak();
+                                    if (company != null)
+                                    {
+                                        col.Item().Element(header => ComposeContractHeader(header, company, employee));
+                                        col.Item().PaddingBottom(10);
+                                    }
+                                }
+
+                                col.Item().Text(template.Name ?? "").FontSize(16).Bold().FontColor(Colors.Black);
+                                col.Item().PaddingBottom(8);
+
+                                var config = Configuration.Default;
+                                var context = BrowsingContext.New(config);
+                                var document = context.OpenAsync(req => req.Content(processedContent)).Result;
+                                var body = document.Body!;
+
+                                RenderNodes(col, body.ChildNodes);
+                            }
+
+                            if (!string.IsNullOrEmpty(model.SignatureBase64))
+                            {
+                                col.Item().PaddingTop(20);
+                                col.Item().Text("Firma:").FontSize(12).Bold();
+                                col.Item().PaddingTop(5);
+
+                                try
+                                {
+                                    var signatureBytes = Convert.FromBase64String(model.SignatureBase64);
+                                    col.Item().MaxWidth(300).Image(signatureBytes);
+                                }
+                                catch
+                                {
+                                    col.Item().Text("(Firma digital capturada)").FontSize(10).Italic();
+                                }
+                            }
+                        });
+
+                        page.Footer().AlignCenter().Text(t =>
+                        {
+                            t.Span($"{employee.Nombre} {employee.ApellidoPaterno} {employee.ApellidoMaterno}".Trim() ?? "").FontSize(8).FontColor(Colors.Grey.Darken1);
+                            t.Span("  —  ").FontSize(8).FontColor(Colors.Grey.Lighten1);
+                            t.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Darken1);
+                            t.Span(" / ").FontSize(8).FontColor(Colors.Grey.Lighten1);
+                            t.TotalPages().FontSize(8).FontColor(Colors.Grey.Darken1);
+                        });
+                    });
+                });
+
+                pdfDocument.GeneratePdf(filePath);
+
+                var contract = new Contract
+                {
+                    IdEmployee = model.IdEmployee,
+                    IdCompany = model.IdCompany,
+                    CreateDate = DateTime.Now,
+                    SignatureDate = DateTime.Now,
+                    DocumentName = documentName,
+                    VirtualPath = $"/contratos/{documentName}",
+                    IsActive = true,
+                    IsDeleted = false
+                };
+
+                var result = await _repository.Add(contract);
+
+                if (!result)
+                    return BadRequest(new ApiResponse { Message = "Failed to save contract" });
+
+                return Ok(new ApiResponse { Data = _mapper.Map<ContractDTO>(contract) });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse { Message = $"Error creating contract: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Generates a preview PDF combining multiple templates with employee data.
+        /// Variables {{variable}} are replaced with actual employee information.
+        /// </summary>
+        [HttpPost("preview")]
+        public async Task<IActionResult> GetContractPreview([FromBody] CreateContractDTO model)
+        {
+            try
+            {
+                if (model.TemplateIds == null || model.TemplateIds.Count == 0)
+                    return BadRequest(new ApiResponse { Message = "At least one template is required" });
+
+                var employee = await _repository.FirstOrDefault<Employee>(
+                    x => x.IdEmployee == model.IdEmployee && !(x.IsDeleted ?? false),
+                    x => x.EmployeeWorkInformations,
+                    x => x.Beneficiaries,
+                    x => x.Dependents,
+                    x => x.EmployeeEmergencyContacts);
+                if (employee == null)
+                    return NotFound(new ApiResponse { Message = "Employee not found" });
+
+                var templates = new List<ContractTemplate>();
+                foreach (var templateId in model.TemplateIds)
+                {
+                    var template = await _repository.FirstOrDefault<ContractTemplate>(
+                        x => x.IdTemplate == templateId && !(x.IsDeleted ?? false));
+                    if (template != null)
+                        templates.Add(template);
+                }
+
+                if (templates.Count == 0)
+                    return BadRequest(new ApiResponse { Message = "No valid templates found" });
+
+                var company = await _repository.FirstOrDefault<Company>(
+                    x => x.IdCompany == model.IdCompany && !(x.IsDeleted ?? false));
+
+                // Pre-process template content with variable replacement
+                var processedTemplates = new List<(ContractTemplate Template, string ProcessedContent)>();
+                foreach (var template in templates)
+                {
+                    var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company);
+                    processedTemplates.Add((template, contentWithData));
+                }
+
+                QuestPDF.Settings.License = LicenseType.Community;
+
+                var pdfDocument = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.Letter);
+                        page.MarginTop(1, Unit.Centimetre);
+                        page.MarginBottom(2, Unit.Centimetre);
+                        page.MarginLeft(2.5f, Unit.Centimetre);
+                        page.MarginRight(2.5f, Unit.Centimetre);
+                        page.DefaultTextStyle(x => x.FontSize(11).FontFamily(Fonts.Lato));
+
+                        page.Content().Column(col =>
+                        {
+                            if (company != null)
+                            {
+                                col.Item().Element(header => ComposeContractHeader(header, company, employee));
+                                col.Item().PaddingBottom(10);
+                            }
+
+                            foreach (var (template, processedContent) in processedTemplates)
+                            {
+                                if (processedTemplates.IndexOf((template, processedContent)) > 0)
+                                {
+                                    col.Item().PageBreak();
+                                    if (company != null)
+                                    {
+                                        col.Item().Element(header => ComposeContractHeader(header, company, employee));
+                                        col.Item().PaddingBottom(10);
+                                    }
+                                }
+
+                                col.Item().Text(template.Name ?? "").FontSize(16).Bold().FontColor(Colors.Black);
+                                col.Item().PaddingBottom(8);
+
+                                var config = Configuration.Default;
+                                var context = BrowsingContext.New(config);
+                                var document = context.OpenAsync(req => req.Content(processedContent)).Result;
+                                var body = document.Body!;
+
+                                RenderNodes(col, body.ChildNodes);
+                            }
+                        });
+
+                        page.Footer().AlignCenter().Text(t =>
+                        {
+                            t.Span($"{employee.Nombre} {employee.ApellidoPaterno} {employee.ApellidoMaterno}".Trim() ?? "").FontSize(8).FontColor(Colors.Grey.Darken1);
+                            t.Span("  —  ").FontSize(8).FontColor(Colors.Grey.Lighten1);
+                            t.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Darken1);
+                            t.Span(" / ").FontSize(8).FontColor(Colors.Grey.Lighten1);
+                            t.TotalPages().FontSize(8).FontColor(Colors.Grey.Darken1);
+                        });
+                    });
+                });
+
+                var stream = new MemoryStream();
+                pdfDocument.GeneratePdf(stream);
+                stream.Position = 0;
+
+                var fileName = $"Preview_Contrato_{employee.Nombre}_{employee.ApellidoPaterno}.pdf";
+                return File(stream, "application/pdf", fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse { Message = $"Error generating preview: {ex.Message}" });
+            }
+        }
+
+        private async Task<string> ReplaceVariables(string htmlContent, Employee employee, Company? company)
+        {
+            var contractTemplateVariables = await _repository.FindBy<ContractTemplateVariable>(x => (x.IsActive ?? false) && !(x.IsDeleted ?? false));
+
+            if (string.IsNullOrEmpty(htmlContent))
+                return htmlContent;
+
+            var result = htmlContent;
+
+            foreach (var variable in contractTemplateVariables)
+            {
+                if (string.IsNullOrEmpty(variable.Code))
+                    continue;
+
+                var pattern = $@"{{{{\s*{Regex.Escape(variable.Code)}\s*}}}}";
+                var replacement = GetVariableValue(variable, employee, company);
+
+                result = Regex.Replace(result, pattern, replacement, RegexOptions.IgnoreCase);
+            }
+
+            return result;
+        }
+
+        private string GetVariableValue(ContractTemplateVariable variable, Employee employee, Company? company)
+        {
+            var type = variable.Type?.ToLower() ?? "";
+            var code = variable.Code?.ToLower() ?? "";
+            var fechaActual = DateTime.Now;
+
+            switch (variable.Code)
+            {
+                case nameof(ContractTemplateVariablesEnum.nombreEmpresa):
+                    return company.RazonSocial;
+                case nameof(ContractTemplateVariablesEnum.fechaActualContrato):
+                    return fechaActual.ToString("d 'DIAS DEL MES DE' MMMM 'DEL AÑO' yyyy", new CultureInfo("es-ES")).ToUpper();
+                case nameof(ContractTemplateVariablesEnum.clave):
+                    return employee.Clave.ToString();
+                case nameof(ContractTemplateVariablesEnum.nombre):
+                    return $"{(employee.Nombre ?? "")} {(employee.ApellidoPaterno ?? "")} {(employee.ApellidoMaterno ?? "")}";
+                case nameof(ContractTemplateVariablesEnum.nacionalidad):
+                    return "MEXICANA";
+                case nameof(ContractTemplateVariablesEnum.edad):
+                    DateTime fechaNacimiento = employee.BirthDate;
+                    int edad = fechaActual.Year - fechaNacimiento.Year;
+                    // Ajuste por si no ha cumplido años este año
+                    if (fechaActual < fechaNacimiento.AddYears(edad))
+                        edad--;
+                    return edad.ToString();
+                case nameof(ContractTemplateVariablesEnum.sexo):
+                    return employee.Genre ?? "";
+                case nameof(ContractTemplateVariablesEnum.estadoCivil):
+                    return employee.CivilStatus ?? "";
+                case nameof(ContractTemplateVariablesEnum.curp):
+                    return employee.CURP ?? "";
+                case nameof(ContractTemplateVariablesEnum.rfc):
+                    return employee.RFC ?? "";
+                case nameof(ContractTemplateVariablesEnum.numeroAfiliacionImss):
+                    return employee.IMSS ?? "";
+                case nameof(ContractTemplateVariablesEnum.domicilio):
+                    return employee.Address ?? "";
+                case nameof(ContractTemplateVariablesEnum.puesto):
+                    return employee.Position ?? "";
+                case nameof(ContractTemplateVariablesEnum.turno):
+                    return "Matutino";
+                case nameof(ContractTemplateVariablesEnum.salarioDiarioBase):
+                    return employee.EmployeeWorkInformations?.FirstOrDefault()?.DailySalary.ToString("#.##") ?? "0.00";
+                case nameof(ContractTemplateVariablesEnum.fechaInicioContrato):
+                    return employee.EmployeeWorkInformations?.FirstOrDefault()?.InitialDate.ToString("dd/MM/yyyy") ?? "";
+                case nameof(ContractTemplateVariablesEnum.fechaTerminacionContrato):
+                    return employee.EmployeeWorkInformations?.FirstOrDefault()?.ContractExpiration.ToString("dd/MM/yyyy") ?? "";
+                case nameof(ContractTemplateVariablesEnum.fechaActualFormatoCorto):
+                    return fechaActual.ToString("dd/MM/yyyy");
+                case nameof(ContractTemplateVariablesEnum.fechaActualFormatoLargo):
+                    return fechaActual.ToString("dddd, d 'de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
+                case nameof(ContractTemplateVariablesEnum.firmaContrato):
+                    return "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario1):
+                    return employee.Beneficiaries?.ElementAtOrDefault(0)?.Name ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario1_Domicilio):
+                    return "MISMO";
+                //return employee.Beneficiaries?.ElementAtOrDefault(0)?.Address ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario1_FechaNacimiento):
+                    return "";
+                //return employee.Beneficiaries?.ElementAtOrDefault(0)?.BirthDate ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario1_Telefono):
+                    return "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario1_Percentage):
+                    return employee.Beneficiaries?.ElementAtOrDefault(0)?.Percentage?.ToString("N0") ?? "0";
+                //return employee.Beneficiaries?.ElementAtOrDefault(0)?.Phone ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario2):
+                    return employee.Beneficiaries?.ElementAtOrDefault(1)?.Name ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario2_Domicilio):
+                    return "MISMO";
+                //return employee.Beneficiaries?.ElementAtOrDefault(1)?.Address ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario2_FechaNacimiento):
+                    return "";
+                //return employee.Beneficiaries?.ElementAtOrDefault(1)?.BirthDate ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario2_Telefono):
+                    return "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario2_Percentage):
+                    return employee.Beneficiaries?.ElementAtOrDefault(1)?.Percentage?.ToString("N0") ?? "0";
+                //return employee.Beneficiaries?.ElementAtOrDefault(1)?.Phone ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario3):
+                    return employee.Beneficiaries?.ElementAtOrDefault(2)?.Name ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario3_Domicilio):
+                    return "MISMO";
+                //return employee.Beneficiaries?.ElementAtOrDefault(2)?.Address ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario3_FechaNacimiento):
+                    return "";
+                //return employee.Beneficiaries?.ElementAtOrDefault(2)?.BirthDate ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario3_Telefono):
+                    return "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario3_Percentage):
+                    return employee.Beneficiaries?.ElementAtOrDefault(2)?.Percentage?.ToString("N0") ?? "0";
+                //return employee.Beneficiaries?.ElementAtOrDefault(0)?.Phone ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario4):
+                    return employee.Beneficiaries?.ElementAtOrDefault(3)?.Name ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario4_Domicilio):
+                    return "MISMO";
+                //return employee.Beneficiaries?.ElementAtOrDefault(3)?.Address ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario4_FechaNacimiento):
+                    return "";
+                //return employee.Beneficiaries?.ElementAtOrDefault(3)?.BirthDate ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario4_Telefono):
+                    return "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario4_Percentage):
+                    return employee.Beneficiaries?.ElementAtOrDefault(3)?.Percentage?.ToString("N0") ?? "0";
+                //return employee.Beneficiaries?.ElementAtOrDefault(3)?.Phone ?? "";
+                default:
+                    break;
+            }
+            return "";
+        }
+
+
+        private void ComposeContractHeader(IContainer container, Company company, Employee employee)
+        {
+            container.Column(column =>
+            {
+                column.Item().PaddingBottom(4).Row(row =>
+                {
+                    const float logoHeight = 48;
+                    const float logoColWidth = 80;
+
+                    var logoName = company.LogoName;
+                    bool hasLogo = !string.IsNullOrEmpty(logoName);
+                    string? logoPath = hasLogo
+                        ? Path.Combine(_env.WebRootPath, "img", "logos", logoName!)
+                        : null;
+                    bool logoExists = logoPath != null && System.IO.File.Exists(logoPath);
+
+                    row.ConstantItem(logoColWidth).AlignMiddle().AlignLeft()
+                        .Element(e =>
+                        {
+                            if (logoExists)
+                                e.Height(logoHeight).Image(logoPath!);
+                        });
+
+                    row.RelativeItem().AlignMiddle().Column(col =>
+                    {
+                        col.Item().AlignCenter().Text("CONTRATO LABORAL")
+                            .Bold().FontSize(14).FontColor(Colors.Black);
+
+                        var subtitle = company.RazonSocial ?? company.Name;
+                        if (!string.IsNullOrWhiteSpace(subtitle))
+                            col.Item().AlignCenter().PaddingTop(2)
+                                .Text(subtitle.ToUpper())
+                                .FontSize(9).FontColor(Colors.Grey.Darken2);
+
+                        col.Item().AlignCenter().PaddingTop(2)
+                            .Text($"{employee.Nombre} {employee.ApellidoPaterno} {employee.ApellidoMaterno}".Trim())
+                            .FontSize(10).FontColor(Colors.Grey.Darken1);
+                    });
+
+                    row.ConstantItem(logoColWidth);
+                });
+
+                column.Item().PaddingBottom(4).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+            });
+        }
+
+        /// <summary>
+        /// Returns a paginated list of contract templates, optionally filtered by name.
+        /// </summary>
+        [HttpGet("templates/pagination")]
         public async Task<ActionResult> GetContractTemplatesPagination(
             [FromQuery] int idCompany,
             [FromQuery] int pageNumber = 1,
@@ -86,7 +582,7 @@ namespace GenericApp.API.Controllers
         /// <summary>
         /// Returns a specific contract template by ID.
         /// </summary>
-        [HttpGet("{id}")]
+        [HttpGet("templates/{id}")]
         public async Task<ActionResult<ContractTemplateDTO>> GetContractTemplateById(int id)
         {
             var template = await _repository.FirstOrDefault<ContractTemplate>(x => x.IdTemplate == id && !(x.IsDeleted ?? false));
@@ -99,7 +595,7 @@ namespace GenericApp.API.Controllers
         /// <summary>
         /// Returns all active contract templates (no pagination).
         /// </summary>
-        [HttpGet("active")]
+        [HttpGet("templates/active")]
         public async Task<ActionResult> GetActiveContractTemplates()
         {
             var query = await _repository.Query<ContractTemplate>();
@@ -121,7 +617,7 @@ namespace GenericApp.API.Controllers
         /// <summary>
         /// Creates a new contract template.
         /// </summary>
-        [HttpPost]
+        [HttpPost("templates")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> AddContractTemplate([FromBody] ContractTemplateDTO model)
         {
@@ -141,7 +637,7 @@ namespace GenericApp.API.Controllers
         /// <summary>
         /// Updates an existing contract template.
         /// </summary>
-        [HttpPut]
+        [HttpPut("templates")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> UpdateContractTemplate([FromBody] ContractTemplateDTO model)
         {
@@ -171,7 +667,7 @@ namespace GenericApp.API.Controllers
         /// <summary>
         /// Disables a contract template (IsActive = false).
         /// </summary>
-        [HttpPut("disable/{id}")]
+        [HttpPut("templates/disable/{id}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DisableContractTemplate(int id)
         {
@@ -191,7 +687,7 @@ namespace GenericApp.API.Controllers
         /// <summary>
         /// Enables a contract template (IsActive = true).
         /// </summary>
-        [HttpPut("enable/{id}")]
+        [HttpPut("templates/enable/{id}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> EnableContractTemplate(int id)
         {
@@ -211,7 +707,7 @@ namespace GenericApp.API.Controllers
         /// <summary>
         /// Soft-deletes a contract template (IsDeleted = true).
         /// </summary>
-        [HttpDelete("{id}")]
+        [HttpDelete("templates/{id}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> DeleteContractTemplate(int id)
         {
@@ -235,7 +731,7 @@ namespace GenericApp.API.Controllers
         /// <summary>
         /// Generates a PDF for a contract template, rendering its HTML content.
         /// </summary>
-        [HttpGet("pdf/{id}")]
+        [HttpGet("templates/pdf/{id}")]
         public async Task<IActionResult> GetContractTemplatePdf(int id, [FromQuery] int? idCompany = null)
         {
             var template = await _repository.FirstOrDefault<ContractTemplate>(

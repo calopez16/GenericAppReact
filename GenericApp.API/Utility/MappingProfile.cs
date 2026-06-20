@@ -17,6 +17,7 @@ namespace GenericApp.API.Utility
             CreateMap<Company, CompanyDTO>().ReverseMap();
             CreateMap<Season, SeasonDTO>().ReverseMap();
             CreateMap<ContractTemplate, ContractTemplateDTO>().ReverseMap();
+            CreateMap<ContractTemplateVariable, ContractTemplateVariableDTO>().ReverseMap();
             CreateMap<Employee, EmployeeDTO>().ReverseMap();
             CreateMap<EmployeeWorkInformation, EmployeeWorkInformationDTO>().ReverseMap();
             CreateMap<EmployeeBeneficiarie, EmployeeBeneficiarieDTO>().ReverseMap();

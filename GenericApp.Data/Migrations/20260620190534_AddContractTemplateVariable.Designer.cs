@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260620190534_AddContractTemplateVariable")]
+    partial class AddContractTemplateVariable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -464,8 +466,8 @@ namespace GenericApp.Data.Migrations
                         new
                         {
                             IdContractTemplateVariable = 2,
-                            Code = "fechaActualContrato",
-                            Description = "Fecha actual contrato",
+                            Code = "fechaActual",
+                            Description = "Fecha actual",
                             IsActive = true,
                             IsDeleted = false,
                             Type = "DateTime"
@@ -671,15 +673,6 @@ namespace GenericApp.Data.Migrations
                         new
                         {
                             IdContractTemplateVariable = 25,
-                            Code = "Beneficiario1_Porcentaje",
-                            Description = "Porcentaje del Beneficiario 1",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Type = "string"
-                        },
-                        new
-                        {
-                            IdContractTemplateVariable = 26,
                             Code = "Beneficiario2",
                             Description = "Beneficiario 2",
                             IsActive = true,
@@ -688,7 +681,7 @@ namespace GenericApp.Data.Migrations
                         },
                         new
                         {
-                            IdContractTemplateVariable = 27,
+                            IdContractTemplateVariable = 26,
                             Code = "Beneficiario2_Domicilio",
                             Description = "Domicilio del Beneficiario 2",
                             IsActive = true,
@@ -697,7 +690,7 @@ namespace GenericApp.Data.Migrations
                         },
                         new
                         {
-                            IdContractTemplateVariable = 28,
+                            IdContractTemplateVariable = 27,
                             Code = "Beneficiario2_FechaNacimiento",
                             Description = "Fecha de Nacimiento del Beneficiario 2",
                             IsActive = true,
@@ -706,7 +699,7 @@ namespace GenericApp.Data.Migrations
                         },
                         new
                         {
-                            IdContractTemplateVariable = 29,
+                            IdContractTemplateVariable = 28,
                             Code = "Beneficiario2_Telefono",
                             Description = "Teléfono del Beneficiario 2",
                             IsActive = true,
@@ -715,16 +708,7 @@ namespace GenericApp.Data.Migrations
                         },
                         new
                         {
-                            IdContractTemplateVariable = 30,
-                            Code = "Beneficiario2_Porcentaje",
-                            Description = "Porcentaje del Beneficiario 2",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Type = "string"
-                        },
-                        new
-                        {
-                            IdContractTemplateVariable = 31,
+                            IdContractTemplateVariable = 29,
                             Code = "Beneficiario3",
                             Description = "Beneficiario 3",
                             IsActive = true,
@@ -733,7 +717,7 @@ namespace GenericApp.Data.Migrations
                         },
                         new
                         {
-                            IdContractTemplateVariable = 32,
+                            IdContractTemplateVariable = 30,
                             Code = "Beneficiario3_Domicilio",
                             Description = "Domicilio del Beneficiario 3",
                             IsActive = true,
@@ -742,7 +726,7 @@ namespace GenericApp.Data.Migrations
                         },
                         new
                         {
-                            IdContractTemplateVariable = 33,
+                            IdContractTemplateVariable = 31,
                             Code = "Beneficiario3_FechaNacimiento",
                             Description = "Fecha de Nacimiento del Beneficiario 3",
                             IsActive = true,
@@ -751,7 +735,7 @@ namespace GenericApp.Data.Migrations
                         },
                         new
                         {
-                            IdContractTemplateVariable = 34,
+                            IdContractTemplateVariable = 32,
                             Code = "Beneficiario3_Telefono",
                             Description = "Teléfono del Beneficiario 3",
                             IsActive = true,
@@ -760,16 +744,7 @@ namespace GenericApp.Data.Migrations
                         },
                         new
                         {
-                            IdContractTemplateVariable = 35,
-                            Code = "Beneficiario3_Porcentaje",
-                            Description = "Porcentaje del Beneficiario 3",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Type = "string"
-                        },
-                        new
-                        {
-                            IdContractTemplateVariable = 36,
+                            IdContractTemplateVariable = 33,
                             Code = "Beneficiario4",
                             Description = "Beneficiario 4",
                             IsActive = true,
@@ -778,7 +753,7 @@ namespace GenericApp.Data.Migrations
                         },
                         new
                         {
-                            IdContractTemplateVariable = 37,
+                            IdContractTemplateVariable = 34,
                             Code = "Beneficiario4_Domicilio",
                             Description = "Domicilio del Beneficiario 4",
                             IsActive = true,
@@ -787,7 +762,7 @@ namespace GenericApp.Data.Migrations
                         },
                         new
                         {
-                            IdContractTemplateVariable = 38,
+                            IdContractTemplateVariable = 35,
                             Code = "Beneficiario4_FechaNacimiento",
                             Description = "Fecha de Nacimiento del Beneficiario 4",
                             IsActive = true,
@@ -796,18 +771,9 @@ namespace GenericApp.Data.Migrations
                         },
                         new
                         {
-                            IdContractTemplateVariable = 39,
+                            IdContractTemplateVariable = 36,
                             Code = "Beneficiario4_Telefono",
                             Description = "Teléfono del Beneficiario 4",
-                            IsActive = true,
-                            IsDeleted = false,
-                            Type = "string"
-                        },
-                        new
-                        {
-                            IdContractTemplateVariable = 40,
-                            Code = "Beneficiario4_Porcentaje",
-                            Description = "Porcentaje del Beneficiario 4",
                             IsActive = true,
                             IsDeleted = false,
                             Type = "string"
@@ -2120,7 +2086,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAELY7F0EoStcgpwr8Lq3Pcve7G/IEHSDeuz1baMTm8/0MwCHMj9jJWkSsvI23Zrpo7A==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEIolJZBvZf9WI9MCcqkoeSkY9BCvU6giNN+zTvevpHa0FJJBVrswEgXiw6wJ4Hdk0w==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,

@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260620220147_addContractTemplateVariablesItems")]
+    partial class addContractTemplateVariablesItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -464,8 +466,8 @@ namespace GenericApp.Data.Migrations
                         new
                         {
                             IdContractTemplateVariable = 2,
-                            Code = "fechaActualContrato",
-                            Description = "Fecha actual contrato",
+                            Code = "fechaActual",
+                            Description = "Fecha actual",
                             IsActive = true,
                             IsDeleted = false,
                             Type = "DateTime"
@@ -2120,7 +2122,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAELY7F0EoStcgpwr8Lq3Pcve7G/IEHSDeuz1baMTm8/0MwCHMj9jJWkSsvI23Zrpo7A==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEKN4i7cmGkKetc498uhuuQxgRNmegNEY9BSemCG/oeIldEI2n6pAXZyum6m64BipLQ==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,

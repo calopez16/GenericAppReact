@@ -214,6 +214,7 @@ const AlignableImage = Image.extend({
 });
 
 import { DataAPIContractTemplatesService } from '@data/ContractTemplates/Data';
+import { AVAILABLE_VARIABLES } from '@data/ContractTemplates/Variables';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 
@@ -867,9 +868,6 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
     const [validationErrors, setValidationErrors] = useState({ name: false });
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
     const [, forceUpdate] = useState(0);
-    const [availableVariables, setAvailableVariables] = useState([]);
-    const [isLoadingVariables, setIsLoadingVariables] = useState(false);
-    const [variableSearchText, setVariableSearchText] = useState('');
 
     const editor = useEditor({
         extensions: [
@@ -908,26 +906,6 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
         onTransaction: () => forceUpdate(n => n + 1),
     });
 
-    // Load variables from API when dialog opens
-    useEffect(() => {
-        if (!open) return;
-        const loadVariables = async () => {
-            setIsLoadingVariables(true);
-            try {
-                const result = await service.getVariables();
-                if (result.success && result.data) {
-                    setAvailableVariables(result.data);
-                }
-            } catch (error) {
-                console.error('Error loading variables:', error);
-                ShowMessage(t('error'), 'error');
-            } finally {
-                setIsLoadingVariables(false);
-            }
-        };
-        loadVariables();
-    }, [open]);
-
     // 1. Populate form fields when the dialog opens or the record changes.
     //    Never touches the editor here to avoid triggering onUpdate mid-state-set.
     useEffect(() => {
@@ -954,7 +932,6 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
         setValidationErrors({ name: false });
         setHasAttemptedSubmit(false);
         setIsFocused(false);
-        setVariableSearchText('');
         setTimeout(() => nameRef.current?.focus(), 120);
     }, [open, isEditing, data]);
 
@@ -979,22 +956,14 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
 
     const insertVariable = useCallback(
         (variable) => {
-            const formattedCode = `{{${variable.code}}}`;
             if (variable.type === 'image') {
-                editor?.chain().focus().insertSignatureVariable(formattedCode, variable.description).run();
+                editor?.chain().focus().insertSignatureVariable(variable.key, variable.label).run();
             } else {
-                editor?.chain().focus().insertVariable(formattedCode).run();
+                editor?.chain().focus().insertVariable(variable.key).run();
             }
         },
         [editor]
     );
-
-    const filteredVariables = availableVariables.filter(v => {
-        if (!variableSearchText.trim()) return true;
-        const searchLower = variableSearchText.toLowerCase();
-        return v.code.toLowerCase().includes(searchLower) ||
-               v.description.toLowerCase().includes(searchLower);
-    });
 
     const validateForm = () => {
         const errors = { name: !formData.name?.trim() };
@@ -1148,49 +1117,25 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                         >
                             {t('contractTemplate_variables')}
                         </Typography>
-                        {isLoadingVariables ? (
-                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-                                <CircularProgress size={20} />
-                            </Box>
-                        ) : (
-                            <>
-                                <TextField
-                                    placeholder={t('search')}
-                                    value={variableSearchText}
-                                    onChange={(e) => setVariableSearchText(e.target.value)}
-                                    fullWidth
-                                    size="small"
-                                    sx={{ mb: 1 }}
-                                    InputProps={{
-                                        sx: { fontSize: '0.85rem' }
-                                    }}
-                                />
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-                                    {filteredVariables.map((v) => (
-                                        <Tooltip key={v.code} title={`${v.code} - ${v.description}`} placement="right">
-                                            <Chip
-                                                label={v.description}
-                                                size="small"
-                                                onClick={() => insertVariable(v)}
-                                                clickable
-                                                variant="outlined"
-                                                color={v.type === 'image' ? 'secondary' : 'primary'}
-                                                icon={v.type === 'image'
-                                                    ? <GestureIcon style={{ fontSize: 14 }} />
-                                                    : <AddIcon style={{ fontSize: 14 }} />
-                                                }
-                                                sx={{ fontWeight: 500 }}
-                                            />
-                                        </Tooltip>
-                                    ))}
-                                    {filteredVariables.length === 0 && (
-                                        <Typography variant="caption" color="text.secondary" sx={{ py: 1 }}>
-                                            {t('noResultsFound')}
-                                        </Typography>
-                                    )}
-                                </Box>
-                            </>
-                        )}
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                            {AVAILABLE_VARIABLES.map((v) => (
+                                <Tooltip key={v.key} title={v.key} placement="right">
+                                    <Chip
+                                        label={v.label}
+                                        size="small"
+                                        onClick={() => insertVariable(v)}
+                                        clickable
+                                        variant="outlined"
+                                        color={v.type === 'image' ? 'secondary' : 'primary'}
+                                        icon={v.type === 'image'
+                                            ? <GestureIcon style={{ fontSize: 14 }} />
+                                            : <AddIcon style={{ fontSize: 14 }} />
+                                        }
+                                        sx={{ fontWeight: 500 }}
+                                    />
+                                </Tooltip>
+                            ))}
+                        </Box>
                     </Box>
                 </Box>
 
