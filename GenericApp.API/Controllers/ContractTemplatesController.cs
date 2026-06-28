@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using MsConfig = Microsoft.Extensions.Configuration;
 
 namespace GenericApp.API.Controllers
 {
@@ -27,12 +28,14 @@ namespace GenericApp.API.Controllers
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _env;
+        private readonly MsConfig.IConfiguration _configuration;
 
-        public ContractTemplatesController(IRepository repository, IMapper mapper, IWebHostEnvironment env)
+        public ContractTemplatesController(IRepository repository, IMapper mapper, IWebHostEnvironment env, MsConfig.IConfiguration configuration)
         {
             _repository = repository;
             _mapper = mapper;
             _env = env;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -311,6 +314,14 @@ namespace GenericApp.API.Controllers
                 company = await _repository.FirstOrDefault<Company>(
                     x => x.IdCompany == idCompany.Value && !(x.IsDeleted ?? false));
 
+            // Load contract signs associated with this template
+            var templateSigns = await _repository.FindBy<ContractTemplateContractSign>(
+                x => x.IdContractTemplate == id && x.IsActive == true && !(x.IsDeleted ?? false));
+            var signIds = templateSigns.Select(ts => ts.IdContractSign).ToList();
+            var contractSigns = signIds.Any()
+                ? await _repository.FindBy<ContractSign>(s => signIds.Contains(s.IdContractSign) && !(s.IsDeleted ?? false))
+                : new List<ContractSign>();
+
             QuestPDF.Settings.License = LicenseType.Community;
 
             // Parse the Tiptap HTML with AngleSharp
@@ -336,6 +347,13 @@ namespace GenericApp.API.Controllers
                             col.Item().Element(header => ComposeTemplateHeader(header, company, template.Name));
 
                         RenderNodes(col, body.ChildNodes);
+
+                        // Render signature section at the end
+                        if (contractSigns.Any() || true) // Always render to include employee signature space
+                        {
+                            col.Item().PaddingTop(30);
+                            RenderSignatures(col, contractSigns.ToList(), idCompany ?? 0);
+                        }
                     });
                     page.Footer().AlignCenter().Text(t =>
                     {
@@ -349,7 +367,15 @@ namespace GenericApp.API.Controllers
             });
 
             var stream = new MemoryStream();
-            pdfDocument.GeneratePdf(stream);
+            try
+            {
+                pdfDocument.GeneratePdf(stream);
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
             stream.Position = 0;
 
             var fileName = $"{SanitizeFileName(template.Name ?? "contrato")}.pdf";
@@ -405,6 +431,136 @@ namespace GenericApp.API.Controllers
                 // Bottom separator line
                 column.Item().PaddingBottom(4).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
             });
+        }
+
+        /// <summary>
+        /// Renders the signature section at the end of the document.
+        /// Distributes signatures in rows of maximum 4 using a table layout.
+        /// Always includes a reserved space for the employee signature.
+        /// Signatures are always centered regardless of quantity.
+        /// </summary>
+        private void RenderSignatures(ColumnDescriptor col, List<ContractSign> signs, int idCompany)
+        {
+            const int maxSignsPerRow = 4;
+            const float signatureAreaHeight = 60;
+
+            // Always add employee signature placeholder at the end
+            var allSignatures = new List<SignatureInfo>();
+
+            // Add existing signs
+            foreach (var sign in signs)
+            {
+                allSignatures.Add(new SignatureInfo
+                {
+                    Name = sign.Name ?? "Sin nombre",
+                    FileName = sign.SignFileName,
+                    IsEmployee = false
+                });
+            }
+
+            // Add employee signature placeholder
+            allSignatures.Add(new SignatureInfo
+            {
+                Name = "Firma del empleado",
+                FileName = "firma-default.png",
+                IsEmployee = true
+            });
+
+            // Group signatures in rows of maximum 4
+            var signatureRows = new List<List<SignatureInfo>>();
+            for (int i = 0; i < allSignatures.Count; i += maxSignsPerRow)
+            {
+                signatureRows.Add(allSignatures.Skip(i).Take(maxSignsPerRow).ToList());
+            }
+
+            var signsPath = _configuration["contractsSettings:contractsSignsPath"] ?? "Signs";
+
+            // Render using table layout for full width distribution with centered content
+            col.Item().AlignCenter().Table(table =>
+            {
+                // Define 4 equal columns
+                table.ColumnsDefinition(cd =>
+                {
+                    for (int i = 0; i < maxSignsPerRow; i++)
+                        cd.RelativeColumn();
+                });
+
+                foreach (var row in signatureRows)
+                {
+                    int signsInRow = row.Count;
+                    int emptyCellsBefore = (maxSignsPerRow - signsInRow) / 2;
+                    int emptyCellsAfter = maxSignsPerRow - signsInRow - emptyCellsBefore;
+
+                    // Add empty cells before to center the signatures
+                    for (int i = 0; i < emptyCellsBefore; i++)
+                    {
+                        table.Cell();
+                    }
+
+                    // Render each signature in the row
+                    foreach (var signInfo in row)
+                    {
+                        table.Cell().Padding(5).Column(signatureCol =>
+                        {
+                            // Image area with fixed height
+                            signatureCol.Item().AlignCenter().Height(signatureAreaHeight)
+                                .Element(container =>
+                                {
+
+                                    // Try to load the signature image
+                                    var signPath = signInfo.IsEmployee
+                                    ? Path.Combine(_env.WebRootPath, "img", signInfo.FileName)
+                                    : Path.Combine(_env.WebRootPath, "img", signsPath, idCompany.ToString(), signInfo.FileName);
+                                    if (System.IO.File.Exists(signPath))
+                                    {
+                                        // Image fills container while maintaining aspect ratio
+                                        container.AlignCenter().AlignMiddle().Image(signPath);
+                                    }
+                                    else
+                                    {
+                                        // File not found: show placeholder
+                                        container.Border(1)
+                                            .BorderColor(Colors.Grey.Lighten1)
+                                            .AlignCenter()
+                                            .AlignMiddle()
+                                            .Text("[Imagen no encontrada]")
+                                            .FontSize(7)
+                                            .FontColor(Colors.Grey.Medium);
+                                    }
+                                });
+
+                            // Horizontal line below image
+                            signatureCol.Item().PaddingTop(4).PaddingHorizontal(5)
+                                .AlignCenter()
+                                .LineHorizontal(1)
+                                .LineColor(Colors.Black);
+
+                            // Name label
+                            signatureCol.Item().PaddingTop(2)
+                                .AlignCenter()
+                                .Text(signInfo.Name)
+                                .FontSize(9)
+                                .FontColor(Colors.Black);
+                        });
+                    }
+
+                    // Add empty cells after to center the signatures
+                    for (int i = 0; i < emptyCellsAfter; i++)
+                    {
+                        table.Cell();
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// Helper class to hold signature information for rendering
+        /// </summary>
+        private class SignatureInfo
+        {
+            public string Name { get; set; } = string.Empty;
+            public string? FileName { get; set; }
+            public bool IsEmployee { get; set; }
         }
 
         private static string SanitizeFileName(string name)
