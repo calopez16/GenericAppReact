@@ -26,7 +26,7 @@ const handleResponse = async (response, isReturnData, responseType = 'json') => 
             throw new Error("Su sesión ha expirado. Por favor, inicie sesión de nuevo.");
         }
         // Intentamos leer el error como JSON, si falla (porque es blob u otro), devolvemos objeto vacío
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch((ex) => ({}));
         throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
     }
 

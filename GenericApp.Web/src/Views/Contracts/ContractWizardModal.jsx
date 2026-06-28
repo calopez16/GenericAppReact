@@ -42,7 +42,7 @@ import { DataAPIEmployeesService } from '@data/Employees/Data';
 import { DataAPIContractTemplatesService } from '@data/ContractTemplates/Data';
 import { DataAPIContractsService } from '@data/Contracts/Data';
 import { ShowMessage } from '@helpers/NotificationService';
-import SignaturePadModal from '@views/Contracts/SignaturePadModal';
+import SignaturePadModal from '@/Components/SignaturePadModal';
 
 const CACHE_KEY_SELECTED_TEMPLATES = 'contracts_wizard_selected_templates';
 const CACHE_KEY_SHOW_PREVIEW = 'contracts_wizard_show_preview';
@@ -793,6 +793,7 @@ const ContractWizardModal = ({ open, onClose, onComplete }) => {
             open={isSignatureModalOpen}
             onClose={() => setIsSignatureModalOpen(false)}
             onSave={handleSignatureSave}
+            autoStart={true}
         />
         </>
     );

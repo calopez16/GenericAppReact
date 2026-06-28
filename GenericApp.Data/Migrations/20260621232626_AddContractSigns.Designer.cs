@@ -4,6 +4,7 @@ using GenericApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenericApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260621232626_AddContractSigns")]
+    partial class AddContractSigns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -382,12 +384,6 @@ namespace GenericApp.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdContractSign"), 1L, 1);
 
-                    b.Property<int?>("IdCompany")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("IdCompanyNavigationIdCompany")
-                        .HasColumnType("int");
-
                     b.Property<bool?>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -408,8 +404,6 @@ namespace GenericApp.Data.Migrations
                         .HasColumnType("nvarchar(250)");
 
                     b.HasKey("IdContractSign");
-
-                    b.HasIndex("IdCompanyNavigationIdCompany");
 
                     b.ToTable("ContractSigns");
                 });
@@ -2193,7 +2187,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEHXxi/mgt+6RlptkDmaKr7UOVlrwru3Q68nuwshLIumd80BM7xcsXW7aWiPowgnuXQ==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEALEDyqJ68CNqjqz/kLoDldUIT9AnmnaviMYziv2vgjrfnpCJupqFRtHUeonDIuq1w==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
@@ -2334,15 +2328,6 @@ namespace GenericApp.Data.Migrations
                         .HasForeignKey("IdCompany")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("IdCompanyNavigation");
-                });
-
-            modelBuilder.Entity("GenericApp.Data.Models.ContractSign", b =>
-                {
-                    b.HasOne("GenericApp.Data.Models.Company", "IdCompanyNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdCompanyNavigationIdCompany");
 
                     b.Navigation("IdCompanyNavigation");
                 });

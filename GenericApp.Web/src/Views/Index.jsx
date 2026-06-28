@@ -18,6 +18,7 @@ const Parameters = lazy(() => import('@views/Parameters'));
 const ConfigurationPage = lazy(() => import('@views/Configuration'));
 const UnathorizePage = lazy(() => import('@views/Pages/Unauthorized'));
 const ContractTemplatesPage = lazy(() => import('@views/ContractTemplates/Index'));
+const ContractSignsPage = lazy(() => import('@views/ContractSigns/Index'));
 const EmployeesPage = lazy(() => import('@views/Employees/Index'));
 const ContractsPage = lazy(() => import('@views/Contracts/Index'));
 
@@ -44,6 +45,7 @@ function App() {
                 <Route path="/labels" element={<LabelsPage />} />
                 <Route path="/trailerboxtypes" element={<TrailerBoxTypesPage />} />
                 <Route path="/contract-templates" element={<ContractTemplatesPage />} />
+                <Route path="/contract-signs" element={<ContractSignsPage />} />
                 <Route path="/employees" element={<EmployeesPage />} />
                 <Route path="/contracts" element={<ContractsPage />} />
                 <Route path="/unauthorized" element={<UnathorizePage />} />

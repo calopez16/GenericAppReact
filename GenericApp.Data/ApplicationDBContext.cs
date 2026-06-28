@@ -16,7 +16,9 @@ namespace GenericApp.Data
 
         public DbSet<ApplicationLog> ApplicationLogs { get; set; }
         public DbSet<City> Cities { get; set; }
+        public DbSet<ContractSign> ContractSigns { get; set; }
         public DbSet<ContractTemplate> ContractTemplates { get; set; }
+        public DbSet<ContractTemplateContractSign> ContractTemplateContractSigns { get; set; }
         public DbSet<ContractTemplateVariable> ContractTemplateVariables { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<Company> Companies { get; set; }
@@ -122,7 +124,14 @@ namespace GenericApp.Data
                       .HasForeignKey(s => s.IdState)
                       .OnDelete(DeleteBehavior.Restrict);
             });
-
+            modelBuilder.Entity<ContractSign>(b =>
+            {
+                b.HasKey(x => x.IdContractSign);
+                b.Property(x => x.Name).HasMaxLength(150).IsRequired();
+                b.Property(x => x.SignFileName).HasMaxLength(250);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+            });
             modelBuilder.Entity<ContractTemplate>(b =>
             {
                 b.HasKey(x => x.IdTemplate);
@@ -134,6 +143,23 @@ namespace GenericApp.Data
                 b.HasOne(ct => ct.IdCompanyNavigation)
                     .WithMany()
                     .HasForeignKey(x => x.IdCompany)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<ContractTemplateContractSign>(b =>
+            {
+                b.HasKey(x => x.IdContractTemplateContractSign);
+                b.Property(x => x.IsActive).HasDefaultValue(true);
+                b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(ctcs => ctcs.IdContractSignNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdContractSign)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(ctcs => ctcs.IdContractTemplateNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdContractTemplate)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

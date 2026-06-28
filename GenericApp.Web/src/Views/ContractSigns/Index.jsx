@@ -17,28 +17,28 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
-import ArticleIcon from '@mui/icons-material/Article';
-import CloseIcon from '@mui/icons-material/Close';
 import DrawIcon from '@mui/icons-material/Draw';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CloseIcon from '@mui/icons-material/Close';
 import { AppContext } from '@helpers/AppContext';
-import { DataAPIContractTemplatesService } from '@data/ContractTemplates/Data';
+import { DataAPIContractSignsService } from '@data/ContractSigns/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import ConfirmationModal from '@layout/ConfirmationModal';
-import ContractTemplateFormModal from '@views/ContractTemplates/ContractTemplateFormModal';
-import ContractTemplateCardList from '@views/ContractTemplates/ContractTemplateCardList';
-import ContractTemplateTableList from '@views/ContractTemplates/ContractTemplateTableList';
+import ContractSignFormModal from '@views/ContractSigns/ContractSignFormModal';
+import ContractSignCardList from '@views/ContractSigns/ContractSignCardList';
+import ContractSignTableList from '@views/ContractSigns/ContractSignTableList';
 
-function ContractTemplatesIndex() {
+function ContractSignsIndex() {
     const { t } = useTranslation();
     const { companySelected } = useContext(AppContext);
-    const templateDataService = DataAPIContractTemplatesService();
+    const signDataService = DataAPIContractSignsService();
     const navigate = useNavigate();
 
-    const [templates, setTemplates] = useState([]);
+    const [signs, setSigns] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
-    const [totalTemplates, setTotalTemplates] = useState(0);
+    const [totalSigns, setTotalSigns] = useState(0);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
@@ -47,19 +47,14 @@ function ContractTemplatesIndex() {
 
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedTemplate, setSelectedTemplate] = useState(null);
+    const [selectedSign, setSelectedSign] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
-    const [templateToDelete, setTemplateToDelete] = useState(null);
+    const [signToDelete, setSignToDelete] = useState(null);
 
     const [deletingId, setDeletingId] = useState(null);
     const ANIMATION_DURATION = 500;
-
-    const [isPdfLoading, setIsPdfLoading] = useState(false);
-
-    const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
-    const [selectedTemplateForSignature, setSelectedTemplateForSignature] = useState(null);
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
@@ -72,20 +67,26 @@ function ContractTemplatesIndex() {
     }, [searchTerm]);
 
     useEffect(() => {
-        const loadTemplates = async () => {
+        const loadSigns = async () => {
+            if (!companySelected?.idCompany) return;
+
             try {
                 setLoading(true);
-                const response = await templateDataService.getDataPagination(page + 1, rowsPerPage, debouncedSearchTerm);
-                setTemplates(response.data.data);
-                setTotalTemplates(response.data.totalCount);
+                const response = await signDataService.getDataPagination(
+                    page + 1, 
+                    rowsPerPage, 
+                    debouncedSearchTerm + `&idCompany=${companySelected.idCompany}`
+                );
+                setSigns(response.data.data);
+                setTotalSigns(response.data.totalCount);
             } catch (error) {
-                console.error('Error loading contract templates:', error);
+                console.error('Error loading contract signs:', error);
             } finally {
                 setLoading(false);
             }
         };
-        loadTemplates();
-    }, [page, rowsPerPage, debouncedSearchTerm]);
+        loadSigns();
+    }, [page, rowsPerPage, debouncedSearchTerm, companySelected?.idCompany]);
 
     const handlePageChange = (event, newPage) => setPage(newPage);
 
@@ -114,48 +115,48 @@ function ContractTemplatesIndex() {
         if (searchTerm === '') setIsSearchExpanded(false);
     };
 
-    const handleToggleTemplateStatus = async (template) => {
-        const isActiveNow = template.isActive;
+    const handleToggleSignStatus = async (sign) => {
+        const isActiveNow = sign.isActive;
         try {
             let dataResult;
             if (isActiveNow) {
-                dataResult = await templateDataService.disableData(template.idTemplate);
+                dataResult = await signDataService.disableData(sign.idContractSign);
                 if (dataResult.success) ShowMessage(t('recordDisabled'), 'success');
             } else {
-                dataResult = await templateDataService.enableData(template.idTemplate);
+                dataResult = await signDataService.enableData(sign.idContractSign);
                 if (dataResult.success) ShowMessage(t('recordEnabled'), 'success');
             }
             if (dataResult.success) {
-                setTemplates(prev =>
+                setSigns(prev =>
                     prev.map(item =>
-                        item.idTemplate === template.idTemplate ? { ...item, isActive: !isActiveNow } : item
+                        item.idContractSign === sign.idContractSign ? { ...item, isActive: !isActiveNow } : item
                     )
                 );
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
-            console.error('Error toggling template status:', error);
+            console.error('Error toggling sign status:', error);
         }
     };
 
-    const handleOpenDeleteConfirmation = (template) => {
-        setTemplateToDelete(template);
+    const handleOpenDeleteConfirmation = (sign) => {
+        setSignToDelete(sign);
         setIsConfirmDeleteModalOpen(true);
     };
 
-    const handleDeleteTemplate = async () => {
+    const handleDeleteSign = async () => {
         setIsConfirmDeleteModalOpen(false);
-        if (!templateToDelete) return;
+        if (!signToDelete) return;
 
-        const idToDelete = templateToDelete.idTemplate;
+        const idToDelete = signToDelete.idContractSign;
         try {
             setDeletingId(idToDelete);
-            const dataResult = await templateDataService.deleteData(idToDelete);
+            const dataResult = await signDataService.deleteData(idToDelete);
 
             if (dataResult.success) {
                 ShowMessage(t('recordDeleted'), 'success');
                 setTimeout(() => {
-                    setTemplates(prev => prev.filter(item => item.idTemplate !== idToDelete));
+                    setSigns(prev => prev.filter(item => item.idContractSign !== idToDelete));
                     setDeletingId(null);
                     setPage(0);
                 }, ANIMATION_DURATION);
@@ -165,26 +166,26 @@ function ContractTemplatesIndex() {
             }
         } catch (error) {
             ShowMessage(t('error'), 'error');
-            console.error('Error deleting contract template:', error);
+            console.error('Error deleting contract sign:', error);
             setDeletingId(null);
         } finally {
-            setTemplateToDelete(null);
+            setSignToDelete(null);
         }
     };
 
     const handleCloseDeleteConfirmation = () => {
         setIsConfirmDeleteModalOpen(false);
-        setTemplateToDelete(null);
+        setSignToDelete(null);
     };
 
-    const handleOpenAddTemplate = () => {
-        setSelectedTemplate(null);
+    const handleOpenAddSign = () => {
+        setSelectedSign(null);
         setIsEditing(false);
         setIsModalOpen(true);
     };
 
-    const handleOpenEditTemplate = (template) => {
-        setSelectedTemplate(template);
+    const handleOpenEditSign = (sign) => {
+        setSelectedSign(sign);
         setIsEditing(true);
         setIsModalOpen(true);
     };
@@ -193,44 +194,14 @@ function ContractTemplatesIndex() {
         setIsModalOpen(false);
     };
 
-    const handleOpenPdf = async (template) => {
-        try {
-            setIsPdfLoading(true);
-            ShowMessage(t('generatingPdf'), 'info');
-            const response = await templateDataService.getPdfById(template.idTemplate, companySelected?.idCompany);
-            const fileData = response.data ? response.data : response;
-            const blob = new Blob([fileData], { type: 'application/pdf' });
-            const pdfUrl = window.URL.createObjectURL(blob);
-            window.open(pdfUrl, '_blank');
-        } catch (error) {
-            ShowMessage(t('error'), 'error');
-            console.error('Error generating contract template PDF:', error);
-        } finally {
-            setIsPdfLoading(false);
-        }
-    };
-
-    const handleOpenSignature = (template) => {
-        setSelectedTemplateForSignature(template);
-        setIsSignatureModalOpen(true);
-    };
-
-    const handleSignatureSave = ({ base64, sigString }) => {
-        console.log('Firma guardada para plantilla:', selectedTemplateForSignature?.name, { base64, sigString });
-        setIsSignatureModalOpen(false);
-        setSelectedTemplateForSignature(null);
-    };
-
     const commonListProps = {
-        templates,
-        loading: loading || isPdfLoading,
+        signs,
+        loading,
         t,
-        handleOpenEditTemplate,
-        handleToggleTemplateStatus,
+        handleOpenEditSign,
+        handleToggleSignStatus,
         handleOpenDeleteConfirmation,
-        handleOpenPreview: handleOpenPdf,
-        handleOpenSignature,
-        setSelectedTemplate,
+        setSelectedSign,
         deletingId,
         isSearch: searchTerm !== '',
         rowsPerPage
@@ -256,14 +227,14 @@ function ContractTemplatesIndex() {
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 45, height: 45, borderRadius: 2 }}>
-                        <ArticleIcon />
+                        <DrawIcon />
                     </Avatar>
                     <Box>
                         <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-                            {t('contractTemplates')}
+                            {t('contractSigns')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                            {t('contractTemplates_description')}
+                            {t('contractSigns_description')}
                         </Typography>
                     </Box>
                 </Box>
@@ -326,22 +297,19 @@ function ContractTemplatesIndex() {
                             />
                         </Box>
                     </ClickAwayListener>
-
-                   
                     <Button
-                        onClick={() => navigate('/contract-signs')}
+                        onClick={() => navigate('/contract-templates')}
                         variant="contained"
-                        disableElevation
-                        endIcon={<DrawIcon />}
+                        startIcon={<ArrowBackIcon />}
                         sx={{ whiteSpace: 'nowrap', ml: 1 }}
                     >
-                        {t('manageSignatures')}
+                        {t('return')}
                     </Button>
                     <Button
                         variant="contained"
                         disableElevation
-                        endIcon={<AddIcon />}
-                        onClick={handleOpenAddTemplate}
+                        startIcon={<AddIcon />}
+                        onClick={handleOpenAddSign}
                         sx={{ whiteSpace: 'nowrap', ml: 1 }}
                     >
                         {t('add')}
@@ -352,14 +320,14 @@ function ContractTemplatesIndex() {
             {loading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
 
             {isSmallScreen
-                ? <ContractTemplateCardList {...commonListProps} />
-                : <ContractTemplateTableList {...commonListProps} />
+                ? <ContractSignCardList {...commonListProps} />
+                : <ContractSignTableList {...commonListProps} />
             }
 
             <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
-                count={totalTemplates}
+                count={totalSigns}
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={handlePageChange}
@@ -370,27 +338,26 @@ function ContractTemplatesIndex() {
                 }
             />
 
-            <ContractTemplateFormModal
+            <ContractSignFormModal
                 open={isModalOpen}
                 handleClose={handleCloseModal}
-                data={selectedTemplate}
+                data={selectedSign}
                 isEditing={isEditing}
-                setData={setTemplates}
+                setData={setSigns}
             />
 
             <ConfirmationModal
                 open={isConfirmDeleteModalOpen}
                 onClose={handleCloseDeleteConfirmation}
-                onConfirm={handleDeleteTemplate}
-                title={t('contractTemplate_delete')}
-                message={t('question_areYouSureDeleteContractTemplate', { templateName: templateToDelete?.name || '' })}
+                onConfirm={handleDeleteSign}
+                title={t('contractSign_delete')}
+                message={t('question_areYouSureDeleteContractSign', { signName: signToDelete?.name || '' })}
                 confirmText={t('delete')}
                 cancelText={t('cancel')}
                 type="danger"
             />
-                      
         </Box>
     );
 }
 
-export default ContractTemplatesIndex;
+export default ContractSignsIndex;

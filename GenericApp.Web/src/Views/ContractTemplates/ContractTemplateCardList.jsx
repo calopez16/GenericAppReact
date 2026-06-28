@@ -58,16 +58,7 @@ const ContractTemplateCardList = ({
                             >
                                 <VisibilityIcon fontSize="small" />
                             </IconButton>
-                        </Tooltip>
-                        <Tooltip title={t('signatureTopaz') || 'Firma Topaz'}>
-                            <IconButton
-                                onClick={() => handleOpenSignature(template)}
-                                disabled={isDeleting}
-                                sx={{ color: 'white', bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark' }, p: 1 }}
-                            >
-                                <DrawIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
+                        </Tooltip>                      
                         <Tooltip title={t('edit')}>
                             <IconButton
                                 onClick={() => handleOpenEditTemplate(template)}

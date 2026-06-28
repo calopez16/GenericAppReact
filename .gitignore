@@ -392,3 +392,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+wwwroot/contratos
+wwwroot/img/signs
+wwwroot/img/logos

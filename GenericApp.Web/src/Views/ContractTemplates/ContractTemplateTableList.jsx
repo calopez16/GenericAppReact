@@ -17,7 +17,6 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import DrawIcon from '@mui/icons-material/Draw';
 import EmptyData from '@layout/EmptyData';
 
 const ANIMATION_DURATION = 500;
@@ -71,7 +70,6 @@ const ContractTemplateTableList = ({
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('name')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('description')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold', width: 80 }} align="center">{t('contractTemplate_preview_col')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', width: 60 }} align="center">{t('signature') || 'Firma'}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold', width: 160 }} align="center">{t('actions')}</TableCell>
                     </TableRow>
                 </TableHead>
@@ -147,18 +145,7 @@ const ContractTemplateTableList = ({
                                                 </IconButton>
                                             </Tooltip>
                                         </TableCell>
-                                        <TableCell align="center">
-                                            <Tooltip title={t('signatureTopaz') || 'Firma Topaz'}>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => handleOpenSignature(template)}
-                                                    disabled={isDeleting}
-                                                    sx={{ color: 'white', bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark' } }}
-                                                >
-                                                    <DrawIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </TableCell>
+                                       
                                         <TableCell align="center">
                                             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
                                                 <Tooltip title={t('edit')}>

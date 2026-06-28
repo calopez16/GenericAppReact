@@ -15,26 +15,27 @@ import CloseIcon from '@mui/icons-material/Close';
 import DrawIcon from '@mui/icons-material/Draw';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SaveIcon from '@mui/icons-material/Save';
-import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { useTranslation } from 'react-i18next';
 
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 150;
 
-function SignaturePadModal({ open, onClose, onSave }) {
+function SignaturePadModal({ open, onClose, onSave, autoStart = false }) {
     const { t } = useTranslation();
     const canvasRef = useRef(null);
-    // timerRef guarda el interval devuelto por SetTabletState(1, ctx)
     const timerRef = useRef(null);
 
     const [padActive, setPadActive] = useState(false);
     const [sigwebReady, setSigwebReady] = useState(false);
     const [error, setError] = useState('');
+    const autoStarted = useRef(false);
 
-    // Al abrir el modal: verificar disponibilidad de SigWeb y limpiar estado
     useEffect(() => {
-        if (!open) return;
+        if (!open) {
+            autoStarted.current = false;
+            return;
+        }
 
         setError('');
         setPadActive(false);
@@ -46,15 +47,23 @@ function SignaturePadModal({ open, onClose, onSave }) {
         if (!installed) {
             setError(
                 t('sigweb_notAvailable') ||
-                'SigWeb no está disponible. Verifique que el servicio está instalado y ejecutándose en https://localhost:47290/SigWeb/'
+                'SigWeb no está disponible. Verifique que el servicio esté instalado y ejecutándose en https://localhost:47290/SigWeb/'
             );
             setSigwebReady(false);
         } else {
             setSigwebReady(true);
         }
-    }, [open]);
+    }, [open, t]);
 
-    // Cleanup: apagar el pad si el modal se desmonta mientras está activo
+    useEffect(() => {
+        if (open && sigwebReady && autoStart && !autoStarted.current) {
+            autoStarted.current = true;
+            setTimeout(() => {
+                startPad();
+            }, 100);
+        }
+    }, [open, sigwebReady, autoStart]);
+
     useEffect(() => {
         return () => {
             if (timerRef.current !== null) {
@@ -71,23 +80,19 @@ function SignaturePadModal({ open, onClose, onSave }) {
         const canvas = canvasRef.current;
         const ctx2d = canvas.getContext('2d');
 
-        // Limpiar historial anterior antes de iniciar una nueva captura
         window.ClearTablet();
         window.NumPointsLastTime = 0;
         ctx2d.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Configurar tamaño de imagen de captura igual al canvas
         window.SetImageXSize(CANVAS_WIDTH);
         window.SetImageYSize(CANVAS_HEIGHT);
 
-        // Retorna el timer del setInterval interno de SigWebRefresh
         const timer = window.SetTabletState(1, ctx2d);
         timerRef.current = timer;
         setPadActive(true);
     };
 
     const stopPad = () => {
-        // SetTabletState(0, timer) hace clearInterval del timer devuelto al activar
         window.SetTabletState(0, timerRef.current);
         timerRef.current = null;
         setPadActive(false);
@@ -96,16 +101,9 @@ function SignaturePadModal({ open, onClose, onSave }) {
     const clearSignature = () => {
         if (!padActive) return;
 
-        // ClearTablet() llama al endpoint ClearSignature ? borra todos los
-        // puntos de la firma de la memoria del servicio SigWeb.
-        // ClearSigWindow(1) solo limpia la visualización, no los datos.
         window.ClearTablet();
-
-        // Resetear el contador global del SDK para que SigWebRefresh detecte
-        // el cambio (0 puntos) y dibuje el canvas vacío en el próximo tick.
         window.NumPointsLastTime = 0;
 
-        // Limpiar el canvas de React de forma inmediata sin esperar al refresh
         const canvas = canvasRef.current;
         if (canvas) {
             canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
@@ -124,18 +122,16 @@ function SignaturePadModal({ open, onClose, onSave }) {
 
         setError('');
 
-        // Detener el pad antes de capturar la imagen final
         if (padActive) stopPad();
 
-        // Configurar tamaño de imagen de salida y obtener en base64
         window.SetImageXSize(CANVAS_WIDTH);
         window.SetImageYSize(CANVAS_HEIGHT);
 
         window.GetSigImageB64((base64Image) => {
             const sigString = window.GetSigString ? window.GetSigString() : null;
             onSave?.({ base64: base64Image, sigString });
-            onClose();
         });
+        handleClose();
     };
 
     const handleClose = () => {
@@ -186,7 +182,6 @@ function SignaturePadModal({ open, onClose, onSave }) {
                 )}
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                    {/* Canvas donde SigWebRefresh dibujará en tiempo real */}
                     <canvas
                         ref={canvasRef}
                         width={CANVAS_WIDTH}
@@ -202,40 +197,19 @@ function SignaturePadModal({ open, onClose, onSave }) {
                             display: 'block',
                         }}
                     />
-
-                    <Typography variant="caption" color="text.secondary">
-                        {padActive
-                            ? (t('sigweb_instruction') || 'Firme en el pad Topaz. La firma aparecerá en tiempo real.')
-                            : (t('sigweb_instructionIdle') || 'Presione "Encender Pad" para iniciar la captura.')}
-                    </Typography>
-
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <Button
-                            variant={padActive ? 'contained' : 'outlined'}
-                            color={padActive ? 'error' : 'primary'}
-                            startIcon={<PowerSettingsNewIcon />}
-                            onClick={padActive ? stopPad : startPad}
-                            disabled={!sigwebReady}
-                        >
-                            {padActive
-                                ? (t('sigweb_stopPad') || 'Apagar Pad')
-                                : (t('sigweb_startPad') || 'Encender Pad')}
-                        </Button>
-
-                        <Button
-                            variant="outlined"
-                            color="secondary"
-                            startIcon={<DeleteOutlineIcon />}
-                            onClick={clearSignature}
-                            disabled={!padActive}
-                        >
-                            {t('sigweb_clear') || 'Limpiar'}
-                        </Button>
-                    </Box>
                 </Box>
             </DialogContent>
 
             <DialogActions sx={{ px: 3, py: 2 }}>
+                <Button
+                    variant="outlined"
+                    color="secondary"
+                    startIcon={<DeleteOutlineIcon />}
+                    onClick={clearSignature}
+                    disabled={!padActive}
+                >
+                    {t('sigweb_clear') || 'Limpiar'}
+                </Button>
                 <Button onClick={handleClose} startIcon={<CloseIcon />}>
                     {t('cancel') || 'Cancelar'}
                 </Button>

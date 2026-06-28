@@ -25,6 +25,8 @@ namespace GenericApp.API.Utility
             CreateMap<EmployeeEmergencyContact, EmployeeEmergencyContactDTO>().ReverseMap();
             CreateMap<EmployeeRelationshipType, EmployeeRelationshipTypeDTO>().ReverseMap();
             CreateMap<Contract, ContractDTO>().ReverseMap();
+            CreateMap<ContractSign, ContractSignDTO>().ReverseMap();
+            CreateMap<ContractTemplateContractSign, ContractTemplateContractSignDTO>().ReverseMap();
         }
     }
 }

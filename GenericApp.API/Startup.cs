@@ -118,7 +118,6 @@ namespace GenericApp
             {
                 // RequestPath: La URL que usará React para acceder (e.g., /api/img/logo.png)
                 RequestPath = "/img",
-
                 // FileProvider: La ubicación física de los archivos.
                 FileProvider = new PhysicalFileProvider(
                     // Combina la ruta base de 'wwwroot' con la subcarpeta 'img'

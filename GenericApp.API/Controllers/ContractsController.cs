@@ -1,7 +1,4 @@
 ﻿using AngleSharp;
-using AngleSharp;
-using AngleSharp.Common;
-using AngleSharp.Html.Dom;
 using AutoMapper;
 using GenericApp.API.Constants;
 using GenericApp.API.Models;
@@ -10,13 +7,13 @@ using GenericApp.Data.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Storage;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using AsDom = AngleSharp.Dom;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace GenericApp.API.Controllers
 {
@@ -32,12 +29,14 @@ namespace GenericApp.API.Controllers
         private readonly IRepository _repository;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _env;
+        private readonly IConfiguration _configuration;
 
-        public ContractsController(IRepository repository, IMapper mapper, IWebHostEnvironment env)
+        public ContractsController(IRepository repository, IMapper mapper, IWebHostEnvironment env, IConfiguration configuration)
         {
             _repository = repository;
             _mapper = mapper;
             _env = env;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -135,7 +134,7 @@ namespace GenericApp.API.Controllers
                 var processedTemplates = new List<(ContractTemplate Template, string ProcessedContent)>();
                 foreach (var template in templates)
                 {
-                    var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company);
+                    var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company, model.SignatureBase64);
                     processedTemplates.Add((template, contentWithData));
                 }
 
@@ -152,26 +151,25 @@ namespace GenericApp.API.Controllers
 
                         page.Content().Column(col =>
                         {
-                            if (company != null)
-                            {
-                                col.Item().Element(header => ComposeContractHeader(header, company, employee));
-                                col.Item().PaddingBottom(10);
-                            }
+                            bool isFirstTemplate = true;
 
                             foreach (var (template, processedContent) in processedTemplates)
                             {
-                                if (processedTemplates.IndexOf((template, processedContent)) > 0)
+                                if (!isFirstTemplate)
                                 {
                                     col.Item().PageBreak();
-                                    if (company != null)
-                                    {
-                                        col.Item().Element(header => ComposeContractHeader(header, company, employee));
-                                        col.Item().PaddingBottom(10);
-                                    }
+                                }
+
+                                if (company != null && (template.IsHeaderEnable ?? false))
+                                {
+                                    col.Item().Element(header => ComposeContractHeader(header, company, employee));
+                                    col.Item().PaddingBottom(10);
                                 }
 
                                 col.Item().Text(template.Name ?? "").FontSize(16).Bold().FontColor(Colors.Black);
                                 col.Item().PaddingBottom(8);
+
+                                isFirstTemplate = false;
 
                                 var config = Configuration.Default;
                                 var context = BrowsingContext.New(config);
@@ -179,23 +177,6 @@ namespace GenericApp.API.Controllers
                                 var body = document.Body!;
 
                                 RenderNodes(col, body.ChildNodes);
-                            }
-
-                            if (!string.IsNullOrEmpty(model.SignatureBase64))
-                            {
-                                col.Item().PaddingTop(20);
-                                col.Item().Text("Firma:").FontSize(12).Bold();
-                                col.Item().PaddingTop(5);
-
-                                try
-                                {
-                                    var signatureBytes = Convert.FromBase64String(model.SignatureBase64);
-                                    col.Item().MaxWidth(300).Image(signatureBytes);
-                                }
-                                catch
-                                {
-                                    col.Item().Text("(Firma digital capturada)").FontSize(10).Italic();
-                                }
                             }
                         });
 
@@ -212,6 +193,8 @@ namespace GenericApp.API.Controllers
 
                 pdfDocument.GeneratePdf(filePath);
 
+                var contractFolderVirtualPath = _configuration["contractsSettings:contractsPath"] ?? "/contratos";
+
                 var contract = new Contract
                 {
                     IdEmployee = model.IdEmployee,
@@ -219,7 +202,7 @@ namespace GenericApp.API.Controllers
                     CreateDate = DateTime.Now,
                     SignatureDate = DateTime.Now,
                     DocumentName = documentName,
-                    VirtualPath = $"/contratos/{documentName}",
+                    VirtualPath = $"/{contractFolderVirtualPath}/{documentName}",
                     IsActive = true,
                     IsDeleted = false
                 };
@@ -277,7 +260,7 @@ namespace GenericApp.API.Controllers
                 var processedTemplates = new List<(ContractTemplate Template, string ProcessedContent)>();
                 foreach (var template in templates)
                 {
-                    var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company);
+                    var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company, null);
                     processedTemplates.Add((template, contentWithData));
                 }
 
@@ -288,34 +271,33 @@ namespace GenericApp.API.Controllers
                     container.Page(page =>
                     {
                         page.Size(PageSizes.Letter);
-                        page.MarginTop(1, Unit.Centimetre);
-                        page.MarginBottom(2, Unit.Centimetre);
-                        page.MarginLeft(2.5f, Unit.Centimetre);
-                        page.MarginRight(2.5f, Unit.Centimetre);
-                        page.DefaultTextStyle(x => x.FontSize(11).FontFamily(Fonts.Lato));
+                        page.MarginTop(1.5f, Unit.Centimetre);
+                        page.MarginBottom(1.5f, Unit.Centimetre);
+                        page.MarginLeft(2f, Unit.Centimetre);
+                        page.MarginRight(2f, Unit.Centimetre);
+                        //page.DefaultTextStyle(x => x.FontSize(11).FontFamily(Fonts.Lato));
 
                         page.Content().Column(col =>
                         {
-                            if (company != null)
-                            {
-                                col.Item().Element(header => ComposeContractHeader(header, company, employee));
-                                col.Item().PaddingBottom(10);
-                            }
+                            bool isFirstTemplate = true;
 
                             foreach (var (template, processedContent) in processedTemplates)
                             {
-                                if (processedTemplates.IndexOf((template, processedContent)) > 0)
+                                if (!isFirstTemplate)
                                 {
                                     col.Item().PageBreak();
-                                    if (company != null)
-                                    {
-                                        col.Item().Element(header => ComposeContractHeader(header, company, employee));
-                                        col.Item().PaddingBottom(10);
-                                    }
                                 }
 
-                                col.Item().Text(template.Name ?? "").FontSize(16).Bold().FontColor(Colors.Black);
+                                if (company != null && (template.IsHeaderEnable ?? false))
+                                {
+                                    col.Item().Element(header => ComposeContractHeader(header, company, employee));
+                                    col.Item().PaddingBottom(10);
+                                }
+
+                                //col.Item().Text(template.Name ?? "").FontSize(16).Bold().FontColor(Colors.Black);
                                 col.Item().PaddingBottom(8);
+
+                                isFirstTemplate = false;
 
                                 var config = Configuration.Default;
                                 var context = BrowsingContext.New(config);
@@ -350,7 +332,7 @@ namespace GenericApp.API.Controllers
             }
         }
 
-        private async Task<string> ReplaceVariables(string htmlContent, Employee employee, Company? company)
+        private async Task<string> ReplaceVariables(string htmlContent, Employee employee, Company? company, string? signatureBase64 = null)
         {
             var contractTemplateVariables = await _repository.FindBy<ContractTemplateVariable>(x => (x.IsActive ?? false) && !(x.IsDeleted ?? false));
 
@@ -364,16 +346,21 @@ namespace GenericApp.API.Controllers
                 if (string.IsNullOrEmpty(variable.Code))
                     continue;
 
-                var pattern = $@"{{{{\s*{Regex.Escape(variable.Code)}\s*}}}}";
-                var replacement = GetVariableValue(variable, employee, company);
+                var replacement = GetVariableValue(variable, employee, company, signatureBase64);
 
-                result = Regex.Replace(result, pattern, replacement, RegexOptions.IgnoreCase);
+                // Pattern 1: Match the full <span> element with tiptap-variable class
+                var spanPattern = $@"<span[^>]*data-variable=""{{{{{Regex.Escape(variable.Code)}}}}}""[^>]*>.*?</span>";
+                result = Regex.Replace(result, spanPattern, replacement, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                // Pattern 2: Match standalone variable (fallback for variables not wrapped in span)
+                var simplePattern = $@"{{{{\s*{Regex.Escape(variable.Code)}\s*}}}}";
+                result = Regex.Replace(result, simplePattern, replacement, RegexOptions.IgnoreCase);
             }
 
             return result;
         }
 
-        private string GetVariableValue(ContractTemplateVariable variable, Employee employee, Company? company)
+        private string GetVariableValue(ContractTemplateVariable variable, Employee employee, Company? company, string? signatureBase64 = null)
         {
             var type = variable.Type?.ToLower() ?? "";
             var code = variable.Code?.ToLower() ?? "";
@@ -425,6 +412,11 @@ namespace GenericApp.API.Controllers
                 case nameof(ContractTemplateVariablesEnum.fechaActualFormatoLargo):
                     return fechaActual.ToString("dddd, d 'de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
                 case nameof(ContractTemplateVariablesEnum.firmaContrato):
+                    if (!string.IsNullOrEmpty(signatureBase64))
+                    {
+                        // Retornar la imagen como HTML embebido con data URI dentro de un párrafo
+                        return $"<p style=\"text-align: center;\"><img src=\"data:image/png;base64,{signatureBase64}\" alt=\"Firma\" width=\"265\" height=\"102\" /></p>";
+                    }
                     return "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1):
                     return employee.Beneficiaries?.ElementAtOrDefault(0)?.Name ?? "";
