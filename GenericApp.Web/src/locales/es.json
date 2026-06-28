@@ -91,6 +91,7 @@
   "contractTemplate_toolbar_rowHeightAuto": "Auto",
   "contractTemplate_toolbar_underline": "Subrayado",
   "contractTemplate_enablePrintHeader": "Habilitar encabezado de impresión",
+  "contractTemplate_signs": "Firmas",
   "contractTemplate_variables": "Insertar variable",
   "employees": "Empleados",
   "employees_description": "Módulo para administrar los empleados de la compañía",
@@ -565,5 +566,15 @@
   "sigweb_instructionIdle": "La captura se iniciará automáticamente.",
   "sigweb_noSignature": "Por favor, firme en el pad antes de guardar.",
   "sigweb_clear": "Limpiar",
-  "signatureTopaz": "Firma"
+  "signatureTopaz": "Firma",
+  "cropImage": "Recortar Imagen",
+  "rotation": "Rotación",
+  "zoom": "Zoom",
+  "cropWidth": "Ancho",
+  "cropHeight": "Alto",
+  "crop": "Recortar",
+  "cropSize": "Tamaño del recorte",
+  "resetView": "Ajustar",
+  "cropInstructions": "Arrastra la imagen para posicionarla. Ajusta el zoom y las dimensiones del área de recorte.",
+  "cropInstructionsDynamic": "Arrastra la imagen de fondo para posicionarla. Arrastra el área de recorte para moverla. Usa las esquinas y bordes para redimensionar."
 }

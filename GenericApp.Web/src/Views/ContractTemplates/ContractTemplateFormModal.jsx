@@ -214,6 +214,7 @@ const AlignableImage = Image.extend({
 });
 
 import { DataAPIContractTemplatesService } from '@data/ContractTemplates/Data';
+import { DataAPIContractSignsService } from '@data/ContractSigns/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 
@@ -850,6 +851,7 @@ const EditorToolbar = ({ editor, t }) => {
 const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData }) => {
     const { t } = useTranslation();
     const service = DataAPIContractTemplatesService();
+    const signsService = DataAPIContractSignsService();
     const { companySelected } = useContext(AppContext);
     const theme = useTheme();
     const nameRef = useRef(null);
@@ -861,6 +863,7 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
         content: '',
         isHeaderEnable: false,
         idCompany: companySelected?.idCompany ?? null,
+        contractSignIds: [],
     });
     const [isLoading, setIsLoading] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
@@ -870,6 +873,10 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
     const [availableVariables, setAvailableVariables] = useState([]);
     const [isLoadingVariables, setIsLoadingVariables] = useState(false);
     const [variableSearchText, setVariableSearchText] = useState('');
+    const [availableSigns, setAvailableSigns] = useState([]);
+    const [isLoadingSigns, setIsLoadingSigns] = useState(false);
+    const [signSearchText, setSignSearchText] = useState('');
+    const [selectedSigns, setSelectedSigns] = useState([]);
 
     const editor = useEditor({
         extensions: [
@@ -928,6 +935,26 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
         loadVariables();
     }, [open]);
 
+    // Load contract signs from API when dialog opens
+    useEffect(() => {
+        if (!open) return;
+        const loadSigns = async () => {
+            setIsLoadingSigns(true);
+            try {
+                const result = await signsService.getDataActive();
+                if (result.success && result.data) {
+                    setAvailableSigns(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading signs:', error);
+                ShowMessage(t('error'), 'error');
+            } finally {
+                setIsLoadingSigns(false);
+            }
+        };
+        loadSigns();
+    }, [open]);
+
     // 1. Populate form fields when the dialog opens or the record changes.
     //    Never touches the editor here to avoid triggering onUpdate mid-state-set.
     useEffect(() => {
@@ -940,7 +967,9 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                 content: data.content ?? '',
                 isHeaderEnable: data.isHeaderEnable ?? false,
                 idCompany: data.idCompany ?? companySelected?.idCompany ?? null,
+                contractSignIds: data.contractSignIds ?? [],
             });
+            setSelectedSigns(data.contractSignIds ?? []);
         } else {
             setFormData({
                 idTemplate: 0,
@@ -949,12 +978,15 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                 content: '',
                 isHeaderEnable: false,
                 idCompany: companySelected?.idCompany ?? null,
+                contractSignIds: [],
             });
+            setSelectedSigns([]);
         }
         setValidationErrors({ name: false });
         setHasAttemptedSubmit(false);
         setIsFocused(false);
         setVariableSearchText('');
+        setSignSearchText('');
         setTimeout(() => nameRef.current?.focus(), 120);
     }, [open, isEditing, data]);
 
@@ -989,11 +1021,27 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
         [editor]
     );
 
+    const handleSignToggle = (signId) => {
+        setSelectedSigns(prev => {
+            const newSelected = prev.includes(signId)
+                ? prev.filter(id => id !== signId)
+                : [...prev, signId];
+            setFormData(fd => ({ ...fd, contractSignIds: newSelected }));
+            return newSelected;
+        });
+    };
+
     const filteredVariables = availableVariables.filter(v => {
         if (!variableSearchText.trim()) return true;
         const searchLower = variableSearchText.toLowerCase();
         return v.code.toLowerCase().includes(searchLower) ||
                v.description.toLowerCase().includes(searchLower);
+    });
+
+    const filteredSigns = availableSigns.filter(s => {
+        if (!signSearchText.trim()) return true;
+        const searchLower = signSearchText.toLowerCase();
+        return s.name.toLowerCase().includes(searchLower);
     });
 
     const validateForm = () => {
@@ -1007,7 +1055,11 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
         if (!validateForm()) return;
         setIsLoading(true);
         try {
-            const payload = { ...formData, content: editor?.getHTML() ?? '' };
+            const payload = { 
+                ...formData, 
+                content: editor?.getHTML() ?? '',
+                contractSignIds: selectedSigns
+            };
             const result = isEditing
                 ? await service.editData(payload)
                 : await service.addData(payload);
@@ -1139,6 +1191,60 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                             </Typography>
                         }
                     />
+
+                    <Box>
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ mb: 0.75, display: 'block', fontWeight: 600 }}
+                        >
+                            {t('contractTemplate_signs')}
+                        </Typography>
+                        {isLoadingSigns ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                                <CircularProgress size={20} />
+                            </Box>
+                        ) : (
+                            <>
+                                <TextField
+                                    placeholder={t('search')}
+                                    value={signSearchText}
+                                    onChange={(e) => setSignSearchText(e.target.value)}
+                                    fullWidth
+                                    size="small"
+                                    sx={{ mb: 1 }}
+                                    InputProps={{
+                                        sx: { fontSize: '0.85rem' }
+                                    }}
+                                />
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 2 }}>
+                                    {filteredSigns.map((s) => (
+                                        <FormControlLabel
+                                            key={s.idContractSign}
+                                            control={
+                                                <Switch
+                                                    checked={selectedSigns.includes(s.idContractSign)}
+                                                    onChange={() => handleSignToggle(s.idContractSign)}
+                                                    size="small"
+                                                    color="secondary"
+                                                />
+                                            }
+                                            label={
+                                                <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
+                                                    {s.name}
+                                                </Typography>
+                                            }
+                                        />
+                                    ))}
+                                    {filteredSigns.length === 0 && (
+                                        <Typography variant="caption" color="text.secondary" sx={{ py: 1 }}>
+                                            {t('noResultsFound')}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </>
+                        )}
+                    </Box>
 
                     <Box>
                         <Typography

@@ -92,7 +92,13 @@ namespace GenericApp.API.Controllers
             if (template == null)
                 return NotFound(new ApiResponse());
 
-            return Ok(new ApiResponse { Data = _mapper.Map<ContractTemplateDTO>(template) });
+            var templateDTO = _mapper.Map<ContractTemplateDTO>(template);
+
+            // Load associated contract signs
+            var signs = await _repository.FindBy<ContractTemplateContractSign>(x => x.IdContractTemplate == id && !(x.IsDeleted ?? false));
+            templateDTO.ContractSignIds = signs.Select(s => s.IdContractSign).ToList();
+
+            return Ok(new ApiResponse { Data = templateDTO });
         }
 
         /// <summary>
@@ -134,6 +140,22 @@ namespace GenericApp.API.Controllers
             if (!result)
                 return BadRequest(new ApiResponse());
 
+            // Save associated contract signs
+            if (model.ContractSignIds != null && model.ContractSignIds.Any())
+            {
+                foreach (var signId in model.ContractSignIds)
+                {
+                    var contractSign = new ContractTemplateContractSign
+                    {
+                        IdContractTemplate = entity.IdTemplate,
+                        IdContractSign = signId,
+                        IsActive = true,
+                        IsDeleted = false
+                    };
+                    await _repository.Add(contractSign);
+                }
+            }
+
             return Ok(new ApiResponse { Data = entity });
         }
 
@@ -162,6 +184,31 @@ namespace GenericApp.API.Controllers
 
             if (!result)
                 return BadRequest(new ApiResponse());
+
+            // Update associated contract signs
+            // First, soft-delete existing associations
+            var existingSigns = await _repository.FindBy<ContractTemplateContractSign>(x => x.IdContractTemplate == model.IdTemplate);
+            foreach (var sign in existingSigns)
+            {
+                sign.IsDeleted = true;
+                await _repository.Update(sign);
+            }
+
+            // Then, add new associations
+            if (model.ContractSignIds != null && model.ContractSignIds.Any())
+            {
+                foreach (var signId in model.ContractSignIds)
+                {
+                    var contractSign = new ContractTemplateContractSign
+                    {
+                        IdContractTemplate = templateDB.IdTemplate,
+                        IdContractSign = signId,
+                        IsActive = true,
+                        IsDeleted = false
+                    };
+                    await _repository.Add(contractSign);
+                }
+            }
 
             return Ok(new ApiResponse { Data = templateDB });
 

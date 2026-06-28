@@ -91,6 +91,7 @@
   "contractTemplate_toolbar_rowHeightAuto": "Auto",
   "contractTemplate_toolbar_underline": "Underline",
   "contractTemplate_enablePrintHeader": "Enable print header",
+  "contractTemplate_signs": "Signatures",
   "contractTemplate_variables": "Insert variable",
   "employees": "Employees",
   "employees_description": "Module to manage company employees",
@@ -565,5 +566,15 @@
   "sigweb_instructionIdle": "Capture will start automatically.",
   "sigweb_noSignature": "Please sign on the pad before saving.",
   "sigweb_clear": "Clear",
-  "signatureTopaz": "Signature"
+  "signatureTopaz": "Signature",
+  "cropImage": "Crop Image",
+  "rotation": "Rotation",
+  "zoom": "Zoom",
+  "cropWidth": "Width",
+  "cropHeight": "Height",
+  "crop": "Crop",
+  "cropSize": "Crop size",
+  "resetView": "Fit to View",
+  "cropInstructions": "Drag the image to position it. Adjust zoom and crop area dimensions.",
+  "cropInstructionsDynamic": "Drag the background image to position it. Drag the crop area to move it. Use corners and edges to resize."
 }

@@ -88,6 +88,27 @@ namespace GenericApp.API.Controllers
         }
 
         /// <summary>
+        /// Obtiene las firmas activas del sistema.
+        /// </summary>
+        /// <param name="id">El ID de la ciudad a buscar.</param>
+        /// <returns>La ContractSignDTO si se encuentra, o NotFound si no existe.</returns>
+        [HttpGet("active")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
+        public async Task<ActionResult<ContractSignDTO>> GetActiveContractSigns()
+        {
+            // Obtenemos la consulta base del repositorio
+            var query = await _repository.Query<ContractSign>();
+
+            // Aplicamos los Includes para cargar las navegaciones
+            var contractSign = await query.Where(x => (x.IsActive ?? false) && !(x.IsDeleted ?? false)).ToListAsync();
+
+            // El Mapper se encarga de convertir las entidades cargadas al DTO
+            var contractSignListDTO = _mapper.Map<List<ContractSignDTO>>(contractSign);
+
+            return Ok(new ApiResponse { Data = contractSignListDTO });
+        }
+
+        /// <summary>
         /// Obtiene una ciudad específica por su ID.
         /// </summary>
         /// <param name="id">El ID de la ciudad a buscar.</param>

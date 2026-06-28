@@ -21,6 +21,7 @@ import { ShowMessage } from '@helpers/NotificationService';
 import { DataAPIContractSignsService } from '@data/ContractSigns/Data';
 import { AppContext } from '@helpers/AppContext';
 import SignaturePadModal from '@/Components/SignaturePadModal';
+import ImageCropModal from '@/Components/ImageCropModal';
 import { API_BASE_URL } from '@config';
 
 function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) {
@@ -37,6 +38,8 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [isSignaturePadOpen, setIsSignaturePadOpen] = useState(false);
+    const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+    const [tempImageUrl, setTempImageUrl] = useState(null);
 
     useEffect(() => {
         if (data && isEditing) {
@@ -70,14 +73,9 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
                 ShowMessage(t('onlyImagesAllowed'), 'error');
                 return;
             }
-            setFormData(prev => ({
-                ...prev,
-                signFile: file,
-                signPreview: URL.createObjectURL(file)
-            }));
-            if (errors.signFile) {
-                setErrors(prev => ({ ...prev, signFile: '' }));
-            }
+            const imageUrl = URL.createObjectURL(file);
+            setTempImageUrl(imageUrl);
+            setIsCropModalOpen(true);
         }
     };
 
@@ -85,20 +83,8 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
         if (!base64) return;
 
         const img = base64.startsWith('data:') ? base64 : `data:image/png;base64,${base64}`;
-
-        fetch(img)
-            .then(res => res.blob())
-            .then(blob => {
-                const file = new File([blob], "signature.png", { type: "image/png" });
-                setFormData(prev => ({
-                    ...prev,
-                    signFile: file,
-                    signPreview: img
-                }));
-                if (errors.signFile) {
-                    setErrors(prev => ({ ...prev, signFile: '' }));
-                }
-            });
+        setTempImageUrl(img);
+        setIsCropModalOpen(true);
     };
 
     const handleRemoveSign = () => {
@@ -107,6 +93,29 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
             signFile: null,
             signPreview: null
         }));
+    };
+
+    const handleCropComplete = ({ file, url }) => {
+        setFormData(prev => ({
+            ...prev,
+            signFile: file,
+            signPreview: url
+        }));
+        if (errors.signFile) {
+            setErrors(prev => ({ ...prev, signFile: '' }));
+        }
+        if (tempImageUrl) {
+            URL.revokeObjectURL(tempImageUrl);
+            setTempImageUrl(null);
+        }
+    };
+
+    const handleCloseCropModal = () => {
+        setIsCropModalOpen(false);
+        if (tempImageUrl) {
+            URL.revokeObjectURL(tempImageUrl);
+            setTempImageUrl(null);
+        }
     };
 
     const validate = () => {
@@ -315,6 +324,13 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
                 onClose={() => setIsSignaturePadOpen(false)}
                 onSave={handleSignatureFromPad}
                 autoStart={true}
+            />
+
+            <ImageCropModal
+                open={isCropModalOpen}
+                onClose={handleCloseCropModal}
+                imageUrl={tempImageUrl}
+                onCropComplete={handleCropComplete}
             />
         </>
     );
