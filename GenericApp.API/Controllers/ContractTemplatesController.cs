@@ -69,9 +69,24 @@ namespace GenericApp.API.Controllers
                     IsHeaderEnable = x.IsHeaderEnable,
                     IsActive = x.IsActive,
                     IsDeleted = x.IsDeleted,
-                    IdCompany = x.IdCompany
+                    IdCompany = x.IdCompany,
                 })
                 .ToList();
+
+            // Load associated contract signs for the current page items
+            if (data.Any())
+            {
+                var templateIds = data.Select(x => x.IdTemplate ?? 0).ToList();
+                var signs = await _repository.FindBy<ContractTemplateContractSign>(x => templateIds.Contains(x.IdContractTemplate) && !(x.IsDeleted ?? false));
+
+                foreach (var item in data)
+                {
+                    item.ContractSignIds = signs
+                        .Where(s => s.IdContractTemplate == item.IdTemplate)
+                        .Select(s => s.IdContractSign)
+                        .ToList();
+                }
+            }
 
             var paginatedResponse = new
             {
@@ -84,7 +99,6 @@ namespace GenericApp.API.Controllers
 
             return Ok(new ApiResponse { Data = paginatedResponse });
         }
-
         /// <summary>
         /// Returns a specific contract template by ID.
         /// </summary>
@@ -351,18 +365,18 @@ namespace GenericApp.API.Controllers
                         // Render signature section at the end
                         if (contractSigns.Any() || true) // Always render to include employee signature space
                         {
-                            col.Item().PaddingTop(30);
+                            //col.Item().PaddingTop(30);
                             RenderSignatures(col, contractSigns.ToList(), idCompany ?? 0);
                         }
                     });
-                    page.Footer().AlignCenter().Text(t =>
-                    {
-                        t.Span(template.Name ?? "").FontSize(8).FontColor(Colors.Grey.Darken1);
-                        t.Span("  —  ").FontSize(8).FontColor(Colors.Grey.Lighten1);
-                        t.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Darken1);
-                        t.Span(" / ").FontSize(8).FontColor(Colors.Grey.Lighten1);
-                        t.TotalPages().FontSize(8).FontColor(Colors.Grey.Darken1);
-                    });
+                    //page.Footer().AlignCenter().Text(t =>
+                    //{
+                    //    t.Span(template.Name ?? "").FontSize(8).FontColor(Colors.Grey.Darken1);
+                    //    t.Span("  —  ").FontSize(8).FontColor(Colors.Grey.Lighten1);
+                    //    t.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Darken1);
+                    //    t.Span(" / ").FontSize(8).FontColor(Colors.Grey.Lighten1);
+                    //    t.TotalPages().FontSize(8).FontColor(Colors.Grey.Darken1);
+                    //});
                 });
             });
 
@@ -390,7 +404,7 @@ namespace GenericApp.API.Controllers
             container.Column(column =>
             {
                 // Row: logo left | template name centered | empty right (mirror of logo width)
-                column.Item().PaddingBottom(4).Row(row =>
+                column.Item().PaddingBottom(2).Row(row =>
                 {
                     // LEFT — logo
                     const float logoHeight = 48;
@@ -442,7 +456,8 @@ namespace GenericApp.API.Controllers
         private void RenderSignatures(ColumnDescriptor col, List<ContractSign> signs, int idCompany)
         {
             const int maxSignsPerRow = 4;
-            const float signatureAreaHeight = 60;
+            // Mantenemos la altura total de 80, pero organizaremos mejor el espacio interior.
+            const float signatureAreaHeight = 65;
 
             // Always add employee signature placeholder at the end
             var allSignatures = new List<SignatureInfo>();
@@ -488,25 +503,40 @@ namespace GenericApp.API.Controllers
                 foreach (var row in signatureRows)
                 {
                     int signsInRow = row.Count;
-                    int emptyCellsBefore = (maxSignsPerRow - signsInRow) / 2;
-                    int emptyCellsAfter = maxSignsPerRow - signsInRow - emptyCellsBefore;
 
-                    // Add empty cells before to center the signatures
-                    for (int i = 0; i < emptyCellsBefore; i++)
+                    // Render each signature in the row following the layout rules
+                    for (int index = 0; index < signsInRow; index++)
                     {
-                        table.Cell();
-                    }
+                        var signInfo = row[index];
+                        var cell = table.Cell();
 
-                    // Render each signature in the row
-                    foreach (var signInfo in row)
-                    {
-                        table.Cell().Padding(5).Column(signatureCol =>
+                        // Apply custom colspans and positional cells depending on the signature count in the row
+                        if (signsInRow == 1)
                         {
-                            // Image area with fixed height
-                            signatureCol.Item().AlignCenter().Height(signatureAreaHeight)
+                            cell.ColumnSpan(4);
+                        }
+                        else if (signsInRow == 2)
+                        {
+                            cell.ColumnSpan(2);
+                        }
+                        else if (signsInRow == 3)
+                        {
+                            if (index == 1)
+                            {
+                                cell.ColumnSpan(2);
+                            }
+                        }
+
+                        // --- CAMBIO 1: Reducción del padding de la celda ---
+                        // Reducimos el padding general de la celda de 2 a 1 para ganar espacio vertical.
+                        cell.Padding(1).Column(signatureCol =>
+                        {
+                            // --- CAMBIO 2: Reducción de la altura de la imagen ---
+                            // Reducimos la altura dedicada a la imagen de 80 a 55 para dejar espacio para la línea y el texto.
+                            // Ajuste este valor si necesita la imagen más grande o más pequeña.
+                            signatureCol.Item().Height(signatureAreaHeight).AlignCenter()
                                 .Element(container =>
                                 {
-
                                     // Try to load the signature image
                                     var signPath = signInfo.IsEmployee
                                     ? Path.Combine(_env.WebRootPath, "img", signInfo.FileName)
@@ -514,7 +544,7 @@ namespace GenericApp.API.Controllers
                                     if (System.IO.File.Exists(signPath))
                                     {
                                         // Image fills container while maintaining aspect ratio
-                                        container.AlignCenter().AlignMiddle().Image(signPath);
+                                        container.AlignCenter().AlignMiddle().Image(signPath).FitArea();
                                     }
                                     else
                                     {
@@ -529,25 +559,21 @@ namespace GenericApp.API.Controllers
                                     }
                                 });
 
-                            // Horizontal line below image
-                            signatureCol.Item().PaddingTop(4).PaddingHorizontal(5)
-                                .AlignCenter()
-                                .LineHorizontal(1)
-                                .LineColor(Colors.Black);
+                            //// --- CAMBIO 3: Ajuste de espaciado y grosor de línea ---
+                            //// Reducimos el PaddingTop de 4 a 1 y aumentamos el grosor de la línea a 1.5 para mayor visibilidad.
+                            //signatureCol.Item()
+                            //    .AlignCenter()
+                            //    .LineHorizontal(10f) // Línea ligeramente más gruesa
+                            //    .LineColor(Colors.Black);
 
                             // Name label
-                            signatureCol.Item().PaddingTop(2)
+                            // Reducimos el PaddingTop de 2 a 1.
+                            signatureCol.Item().BorderTop(1).PaddingTop(1)
                                 .AlignCenter()
                                 .Text(signInfo.Name)
-                                .FontSize(9)
+                                .FontSize(12)
                                 .FontColor(Colors.Black);
                         });
-                    }
-
-                    // Add empty cells after to center the signatures
-                    for (int i = 0; i < emptyCellsAfter; i++)
-                    {
-                        table.Cell();
                     }
                 }
             });
