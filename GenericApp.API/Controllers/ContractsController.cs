@@ -119,7 +119,7 @@ namespace GenericApp.API.Controllers
                     return BadRequest(new ApiResponse { Message = "No valid templates found" });
 
                 var documentName = $"Contrato_{employee.Nombre}_{employee.ApellidoPaterno}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                var contractsFolder = Path.Combine(_env.WebRootPath, "contratos");
+                var contractsFolder = Path.Combine(_env.WebRootPath, _configuration["contractsSettings:contractsPath"]??"contratos");
 
                 if (!Directory.Exists(contractsFolder))
                     Directory.CreateDirectory(contractsFolder);
@@ -206,7 +206,7 @@ namespace GenericApp.API.Controllers
 
                 pdfDocument.GeneratePdf(filePath);
 
-                var contractFolderVirtualPath = _configuration["contractsSettings:contractsPath"] ?? "/contratos";
+                var contractFolderVirtualPath = _configuration["contractsSettings:contractsPath"] ?? "contratos";
 
                 var contract = new Contract
                 {
@@ -357,6 +357,27 @@ namespace GenericApp.API.Controllers
                 return StatusCode(500, new ApiResponse { Message = $"Error generating preview: {ex.Message}" });
             }
         }
+
+
+        /// <summary>
+        /// Generates a PDF for a contract template, rendering its HTML content.
+        /// </summary>
+        [HttpGet("pdf/{id}")]
+        public async Task<IActionResult> GetContractTemplatePdf(int id)
+        {
+            var contractSigned =await _repository.GetById<Contract>(id);
+            var contractsFolder = Path.Combine(_env.WebRootPath, _configuration["contractsSettings:contractsPath"] ?? "contratos");
+            var pathFile = Path.Combine(contractsFolder, contractSigned.DocumentName);
+            var stream = new FileStream(pathFile, FileMode.Open, FileAccess.Read);
+            return File(stream, "application/pdf", contractSigned.DocumentName);
+
+        }
+
+
+
+        #region Helpers
+
+
         private async Task<string> ReplaceVariables(string htmlContent, Employee employee, Company? company, string? signatureBase64 = null, bool isPreview = false)
         {
             var contractTemplateVariables = await _repository.FindBy<ContractTemplateVariable>(x => (x.IsActive ?? false) && !(x.IsDeleted ?? false));
@@ -656,7 +677,7 @@ namespace GenericApp.API.Controllers
             });
         }
 
-        private void ComposeContractHeader(IContainer container, Company company, Employee employee,string contractTemplateName)
+        private void ComposeContractHeader(IContainer container, Company company, Employee employee, string contractTemplateName)
         {
             container.Column(column =>
             {
@@ -700,323 +721,6 @@ namespace GenericApp.API.Controllers
 
                 column.Item().PaddingBottom(4).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
             });
-        }
-
-        /// <summary>
-        /// Returns a paginated list of contract templates, optionally filtered by name.
-        /// </summary>
-        [HttpGet("templates/pagination")]
-        public async Task<ActionResult> GetContractTemplatesPagination(
-            [FromQuery] int idCompany,
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? searchTerm = null)
-        {
-            if (pageNumber < 1) pageNumber = 1;
-            if (pageSize < 1) pageSize = 10;
-
-            var query = await _repository.Query<ContractTemplate>();
-            query = query.Where(x => !(x.IsDeleted ?? false));
-
-            if (!string.IsNullOrWhiteSpace(searchTerm))
-                query = query.Where(x => x.Name.Contains(searchTerm) || x.Description.Contains(searchTerm));
-
-            var totalRows = query.Count();
-            var data = query
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(x => new ContractTemplateDTO
-                {
-                    IdTemplate = x.IdTemplate,
-                    Name = x.Name,
-                    Description = x.Description,
-                    Content = x.Content,
-                    IsHeaderEnable = x.IsHeaderEnable,
-                    IsActive = x.IsActive,
-                    IsDeleted = x.IsDeleted,
-                    IdCompany = x.IdCompany
-                })
-                .ToList();
-
-            var paginatedResponse = new
-            {
-                TotalCount = totalRows,
-                PageSize = pageSize,
-                CurrentPage = pageNumber,
-                TotalPages = (int)System.Math.Ceiling((double)totalRows / pageSize),
-                Data = data
-            };
-
-            return Ok(new ApiResponse { Data = paginatedResponse });
-        }
-
-        /// <summary>
-        /// Returns a specific contract template by ID.
-        /// </summary>
-        [HttpGet("templates/{id}")]
-        public async Task<ActionResult<ContractTemplateDTO>> GetContractTemplateById(int id)
-        {
-            var template = await _repository.FirstOrDefault<ContractTemplate>(x => x.IdTemplate == id && !(x.IsDeleted ?? false));
-            if (template == null)
-                return NotFound(new ApiResponse());
-
-            return Ok(new ApiResponse { Data = _mapper.Map<ContractTemplateDTO>(template) });
-        }
-
-        /// <summary>
-        /// Returns all active contract templates (no pagination).
-        /// </summary>
-        [HttpGet("templates/active")]
-        public async Task<ActionResult> GetActiveContractTemplates()
-        {
-            var query = await _repository.Query<ContractTemplate>();
-            var data = query
-                .Where(x => (x.IsActive ?? false) && !(x.IsDeleted ?? false))
-                .Select(x => new ContractTemplateDTO
-                {
-                    IdTemplate = x.IdTemplate,
-                    Name = x.Name,
-                    Description = x.Description,
-                    IsActive = x.IsActive,
-                    IdCompany = x.IdCompany
-                })
-                .ToList();
-
-            return Ok(new ApiResponse { Data = data });
-        }
-
-        /// <summary>
-        /// Creates a new contract template.
-        /// </summary>
-        [HttpPost("templates")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
-        public async Task<ActionResult> AddContractTemplate([FromBody] ContractTemplateDTO model)
-        {
-            var exists = await _repository.FirstOrDefault<ContractTemplate>(x => x.Name.ToLower().Equals(model.Name.ToLower()) && !(x.IsDeleted ?? false));
-            if (exists != null)
-                return Conflict(new ApiResponse { Conflict = model.Name });
-
-            var entity = _mapper.Map<ContractTemplate>(model);
-            var result = await _repository.Add(entity);
-
-            if (!result)
-                return BadRequest(new ApiResponse());
-
-            return Ok(new ApiResponse { Data = entity });
-        }
-
-        /// <summary>
-        /// Updates an existing contract template.
-        /// </summary>
-        [HttpPut("templates")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
-        public async Task<ActionResult> UpdateContractTemplate([FromBody] ContractTemplateDTO model)
-        {
-
-            var exists = await _repository.FirstOrDefault<ContractTemplate>(x => x.IdTemplate != model.IdTemplate && x.Name.ToLower().Equals(model.Name.ToLower()) && !(x.IsDeleted ?? false));
-            if (exists != null)
-                return Conflict(new ApiResponse { Conflict = model.Name });
-
-            var templateDB = await _repository.GetById<ContractTemplate>(model.IdTemplate ?? 0);
-            if (templateDB == null)
-                return NotFound(new ApiResponse());
-
-            templateDB.Name = model.Name;
-            templateDB.Description = model.Description;
-            templateDB.Content = model.Content;
-            templateDB.IsHeaderEnable = model.IsHeaderEnable;
-
-            var result = await _repository.Update(templateDB);
-
-            if (!result)
-                return BadRequest(new ApiResponse());
-
-            return Ok(new ApiResponse { Data = templateDB });
-
-        }
-
-        /// <summary>
-        /// Disables a contract template (IsActive = false).
-        /// </summary>
-        [HttpPut("templates/disable/{id}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
-        public async Task<ActionResult> DisableContractTemplate(int id)
-        {
-            var template = await _repository.GetById<ContractTemplate>(id);
-            if (template == null)
-                return NotFound(new ApiResponse());
-
-            template.IsActive = false;
-            var result = await _repository.Update(template);
-
-            if (!result)
-                return BadRequest(new ApiResponse());
-
-            return Ok(new ApiResponse { Data = _mapper.Map<ContractTemplateDTO>(template) });
-        }
-
-        /// <summary>
-        /// Enables a contract template (IsActive = true).
-        /// </summary>
-        [HttpPut("templates/enable/{id}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
-        public async Task<ActionResult> EnableContractTemplate(int id)
-        {
-            var template = await _repository.FirstOrDefault<ContractTemplate>(x => x.IdTemplate == id && !(x.IsDeleted ?? false));
-            if (template == null)
-                return NotFound(new ApiResponse());
-
-            template.IsActive = true;
-            var result = await _repository.Update(template);
-
-            if (!result)
-                return BadRequest(new ApiResponse());
-
-            return Ok(new ApiResponse { Data = _mapper.Map<ContractTemplateDTO>(template) });
-        }
-
-        /// <summary>
-        /// Soft-deletes a contract template (IsDeleted = true).
-        /// </summary>
-        [HttpDelete("templates/{id}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
-        public async Task<ActionResult> DeleteContractTemplate(int id)
-        {
-            var template = await _repository.FirstOrDefault<ContractTemplate>(x => x.IdTemplate == id && !(x.IsDeleted ?? false));
-            if (template == null)
-                return NotFound(new ApiResponse());
-
-            template.IsDeleted = true;
-            var result = await _repository.Update(template);
-
-            if (!result)
-                return BadRequest(new ApiResponse());
-
-            return Ok(new ApiResponse { Data = _mapper.Map<ContractTemplateDTO>(template) });
-        }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // PDF generation
-        // ─────────────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Generates a PDF for a contract template, rendering its HTML content.
-        /// </summary>
-        [HttpGet("templates/pdf/{id}")]
-        public async Task<IActionResult> GetContractTemplatePdf(int id, [FromQuery] int? idCompany = null)
-        {
-            var template = await _repository.FirstOrDefault<ContractTemplate>(
-                x => x.IdTemplate == id && !(x.IsDeleted ?? false));
-
-            if (template == null)
-                return NotFound(new ApiResponse());
-
-            // Load company only when header is enabled and an idCompany was provided
-            Company? company = null;
-            if ((template.IsHeaderEnable ?? false) && idCompany.HasValue)
-                company = await _repository.FirstOrDefault<Company>(
-                    x => x.IdCompany == idCompany.Value && !(x.IsDeleted ?? false));
-
-            QuestPDF.Settings.License = LicenseType.Community;
-
-            // Parse the Tiptap HTML with AngleSharp
-            var config = Configuration.Default;
-            var context = BrowsingContext.New(config);
-            var document = await context.OpenAsync(req => req.Content(template.Content ?? ""));
-            var body = document.Body!;
-
-            var pdfDocument = Document.Create(container =>
-            {
-                container.Page(page =>
-                {
-                    page.Size(PageSizes.Letter);
-                    page.MarginTop(1, Unit.Centimetre);
-                    page.MarginBottom(2, Unit.Centimetre);
-                    page.MarginLeft(2.5f, Unit.Centimetre);
-                    page.MarginRight(2.5f, Unit.Centimetre);
-                    page.DefaultTextStyle(x => x.FontSize(11).FontFamily(Fonts.Lato));
-
-                    page.Content().Column(col =>
-                    {
-                        if (company != null)
-                            col.Item().Element(header => ComposeTemplateHeader(header, company, template.Name));
-
-                        RenderNodes(col, body.ChildNodes);
-                    });
-                    page.Footer().AlignCenter().Text(t =>
-                    {
-                        t.Span(template.Name ?? "").FontSize(8).FontColor(Colors.Grey.Darken1);
-                        t.Span("  —  ").FontSize(8).FontColor(Colors.Grey.Lighten1);
-                        t.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Darken1);
-                        t.Span(" / ").FontSize(8).FontColor(Colors.Grey.Lighten1);
-                        t.TotalPages().FontSize(8).FontColor(Colors.Grey.Darken1);
-                    });
-                });
-            });
-
-            var stream = new MemoryStream();
-            pdfDocument.GeneratePdf(stream);
-            stream.Position = 0;
-
-            var fileName = $"{SanitizeFileName(template.Name ?? "contrato")}.pdf";
-            return File(stream, "application/pdf", fileName);
-
-        }
-
-        // ── Helpers ──────────────────────────────────────────────────────────
-
-        private void ComposeTemplateHeader(IContainer container, Company company, string? templateName)
-        {
-            container.Column(column =>
-            {
-                // Row: logo left | template name centered | empty right (mirror of logo width)
-                column.Item().PaddingBottom(4).Row(row =>
-                {
-                    // LEFT — logo
-                    const float logoHeight = 48;
-                    const float logoColWidth = 80;
-
-                    var logoName = company.LogoName;
-                    bool hasLogo = !string.IsNullOrEmpty(logoName);
-                    string? logoPath = hasLogo
-                        ? Path.Combine(_env.WebRootPath, "img", "logos", logoName!)
-                        : null;
-                    bool logoExists = logoPath != null && System.IO.File.Exists(logoPath);
-
-                    row.ConstantItem(logoColWidth).AlignMiddle().AlignLeft()
-                        .Element(e =>
-                        {
-                            if (logoExists)
-                                e.Height(logoHeight).Image(logoPath!);
-                        });
-
-                    // CENTER — document name (large, bold, centered)
-                    row.RelativeItem().AlignMiddle().Column(col =>
-                    {
-                        col.Item().AlignCenter().Text((templateName ?? "").ToUpper())
-                            .Bold().FontSize(14).FontColor(Colors.Black);
-
-                        var subtitleDocument = company.RazonSocial ?? company.Name;
-
-                        if (!string.IsNullOrWhiteSpace(subtitleDocument))
-                            col.Item().AlignCenter().PaddingTop(2)
-                                .Text(subtitleDocument.ToUpper())
-                                .FontSize(9).FontColor(Colors.Grey.Darken2);
-                    });
-
-                    // RIGHT — mirror spacer so center stays truly centered
-                    row.ConstantItem(logoColWidth);
-                });
-
-                // Bottom separator line
-                column.Item().PaddingBottom(4).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
-            });
-        }
-
-        private static string SanitizeFileName(string name)
-        {
-            var invalid = Path.GetInvalidFileNameChars();
-            return string.Concat(name.Select(c => invalid.Contains(c) ? '_' : c));
         }
 
         /// <summary>Walks a node list and writes items into a QuestPDF ColumnDescriptor.</summary>
@@ -1344,10 +1048,7 @@ namespace GenericApp.API.Controllers
         /// <paramref name="inherited"/> carries the accumulated parent style so all
         /// ancestor properties (font-size, font-family, bold…) compose correctly.
         /// </summary>
-        private static void BuildInlineSpans(
-            TextDescriptor t,
-            AsDom.IElement el,
-            Func<TextSpanDescriptor, TextSpanDescriptor>? inherited = null)
+        private static void BuildInlineSpans(TextDescriptor t,AsDom.IElement el,Func<TextSpanDescriptor, TextSpanDescriptor>? inherited = null)
         {
             foreach (var child in el.ChildNodes)
             {
@@ -1443,10 +1144,7 @@ namespace GenericApp.API.Controllers
         /// elements, composes <paramref name="style"/> with the element-specific
         /// style so descendant spans receive all ancestor styles.
         /// </summary>
-        private static void ApplyFormattedChildren(
-            TextDescriptor t,
-            AsDom.IElement el,
-            Func<TextSpanDescriptor, TextSpanDescriptor> style)
+        private static void ApplyFormattedChildren(TextDescriptor t,AsDom.IElement el,Func<TextSpanDescriptor, TextSpanDescriptor> style)
         {
             foreach (var child in el.ChildNodes)
             {
@@ -1545,10 +1243,7 @@ namespace GenericApp.API.Controllers
             }
         }
 
-        private static void ApplySpanStyle(
-            TextDescriptor t,
-            AsDom.IElement span,
-            Func<TextSpanDescriptor, TextSpanDescriptor>? inherited = null)
+        private static void ApplySpanStyle(TextDescriptor t,AsDom.IElement span,Func<TextSpanDescriptor, TextSpanDescriptor>? inherited = null)
         {
             var style = span.GetAttribute("style") ?? "";
 
@@ -1652,5 +1347,6 @@ namespace GenericApp.API.Controllers
             }
             return null;
         }
+        #endregion
     }
 }

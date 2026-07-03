@@ -193,7 +193,7 @@ function ContractsIndex() {
         try {
             setIsPdfLoading(true);
             ShowMessage(t('generatingPdf'), 'info');
-            const response = await contractDataService.getPdfById(contract.idContract, companySelected?.idCompany);
+            const response = await contractDataService.getPdfById(contract.idContract);
             const fileData = response.data ? response.data : response;
             const blob = new Blob([fileData], { type: 'application/pdf' });
             const pdfUrl = window.URL.createObjectURL(blob);

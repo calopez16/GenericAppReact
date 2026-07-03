@@ -14,7 +14,7 @@ export const DataAPIContractsService = () => {
         ...genericService,
         getDataPagination: (pageNumber = 1, pageSize = 10, searchTerm = "", idCompany = null) => 
             GET(`${moduleSource}/pagination?pageNumber=${pageNumber}&pageSize=${pageSize}&searchTerm=${searchTerm}` + (idCompany ? `&idCompany=${idCompany}` : '')),
-        getPdfById: (id, idCompany) => GET(`${moduleSource}/pdf/${id}${idCompany ? `?idCompany=${idCompany}` : ''}`, { responseType: 'blob' }),
+        getPdfById: (id) => GET(`${moduleSource}/pdf/${id}`, { responseType: 'blob' }),
         getPreview: (data) => POST(`${moduleSource}/preview`, data, { responseType: 'blob' }),
     };
 };
