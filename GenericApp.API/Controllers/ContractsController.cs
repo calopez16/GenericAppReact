@@ -104,6 +104,7 @@ namespace GenericApp.API.Controllers
                 var employee = await _repository.GetById<Employee>(model.IdEmployee);
                 if (employee == null)
                     return NotFound(new ApiResponse { Message = "Employee not found" });
+                var employeeName = $"{employee.Nombre} {employee.ApellidoPaterno} {employee.ApellidoMaterno}";
 
                 var templates = new List<ContractTemplate>();
                 foreach (var templateId in model.TemplateIds)
@@ -130,12 +131,27 @@ namespace GenericApp.API.Controllers
                 var company = await _repository.FirstOrDefault<Company>(
                     x => x.IdCompany == model.IdCompany && !(x.IsDeleted ?? false));
 
-                // Pre-process template content with variable replacement
                 var processedTemplates = new List<(ContractTemplate Template, string ProcessedContent)>();
                 foreach (var template in templates)
                 {
                     var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company, model.SignatureBase64);
                     processedTemplates.Add((template, contentWithData));
+                }
+
+                // PRE-PROCESAMIENTO: Cargamos de forma segura los documentos de AngleSharp y las firmas antes de QuestPDF
+                var renderDataList = new List<(ContractTemplate Template, AsDom.INodeList ChildNodes, List<ContractSign> ContractSigns)>();
+                var config = Configuration.Default;
+                var context = BrowsingContext.New(config);
+
+                foreach (var (template, processedContent) in processedTemplates)
+                {
+                    var document = await context.OpenAsync(req => req.Content(processedContent));
+                    var body = document.Body!;
+
+                    var contractsSignsIds = await _repository.FindBy<ContractTemplateContractSign>(x => x.IdContractTemplate == template.IdTemplate && !(x.IsDeleted ?? false));
+                    var contractSigns = await _repository.FindBy<ContractSign>(x => contractsSignsIds.Select(s => s.IdContractSign).Contains(x.IdContractSign) && !(x.IsDeleted ?? false));
+
+                    renderDataList.Add((template, body.ChildNodes, contractSigns?.ToList() ?? new List<ContractSign>()));
                 }
 
                 var pdfDocument = Document.Create(container =>
@@ -153,7 +169,7 @@ namespace GenericApp.API.Controllers
                         {
                             bool isFirstTemplate = true;
 
-                            foreach (var (template, processedContent) in processedTemplates)
+                            foreach (var (template, childNodes, contractSigns) in renderDataList)
                             {
                                 if (!isFirstTemplate)
                                 {
@@ -162,21 +178,18 @@ namespace GenericApp.API.Controllers
 
                                 if (company != null && (template.IsHeaderEnable ?? false))
                                 {
-                                    col.Item().Element(header => ComposeContractHeader(header, company, employee));
+                                    col.Item().Element(header => ComposeContractHeader(header, company, employee, template.Name));
                                     col.Item().PaddingBottom(10);
                                 }
 
-                                col.Item().Text(template.Name ?? "").FontSize(16).Bold().FontColor(Colors.Black);
-                                col.Item().PaddingBottom(8);
+                                //col.Item().Text(template.Name ?? "").FontSize(16).Bold().FontColor(Colors.Black);
+                                //col.Item().PaddingBottom(8);
 
                                 isFirstTemplate = false;
 
-                                var config = Configuration.Default;
-                                var context = BrowsingContext.New(config);
-                                var document = context.OpenAsync(req => req.Content(processedContent)).Result;
-                                var body = document.Body!;
+                                RenderNodes(col, childNodes);
 
-                                RenderNodes(col, body.ChildNodes);
+                                RenderSignatures(col, contractSigns, model.IdCompany, model.SignatureBase64, employeeName, employee.Position);
                             }
                         });
 
@@ -240,7 +253,7 @@ namespace GenericApp.API.Controllers
                     x => x.EmployeeEmergencyContacts);
                 if (employee == null)
                     return NotFound(new ApiResponse { Message = "Employee not found" });
-
+                var employeeName = $"{employee?.Nombre ?? ""} {employee?.ApellidoPaterno ?? ""} {employee?.ApellidoMaterno ?? ""}";
                 var templates = new List<ContractTemplate>();
                 foreach (var templateId in model.TemplateIds)
                 {
@@ -256,12 +269,27 @@ namespace GenericApp.API.Controllers
                 var company = await _repository.FirstOrDefault<Company>(
                     x => x.IdCompany == model.IdCompany && !(x.IsDeleted ?? false));
 
-                // Pre-process template content with variable replacement
                 var processedTemplates = new List<(ContractTemplate Template, string ProcessedContent)>();
                 foreach (var template in templates)
                 {
-                    var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company, null);
+                    var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company, null, true);
                     processedTemplates.Add((template, contentWithData));
+                }
+
+                // PRE-PROCESAMIENTO PREVIEW: Cargamos de forma segura los documentos de AngleSharp y las firmas antes de QuestPDF
+                var renderDataList = new List<(ContractTemplate Template, AsDom.INodeList ChildNodes, List<ContractSign> ContractSigns)>();
+                var config = Configuration.Default;
+                var context = BrowsingContext.New(config);
+
+                foreach (var (template, processedContent) in processedTemplates)
+                {
+                    var document = await context.OpenAsync(req => req.Content(processedContent));
+                    var body = document.Body!;
+
+                    var contractsSignsIds = await _repository.FindBy<ContractTemplateContractSign>(x => x.IdContractTemplate == template.IdTemplate && !(x.IsDeleted ?? false));
+                    var contractSigns = await _repository.FindBy<ContractSign>(x => contractsSignsIds.Select(s => s.IdContractSign).Contains(x.IdContractSign) && !(x.IsDeleted ?? false));
+
+                    renderDataList.Add((template, body.ChildNodes, contractSigns?.ToList() ?? new List<ContractSign>()));
                 }
 
                 QuestPDF.Settings.License = LicenseType.Community;
@@ -271,17 +299,17 @@ namespace GenericApp.API.Controllers
                     container.Page(page =>
                     {
                         page.Size(PageSizes.Letter);
-                        page.MarginTop(1.5f, Unit.Centimetre);
-                        page.MarginBottom(1.5f, Unit.Centimetre);
-                        page.MarginLeft(2f, Unit.Centimetre);
-                        page.MarginRight(2f, Unit.Centimetre);
-                        //page.DefaultTextStyle(x => x.FontSize(11).FontFamily(Fonts.Lato));
+                        page.MarginTop(1, Unit.Centimetre);
+                        page.MarginBottom(2, Unit.Centimetre);
+                        page.MarginLeft(2.5f, Unit.Centimetre);
+                        page.MarginRight(2.5f, Unit.Centimetre);
+                        page.DefaultTextStyle(x => x.FontSize(11).FontFamily(Fonts.Lato));
 
                         page.Content().Column(col =>
                         {
                             bool isFirstTemplate = true;
 
-                            foreach (var (template, processedContent) in processedTemplates)
+                            foreach (var (template, childNodes, contractSigns) in renderDataList)
                             {
                                 if (!isFirstTemplate)
                                 {
@@ -290,21 +318,19 @@ namespace GenericApp.API.Controllers
 
                                 if (company != null && (template.IsHeaderEnable ?? false))
                                 {
-                                    col.Item().Element(header => ComposeContractHeader(header, company, employee));
+                                    col.Item().Element(header => ComposeContractHeader(header, company, employee, template.Name));
                                     col.Item().PaddingBottom(10);
                                 }
 
                                 //col.Item().Text(template.Name ?? "").FontSize(16).Bold().FontColor(Colors.Black);
-                                col.Item().PaddingBottom(8);
+                                //col.Item().PaddingBottom(8);
 
                                 isFirstTemplate = false;
 
-                                var config = Configuration.Default;
-                                var context = BrowsingContext.New(config);
-                                var document = context.OpenAsync(req => req.Content(processedContent)).Result;
-                                var body = document.Body!;
+                                RenderNodes(col, childNodes);
 
-                                RenderNodes(col, body.ChildNodes);
+                                RenderSignatures(col, contractSigns, model.IdCompany, model.SignatureBase64, employeeName, employee.Position);
+
                             }
                         });
 
@@ -331,8 +357,7 @@ namespace GenericApp.API.Controllers
                 return StatusCode(500, new ApiResponse { Message = $"Error generating preview: {ex.Message}" });
             }
         }
-
-        private async Task<string> ReplaceVariables(string htmlContent, Employee employee, Company? company, string? signatureBase64 = null)
+        private async Task<string> ReplaceVariables(string htmlContent, Employee employee, Company? company, string? signatureBase64 = null, bool isPreview = false)
         {
             var contractTemplateVariables = await _repository.FindBy<ContractTemplateVariable>(x => (x.IsActive ?? false) && !(x.IsDeleted ?? false));
 
@@ -346,7 +371,7 @@ namespace GenericApp.API.Controllers
                 if (string.IsNullOrEmpty(variable.Code))
                     continue;
 
-                var replacement = GetVariableValue(variable, employee, company, signatureBase64);
+                var replacement = GetVariableValue(variable, employee, company);
 
                 // Pattern 1: Match the full <span> element with tiptap-variable class
                 var spanPattern = $@"<span[^>]*data-variable=""{{{{{Regex.Escape(variable.Code)}}}}}""[^>]*>.*?</span>";
@@ -360,7 +385,7 @@ namespace GenericApp.API.Controllers
             return result;
         }
 
-        private string GetVariableValue(ContractTemplateVariable variable, Employee employee, Company? company, string? signatureBase64 = null)
+        private string GetVariableValue(ContractTemplateVariable variable, Employee employee, Company? company = null)
         {
             var type = variable.Type?.ToLower() ?? "";
             var code = variable.Code?.ToLower() ?? "";
@@ -371,7 +396,7 @@ namespace GenericApp.API.Controllers
                 case nameof(ContractTemplateVariablesEnum.nombreEmpresa):
                     return company.RazonSocial;
                 case nameof(ContractTemplateVariablesEnum.fechaActualContrato):
-                    return fechaActual.ToString("d 'DIAS DEL MES DE' MMMM 'DEL AÑO' yyyy", new CultureInfo("es-ES")).ToUpper();
+                    return fechaActual.ToString("d 'días del mes de' MMMM 'del año' yyyy", new CultureInfo("es-ES"));
                 case nameof(ContractTemplateVariablesEnum.clave):
                     return employee.Clave.ToString();
                 case nameof(ContractTemplateVariablesEnum.nombre):
@@ -410,14 +435,7 @@ namespace GenericApp.API.Controllers
                 case nameof(ContractTemplateVariablesEnum.fechaActualFormatoCorto):
                     return fechaActual.ToString("dd/MM/yyyy");
                 case nameof(ContractTemplateVariablesEnum.fechaActualFormatoLargo):
-                    return fechaActual.ToString("dddd, d 'de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
-                case nameof(ContractTemplateVariablesEnum.firmaContrato):
-                    if (!string.IsNullOrEmpty(signatureBase64))
-                    {
-                        // Retornar la imagen como HTML embebido con data URI dentro de un párrafo
-                        return $"<p style=\"text-align: center;\"><img src=\"data:image/png;base64,{signatureBase64}\" alt=\"Firma\" width=\"265\" height=\"102\" /></p>";
-                    }
-                    return "";
+                    return fechaActual.ToString("d 'de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1):
                     return employee.Beneficiaries?.ElementAtOrDefault(0)?.Name ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1_Domicilio):
@@ -476,8 +494,169 @@ namespace GenericApp.API.Controllers
             return "";
         }
 
+        /// <summary>
+        /// Renders the signatures section. Leaves the employee signature space blank during preview.
+        /// </summary>
+        private void RenderSignatures(ColumnDescriptor col, List<ContractSign> signs, int idCompany, string? signatureBase64 = null, string? nombreEmpleado = null, string? employeePosition = null)
+        {
+            const int maxSignsPerRow = 4;
+            // Mantenemos la altura total de 80, pero organizaremos mejor el espacio interior.
+            const float signatureAreaHeight = 65;
 
-        private void ComposeContractHeader(IContainer container, Company company, Employee employee)
+            // Always add employee signature placeholder at the end
+            var allSignatures = new List<ContractSignDTO>();
+
+            // Add existing signs
+            foreach (var sign in signs)
+            {
+                allSignatures.Add(new ContractSignDTO
+                {
+                    Name = sign.Name ?? "Sin nombre",
+                    SignFileName = sign.SignFileName,
+                    IsEmployee = false
+                });
+            }
+            // Add employee signature placeholder
+            allSignatures.Add(new ContractSignDTO
+            {
+                Name = string.IsNullOrEmpty(nombreEmpleado) ? "Firma del empleado" : nombreEmpleado,
+                SignFileName = "firma-default.png",
+                IsEmployee = true,
+                SignBase64 = signatureBase64,
+                Position = employeePosition
+            });
+
+
+            // Group signatures in rows of maximum 4
+            var signatureRows = new List<List<ContractSignDTO>>();
+            for (int i = 0; i < allSignatures.Count; i += maxSignsPerRow)
+            {
+                signatureRows.Add(allSignatures.Skip(i).Take(maxSignsPerRow).ToList());
+            }
+
+            var signsPath = _configuration["contractsSettings:contractsSignsPath"] ?? "Signs";
+
+            // Render using table layout for full width distribution with centered content
+            col.Item().AlignCenter().Table(table =>
+            {
+                // Define 4 equal columns
+                table.ColumnsDefinition(cd =>
+                {
+                    for (int i = 0; i < maxSignsPerRow; i++)
+                        cd.RelativeColumn();
+                });
+
+                foreach (var row in signatureRows)
+                {
+                    int signsInRow = row.Count;
+
+                    // Render each signature in the row following the layout rules
+                    for (int index = 0; index < signsInRow; index++)
+                    {
+                        var signInfo = row[index];
+                        var cell = table.Cell();
+
+                        // Apply custom colspans and positional cells depending on the signature count in the row
+                        if (signsInRow == 1)
+                        {
+                            cell.ColumnSpan(4);
+                        }
+                        else if (signsInRow == 2)
+                        {
+                            cell.ColumnSpan(2);
+                        }
+                        else if (signsInRow == 3)
+                        {
+                            if (index == 1)
+                            {
+                                cell.ColumnSpan(2);
+                            }
+                        }
+
+                        // --- CAMBIO 1: Reducción del padding de la celda ---
+                        // Reducimos el padding general de la celda de 2 a 1 para ganar espacio vertical.
+                        cell.Padding(1).Column(signatureCol =>
+                        {
+                            // --- CAMBIO 2: Reducción de la altura de la imagen ---
+                            // Reducimos la altura dedicada a la imagen de 80 a 55 para dejar espacio para la línea y el texto.
+                            // Ajuste este valor si necesita la imagen más grande o más pequeña.
+                            signatureCol.Item().Height(signatureAreaHeight).AlignCenter()
+                                .Element(container =>
+                                {
+                                    if (signInfo.IsEmployee == true)
+                                    {
+                                        if (string.IsNullOrEmpty(signatureBase64))
+                                        {
+                                            // During preview, show a placeholder for the employee signature
+                                            container.Border(1)
+                                                .BorderColor(Colors.Grey.Lighten1)
+                                                .AlignCenter()
+                                                .AlignMiddle()
+                                                .Text("[Firma del empleado]")
+                                                .FontSize(7)
+                                                .FontFamily(Fonts.Lato)
+                                                .FontColor(Colors.Grey.Medium);
+                                        }
+                                        else
+                                        {
+                                            byte[] imageBytes = Convert.FromBase64String(signatureBase64);
+                                            container.AlignCenter().AlignMiddle().Image(imageBytes).FitArea();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // Try to load the signature image
+                                        var signPath = Path.Combine(_env.WebRootPath, "img", signsPath, idCompany.ToString(), signInfo.SignFileName);
+                                        if (System.IO.File.Exists(signPath))
+                                        {
+                                            // Image fills container while maintaining aspect ratio
+                                            container.AlignCenter().AlignMiddle().Image(signPath).FitArea();
+                                        }
+                                        else
+                                        {
+                                            // File not found: show placeholder
+                                            container.Border(1)
+                                                    .BorderColor(Colors.Grey.Lighten1)
+                                                    .AlignCenter()
+                                                    .AlignMiddle()
+                                                    .Text("[Imagen no encontrada]")
+                                                    .FontSize(7)
+                                                    .FontFamily(Fonts.Lato)
+                                                    .FontColor(Colors.Grey.Medium);
+                                        }
+                                    }
+                                });
+
+                            //// --- CAMBIO 3: Ajuste de espaciado y grosor de línea ---
+                            //// Reducimos el PaddingTop de 4 a 1 y aumentamos el grosor de la línea a 1.5 para mayor visibilidad.
+                            //signatureCol.Item()
+                            //    .AlignCenter()
+                            //    .LineHorizontal(10f) // Línea ligeramente más gruesa
+                            //    .LineColor(Colors.Black);
+
+                            // Name label
+                            // Reducimos el PaddingTop de 2 a 1.
+                            signatureCol.Item().BorderBottom(1).PaddingBottom(1)
+                                .AlignCenter()
+                                .Text(signInfo.Name)
+                                .FontSize(12)
+                                .FontFamily(Fonts.Lato)
+                                .FontColor(Colors.Black);
+                            if (signInfo.IsEmployee ?? false)
+                                signatureCol.Item()
+                                   .AlignCenter()
+                                   .Text("NOMBRE Y FIRMA COMPLETO DEL TRABAJADOR")
+                                   .FontSize(8)
+                                   .Bold()
+                                   .FontFamily(Fonts.Lato)
+                                   .FontColor(Colors.Black);
+                        });
+                    }
+                }
+            });
+        }
+
+        private void ComposeContractHeader(IContainer container, Company company, Employee employee,string contractTemplateName)
         {
             container.Column(column =>
             {
@@ -502,7 +681,7 @@ namespace GenericApp.API.Controllers
 
                     row.RelativeItem().AlignMiddle().Column(col =>
                     {
-                        col.Item().AlignCenter().Text("CONTRATO LABORAL")
+                        col.Item().AlignCenter().Text(contractTemplateName)
                             .Bold().FontSize(14).FontColor(Colors.Black);
 
                         var subtitle = company.RazonSocial ?? company.Name;
@@ -511,9 +690,9 @@ namespace GenericApp.API.Controllers
                                 .Text(subtitle.ToUpper())
                                 .FontSize(9).FontColor(Colors.Grey.Darken2);
 
-                        col.Item().AlignCenter().PaddingTop(2)
-                            .Text($"{employee.Nombre} {employee.ApellidoPaterno} {employee.ApellidoMaterno}".Trim())
-                            .FontSize(10).FontColor(Colors.Grey.Darken1);
+                        //col.Item().AlignCenter().PaddingTop(2)
+                        //    .Text($"{employee.Nombre} {employee.ApellidoPaterno} {employee.ApellidoMaterno}".Trim())
+                        //    .FontSize(10).FontColor(Colors.Grey.Darken1);
                     });
 
                     row.ConstantItem(logoColWidth);

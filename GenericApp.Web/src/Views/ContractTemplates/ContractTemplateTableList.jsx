@@ -84,10 +84,7 @@ const ContractTemplateTableList = ({
                                 <TableCell><Skeleton variant="text" width="50%" /></TableCell>
                                 <TableCell align="center">
                                     <Skeleton variant="circular" width={30} height={30} sx={{ mx: 'auto' }} />
-                                </TableCell>
-                                <TableCell align="center">
-                                    <Skeleton variant="circular" width={30} height={30} sx={{ mx: 'auto' }} />
-                                </TableCell>
+                                </TableCell>                               
                                 <TableCell align="center">
                                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
                                         <Skeleton variant="circular" width={30} height={30} />

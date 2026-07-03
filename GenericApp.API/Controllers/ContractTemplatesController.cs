@@ -460,29 +460,29 @@ namespace GenericApp.API.Controllers
             const float signatureAreaHeight = 65;
 
             // Always add employee signature placeholder at the end
-            var allSignatures = new List<SignatureInfo>();
+            var allSignatures = new List<ContractSignDTO>();
 
             // Add existing signs
             foreach (var sign in signs)
             {
-                allSignatures.Add(new SignatureInfo
+                allSignatures.Add(new ContractSignDTO
                 {
                     Name = sign.Name ?? "Sin nombre",
-                    FileName = sign.SignFileName,
+                    SignFileName = sign.SignFileName,
                     IsEmployee = false
                 });
             }
 
             // Add employee signature placeholder
-            allSignatures.Add(new SignatureInfo
+            allSignatures.Add(new ContractSignDTO
             {
                 Name = "Firma del empleado",
-                FileName = "firma-default.png",
+                SignFileName = "firma-default.png",
                 IsEmployee = true
             });
 
             // Group signatures in rows of maximum 4
-            var signatureRows = new List<List<SignatureInfo>>();
+            var signatureRows = new List<List<ContractSignDTO>>();
             for (int i = 0; i < allSignatures.Count; i += maxSignsPerRow)
             {
                 signatureRows.Add(allSignatures.Skip(i).Take(maxSignsPerRow).ToList());
@@ -538,9 +538,9 @@ namespace GenericApp.API.Controllers
                                 .Element(container =>
                                 {
                                     // Try to load the signature image
-                                    var signPath = signInfo.IsEmployee
-                                    ? Path.Combine(_env.WebRootPath, "img", signInfo.FileName)
-                                    : Path.Combine(_env.WebRootPath, "img", signsPath, idCompany.ToString(), signInfo.FileName);
+                                    var signPath = signInfo.IsEmployee ?? true
+                                    ? Path.Combine(_env.WebRootPath, "img", signInfo.SignFileName)
+                                    : Path.Combine(_env.WebRootPath, "img", signsPath, idCompany.ToString(), signInfo.SignFileName);
                                     if (System.IO.File.Exists(signPath))
                                     {
                                         // Image fills container while maintaining aspect ratio

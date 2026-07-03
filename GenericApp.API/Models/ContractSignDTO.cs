@@ -9,5 +9,8 @@ namespace GenericApp.API.Models
         public int IdCompany { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
+        public bool? IsEmployee { get; set; } = true;
+        public string? SignBase64 { get; set; }
+        public string? Position { get; set; }
     }
 }
