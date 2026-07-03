@@ -596,6 +596,7 @@
   "noEmployeesFound": "No se encontraron empleados",
   "selectedEmployee": "Empleado Seleccionado",
   "imss": "IMSS",
+  "signContract": "Firmar contrato",
   "selectContractTemplates": "Seleccionar Plantillas de Contrato",
   "noTemplatesAvailable": "No hay plantillas disponibles",
   "previewTemplate": "Previsualizar plantilla",

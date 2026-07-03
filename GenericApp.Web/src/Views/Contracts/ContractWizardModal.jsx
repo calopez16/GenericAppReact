@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -43,9 +43,14 @@ import { DataAPIContractTemplatesService } from '@data/ContractTemplates/Data';
 import { DataAPIContractsService } from '@data/Contracts/Data';
 import { ShowMessage } from '@helpers/NotificationService';
 import SignaturePadModal from '@/Components/SignaturePadModal';
+import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
 const CACHE_KEY_SELECTED_TEMPLATES = 'contracts_wizard_selected_templates';
 const CACHE_KEY_SHOW_PREVIEW = 'contracts_wizard_show_preview';
+const CANVAS_WIDTH = 500;
+const CANVAS_HEIGHT = 150;
 
 const ContractWizardModal = ({ open, onClose, onComplete }) => {
     const { t } = useTranslation();
@@ -72,6 +77,18 @@ const ContractWizardModal = ({ open, onClose, onComplete }) => {
 
     const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
     const [loadingPreview, setLoadingPreview] = useState(false);
+
+    const canvasRef = useRef(null);
+    const timerRef = useRef(null);
+
+    const [padActive, setPadActive] = useState(false);
+    const [sigwebReady, setSigwebReady] = useState(false);
+    const [sigwebError, setSigwebError] = useState('');
+    const [hasSignatureData, setHasSignatureData] = useState(false);
+
+    // Determinar el índice dinámico del step de firmas
+    const signatureStepIndex = showPreview ? 3 : 2;
+
 
     const steps = showPreview 
         ? [
@@ -109,6 +126,91 @@ const ContractWizardModal = ({ open, onClose, onComplete }) => {
         }
     }, [open]);
 
+    useEffect(() => {
+        // 1. Limpieza de seguridad: Si sale del step de firma, apagar el hardware inmediatamente
+        if (!open || activeStep !== signatureStepIndex) {
+            if (timerRef.current !== null) {
+                window.SetTabletState?.(0, timerRef.current);
+                timerRef.current = null;
+            }
+            return;
+        }
+
+        // 2. Preparar el entorno al entrar al step de firma
+        setSigwebError('');
+        setHasSignatureData(false); // Reiniciar estado de validación
+
+        const installed = typeof window.IsSigWebInstalled === 'function'
+            ? window.IsSigWebInstalled()
+            : typeof window.SetTabletState === 'function';
+
+        if (!installed) {
+            setSigwebError(
+                t('sigweb_notAvailable') ||
+                'SigWeb no está disponible. Verifique que el servicio está instalado y ejecutándose.'
+            );
+            setSigwebReady(false);
+            return;
+        }
+
+        setSigwebReady(true);
+
+        // 3. Ejecutar el encendido y reinicio automático del lienzo
+        setTimeout(() => {
+            if (typeof window.SetTabletState !== 'function' || !canvasRef.current) return;
+
+            const canvas = canvasRef.current;
+            canvas.width = CANVAS_WIDTH;
+            canvas.height = CANVAS_HEIGHT;
+
+            const ctx2d = canvas.getContext('2d');
+
+            if (timerRef.current !== null) {
+                window.SetTabletState(0, timerRef.current);
+                timerRef.current = null;
+            }
+
+            window.ClearTablet?.();
+            window.NumPointsLastTime = 0;
+            ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+
+            window.SetImageXSize?.(CANVAS_WIDTH);
+            window.SetImageYSize?.(CANVAS_HEIGHT);
+
+            timerRef.current = window.SetTabletState(1, ctx2d);
+
+            // --- FUNCIÓN DE ESCUCHA EXTRAÍDA ---
+            window.startPointsCheck = () => {
+                const checkPointsInterval = setInterval(() => {
+                    if (!open || activeStep !== signatureStepIndex) {
+                        clearInterval(checkPointsInterval);
+                        return;
+                    }
+                    if (typeof window.NumberOfTabletPoints === 'function') {
+                        const points = parseInt(window.NumberOfTabletPoints(), 10);
+                        if (points > 0) {
+                            setHasSignatureData(true);
+                            clearInterval(checkPointsInterval); // Se apaga al detectar firma
+                        }
+                    }
+                }, 300);
+            };
+
+            // Iniciar la escucha inicial
+            window.startPointsCheck();
+
+        }, 150);
+    }, [open, activeStep, signatureStepIndex]);
+
+    // Desmontaje total del componente (Cierre del Modal)
+    useEffect(() => {
+        return () => {
+            if (timerRef.current !== null) {
+                window.SetTabletState?.(0, timerRef.current);
+                timerRef.current = null;
+            }
+        };
+    }, []);
     useEffect(() => {
         if (selectedTemplates.length > 0) {
             localStorage.setItem(CACHE_KEY_SELECTED_TEMPLATES, JSON.stringify(selectedTemplates));
@@ -259,45 +361,68 @@ const ContractWizardModal = ({ open, onClose, onComplete }) => {
     };
 
     const handleComplete = async () => {
-        if (!signatureData || !selectedEmployee || selectedTemplates.length === 0) {
+        if (!selectedEmployee || selectedTemplates.length === 0) {
             ShowMessage(t('error') || 'Error', 'error');
             return;
         }
 
-        try {
-            setIsSaving(true);
+        const points = window.NumberOfTabletPoints
+            ? parseInt(window.NumberOfTabletPoints(), 10)
+            : 0;
 
-            const payload = {
-                idEmployee: selectedEmployee.idEmployee,
-                idCompany: companySelected.idCompany,
-                templateIds: selectedTemplates.map(t => t.idTemplate),
-                signatureBase64: signatureData.base64,
-                signatureString: signatureData.sigString
-            };
-
-            const result = await contractService.addData(payload, true);
-
-            if (result.success) {
-                ShowMessage(t('contractSaved') || 'Contrato guardado exitosamente', 'success');
-                if (onComplete) {
-                    onComplete({
-                        employee: selectedEmployee,
-                        templates: selectedTemplates,
-                        signature: signatureData
-                    });
-                }
-                handleClose();
-            } else {
-                ShowMessage(result.message || t('error'), 'error');
-            }
-        } catch (error) {
-            console.error('Error saving contract:', error);
-            ShowMessage(t('error') || 'Error al guardar el contrato', 'error');
-        } finally {
-            setIsSaving(false);
+        if (points === 0) {
+            setSigwebError(t('sigweb_noSignature') || 'Por favor, firme en el pad antes de guardar.');
+            return;
         }
-    };
 
+        setSigwebError('');
+
+        // Apagar periférico antes del volcado de bytes
+        if (timerRef.current !== null) {
+            window.SetTabletState?.(0, timerRef.current);
+            timerRef.current = null;
+            setPadActive(false);
+        }
+
+        window.SetImageXSize?.(CANVAS_WIDTH);
+        window.SetImageYSize?.(CANVAS_HEIGHT);
+
+        // Obtener imagen en base64 de forma asíncrona mediante el callback del SDK
+        window.GetSigImageB64(async (base64Image) => {
+            const sigString = window.GetSigString ? window.GetSigString() : null;
+
+            try {
+                setIsSaving(true);
+                const payload = {
+                    idEmployee: selectedEmployee.idEmployee,
+                    idCompany: companySelected.idCompany,
+                    templateIds: selectedTemplates.map(t => t.idTemplate),
+                    signatureBase64: base64Image, // Enviado directamente
+                    signatureString: sigString
+                };
+
+                const result = await contractService.addData(payload, true);
+                if (result.success) {
+                    ShowMessage(t('contractSaved') || 'Contrato guardado exitosamente', 'success');
+                    if (onComplete) {
+                        onComplete({
+                            employee: selectedEmployee,
+                            templates: selectedTemplates,
+                            signature: { base64: base64Image, sigString }
+                        });
+                    }
+                    handleClose();
+                } else {
+                    ShowMessage(result.message || t('error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error saving contract:', error);
+                ShowMessage(t('error') || 'Error al guardar el contrato', 'error');
+            } finally {
+                setIsSaving(false);
+            }
+        });
+    };
     const handleOpenSignature = () => {
         setIsSignatureModalOpen(true);
     };
@@ -329,7 +454,7 @@ const ContractWizardModal = ({ open, onClose, onComplete }) => {
                 case 2:
                     return true;
                 case 3:
-                    return signatureData !== null;
+                    return hasSignatureData; // Habilita el botón al firmar
                 default:
                     return false;
             }
@@ -340,10 +465,48 @@ const ContractWizardModal = ({ open, onClose, onComplete }) => {
                 case 1:
                     return selectedTemplates.length > 0;
                 case 2:
-                    return signatureData !== null;
+                    return hasSignatureData; // Habilita el botón al firmar
                 default:
                     return false;
             }
+        }
+    };
+
+    const startPadInstance = () => {
+        if (typeof window.SetTabletState !== 'function' || !canvasRef.current) return;
+        setSigwebError('');
+
+        const canvas = canvasRef.current;
+        const ctx2d = canvas.getContext('2d');
+
+        window.ClearTablet?.();
+        window.NumPointsLastTime = 0;
+        ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.SetImageXSize?.(CANVAS_WIDTH);
+        window.SetImageYSize?.(CANVAS_HEIGHT);
+
+        const timer = window.SetTabletState(1, ctx2d);
+        timerRef.current = timer;
+        setPadActive(true);
+    };
+
+    const stopPadInstance = () => {
+        if (timerRef.current !== null) {
+            window.SetTabletState?.(0, timerRef.current);
+            timerRef.current = null;
+        }
+        setPadActive(false);
+    };
+
+    const clearPadSignature = () => {
+        if (typeof window.ClearTablet !== 'function') return;
+        window.ClearTablet();
+        window.NumPointsLastTime = 0;
+
+        const canvas = canvasRef.current;
+        if (canvas) {
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
         }
     };
 
@@ -592,107 +755,79 @@ const ContractWizardModal = ({ open, onClose, onComplete }) => {
 
             case signStep:
                 return (
-                    <Box>
-                        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <DrawIcon sx={{ color: 'primary.main' }} />
-                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                                {t('digitalSignature') || 'Firma Digital'}
+                    <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="subtitle1" fontWeight={600}>
+                                {t('signContract') || 'Firmar Contrato'}
                             </Typography>
+                            <Chip
+                                icon={<FiberManualRecordIcon sx={{ fontSize: 12 }} />}
+                                label={
+                                    sigwebReady
+                                        ? (t('sigweb_active') || 'Pad Conectado e Inicializado')
+                                        : (t('sigweb_disconnected') || 'Sin conexión')
+                                }
+                                size="small"
+                                color={sigwebReady ? 'success' : 'error'}
+                                variant="outlined"
+                            />
                         </Box>
 
-                        {signatureData ? (
-                            <Paper
-                                elevation={0}
-                                sx={{
-                                    p: 2,
-                                    border: '1px solid',
-                                    borderColor: 'success.main',
-                                    borderRadius: 2,
-                                    bgcolor: 'success.lighter'
-                                }}
-                            >
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                    <DrawIcon sx={{ color: 'success.main' }} />
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'success.main' }}>
-                                        {t('signatureCaptured') || 'Firma Capturada'}
-                                    </Typography>
-                                </Box>
-                                <Box
-                                    component="img"
-                                    src={`data:image/png;base64,${signatureData.base64}`}
-                                    alt="Signature"
-                                    sx={{
-                                        width: '100%',
-                                        maxWidth: 500,
-                                        height: 'auto',
-                                        border: '1px solid',
-                                        borderColor: 'divider',
-                                        borderRadius: 1,
-                                        bgcolor: 'white',
-                                        display: 'block',
-                                        mx: 'auto'
-                                    }}
-                                />
-                                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                                    <Button
-                                        variant="outlined"
-                                        size="small"
-                                        onClick={handleOpenSignature}
-                                        startIcon={<DrawIcon />}
-                                    >
-                                        {t('retakeSignature') || 'Capturar Nuevamente'}
-                                    </Button>
-                                </Box>
-                            </Paper>
-                        ) : (
-                            <Paper
-                                elevation={0}
-                                sx={{
-                                    p: 4,
-                                    border: '2px dashed',
-                                    borderColor: 'divider',
-                                    borderRadius: 2,
-                                    textAlign: 'center'
-                                }}
-                            >
-                                <DrawIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-                                <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                                    {t('signatureRequired') || 'Es necesario capturar la firma digital'}
-                                </Typography>
-                                <Button
-                                    variant="contained"
-                                    size="large"
-                                    onClick={handleOpenSignature}
-                                    startIcon={<DrawIcon />}
-                                >
-                                    {t('captureSignature') || 'Capturar Firma'}
-                                </Button>
-                            </Paper>
+                        {sigwebError && (
+                            <Alert severity="warning" onClose={() => setSigwebError('')}>
+                                {sigwebError}
+                            </Alert>
                         )}
 
-                        <Box
-                            sx={{
-                                mt: 3,
-                                p: 2,
-                                borderRadius: 2,
-                                bgcolor: 'info.lighter',
-                                border: '1px solid',
-                                borderColor: 'info.main'
-                            }}
-                        >
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'info.main' }}>
-                                {t('contractSummary') || 'Resumen del Contrato'}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                            {/* Lienzo del Canvas interactivo */}
+                            <canvas
+                                ref={canvasRef}
+                                width={CANVAS_WIDTH}
+                                height={CANVAS_HEIGHT}
+                                style={{
+                                    border: '2px solid',
+                                    borderColor: theme.palette.primary.main,
+                                    borderRadius: 8,
+                                    backgroundColor: '#fafafa',
+                                    maxWidth: '100%',
+                                    cursor: 'crosshair',
+                                    display: 'block',
+                                }}
+                            />
+
+                            <Typography variant="caption" color="text.secondary">
+                                {t('sigweb_instruction') || 'El Pad Topaz está listo. Puede firmar directamente sobre el dispositivo periférico.'}
                             </Typography>
-                            <Typography variant="body2">
-                                <strong>{t('employee') || 'Empleado'}:</strong> {selectedEmployee?.nombre} {selectedEmployee?.apellidoPaterno} {selectedEmployee?.apellidoMaterno}
-                            </Typography>
-                            <Typography variant="body2">
-                                <strong>{t('templates') || 'Plantillas'}:</strong> {selectedTemplates.map(t => t.name).join(', ')}
-                            </Typography>
+
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Button
+                                    variant="outlined"
+                                    color="secondary"
+                                    startIcon={<DeleteOutlineIcon />}
+                                    onClick={() => {
+                                        if (typeof window.ClearTablet !== 'function') return;
+                                        window.ClearTablet();
+                                        window.NumPointsLastTime = 0;
+                                        setHasSignatureData(false); // Bloquea el botón de guardar nuevamente
+
+                                        if (canvasRef.current) {
+                                            canvasRef.current.getContext('2d').clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                                        }
+
+                                        // --- RE-EN CENDER LA ESCUCHA TRAS LIMPIAR ---
+                                        if (typeof window.startPointsCheck === 'function') {
+                                            window.startPointsCheck();
+                                        }
+                                    }}
+                                    disabled={!sigwebReady}
+                                >
+                                    {t('sigweb_clear') || 'Limpiar Firma'}
+                                </Button>
+                            </Box>
                         </Box>
                     </Box>
                 );
-
             default:
                 return null;
         }
@@ -789,12 +924,7 @@ const ContractWizardModal = ({ open, onClose, onComplete }) => {
             </DialogActions>
         </Dialog>
 
-        <SignaturePadModal
-            open={isSignatureModalOpen}
-            onClose={() => setIsSignatureModalOpen(false)}
-            onSave={handleSignatureSave}
-            autoStart={true}
-        />
+       
         </>
     );
 };
