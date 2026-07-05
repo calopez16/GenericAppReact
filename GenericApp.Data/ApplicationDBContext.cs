@@ -311,6 +311,11 @@ namespace GenericApp.Data
                     .WithMany()
                     .HasForeignKey(c => c.IdCompany)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(c => c.IdEmployeeNavigation)
+                   .WithMany()
+                   .HasForeignKey(c => c.IdEmployee)
+                   .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Season>(b =>
@@ -465,7 +470,7 @@ namespace GenericApp.Data
                 new City { IdCity = 10, IdState = 37, Description = "San Jose", IsActive = true, IsDeleted = false },
                 new City { IdCity = 11, IdState = 37, Description = "Calexico", IsActive = true, IsDeleted = false }
             );
-            
+
             modelBuilder.Entity<ContractTemplateVariable>().HasData(
                 new ContractTemplateVariable { IdContractTemplateVariable = 1, Code = "nombreEmpresa", Description = "Nombre de la empresa", Type = "string", IsActive = true, IsDeleted = false },
                 new ContractTemplateVariable { IdContractTemplateVariable = 2, Code = "fechaActualContrato", Description = "Fecha actual contrato", Type = "DateTime", IsActive = true, IsDeleted = false },

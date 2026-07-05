@@ -57,7 +57,7 @@ const ContractsTableList = ({
     const formatDate = (dateString) => {
         if (!dateString) return '-';
         const date = new Date(dateString);
-        return date.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        return date.toLocaleString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true });
     };
 
     return (
@@ -69,11 +69,9 @@ const ContractsTableList = ({
             <Table sx={{ minWidth: 600 }}>
                 <TableHead sx={{ bgcolor: 'action.hover' }}>
                     <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold', width: 10 }} align="center">{t('status')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>{t('documentName')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('employeeName')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', width: 120 }} align="center">{t('signatureDate')}</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', width: 80 }} align="center">{t('preview')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{t('documentName')}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', width: 210 }} align="center">{t('signatureDate')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold', width: 100 }} align="center">{t('actions')}</TableCell>
                     </TableRow>
                 </TableHead>
@@ -81,15 +79,9 @@ const ContractsTableList = ({
                     {loading ? (
                         Array.from(new Array(rowsPerPage)).map((_, index) => (
                             <TableRow key={`skeleton-${index}`} style={{ height: rowHeight }}>
-                                <TableCell align="center">
-                                    <Skeleton variant="rectangular" width={40} height={20} sx={{ mx: 'auto', borderRadius: 1 }} />
-                                </TableCell>
                                 <TableCell><Skeleton variant="text" width="70%" /></TableCell>
                                 <TableCell><Skeleton variant="text" width="60%" /></TableCell>
                                 <TableCell align="center"><Skeleton variant="text" width="80%" sx={{ mx: 'auto' }} /></TableCell>
-                                <TableCell align="center">
-                                    <Skeleton variant="circular" width={30} height={30} sx={{ mx: 'auto' }} />
-                                </TableCell>
                                 <TableCell align="center">
                                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
                                         <Skeleton variant="circular" width={30} height={30} />
@@ -116,22 +108,14 @@ const ContractsTableList = ({
                                         style={isDeleting ? deletingRowStyle : normalRowStyle}
                                         sx={{ '&:last-child td': { borderBottom: 0 } }}
                                     >
-                                        <TableCell align="center">
-                                            <Switch
-                                                checked={contract.isActive ?? false}
-                                                onChange={() => handleToggleContractStatus(contract)}
-                                                size="small"
-                                                disabled={isDeleting}
-                                            />
+                                        <TableCell>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {contract.idEmployeeNavigation.nombre || t('noEmployee')}
+                                            </Typography>
                                         </TableCell>
                                         <TableCell>
                                             <Typography variant="body2" sx={{ fontWeight: 600 }}>
                                                 {contract.documentName || t('noDocumentName')}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {contract.employeeName || t('noEmployee')}
                                             </Typography>
                                         </TableCell>
                                         <TableCell align="center">
@@ -140,19 +124,17 @@ const ContractsTableList = ({
                                             </Typography>
                                         </TableCell>
                                         <TableCell align="center">
-                                            <Tooltip title={t('preview')}>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => handleOpenPreview(contract)}
-                                                    disabled={isDeleting}
-                                                    sx={{ color: 'white', bgcolor: 'info.main', '&:hover': { bgcolor: 'info.dark' } }}
-                                                >
-                                                    <VisibilityIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </TableCell>
-                                        <TableCell align="center">
                                             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                                                <Tooltip title={t('preview')}>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleOpenPreview(contract)}
+                                                        disabled={isDeleting}
+                                                        sx={{ color: 'white', bgcolor: 'info.main', '&:hover': { bgcolor: 'info.dark' } }}
+                                                    >
+                                                        <VisibilityIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
                                                 <Tooltip title={t('delete')}>
                                                     <IconButton
                                                         size="small"

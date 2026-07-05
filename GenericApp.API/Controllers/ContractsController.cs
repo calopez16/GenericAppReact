@@ -74,7 +74,11 @@ namespace GenericApp.API.Controllers
                     VirtualPath = x.VirtualPath,
                     IsActive = x.IsActive,
                     IsDeleted = x.IsDeleted,
-                    IdCompany = x.IdCompany
+                    IdCompany = x.IdCompany,
+                    IdEmployeeNavigation = new EmployeeDTO
+                    {
+                        Nombre = $"{x.IdEmployeeNavigation.Nombre} {x.IdEmployeeNavigation.ApellidoPaterno} {x.IdEmployeeNavigation.ApellidoMaterno}"
+                    }
                 })
                 .ToList();
 
@@ -119,7 +123,7 @@ namespace GenericApp.API.Controllers
                     return BadRequest(new ApiResponse { Message = "No valid templates found" });
 
                 var documentName = $"Contrato_{employee.Nombre}_{employee.ApellidoPaterno}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                var contractsFolder = Path.Combine(_env.WebRootPath, _configuration["contractsSettings:contractsPath"]??"contratos");
+                var contractsFolder = Path.Combine(_env.WebRootPath, _configuration["contractsSettings:contractsPath"] ?? "contratos");
 
                 if (!Directory.Exists(contractsFolder))
                     Directory.CreateDirectory(contractsFolder);
@@ -365,7 +369,7 @@ namespace GenericApp.API.Controllers
         [HttpGet("pdf/{id}")]
         public async Task<IActionResult> GetContractTemplatePdf(int id)
         {
-            var contractSigned =await _repository.GetById<Contract>(id);
+            var contractSigned = await _repository.GetById<Contract>(id);
             var contractsFolder = Path.Combine(_env.WebRootPath, _configuration["contractsSettings:contractsPath"] ?? "contratos");
             var pathFile = Path.Combine(contractsFolder, contractSigned.DocumentName);
             var stream = new FileStream(pathFile, FileMode.Open, FileAccess.Read);
@@ -1048,7 +1052,7 @@ namespace GenericApp.API.Controllers
         /// <paramref name="inherited"/> carries the accumulated parent style so all
         /// ancestor properties (font-size, font-family, bold…) compose correctly.
         /// </summary>
-        private static void BuildInlineSpans(TextDescriptor t,AsDom.IElement el,Func<TextSpanDescriptor, TextSpanDescriptor>? inherited = null)
+        private static void BuildInlineSpans(TextDescriptor t, AsDom.IElement el, Func<TextSpanDescriptor, TextSpanDescriptor>? inherited = null)
         {
             foreach (var child in el.ChildNodes)
             {
@@ -1144,7 +1148,7 @@ namespace GenericApp.API.Controllers
         /// elements, composes <paramref name="style"/> with the element-specific
         /// style so descendant spans receive all ancestor styles.
         /// </summary>
-        private static void ApplyFormattedChildren(TextDescriptor t,AsDom.IElement el,Func<TextSpanDescriptor, TextSpanDescriptor> style)
+        private static void ApplyFormattedChildren(TextDescriptor t, AsDom.IElement el, Func<TextSpanDescriptor, TextSpanDescriptor> style)
         {
             foreach (var child in el.ChildNodes)
             {
@@ -1243,7 +1247,7 @@ namespace GenericApp.API.Controllers
             }
         }
 
-        private static void ApplySpanStyle(TextDescriptor t,AsDom.IElement span,Func<TextSpanDescriptor, TextSpanDescriptor>? inherited = null)
+        private static void ApplySpanStyle(TextDescriptor t, AsDom.IElement span, Func<TextSpanDescriptor, TextSpanDescriptor>? inherited = null)
         {
             var style = span.GetAttribute("style") ?? "";
 

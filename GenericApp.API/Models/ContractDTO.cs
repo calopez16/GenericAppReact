@@ -13,6 +13,7 @@ namespace GenericApp.API.Models
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
         public int IdCompany { get; set; }
+        public virtual EmployeeDTO? IdEmployeeNavigation { get; set; }
         public virtual CompanyDTO? IdCompanyNavigation { get; set; }
     }
 }

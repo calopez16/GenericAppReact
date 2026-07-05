@@ -34,7 +34,7 @@ function ContractsIndex() {
 
     const [contracts, setContracts] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalContracts, setTotalContracts] = useState(0);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -52,6 +52,7 @@ function ContractsIndex() {
     const ANIMATION_DURATION = 500;
 
     const [isPdfLoading, setIsPdfLoading] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
@@ -83,7 +84,7 @@ function ContractsIndex() {
             }
         };
         loadContracts();
-    }, [page, rowsPerPage, debouncedSearchTerm, companySelected]);
+    }, [page, rowsPerPage, debouncedSearchTerm, companySelected, refreshKey]);
 
     const handlePageChange = (event, newPage) => setPage(newPage);
 
@@ -187,6 +188,7 @@ function ContractsIndex() {
         console.log('Wizard completed with data:', data);
         ShowMessage(t('contractWizardCompleted') || 'Datos recopilados correctamente', 'success');
         setPage(0);
+        setRefreshKey(prev => prev + 1);
     };
 
     const handleOpenPdf = async (contract) => {
