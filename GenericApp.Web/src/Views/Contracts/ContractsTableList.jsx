@@ -12,7 +12,8 @@ import {
     Tooltip,
     Typography,
     Box,
-    Skeleton
+    Skeleton,
+    Checkbox
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -44,11 +45,17 @@ const ContractsTableList = ({
     handleOpenPreview,
     deletingId,
     isSearch = false,
-    rowsPerPage = 5
+    rowsPerPage = 5,
+    selectedIds = [],
+    onToggleSelect,
+    onToggleSelectAll
 }) => {
 
     const rowHeight = 65;
-    const colSpan = 6;
+    const colSpan = 7;
+
+    const allSelected = contracts?.length > 0 && contracts.every(c => selectedIds.includes(c.idContract));
+    const someSelected = contracts?.some(c => selectedIds.includes(c.idContract)) && !allSelected;
 
     const emptyRows = !loading && contracts?.length > 0
         ? Math.max(0, rowsPerPage - contracts.length)
@@ -69,6 +76,15 @@ const ContractsTableList = ({
             <Table sx={{ minWidth: 600 }}>
                 <TableHead sx={{ bgcolor: 'action.hover' }}>
                     <TableRow>
+                        <TableCell padding="checkbox">
+                            <Checkbox
+                                size="small"
+                                checked={allSelected}
+                                indeterminate={someSelected}
+                                onChange={e => onToggleSelectAll && onToggleSelectAll(e.target.checked)}
+                                disabled={loading || contracts?.length === 0}
+                            />
+                        </TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('employeeName')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>{t('documentName')}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold', width: 210 }} align="center">{t('signatureDate')}</TableCell>
@@ -79,6 +95,7 @@ const ContractsTableList = ({
                     {loading ? (
                         Array.from(new Array(rowsPerPage)).map((_, index) => (
                             <TableRow key={`skeleton-${index}`} style={{ height: rowHeight }}>
+                                <TableCell padding="checkbox"><Skeleton variant="circular" width={20} height={20} sx={{ mx: 'auto' }} /></TableCell>
                                 <TableCell><Skeleton variant="text" width="70%" /></TableCell>
                                 <TableCell><Skeleton variant="text" width="60%" /></TableCell>
                                 <TableCell align="center"><Skeleton variant="text" width="80%" sx={{ mx: 'auto' }} /></TableCell>
@@ -106,8 +123,17 @@ const ContractsTableList = ({
                                     <TableRow
                                         key={contract.idContract}
                                         style={isDeleting ? deletingRowStyle : normalRowStyle}
-                                        sx={{ '&:last-child td': { borderBottom: 0 } }}
+                                        sx={{ '&:last-child td': { borderBottom: 0 }, cursor: 'pointer' }}
+                                        onClick={() => onToggleSelect && onToggleSelect(contract.idContract)}
                                     >
+                                        <TableCell padding="checkbox" onClick={e => e.stopPropagation()}>
+                                            <Checkbox
+                                                size="small"
+                                                checked={selectedIds.includes(contract.idContract)}
+                                                onChange={() => onToggleSelect && onToggleSelect(contract.idContract)}
+                                                disabled={isDeleting}
+                                            />
+                                        </TableCell>
                                         <TableCell>
                                             <Typography variant="body2" color="text.secondary">
                                                 {contract.idEmployeeNavigation.nombre || t('noEmployee')}
@@ -123,7 +149,7 @@ const ContractsTableList = ({
                                                 {formatDate(contract.signatureDate)}
                                             </Typography>
                                         </TableCell>
-                                        <TableCell align="center">
+                                        <TableCell align="center" onClick={e => e.stopPropagation()}>
                                             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
                                                 <Tooltip title={t('preview')}>
                                                     <IconButton

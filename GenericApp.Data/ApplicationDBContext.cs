@@ -170,7 +170,6 @@ namespace GenericApp.Data
                 b.Property(x => x.Description).HasMaxLength(180);
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
             });
 
             modelBuilder.Entity<Client>(b =>
@@ -226,6 +225,8 @@ namespace GenericApp.Data
                     .WithMany()
                     .HasForeignKey(e => e.IdCompany)
                     .OnDelete(DeleteBehavior.Restrict);
+
+
             });
 
             modelBuilder.Entity<EmployeeWorkInformation>(b =>
@@ -302,20 +303,21 @@ namespace GenericApp.Data
             modelBuilder.Entity<Contract>(b =>
             {
                 b.HasKey(x => x.IdContract);
+                b.Property(x => x.CreateDate).HasDefaultValueSql("GETDATE()");
                 b.Property(x => x.DocumentName).HasMaxLength(250);
                 b.Property(x => x.VirtualPath).HasMaxLength(500);
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
 
+                b.HasOne(c => c.IdEmployeeNavigation)
+                    .WithMany(e => e.Contracts)
+                    .HasForeignKey(c => c.IdEmployee)
+                    .OnDelete(DeleteBehavior.Restrict);
+
                 b.HasOne(c => c.IdCompanyNavigation)
                     .WithMany()
                     .HasForeignKey(c => c.IdCompany)
                     .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(c => c.IdEmployeeNavigation)
-                   .WithMany()
-                   .HasForeignKey(c => c.IdEmployee)
-                   .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Season>(b =>

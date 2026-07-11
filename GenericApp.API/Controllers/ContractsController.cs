@@ -7,10 +7,12 @@ using GenericApp.Data.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System.Globalization;
+using System.IO.Compression;
 using System.Text.RegularExpressions;
 using AsDom = AngleSharp.Dom;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
@@ -47,7 +49,9 @@ namespace GenericApp.API.Controllers
             [FromQuery] int idCompany,
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
-            [FromQuery] string? searchTerm = null)
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] DateTime? dateFrom = null,
+            [FromQuery] DateTime? dateTo = null)
         {
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 10;
@@ -57,6 +61,11 @@ namespace GenericApp.API.Controllers
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
                 query = query.Where(x => (x.DocumentName != null && x.DocumentName.Contains(searchTerm)));
+
+            if (dateFrom.HasValue)
+                query = query.Where(x => (x.SignatureDate ?? x.CreateDate) >= dateFrom.Value.Date);
+            if (dateTo.HasValue)
+                query = query.Where(x => (x.SignatureDate ?? x.CreateDate) <= dateTo.Value.Date.AddDays(1).AddTicks(-1));
 
             query = query.OrderByDescending(x => x.SignatureDate ?? x.CreateDate);
 
@@ -93,6 +102,108 @@ namespace GenericApp.API.Controllers
 
             return Ok(new ApiResponse { Data = paginatedResponse });
         }
+
+        /// <summary>
+        /// Returns a paginated list of signed contracts ordered by creation date descending.
+        /// </summary>
+        [HttpGet("employee-pagination")]
+        public async Task<ActionResult> GetEmployeesWithContractsPagination(
+            [FromQuery] int idCompany,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] DateTime? dateFrom = null,
+            [FromQuery] DateTime? dateTo = null,
+            [FromQuery] bool showNoContract = false)
+        {
+            try
+            {
+
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                var query = await _repository.Query<Employee>();
+                query = query.Where(x => x.IdCompany == idCompany && !(x.IsDeleted ?? false));
+
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                    query = query.Where(x => (x.Nombre != null && x.Nombre.Contains(searchTerm)));
+
+                query = query.Include(x => x.Contracts);
+
+                if (dateFrom.HasValue || dateTo.HasValue)
+                {
+                    if (showNoContract)
+                    {
+                        // Employees who have NO contract signed within the date range
+                        query = query.Where(x => !x.Contracts.Any(c =>
+                            !(c.IsDeleted ?? false) &&
+                            (!dateFrom.HasValue || (c.SignatureDate ?? c.CreateDate) >= dateFrom.Value.Date) &&
+                            (!dateTo.HasValue || (c.SignatureDate ?? c.CreateDate) <= dateTo.Value.Date.AddDays(1).AddTicks(-1))));
+                    }
+                }
+                else if (showNoContract)
+                {
+                    // No date filter: employees with no contracts at all
+                    query = query.Where(x => !x.Contracts.Any(c => !(c.IsDeleted ?? false)));
+                }
+
+                query = query.OrderByDescending(x => x.Nombre ?? x.Nombre);
+
+                var totalRows = query.Count();
+                var data = query
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(x => new EmployeeDTO
+                    {
+                        IdEmployee = x.IdEmployee,
+                        Clave = x.Clave,
+                        Nombre = x.Nombre,
+                        ApellidoPaterno = x.ApellidoPaterno,
+                        ApellidoMaterno = x.ApellidoMaterno,
+                        Address = x.Address,
+                        RFC = x.RFC,
+                        CURP = x.CURP,
+                        IMSS = x.IMSS,
+                        Genre = x.Genre,
+                        CivilStatus = x.CivilStatus,
+                        Position = x.Position,
+                        BirthDate = x.BirthDate,
+                        IsActive = x.IsActive,
+                        IdCompany = x.IdCompany,
+                        Contracts = x.Contracts
+                            .Where(s => !(s.IsDeleted ?? false) &&
+                                (!dateFrom.HasValue || (s.SignatureDate ?? s.CreateDate) >= dateFrom.Value.Date) &&
+                                (!dateTo.HasValue || (s.SignatureDate ?? s.CreateDate) <= dateTo.Value.Date.AddDays(1).AddTicks(-1)))
+                            .OrderByDescending(o => o.SignatureDate)
+                            .Select(s => new ContractDTO
+                            {
+                                IdContract = s.IdContract,
+                                VirtualPath = s.VirtualPath,
+                                DocumentName = s.DocumentName,
+                                SignatureDate = s.SignatureDate
+                            }).OrderBy(x => x.SignatureDate).ToList()
+                    })
+                    .ToList();
+
+                var paginatedResponse = new
+                {
+                    TotalCount = totalRows,
+                    PageSize = pageSize,
+                    CurrentPage = pageNumber,
+                    TotalPages = (int)System.Math.Ceiling((double)totalRows / pageSize),
+                    Data = data
+                };
+
+                return Ok(new ApiResponse { Data = paginatedResponse });
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+        }
+
 
         /// <summary>
         /// Creates a new signed contract with multiple templates and saves PDF to disk.
@@ -229,7 +340,20 @@ namespace GenericApp.API.Controllers
                 if (!result)
                     return BadRequest(new ApiResponse { Message = "Failed to save contract" });
 
-                return Ok(new ApiResponse { Data = _mapper.Map<ContractDTO>(contract) });
+                return Ok(new ApiResponse
+                {
+                    Data = new ContractDTO
+                    {
+                        IdEmployee = model.IdEmployee,
+                        IdCompany = model.IdCompany,
+                        CreateDate = DateTime.Now,
+                        SignatureDate = DateTime.Now,
+                        DocumentName = documentName,
+                        VirtualPath = $"/{contractFolderVirtualPath}/{documentName}",
+                        IsActive = true,
+                        IsDeleted = false
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -362,6 +486,40 @@ namespace GenericApp.API.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Downloads a ZIP file containing the PDFs of the specified contract IDs.
+        /// </summary>
+        [HttpPost("download-zip")]
+        public async Task<IActionResult> DownloadContractsZip([FromBody] List<int> contractIds)
+        {
+            if (contractIds == null || contractIds.Count == 0)
+                return BadRequest(new ApiResponse { Message = "At least one contract ID is required" });
+
+            var contractsFolder = Path.Combine(_env.WebRootPath, _configuration["contractsSettings:contractsPath"] ?? "contratos");
+
+            var memoryStream = new MemoryStream();
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, leaveOpen: true))
+            {
+                foreach (var id in contractIds)
+                {
+                    var contract = await _repository.GetById<Contract>(id);
+                    if (contract == null) continue;
+
+                    var filePath = Path.Combine(contractsFolder, contract.DocumentName);
+                    if (!System.IO.File.Exists(filePath)) continue;
+
+                    var entry = archive.CreateEntry(contract.DocumentName, CompressionLevel.Fastest);
+                    using var entryStream = entry.Open();
+                    using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                    await fileStream.CopyToAsync(entryStream);
+                }
+            }
+
+            memoryStream.Position = 0;
+            var zipName = $"Contratos_{Guid.NewGuid()}.zip";
+            return File(memoryStream, "application/zip", zipName);
+        }
 
         /// <summary>
         /// Generates a PDF for a contract template, rendering its HTML content.

@@ -8,7 +8,8 @@ import {
     Tooltip,
     Chip,
     Divider,
-    Skeleton
+    Skeleton,
+    Checkbox
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -25,7 +26,9 @@ const ContractsCardList = ({
     handleOpenPreview,
     deletingId,
     isSearch = false,
-    rowsPerPage = 5
+    rowsPerPage = 5,
+    selectedIds = [],
+    onToggleSelect
 }) => {
 
     const formatDate = (dateString) => {
@@ -36,17 +39,30 @@ const ContractsCardList = ({
 
     const MobileContractCard = ({ contract }) => {
         const isDeleting = contract.idContract === deletingId;
+        const isSelected = selectedIds.includes(contract.idContract);
 
         return (
             <Paper
                 elevation={0}
+                onClick={() => onToggleSelect && onToggleSelect(contract.idContract)}
                 sx={{
-                    p: 2, mb: 2, borderRadius: 3, border: '1px solid', borderColor: 'divider',
+                    p: 2, mb: 2, borderRadius: 3, border: '1.5px solid',
+                    borderColor: isSelected ? 'primary.main' : 'divider',
+                    bgcolor: isSelected ? 'primary.50' : 'background.paper',
                     opacity: isDeleting ? 0.5 : 1,
+                    cursor: 'pointer',
                     transition: '0.3s', '&:hover': { boxShadow: '0 4px 20px 0 rgba(0,0,0,0.05)' }
                 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Checkbox
+                        size="small"
+                        checked={isSelected}
+                        onChange={() => onToggleSelect && onToggleSelect(contract.idContract)}
+                        onClick={e => e.stopPropagation()}
+                        disabled={isDeleting}
+                        sx={{ mr: 1, p: 0 }}
+                    />
                     <Box sx={{ flexGrow: 1 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
                             {contract.documentName || t('noDocumentName')}

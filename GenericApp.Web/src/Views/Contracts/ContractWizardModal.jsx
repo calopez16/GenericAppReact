@@ -52,7 +52,7 @@ const CACHE_KEY_SHOW_PREVIEW = 'contracts_wizard_show_preview';
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 150;
 
-const ContractWizardModal = ({ open, onClose, onComplete }) => {
+const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null, initialStep = 0 }) => {
     const { t } = useTranslation();
     const theme = useTheme();
     const { companySelected } = useContext(AppContext);
@@ -122,6 +122,13 @@ const ContractWizardModal = ({ open, onClose, onComplete }) => {
                 } catch (error) {
                     console.error('Error loading cached preview setting:', error);
                 }
+            }
+
+            if (initialEmployee) {
+                setSelectedEmployee(initialEmployee);
+                setActiveStep(initialStep);
+            } else {
+                setActiveStep(0);
             }
         }
     }, [open]);
@@ -320,6 +327,7 @@ const ContractWizardModal = ({ open, onClose, onComplete }) => {
     const handleClose = () => {
         setActiveStep(0);
         setSelectedEmployee(null);
+        setEmployeeSearchTerm('');
         setSignatureData(null);
         setIsSaving(false);
         if (pdfPreviewUrl) {
@@ -851,9 +859,16 @@ const ContractWizardModal = ({ open, onClose, onComplete }) => {
                         <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }} noWrap>
                             {t('newContract') || 'Nuevo Contrato'}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap>
-                            {t('contractWizard_subtitle') || 'Asistente de creación de contratos'}
-                        </Typography>
+                        {selectedEmployee ? (
+                            <Typography variant="caption" color="text.secondary" noWrap>
+                                {`${selectedEmployee.nombre || ''} ${selectedEmployee.apellidoPaterno || ''} ${selectedEmployee.apellidoMaterno || ''}`.trim()}
+                                {selectedEmployee.rfc ? ` - ${selectedEmployee.rfc}` : ''}
+                            </Typography>
+                        ) : (
+                            <Typography variant="caption" color="text.secondary" noWrap>
+                                {t('contractWizard_subtitle') || 'Asistente de creación de contratos'}
+                            </Typography>
+                        )}
                     </Box>
                     <Tooltip title={t('close')}>
                         <IconButton onClick={handleClose} size="small">

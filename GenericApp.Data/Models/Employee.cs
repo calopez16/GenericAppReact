@@ -25,6 +25,7 @@ namespace GenericApp.Data.Models
         public bool? IsDeleted { get; set; }
         public int IdCompany { get; set; }
         public virtual Company? IdCompanyNavigation { get; set; }
+        public virtual List<Contract> Contracts { get; set; }
         public virtual List<EmployeeWorkInformation> EmployeeWorkInformations { get; set; }
         public virtual List<EmployeeBeneficiarie> Beneficiaries{ get; set; }
         public virtual List<EmployeeDependents> Dependents { get; set; }
