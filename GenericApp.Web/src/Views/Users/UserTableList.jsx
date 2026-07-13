@@ -86,9 +86,9 @@ const UserListTable = ({
                         ))
                     ) : (
                         <>
-                            {users?.map((user) => (
+                            {users?.map((user, index) => (
                                 <TableRow
-                                    key={user.id}
+                                    key={user.id ?? `user-${index}`}
                                     hover
                                     sx={{ '&:last-child td, &:last-child th': { border: 0 }, height: rowHeight }}
                                 >
@@ -142,7 +142,7 @@ const UserListTable = ({
                                     <TableCell>
                                         <Box>
                                             {user.roles.map((rol) => (
-                                                <Typography variant="body2" color="text.secondary">
+                                                <Typography key={rol} variant="body2" color="text.secondary">
                                                     {rol}
                                                 </Typography>
                                             ))}

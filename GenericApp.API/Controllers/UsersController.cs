@@ -2,17 +2,12 @@
 using GenericApp.API.Models;
 using GenericApp.BLL.Sevices.Interface;
 using GenericApp.Data.Models;
-using GenericApp.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Net;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace GenericApp.API.Controllers
 {

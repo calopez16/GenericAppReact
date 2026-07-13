@@ -130,109 +130,107 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                 </Box>
             </Box>
             <Divider />
-            {allowLanguage && (
-                <>
-                    <ListSubheader sx={{ lineHeight: '32px', bgcolor: 'transparent' }}>
-                        {t('select_language')}
-                    </ListSubheader>
-                    <MenuItem
-                        onClick={() => { changeLanguage('es'); handleUserMenuClose(); }}
+            {allowLanguage && [
+                <ListSubheader key="lang-header" sx={{ lineHeight: '32px', bgcolor: 'transparent' }}>
+                    {t('select_language')}
+                </ListSubheader>,
+                <MenuItem
+                    key="lang-es"
+                    onClick={() => { changeLanguage('es'); handleUserMenuClose(); }}
+                    sx={{
+                        py: 1.2, gap: 1.5,
+                        backgroundColor: i18n.language === 'es' ? 'primary.main' : 'transparent',
+                        color: i18n.language === 'es' ? '#fff' : 'inherit',
+                        '&:hover': { backgroundColor: i18n.language === 'es' ? 'primary.dark' : 'action.hover' },
+                        '&.Mui-selected': { backgroundColor: 'primary.main' },
+                        '&.Mui-selected:hover': { backgroundColor: 'primary.dark' },
+                    }}
+                >
+                    <Avatar src={espanishFlag} sx={{ width: 26, height: 26 }} />
+                    <Typography variant="body2" sx={{ flexGrow: 1, fontWeight: i18n.language === 'es' ? 700 : 400 }}>{t('language_spanish')}</Typography>
+                    {i18n.language === 'es' && <CheckIcon fontSize="small" sx={{ color: '#fff' }} />}
+                </MenuItem>,
+                <MenuItem
+                    key="lang-en"
+                    onClick={() => { changeLanguage('en'); handleUserMenuClose(); }}
+                    sx={{
+                        py: 1.2, gap: 1.5,
+                        backgroundColor: i18n.language === 'en' ? 'primary.main' : 'transparent',
+                        color: i18n.language === 'en' ? '#fff' : 'inherit',
+                        '&:hover': { backgroundColor: i18n.language === 'en' ? 'primary.dark' : 'action.hover' },
+                        '&.Mui-selected': { backgroundColor: 'primary.main' },
+                        '&.Mui-selected:hover': { backgroundColor: 'primary.dark' },
+                    }}
+                >
+                    <Avatar src={englishFlag} sx={{ width: 26, height: 26 }} />
+                    <Typography variant="body2" sx={{ flexGrow: 1, fontWeight: i18n.language === 'en' ? 700 : 400 }}>{t('language_english')}</Typography>
+                    {i18n.language === 'en' && <CheckIcon fontSize="small" sx={{ color: '#fff' }} />}
+                </MenuItem>,
+                <Divider key="lang-divider" />,
+            ]}
+            {allowTheme && [
+                <ListSubheader key="theme-header" sx={{ lineHeight: '32px', bgcolor: 'transparent' }}>
+                    {t('configuration')}
+                </ListSubheader>,
+                <Box key="theme-boxes" sx={{ display: 'flex', gap: 1, px: 1.5, pb: 1.5 }}>
+                    <Box
+                        onClick={() => { setThemeMode('light'); handleUserMenuClose(); }}
                         sx={{
-                            py: 1.2, gap: 1.5,
-                            backgroundColor: i18n.language === 'es' ? 'primary.main' : 'transparent',
-                            color: i18n.language === 'es' ? '#fff' : 'inherit',
-                            '&:hover': { backgroundColor: i18n.language === 'es' ? 'primary.dark' : 'action.hover' },
-                            '&.Mui-selected': { backgroundColor: 'primary.main' },
-                            '&.Mui-selected:hover': { backgroundColor: 'primary.dark' },
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            py: 1.2,
+                            borderRadius: 2,
+                            cursor: 'pointer',
+                            border: '2px solid',
+                            borderColor: themeMode === 'light' ? 'primary.main' : 'divider',
+                            bgcolor: themeMode === 'light' ? 'primary.main' : 'transparent',
+                            color: themeMode === 'light' ? '#fff' : 'text.secondary',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                                borderColor: 'primary.main',
+                                bgcolor: themeMode === 'light' ? 'primary.dark' : 'action.hover',
+                            },
                         }}
                     >
-                        <Avatar src={espanishFlag} sx={{ width: 26, height: 26 }} />
-                        <Typography variant="body2" sx={{ flexGrow: 1, fontWeight: i18n.language === 'es' ? 700 : 400 }}>{t('language_spanish')}</Typography>
-                        {i18n.language === 'es' && <CheckIcon fontSize="small" sx={{ color: '#fff' }} />}
-                    </MenuItem>
-                    <MenuItem
-                        onClick={() => { changeLanguage('en'); handleUserMenuClose(); }}
-                        sx={{
-                            py: 1.2, gap: 1.5,
-                            backgroundColor: i18n.language === 'en' ? 'primary.main' : 'transparent',
-                            color: i18n.language === 'en' ? '#fff' : 'inherit',
-                            '&:hover': { backgroundColor: i18n.language === 'en' ? 'primary.dark' : 'action.hover' },
-                            '&.Mui-selected': { backgroundColor: 'primary.main' },
-                            '&.Mui-selected:hover': { backgroundColor: 'primary.dark' },
-                        }}
-                    >
-                        <Avatar src={englishFlag} sx={{ width: 26, height: 26 }} />
-                        <Typography variant="body2" sx={{ flexGrow: 1, fontWeight: i18n.language === 'en' ? 700 : 400 }}>{t('language_english')}</Typography>
-                        {i18n.language === 'en' && <CheckIcon fontSize="small" sx={{ color: '#fff' }} />}
-                    </MenuItem>
-                    <Divider />
-                </>
-            )}
-            {allowTheme && (
-                <>
-                    <ListSubheader sx={{ lineHeight: '32px', bgcolor: 'transparent' }}>
-                        {t('configuration')}
-                    </ListSubheader>
-                    <Box sx={{ display: 'flex', gap: 1, px: 1.5, pb: 1.5 }}>
-                        <Box
-                            onClick={() => { setThemeMode('light'); handleUserMenuClose(); }}
-                            sx={{
-                                flex: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: 0.5,
-                                py: 1.2,
-                                borderRadius: 2,
-                                cursor: 'pointer',
-                                border: '2px solid',
-                                borderColor: themeMode === 'light' ? 'primary.main' : 'divider',
-                                bgcolor: themeMode === 'light' ? 'primary.main' : 'transparent',
-                                color: themeMode === 'light' ? '#fff' : 'text.secondary',
-                                transition: 'all 0.2s',
-                                '&:hover': {
-                                    borderColor: 'primary.main',
-                                    bgcolor: themeMode === 'light' ? 'primary.dark' : 'action.hover',
-                                },
-                            }}
-                        >
-                            <WbSunnyIcon fontSize="small" />
-                            <Typography variant="caption" sx={{ fontWeight: themeMode === 'light' ? 700 : 400 }}>
-                                {t('select_theme_light')}
-                            </Typography>
-                        </Box>
-                        <Box
-                            onClick={() => { setThemeMode('dark'); handleUserMenuClose(); }}
-                            sx={{
-                                flex: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: 0.5,
-                                py: 1.2,
-                                borderRadius: 2,
-                                cursor: 'pointer',
-                                border: '2px solid',
-                                borderColor: themeMode === 'dark' ? 'primary.main' : 'divider',
-                                bgcolor: themeMode === 'dark' ? 'primary.main' : 'transparent',
-                                color: themeMode === 'dark' ? '#fff' : 'text.secondary',
-                                transition: 'all 0.2s',
-                                '&:hover': {
-                                    borderColor: 'primary.main',
-                                    bgcolor: themeMode === 'dark' ? 'primary.dark' : 'action.hover',
-                                },
-                            }}
-                        >
-                            <DarkModeIcon fontSize="small" />
-                            <Typography variant="caption" sx={{ fontWeight: themeMode === 'dark' ? 700 : 400 }}>
-                                {t('select_theme_dark')}
-                            </Typography>
-                        </Box>
+                        <WbSunnyIcon fontSize="small" />
+                        <Typography variant="caption" sx={{ fontWeight: themeMode === 'light' ? 700 : 400 }}>
+                            {t('select_theme_light')}
+                        </Typography>
                     </Box>
-                    <Divider />
-                </>
-            )}
-            <MenuItem onClick={() => { handleUserMenuClose(); handleLogout(); }} sx={{ mt: 1 }} >
+                    <Box
+                        onClick={() => { setThemeMode('dark'); handleUserMenuClose(); }}
+                        sx={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            py: 1.2,
+                            borderRadius: 2,
+                            cursor: 'pointer',
+                            border: '2px solid',
+                            borderColor: themeMode === 'dark' ? 'primary.main' : 'divider',
+                            bgcolor: themeMode === 'dark' ? 'primary.main' : 'transparent',
+                            color: themeMode === 'dark' ? '#fff' : 'text.secondary',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                                borderColor: 'primary.main',
+                                bgcolor: themeMode === 'dark' ? 'primary.dark' : 'action.hover',
+                            },
+                        }}
+                    >
+                        <DarkModeIcon fontSize="small" />
+                        <Typography variant="caption" sx={{ fontWeight: themeMode === 'dark' ? 700 : 400 }}>
+                            {t('select_theme_dark')}
+                        </Typography>
+                    </Box>
+                </Box>,
+                <Divider key="theme-divider" />,
+            ]}
+            <MenuItem onClick={() => { handleUserMenuClose(); handleLogout(); }} sx={{ mt: 1 }}>
                 <LogoutIcon sx={{ mr: 1 }} />
                 {t('logout')}
             </MenuItem>
