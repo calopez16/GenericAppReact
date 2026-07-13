@@ -535,11 +535,33 @@ namespace GenericApp.API.Controllers
 
         }
 
+        /// <summary>
+        /// Soft-deletes a contract and removes the physical PDF file from disk.
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteContract(int id)
+        {
+            var contract = await _repository.GetById<Contract>(id);
+            if (contract == null)
+                return NotFound(new ApiResponse { Message = "Contract not found" });
 
+            contract.IsDeleted = true;
+            var result = await _repository.Update(contract);
+            if (!result)
+                return BadRequest(new ApiResponse { Message = "Failed to delete contract" });
+
+            if (!string.IsNullOrEmpty(contract.DocumentName))
+            {
+                var contractsFolder = Path.Combine(_env.WebRootPath, _configuration["contractsSettings:contractsPath"] ?? "contratos");
+                var filePath = Path.Combine(contractsFolder, contract.DocumentName);
+                if (System.IO.File.Exists(filePath))
+                    System.IO.File.Delete(filePath);
+            }
+
+            return Ok(new ApiResponse { Message = "Contract deleted successfully" });
+        }
 
         #region Helpers
-
-
         private async Task<string> ReplaceVariables(string htmlContent, Employee employee, Company? company, string? signatureBase64 = null, bool isPreview = false)
         {
             var contractTemplateVariables = await _repository.FindBy<ContractTemplateVariable>(x => (x.IsActive ?? false) && !(x.IsDeleted ?? false));
