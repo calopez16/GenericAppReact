@@ -393,6 +393,6 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-wwwroot/contratos
-wwwroot/img/signs
-wwwroot/img/logos
+/GenericApp.API/wwwroot/contratos
+/GenericApp.API/wwwroot/img/Signs
+/GenericApp.API/wwwroot/logos

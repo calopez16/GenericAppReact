@@ -59,7 +59,8 @@ import TableRowsIcon from '@mui/icons-material/TableRows';
 import GestureIcon from '@mui/icons-material/Gesture';
 import { AppContext } from '@helpers/AppContext';
 import { useEditor, EditorContent } from '@tiptap/react';
-import { Node, mergeAttributes } from '@tiptap/core';
+import { Node, Extension, mergeAttributes } from '@tiptap/core';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Color, FontFamily, FontSize, TextStyle } from '@tiptap/extension-text-style';
@@ -181,6 +182,65 @@ const ResizableTableRow = TableRow.extend({
     },
 });
 
+// ---------------------------------------------------------------------------
+// Extension: syncs the first text node's fontSize to the <li> element so
+// that ::marker (numbers / bullets) scales with the text font size.
+// ---------------------------------------------------------------------------
+const ListItemFontSizeSync = Extension.create({
+    name: 'listItemFontSizeSync',
+
+    addGlobalAttributes() {
+        return [
+            {
+                types: ['listItem'],
+                attributes: {
+                    fontSize: {
+                        default: null,
+                        parseHTML: element => element.style.fontSize || null,
+                        renderHTML: attributes => {
+                            if (!attributes.fontSize) return {};
+                            return { style: `font-size: ${attributes.fontSize}` };
+                        },
+                    },
+                },
+            },
+        ];
+    },
+
+    addProseMirrorPlugins() {
+        return [
+            new Plugin({
+                key: new PluginKey('listItemFontSizeSync'),
+                appendTransaction(transactions, _oldState, newState) {
+                    if (!transactions.some(tr => tr.docChanged)) return null;
+                    const tr = newState.tr;
+                    let changed = false;
+                    newState.doc.descendants((node, pos) => {
+                        if (node.type.name !== 'listItem') return true;
+                        let fontSize = null;
+                        node.descendants((child) => {
+                            if (fontSize !== null) return false;
+                            if (child.isText && child.marks.length) {
+                                const mark = child.marks.find(m => m.type.name === 'textStyle');
+                                if (mark?.attrs?.fontSize) {
+                                    fontSize = mark.attrs.fontSize;
+                                    return false;
+                                }
+                            }
+                        });
+                        if (node.attrs.fontSize !== fontSize) {
+                            tr.setNodeMarkup(pos, undefined, { ...node.attrs, fontSize });
+                            changed = true;
+                        }
+                        return true;
+                    });
+                    return changed ? tr : null;
+                },
+            }),
+        ];
+    },
+});
+
 import Image from '@tiptap/extension-image';
 
 // ---------------------------------------------------------------------------
@@ -226,6 +286,7 @@ const TemplateVariable = Node.create({
     group: 'inline',
     inline: true,
     atom: true,
+    marks: '_', // allow all marks (bold, italic, color, fontSize, etc.)
 
     addAttributes() {
         return { key: { default: null } };
@@ -245,6 +306,59 @@ const TemplateVariable = Node.create({
             }),
             node.attrs.key,
         ];
+    },
+
+    addNodeView() {
+        return ({ node, getPos, editor }) => {
+            const dom = document.createElement('span');
+            dom.setAttribute('data-variable', node.attrs.key);
+            dom.className = 'tiptap-variable';
+            dom.contentEditable = 'false';
+            dom.textContent = node.attrs.key;
+
+            const applyMarkStyles = (marks) => {
+                dom.style.removeProperty('font-weight');
+                dom.style.removeProperty('font-style');
+                dom.style.removeProperty('text-decoration');
+                dom.style.removeProperty('color');
+                dom.style.removeProperty('font-size');
+                dom.style.removeProperty('font-family');
+                let textDecoration = '';
+                marks.forEach(mark => {
+                    if (mark.type.name === 'bold')      dom.style.fontWeight = 'bold';
+                    if (mark.type.name === 'italic')    dom.style.fontStyle  = 'italic';
+                    if (mark.type.name === 'underline') textDecoration += ' underline';
+                    if (mark.type.name === 'strike')    textDecoration += ' line-through';
+                    if (mark.type.name === 'textStyle') {
+                        if (mark.attrs.color)      dom.style.color      = mark.attrs.color;
+                        if (mark.attrs.fontSize)   dom.style.fontSize   = mark.attrs.fontSize;
+                        if (mark.attrs.fontFamily) dom.style.fontFamily = mark.attrs.fontFamily;
+                    }
+                });
+                if (textDecoration.trim()) dom.style.textDecoration = textDecoration.trim();
+            };
+
+            applyMarkStyles(node.marks);
+
+            // Single click ? NodeSelection so toolbar buttons act on this node
+            dom.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (typeof getPos === 'function') {
+                    editor.commands.setNodeSelection(getPos());
+                }
+            });
+
+            return {
+                dom,
+                update(updatedNode) {
+                    if (updatedNode.type.name !== 'templateVariable') return false;
+                    dom.textContent = updatedNode.attrs.key;
+                    dom.setAttribute('data-variable', updatedNode.attrs.key);
+                    applyMarkStyles(updatedNode.marks);
+                    return true;
+                },
+            };
+        };
     },
 
     addCommands() {
@@ -898,6 +1012,7 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
             ResizableTableRow,
             BorderlessTableHeader,
             BorderlessTableCell,
+            ListItemFontSizeSync,
             AlignableImage.configure({
                 inline: false,
                 allowBase64: true,
@@ -1341,6 +1456,8 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                             '& .tiptap h2': { fontSize: '1.4em', fontWeight: 700, margin: '0.5em 0 0.3em' },
                             '& .tiptap h3': { fontSize: '1.15em', fontWeight: 700, margin: '0.5em 0 0.3em' },
                             '& .tiptap ul, & .tiptap ol': { paddingLeft: '1.4em', margin: '4px 0' },
+                            '& .tiptap ul li, & .tiptap ol li': { fontSize: 'inherit' },
+                            '& .tiptap ul li::marker, & .tiptap ol li::marker': { fontSize: 'inherit', fontFamily: 'inherit' },
                             '& .tiptap code': {
                                 borderRadius: '3px',
                                 px: 0.5,

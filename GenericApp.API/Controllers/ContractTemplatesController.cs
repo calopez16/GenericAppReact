@@ -746,9 +746,14 @@ namespace GenericApp.API.Controllers
                                 || tag == "BLOCKQUOTE" || tag == "TABLE" || tag == "HR";
                         });
 
+                    var bulletFontSize = GetListItemFontSize(li);
                     listCol.Item().PaddingBottom(2).Row(row =>
                     {
-                        row.ConstantItem(20).Text(bullet).FontSize(11);
+                        row.ConstantItem(20).Text(t =>
+                        {
+                            var s = t.Span(bullet);
+                            if (bulletFontSize.HasValue) s.FontSize(bulletFontSize.Value);
+                        });
 
                         if (hasBlockChildren)
                         {
@@ -772,6 +777,30 @@ namespace GenericApp.API.Controllers
                     });
                 }
             });
+        }
+
+        /// <summary>
+        /// Returns the font-size (in pt) of the first styled span found inside a list item,
+        /// or null if no explicit font-size is present. Used to keep the bullet/number
+        /// visually consistent with the item text.
+        /// </summary>
+        private static float? GetListItemFontSize(AsDom.IElement li)
+        {
+            var span = li.QuerySelector("span[style]");
+            if (span == null) return null;
+
+            var style = span.GetAttribute("style") ?? "";
+            var match = System.Text.RegularExpressions.Regex
+                .Match(style, @"font-size:\s*([\d.]+)px");
+            if (!match.Success) return null;
+
+            if (float.TryParse(match.Groups[1].Value,
+                System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out var px))
+                return px * 0.75f; // CSS px → PDF pt
+
+            return null;
         }
 
         private static void RenderTable(ColumnDescriptor col, AsDom.IElement tableEl)
