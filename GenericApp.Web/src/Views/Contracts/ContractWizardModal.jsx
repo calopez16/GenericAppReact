@@ -33,6 +33,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import ArticleIcon from '@mui/icons-material/Article';
+import EditDocumentIcon from '@mui/icons-material/EditDocument';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DrawIcon from '@mui/icons-material/Draw';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -49,6 +50,7 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
 const CACHE_KEY_SELECTED_TEMPLATES = 'contracts_wizard_selected_templates';
 const CACHE_KEY_SHOW_PREVIEW = 'contracts_wizard_show_preview';
+const ENABLE_TEMPLATE_SELECTION = false;
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 150;
 
@@ -77,6 +79,7 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
 
     const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
     const [loadingPreview, setLoadingPreview] = useState(false);
+    const [enableTemplateSelection, setEnableTemplateSelection] = useState(ENABLE_TEMPLATE_SELECTION);
 
     const canvasRef = useRef(null);
     const timerRef = useRef(null);
@@ -92,15 +95,15 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
 
     const steps = showPreview 
         ? [
-            t('selectEmployee') || 'Seleccionar Empleado',
-            t('selectTemplates') || 'Seleccionar Plantillas',
-            t('preview') || 'Previsualizar',
-            t('sign') || 'Firmar'
+            t('selectEmployee') ,
+            t('contractsToSign'),
+            t('preview'),
+            t('sign')
         ]
         : [
-            t('selectEmployee') || 'Seleccionar Empleado',
-            t('selectTemplates') || 'Seleccionar Plantillas',
-            t('sign') || 'Firmar'
+            t('selectEmployee'),
+            t('contractsToSign'),
+            t('sign')
         ];
 
     useEffect(() => {
@@ -258,7 +261,11 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
             try {
                 setLoadingTemplates(true);
                 const response = await templateService.getDataActive();
-                setTemplates(response.data || []);
+                const data = response.data || [];
+                setTemplates(data);
+                if (!enableTemplateSelection) {
+                    setSelectedTemplates(data);
+                }
             } catch (error) {
                 console.error('Error loading templates:', error);
                 setTemplates([]);
@@ -270,7 +277,7 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
         if (activeStep === 1) {
             loadTemplates();
         }
-    }, [activeStep, companySelected, open]);
+    }, [activeStep, companySelected, open, enableTemplateSelection]);
 
     useEffect(() => {
         const loadPreview = async () => {
@@ -528,7 +535,7 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
                         <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                             <PersonSearchIcon sx={{ color: 'primary.main' }} />
                             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                                {t('searchEmployee') || 'Buscar Empleado'}
+                                {t('searchEmployee')}
                             </Typography>
                         </Box>
                         <Autocomplete
@@ -608,52 +615,124 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
                         <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                             <ArticleIcon sx={{ color: 'primary.main' }} />
                             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                                {t('selectContractTemplates') || 'Seleccionar Plantillas de Contrato'}
+                                {t('contractsToSign')}
                             </Typography>
                         </Box>
-                        {loadingTemplates ? (
-                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                                <CircularProgress />
-                            </Box>
-                        ) : templates.length === 0 ? (
-                            <Box
-                                sx={{
-                                    py: 4,
-                                    textAlign: 'center',
-                                    color: 'text.secondary'
-                                }}
-                            >
-                                <Typography variant="body2">
-                                    {t('noTemplatesAvailable') || 'No hay plantillas disponibles'}
-                                </Typography>
-                            </Box>
-                        ) : (
-                            <List sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                                {templates.map((template, index) => {
-                                    const isSelected = selectedTemplates.some(t => t.idTemplate === template.idTemplate);
-                                    return (
-                                        <ListItem
-                                            key={template.idTemplate}
-                                            disablePadding
-                                            divider={index < templates.length - 1}
-                                        >
-                                            <ListItemButton onClick={() => handleToggleTemplate(template)}>
-                                                <Checkbox
-                                                    edge="start"
-                                                    checked={isSelected}
-                                                    tabIndex={-1}
-                                                    disableRipple
-                                                />
+                        {/*<Box*/}
+                        {/*    sx={{*/}
+                        {/*        mb: 2,*/}
+                        {/*        p: 2,*/}
+                        {/*        border: '1px solid',*/}
+                        {/*        borderColor: 'divider',*/}
+                        {/*        borderRadius: 2,*/}
+                        {/*        bgcolor: 'action.hover',*/}
+                        {/*        display: 'flex',*/}
+                        {/*        alignItems: 'center',*/}
+                        {/*        gap: 2*/}
+                        {/*    }}*/}
+                        {/*>*/}
+                        {/*    <Checkbox*/}
+                        {/*        checked={enableTemplateSelection}*/}
+                        {/*        onChange={(e) => {*/}
+                        {/*            const enabled = e.target.checked;*/}
+                        {/*            setEnableTemplateSelection(enabled);*/}
+                        {/*            if (!enabled) {*/}
+                        {/*                setSelectedTemplates(templates);*/}
+                        {/*            }*/}
+                        {/*        }}*/}
+                        {/*        color="primary"*/}
+                        {/*    />*/}
+                        {/*    <Box>*/}
+                        {/*        <Typography variant="body2" sx={{ fontWeight: 600 }}>*/}
+                        {/*            {t('enableTemplateSelection') || 'Seleccionar plantillas manualmente'}*/}
+                        {/*        </Typography>*/}
+                        {/*        <Typography variant="caption" color="text.secondary">*/}
+                        {/*            {t('enableTemplateSelectionDescription') || 'Por defecto se incluyen todas las plantillas activas'}*/}
+                        {/*        </Typography>*/}
+                        {/*    </Box>*/}
+                        {/*</Box>*/}
+
+                        {enableTemplateSelection && (
+                            loadingTemplates ? (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                                    <CircularProgress />
+                                </Box>
+                            ) : templates.length === 0 ? (
+                                <Box
+                                    sx={{
+                                        py: 4,
+                                        textAlign: 'center',
+                                        color: 'text.secondary'
+                                    }}
+                                >
+                                    <Typography variant="body2">
+                                        {t('noTemplatesAvailable') || 'No hay plantillas disponibles'}
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                <List sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                                    {templates.map((template, index) => {
+                                        const isSelected = selectedTemplates.some(t => t.idTemplate === template.idTemplate);
+                                        return (
+                                            <ListItem
+                                                key={template.idTemplate}
+                                                disablePadding
+                                                divider={index < templates.length - 1}
+                                            >
+                                                <ListItemButton onClick={() => handleToggleTemplate(template)}>
+                                                    <Checkbox
+                                                        edge="start"
+                                                        checked={isSelected}
+                                                        tabIndex={-1}
+                                                        disableRipple
+                                                    />
+                                                    <ListItemText
+                                                        primary={template.name}
+                                                        secondary={template.description}
+                                                        primaryTypographyProps={{ fontWeight: 600 }}
+                                                    />
+                                                </ListItemButton>
+                                            </ListItem>
+                                        );
+                                    })}
+                                </List>
+                            )
+                        )}
+
+                        {!enableTemplateSelection && (
+                            loadingTemplates ? (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                                    <CircularProgress />
+                                </Box>
+                            ) : templates.length === 0 ? (
+                                <Box sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>
+                                    <Typography variant="body2">
+                                        {t('noContractsAvailable') || 'No hay contratos disponibles'}
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                <Box>
+                                    {/*<Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>*/}
+                                    {/*    {t('contractsToSign') || `Contratos a firmar (${templates.length})`}*/}
+                                    {/*</Typography>*/}
+                                    <List sx={{ border: '1px solid', borderColor: 'success.light', borderRadius: 2 }}>
+                                        {templates.map((template, index) => (
+                                            <ListItem
+                                                key={template.idTemplate}
+                                                divider={index < templates.length - 1}
+                                                sx={{ gap: 1 }}
+                                            >
+                                                <EditDocumentIcon sx={{ color: 'success.main', fontSize: 40, flexShrink: 0 }} />
                                                 <ListItemText
                                                     primary={template.name}
                                                     secondary={template.description}
                                                     primaryTypographyProps={{ fontWeight: 600 }}
                                                 />
-                                            </ListItemButton>
-                                        </ListItem>
-                                    );
-                                })}
-                            </List>
+                                            </ListItem>
+                                        ))}
+                                    </List>
+                                </Box>
+                            )
                         )}
                        
                         <Box
@@ -676,10 +755,10 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
                             />
                             <Box>
                                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                    {t('previewTemplate') || 'Previsualizar plantilla'}
+                                    {t('previewContract')}
                                 </Typography>
                                 <Typography variant="caption" color="text.secondary">
-                                    {t('previewTemplateDescription') || 'Mostrar vista previa del documento antes de firmar'}
+                                    {t('previewContractDescription') }
                                 </Typography>
                             </Box>
                         </Box>
@@ -853,11 +932,11 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
             <DialogTitle sx={{ pb: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Avatar sx={{ bgcolor: 'primary.light', color: 'white', borderRadius: 2 }}>
-                        <ArticleIcon />
+                        <EditDocumentIcon />
                     </Avatar>
                     <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                         <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }} noWrap>
-                            {t('newContract') || 'Nuevo Contrato'}
+                            {t('newContract')}
                         </Typography>
                         {selectedEmployee ? (
                             <Typography variant="caption" color="text.secondary" noWrap>

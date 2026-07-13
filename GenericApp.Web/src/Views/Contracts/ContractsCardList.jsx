@@ -64,8 +64,8 @@ const ContractsCardList = ({
                         sx={{ mr: 1, p: 0 }}
                     />
                     <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-                            {contract.documentName || t('noDocumentName')}
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2, wordBreak: 'break-all' }}>
+                            {contract.idEmployeeNavigation.nombre || t('noDocumentName')}
                         </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1 }}>
@@ -90,11 +90,11 @@ const ContractsCardList = ({
                     </Box>
                 </Box>
 
-                {contract.employeeName && (
+                {contract.documentName && (
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
                         <ArticleOutlinedIcon sx={{ fontSize: 18, color: 'text.secondary', mt: 0.2 }} />
                         <Typography variant="body2" color="text.secondary">
-                            {contract.employeeName}
+                            {contract.documentName}
                         </Typography>
                     </Box>
                 )}

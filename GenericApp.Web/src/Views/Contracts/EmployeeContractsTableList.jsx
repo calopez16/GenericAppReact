@@ -13,7 +13,13 @@ import {
     IconButton,
     Tooltip,
     Collapse,
-    Chip
+    Chip,
+    Card,
+    CardContent,
+    CardActions,
+    Divider,
+    useMediaQuery,
+    useTheme
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -26,6 +32,86 @@ const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true });
 };
+
+function EmployeeCard({ employee, t, onOpenPdf, onNewContract }) {
+    const [open, setOpen] = useState(false);
+    const contracts = [...(employee.contracts || [])].sort((a, b) => new Date(b.signatureDate) - new Date(a.signatureDate));
+    const fullName = `${employee.nombre || ''} ${employee.apellidoPaterno || ''} ${employee.apellidoMaterno || ''}`.trim();
+
+    return (
+        <Card variant="outlined" sx={{ mb: 1.5, borderRadius: 2 }}>
+            <CardContent sx={{ pb: 0 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>{fullName}</Typography>
+                        {employee.clave && (
+                            <Typography variant="caption" color="text.secondary">{employee.clave}</Typography>
+                        )}
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            {employee.position || '-'}
+                        </Typography>
+                    </Box>
+                    {contracts.length === 0
+                        ? <Chip label={t('noContracts') || 'Sin contratos'} size="small" color="warning" variant="outlined" />
+                        : <Chip label={`${contracts.length} ${contracts.length === 1 ? (t('contract') || 'contrato') : (t('contracts') || 'contratos')}`} size="small" color="success" variant="outlined" />
+                    }
+                </Box>
+            </CardContent>
+            <CardActions sx={{ justifyContent: 'space-between', px: 2, pt: 1 }}>
+                <Tooltip title={t('contractHistory') || 'Historial de contratos'}>
+                    <IconButton size="small" onClick={() => setOpen(o => !o)}>
+                        {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                    </IconButton>
+                </Tooltip>
+                {onNewContract && (
+                    <Tooltip title={t('newContract') || 'Nuevo contrato'}>
+                        <IconButton
+                            size="small"
+                            onClick={() => onNewContract(employee)}
+                            sx={{ color: 'white', bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
+                        >
+                            <NoteAddIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                )}
+            </CardActions>
+            <Collapse in={open} timeout="auto" unmountOnExit>
+                <Divider />
+                <Box sx={{ px: 2, py: 1 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
+                        {t('contractHistory') || 'Historial de contratos'}
+                    </Typography>
+                    {contracts.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
+                            {t('no_contracts_yet') || 'No hay contratos registrados'}
+                        </Typography>
+                    ) : (
+                        contracts.map((c, idx) => (
+                            <Box
+                                key={c.idContract ?? idx}
+                                sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.75, borderBottom: '1px solid', borderColor: 'divider' }}
+                            >
+                                <Box>
+                                    <Typography variant="body2">{c.documentName || '-'}</Typography>
+                                    <Typography variant="caption" color="text.secondary">{formatDate(c.signatureDate)}</Typography>
+                                </Box>
+                                <Tooltip title={t('preview') || 'Ver PDF'}>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => onOpenPdf(c)}
+                                        sx={{ color: 'white', bgcolor: 'info.main', '&:hover': { bgcolor: 'info.dark' } }}
+                                    >
+                                        <VisibilityIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        ))
+                    )}
+                </Box>
+            </Collapse>
+        </Card>
+    );
+}
 
 function EmployeeRow({ employee, t, onOpenPdf, onNewContract }) {
     const [open, setOpen] = useState(false);
@@ -138,11 +224,46 @@ const EmployeeContractsTableList = ({
     onOpenPdf,
     onNewContract
 }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const colSpan = 5;
     const rowHeight = 65;
     const emptyRows = !loading && employees?.length > 0
         ? Math.max(0, rowsPerPage - employees.length)
         : 0;
+
+    if (isMobile) {
+        return (
+            <Box>
+                {loading ? (
+                    Array.from(new Array(rowsPerPage)).map((_, i) => (
+                        <Card key={`sk-${i}`} variant="outlined" sx={{ mb: 1.5, borderRadius: 2 }}>
+                            <CardContent>
+                                <Skeleton variant="text" width="60%" />
+                                <Skeleton variant="text" width="40%" />
+                                <Skeleton variant="text" width="30%" sx={{ mt: 0.5 }} />
+                            </CardContent>
+                        </Card>
+                    ))
+                ) : employees?.length === 0 ? (
+                    <EmptyData
+                        message={isSearch ? t('no_results_found') : t('no_employees_yet') || 'Sin empleados'}
+                        description={isSearch ? t('try_another_search_term') : ''}
+                    />
+                ) : (
+                    employees.map((emp) => (
+                        <EmployeeCard
+                            key={emp.idEmployee}
+                            employee={emp}
+                            t={t}
+                            onOpenPdf={onOpenPdf}
+                            onNewContract={onNewContract}
+                        />
+                    ))
+                )}
+            </Box>
+        );
+    }
 
     return (
         <TableContainer

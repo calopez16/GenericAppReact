@@ -268,7 +268,7 @@ function Index() {
             }
 
             <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
+                rowsPerPageOptions={[10, 50, 100, 500, 1000]}
                 component="div"
                 count={totalEmployees}
                 rowsPerPage={rowsPerPage}

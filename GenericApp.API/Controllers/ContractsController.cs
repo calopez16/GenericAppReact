@@ -148,7 +148,10 @@ namespace GenericApp.API.Controllers
                     query = query.Where(x => !x.Contracts.Any(c => !(c.IsDeleted ?? false)));
                 }
 
-                query = query.OrderByDescending(x => x.Nombre ?? x.Nombre);
+                query = query.OrderByDescending(x => x.Contracts.Any(c => !(c.IsDeleted ?? false)))
+                             .ThenBy(x => x.Nombre)
+                             .ThenBy(x => x.ApellidoPaterno)
+                             .ThenBy(x => x.ApellidoMaterno);
 
                 var totalRows = query.Count();
                 var data = query

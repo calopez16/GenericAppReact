@@ -37,7 +37,7 @@ function ContractTemplatesIndex() {
 
     const [templates, setTemplates] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalTemplates, setTotalTemplates] = useState(0);
 
     const [searchTerm, setSearchTerm] = useState('');

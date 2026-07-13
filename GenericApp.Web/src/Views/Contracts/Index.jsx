@@ -22,11 +22,10 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
-import ArticleIcon from '@mui/icons-material/Article';
+import EditDocumentIcon from '@mui/icons-material/EditDocument';
 import CloseIcon from '@mui/icons-material/Close';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import PeopleIcon from '@mui/icons-material/People';
-import DescriptionIcon from '@mui/icons-material/Description';
 import FolderZipIcon from '@mui/icons-material/FolderZip';
 import { AppContext } from '@helpers/AppContext';
 import { DataAPIContractsService } from '@data/Contracts/Data';
@@ -374,7 +373,7 @@ function ContractsIndex() {
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Avatar sx={{ bgcolor: 'primary.light', color: 'white', width: 45, height: 45, borderRadius: 2 }}>
-                        <ArticleIcon />
+                        <EditDocumentIcon />
                     </Avatar>
                     <Box>
                         <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
@@ -399,7 +398,7 @@ function ContractsIndex() {
             <Paper elevation={0} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', mb: 2 }}>
                 <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ borderBottom: '1px solid', borderColor: 'divider', px: 2 }}>
                     <Tab icon={<PeopleIcon fontSize="small" />} iconPosition="start" label={t('employees')} />
-                    <Tab icon={<DescriptionIcon fontSize="small" />} iconPosition="start" label={t('sigened_contracts') } />
+                    <Tab icon={<EditDocumentIcon fontSize="small" />} iconPosition="start" label={t('sigened_contracts') } />
                 </Tabs>
 
                 {/* TAB 1: EMPLOYEES */}
@@ -489,7 +488,7 @@ function ContractsIndex() {
                         />
 
                         <TablePagination
-                            rowsPerPageOptions={[5, 10, 25]}
+                            rowsPerPageOptions={[10, 50, 100, 500, 1000]}
                             component="div"
                             count={empTotal}
                             rowsPerPage={empRowsPerPage}
@@ -587,7 +586,7 @@ function ContractsIndex() {
                         }
 
                         <TablePagination
-                            rowsPerPageOptions={[5, 10, 25]}
+                            rowsPerPageOptions={[10,50,100,500,1000]}
                             component="div"
                             count={totalContracts}
                             rowsPerPage={rowsPerPage}
