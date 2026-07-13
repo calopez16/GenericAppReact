@@ -10,7 +10,6 @@ namespace GenericApp.API.Utility
         public MappingProfile()
         {
             CreateMap<Parameter, ParameterDTO>().ReverseMap();
-            CreateMap<Client, ClientDTO>().ReverseMap();
             CreateMap<City, CityDTO>().ReverseMap();
             CreateMap<Country, CountryDTO>().ReverseMap();
             CreateMap<State, StateDTO>().ReverseMap();

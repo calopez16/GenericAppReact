@@ -20,7 +20,6 @@ namespace GenericApp.Data
         public DbSet<ContractTemplate> ContractTemplates { get; set; }
         public DbSet<ContractTemplateContractSign> ContractTemplateContractSigns { get; set; }
         public DbSet<ContractTemplateVariable> ContractTemplateVariables { get; set; }
-        public DbSet<Client> Clients { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Country> Countries { get; set; }
         public DbSet<Parameter> Parameters { get; set; }
@@ -131,6 +130,11 @@ namespace GenericApp.Data
                 b.Property(x => x.SignFileName).HasMaxLength(250);
                 b.Property(x => x.IsActive).HasDefaultValue(true);
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                b.HasOne(cs => cs.IdCompanyNavigation)
+                    .WithMany()
+                    .HasForeignKey(x => x.IdCompany)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<ContractTemplate>(b =>
             {
@@ -172,38 +176,13 @@ namespace GenericApp.Data
                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
             });
 
-            modelBuilder.Entity<Client>(b =>
-            {
-                b.HasKey(x => x.IdClient);
-                b.Property(x => x.Code).HasMaxLength(25).IsRequired();
-                b.Property(x => x.Name).HasMaxLength(150).IsRequired();
-                b.Property(x => x.Rfc).HasMaxLength(13);
-                b.Property(x => x.Address).HasMaxLength(250);
-                b.Property(x => x.PostalCode).HasMaxLength(50);
-                b.Property(x => x.Phone).HasMaxLength(25);
-                b.Property(x => x.Notes).HasMaxLength(250);
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-
-                b.HasOne(c => c.IdCompanyNavigation)
-                    .WithMany()
-                    .HasForeignKey(x => x.IdCompany)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                b.HasOne(lt => lt.IdCityNavigation)
-                    .WithMany(l => l.Clients)
-                    .HasForeignKey(x => x.IdCity)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-
             modelBuilder.Entity<EmployeeRelationshipType>(b =>
-            {
-                b.HasKey(x => x.IdEmployeeRelationshipType);
-                b.Property(x => x.Description).HasMaxLength(150);
-                b.Property(x => x.IsActive).HasDefaultValue(true);
-                b.Property(x => x.IsDeleted).HasDefaultValue(false);
-            });
+             {
+                 b.HasKey(x => x.IdEmployeeRelationshipType);
+                 b.Property(x => x.Description).HasMaxLength(150);
+                 b.Property(x => x.IsActive).HasDefaultValue(true);
+                 b.Property(x => x.IsDeleted).HasDefaultValue(false);
+             });
 
             modelBuilder.Entity<Employee>(b =>
             {
