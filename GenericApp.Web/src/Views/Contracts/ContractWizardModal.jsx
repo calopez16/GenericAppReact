@@ -50,7 +50,7 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
 const CACHE_KEY_SELECTED_TEMPLATES = 'contracts_wizard_selected_templates';
 const CACHE_KEY_SHOW_PREVIEW = 'contracts_wizard_show_preview';
-const ENABLE_TEMPLATE_SELECTION = false;
+const ENABLE_TEMPLATE_SELECTION = true;
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 150;
 

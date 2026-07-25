@@ -1,6 +1,6 @@
 import { StrictMode, useContext, Suspense } from 'react'; // <--- Agregado Suspense
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { CircularProgress, Box } from '@mui/material'; // Ejemplo de Loader
 import '@styles/App.css';
@@ -33,9 +33,9 @@ const AppWithThemeWrapper = () => {
 createRoot(document.getElementById('root')).render(
     <AppContextProvider>
         <NotificationContext>
-            <BrowserRouter basename={`${APP_BASE_URL}`}>
+            <HashRouter>
                 <AppWithThemeWrapper />
-            </BrowserRouter>
+            </HashRouter>
         </NotificationContext>
     </AppContextProvider>
 );

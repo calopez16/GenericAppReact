@@ -12,6 +12,7 @@ var baseUri = makeUri();
 var ctx;
 
 function IsSigWebInstalled() {
+	console.log(baseUri);
 	var xhr = new XMLHttpRequest();
 	try {
 		xhr.onreadystatechange = function () {

@@ -27,6 +27,6 @@ export const AuthHelper = {
         window.dispatchEvent(new Event('storage'));
         if (redirectToLogin)
             // Redirección forzada al login.
-            window.location.href = `${APP_BASE_URL}/login`;
+            window.location.href = `#/login`;
     }
 };

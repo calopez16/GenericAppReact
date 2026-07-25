@@ -12,7 +12,6 @@ const ClientsPage = lazy(() => import('@views/Clients'));
 const CompaniesPage = lazy(() => import('@views/Companies'));
 const SeasonsPage = lazy(() => import('@views/Seasons'));
 const LabelsPage = lazy(() => import('@views/Labels'));
-const TrailerBoxTypesPage = lazy(() => import('@views/TrailerBoxTypes'));
 const NotFoundPage = lazy(() => import('@views/Pages/NotFound'));
 const Parameters = lazy(() => import('@views/Parameters'));
 const ConfigurationPage = lazy(() => import('@views/Configuration'));
@@ -35,7 +34,7 @@ function App() {
         <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route element={<Layout />}>
-                <Route path="/" element={<HomePage />} />
+                <Route path="/" element={<ContractsPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/parameters" element={<Parameters />} />
                 <Route path="/clients" element={<ClientsPage />} />
@@ -43,7 +42,6 @@ function App() {
                 <Route path="/companies" element={<CompaniesPage />} />
                 <Route path="/seasons" element={<SeasonsPage />} />
                 <Route path="/labels" element={<LabelsPage />} />
-                <Route path="/trailerboxtypes" element={<TrailerBoxTypesPage />} />
                 <Route path="/contract-templates" element={<ContractTemplatesPage />} />
                 <Route path="/contract-signs" element={<ContractSignsPage />} />
                 <Route path="/employees" element={<EmployeesPage />} />
