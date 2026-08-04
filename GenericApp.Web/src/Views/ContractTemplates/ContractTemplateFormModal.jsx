@@ -325,13 +325,13 @@ const TemplateVariable = Node.create({
                 dom.style.removeProperty('font-family');
                 let textDecoration = '';
                 marks.forEach(mark => {
-                    if (mark.type.name === 'bold')      dom.style.fontWeight = 'bold';
-                    if (mark.type.name === 'italic')    dom.style.fontStyle  = 'italic';
+                    if (mark.type.name === 'bold') dom.style.fontWeight = 'bold';
+                    if (mark.type.name === 'italic') dom.style.fontStyle = 'italic';
                     if (mark.type.name === 'underline') textDecoration += ' underline';
-                    if (mark.type.name === 'strike')    textDecoration += ' line-through';
+                    if (mark.type.name === 'strike') textDecoration += ' line-through';
                     if (mark.type.name === 'textStyle') {
-                        if (mark.attrs.color)      dom.style.color      = mark.attrs.color;
-                        if (mark.attrs.fontSize)   dom.style.fontSize   = mark.attrs.fontSize;
+                        if (mark.attrs.color) dom.style.color = mark.attrs.color;
+                        if (mark.attrs.fontSize) dom.style.fontSize = mark.attrs.fontSize;
                         if (mark.attrs.fontFamily) dom.style.fontFamily = mark.attrs.fontFamily;
                     }
                 });
@@ -365,11 +365,11 @@ const TemplateVariable = Node.create({
         return {
             insertVariable:
                 (key) =>
-                ({ commands }) =>
-                    commands.insertContent([
-                        { type: this.name, attrs: { key } },
-                        { type: 'text', text: ' ' },
-                    ]),
+                    ({ commands }) =>
+                        commands.insertContent([
+                            { type: this.name, attrs: { key } },
+                            { type: 'text', text: ' ' },
+                        ]),
         };
     },
 });
@@ -386,7 +386,7 @@ const SignatureVariablePlaceholder = Node.create({
     addAttributes() {
         return {
             variable: { default: '{{firma_empleado}}' },
-            label:    { default: 'Firma del empleado'  },
+            label: { default: 'Firma del empleado' },
         };
     },
 
@@ -398,9 +398,9 @@ const SignatureVariablePlaceholder = Node.create({
         return [
             'div',
             {
-                'data-variable':      node.attrs.variable,
+                'data-variable': node.attrs.variable,
                 'data-variable-type': 'image',
-                'data-label':         node.attrs.label,
+                'data-label': node.attrs.label,
                 class: 'tiptap-variable-image',
                 contenteditable: 'false',
             },
@@ -412,11 +412,11 @@ const SignatureVariablePlaceholder = Node.create({
         return {
             insertSignatureVariable:
                 (variable, label) =>
-                ({ commands }) =>
-                    commands.insertContent({
-                        type: this.name,
-                        attrs: { variable, label },
-                    }),
+                    ({ commands }) =>
+                        commands.insertContent({
+                            type: this.name,
+                            attrs: { variable, label },
+                        }),
         };
     },
 });
@@ -452,8 +452,8 @@ const EditorToolbar = ({ editor, t }) => {
     // ?? Heading / paragraph select ??????????????????????????????????????????
     const headingValue = editor.isActive('heading', { level: 1 }) ? 'h1'
         : editor.isActive('heading', { level: 2 }) ? 'h2'
-        : editor.isActive('heading', { level: 3 }) ? 'h3'
-        : 'p';
+            : editor.isActive('heading', { level: 3 }) ? 'h3'
+                : 'p';
 
     const handleHeadingChange = (e) => {
         const v = e.target.value;
@@ -467,14 +467,14 @@ const EditorToolbar = ({ editor, t }) => {
 
     // -- Font-family select --
     const FONT_FAMILIES = [
-        { label: 'Lato',             value: 'Lato'             },
-        { label: 'Arial',            value: 'Arial'            },
-        { label: 'Times New Roman',  value: 'Times New Roman'  },
-        { label: 'Courier New',      value: 'Courier New'      },
-        { label: 'Georgia',          value: 'Georgia'          },
-        { label: 'Verdana',          value: 'Verdana'          },
-        { label: 'Trebuchet MS',     value: 'Trebuchet MS'     },
-        { label: 'Tahoma',           value: 'Tahoma'           },
+        { label: 'Lato', value: 'Lato' },
+        { label: 'Arial', value: 'Arial' },
+        { label: 'Times New Roman', value: 'Times New Roman' },
+        { label: 'Courier New', value: 'Courier New' },
+        { label: 'Georgia', value: 'Georgia' },
+        { label: 'Verdana', value: 'Verdana' },
+        { label: 'Trebuchet MS', value: 'Trebuchet MS' },
+        { label: 'Tahoma', value: 'Tahoma' },
     ];
     const activeFontFamily = editor.getAttributes('textStyle').fontFamily ?? 'Lato';
 
@@ -825,7 +825,7 @@ const EditorToolbar = ({ editor, t }) => {
                     <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
                         <Tooltip title={t('contractTemplate_toolbar_addColBefore')}>
                             <IconButton size="small" onClick={() => editor.chain().focus().addColumnBefore().run()} sx={useBtnSx(false)}>
-                                <ViewListIcon fontSize="small"  />
+                                <ViewListIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
                         <Tooltip title={t('contractTemplate_toolbar_addColAfter')}>
@@ -1150,7 +1150,7 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
         if (!variableSearchText.trim()) return true;
         const searchLower = variableSearchText.toLowerCase();
         return v.code.toLowerCase().includes(searchLower) ||
-               v.description.toLowerCase().includes(searchLower);
+            v.description.toLowerCase().includes(searchLower);
     });
 
     const filteredSigns = availableSigns.filter(s => {
@@ -1170,14 +1170,14 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
         if (!validateForm()) return;
         setIsLoading(true);
         try {
-            const payload = { 
-                ...formData, 
+            const payload = {
+                ...formData,
                 content: editor?.getHTML() ?? '',
                 contractSignIds: selectedSigns
             };
             const result = isEditing
-                ? await service.editData(payload)
-                : await service.addData(payload);
+                ? await service.editData(payload, true)
+                : await service.addData(payload, true);
 
             if (result.success) {
                 ShowMessage(
@@ -1199,8 +1199,8 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                     isEditing
                         ? prev.map(item =>
                             item.idTemplate === savedItem.idTemplate ? savedItem : item
-                          )
-                        : [savedItem, ...prev]
+                        )
+                        : [...prev, savedItem]
                 );
                 handleClose();
             } else if (result.conflict) {

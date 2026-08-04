@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <Content Remove="appsettings.Development.json" />
-    <Content Remove="wwwroot\img\login_background.png" />
+    <Content Remove="wwwroot\img\login_background2.png" />
     <Content Remove="wwwroot\img\logo.png" />
   </ItemGroup>
 
@@ -38,7 +38,7 @@
     <None Include="appsettings.Development.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Include="wwwroot\img\login_background.png" />
+    <None Include="wwwroot\img\login_background2.png" />
     <None Include="wwwroot\img\logo.png" />
   </ItemGroup>
 
