@@ -219,7 +219,15 @@ namespace GenericApp.API.Controllers
                 if (model.TemplateIds == null || model.TemplateIds.Count == 0)
                     return BadRequest(new ApiResponse { Message = "At least one template is required" });
 
-                var employee = await _repository.GetById<Employee>(model.IdEmployee);
+                var employeeQuery = await _repository.Query<Employee>();
+                var employee = await Task.FromResult(employeeQuery
+                    .Where(x => x.IdEmployee == model.IdEmployee && !(x.IsDeleted ?? false))
+                    .Include(x => x.EmployeeWorkInformations)
+                    .Include(x => x.Beneficiaries)
+                        .ThenInclude(b => b.IdEmployeeRelationshipTypeNavigation)
+                    .Include(x => x.Dependents)
+                    .Include(x => x.EmployeeEmergencyContacts)
+                    .FirstOrDefault());
                 if (employee == null)
                     return NotFound(new ApiResponse { Message = "Employee not found" });
                 var employeeName = $"{employee.Nombre} {employee.ApellidoPaterno} {employee.ApellidoMaterno}";
@@ -376,12 +384,15 @@ namespace GenericApp.API.Controllers
                 if (model.TemplateIds == null || model.TemplateIds.Count == 0)
                     return BadRequest(new ApiResponse { Message = "At least one template is required" });
 
-                var employee = await _repository.FirstOrDefault<Employee>(
-                    x => x.IdEmployee == model.IdEmployee && !(x.IsDeleted ?? false),
-                    x => x.EmployeeWorkInformations,
-                    x => x.Beneficiaries,
-                    x => x.Dependents,
-                    x => x.EmployeeEmergencyContacts);
+                var employeeQuery = await _repository.Query<Employee>();
+                var employee = await Task.FromResult(employeeQuery
+                    .Where(x => x.IdEmployee == model.IdEmployee && !(x.IsDeleted ?? false))
+                    .Include(x => x.EmployeeWorkInformations)
+                    .Include(x => x.Beneficiaries)
+                        .ThenInclude(b => b.IdEmployeeRelationshipTypeNavigation)
+                    .Include(x => x.Dependents)
+                    .Include(x => x.EmployeeEmergencyContacts)
+                    .FirstOrDefault());
                 if (employee == null)
                     return NotFound(new ApiResponse { Message = "Employee not found" });
                 var employeeName = $"{employee?.Nombre ?? ""} {employee?.ApellidoPaterno ?? ""} {employee?.ApellidoMaterno ?? ""}";
@@ -656,6 +667,8 @@ namespace GenericApp.API.Controllers
                     return "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1_Percentage):
                     return employee.Beneficiaries?.ElementAtOrDefault(0)?.Percentage?.ToString("N0") ?? "0";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario1_Parentezco):
+                    return employee.Beneficiaries?.ElementAtOrDefault(0)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
                 //return employee.Beneficiaries?.ElementAtOrDefault(0)?.Phone ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario2):
                     return employee.Beneficiaries?.ElementAtOrDefault(1)?.Name ?? "";
@@ -670,10 +683,14 @@ namespace GenericApp.API.Controllers
                 case nameof(ContractTemplateVariablesEnum.Beneficiario2_Percentage):
                     return employee.Beneficiaries?.ElementAtOrDefault(1)?.Percentage?.ToString("N0") ?? "0";
                 //return employee.Beneficiaries?.ElementAtOrDefault(1)?.Phone ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario2_Parentezco):
+                    return employee.Beneficiaries?.ElementAtOrDefault(1)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario3):
                     return employee.Beneficiaries?.ElementAtOrDefault(2)?.Name ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario3_Domicilio):
                     return "MISMO";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario3_Parentezco):
+                    return employee.Beneficiaries?.ElementAtOrDefault(2)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
                 //return employee.Beneficiaries?.ElementAtOrDefault(2)?.Address ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario3_FechaNacimiento):
                     return "";
@@ -696,6 +713,8 @@ namespace GenericApp.API.Controllers
                 case nameof(ContractTemplateVariablesEnum.Beneficiario4_Percentage):
                     return employee.Beneficiaries?.ElementAtOrDefault(3)?.Percentage?.ToString("N0") ?? "0";
                 //return employee.Beneficiaries?.ElementAtOrDefault(3)?.Phone ?? "";
+                case nameof(ContractTemplateVariablesEnum.Beneficiario4_Parentezco):
+                    return employee.Beneficiaries?.ElementAtOrDefault(3)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
                 default:
                     break;
             }

@@ -53,20 +53,24 @@
         Beneficiario1_FechaNacimiento,
         Beneficiario1_Telefono,
         Beneficiario1_Percentage,
+        Beneficiario1_Parentezco,
         Beneficiario2,
         Beneficiario2_Domicilio,
         Beneficiario2_FechaNacimiento,
         Beneficiario2_Telefono,
         Beneficiario2_Percentage,
+        Beneficiario2_Parentezco,
         Beneficiario3,
         Beneficiario3_Domicilio,
         Beneficiario3_FechaNacimiento,
         Beneficiario3_Telefono,
         Beneficiario3_Percentage,
+        Beneficiario3_Parentezco,
         Beneficiario4,
         Beneficiario4_Domicilio,
         Beneficiario4_FechaNacimiento,
         Beneficiario4_Telefono,
-        Beneficiario4_Percentage
+        Beneficiario4_Percentage,
+        Beneficiario4_Parentezco
     }
 }
