@@ -646,7 +646,7 @@ namespace GenericApp.API.Controllers
                 case nameof(ContractTemplateVariablesEnum.turno):
                     return "Matutino";
                 case nameof(ContractTemplateVariablesEnum.salarioDiarioBase):
-                    return employee.EmployeeWorkInformations?.FirstOrDefault()?.DailySalary.ToString("#.##") ?? "0.00";
+                    return employee.EmployeeWorkInformations?.FirstOrDefault()?.DailySalary.ToString("$ #.##") ?? "$0.00";
                 case nameof(ContractTemplateVariablesEnum.fechaInicioContrato):
                     return employee.EmployeeWorkInformations?.FirstOrDefault()?.InitialDate.ToString("dd/MM/yyyy") ?? "";
                 case nameof(ContractTemplateVariablesEnum.fechaTerminacionContrato):

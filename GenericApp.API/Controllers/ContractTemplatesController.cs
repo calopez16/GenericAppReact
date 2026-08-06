@@ -302,7 +302,7 @@ namespace GenericApp.API.Controllers
             if (contractTemplateVariables == null)
                 return NotFound(new ApiResponse());
 
-            return Ok(new ApiResponse { Data = _mapper.Map<List<ContractTemplateVariableDTO>>(contractTemplateVariables) });
+            return Ok(new ApiResponse { Data = _mapper.Map<List<ContractTemplateVariableDTO>>(contractTemplateVariables.OrderBy(o => o.Description)) });
         }
 
 

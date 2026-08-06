@@ -130,6 +130,57 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
     const handleListRemove = (field, index) =>
         setFormData(prev => ({ ...prev, [field]: prev[field].filter((_, i) => i !== index) }));
 
+    const handleBeneficiaryAdd = () => {
+        const totalExisting = formData.beneficiaries.reduce((sum, b) => sum + (parseFloat(b.percentage) || 0), 0);
+        if (totalExisting >= 100) {
+            ShowMessage(t('employee_beneficiary_percentageMax'), 'warning');
+            return;
+        }
+        handleListAdd('beneficiaries', INITIAL_BENEFICIARY);
+    };
+
+    const validateBeneficiaries = () => {
+        for (const b of formData.beneficiaries) {
+            if (!b.name?.trim()) {
+                ShowMessage(t('employee_beneficiary_nameRequired'), 'warning');
+                return false;
+            }
+            if (!b.idEmployeeRelationshipType) {
+                ShowMessage(t('employee_beneficiary_relationshipRequired'), 'warning');
+                return false;
+            }
+            const pct = parseFloat(b.percentage);
+            if (b.percentage === '' || isNaN(pct) || pct <= 0) {
+                ShowMessage(t('employee_beneficiary_percentageRequired'), 'warning');
+                return false;
+            }
+        }
+        const total = formData.beneficiaries.reduce((sum, b) => sum + (parseFloat(b.percentage) || 0), 0);
+        if (formData.beneficiaries.length > 0 && total !== 100) {
+            ShowMessage(t('employee_beneficiary_percentageTotal'), 'warning');
+            return false;
+        }
+        return true;
+    };
+
+    const validateDependents = () => {
+        for (const d of formData.dependents) {
+            if (!d.name?.trim()) {
+                ShowMessage(t('employee_dependent_nameRequired'), 'warning');
+                return false;
+            }
+            if (!d.birthDate) {
+                ShowMessage(t('employee_dependent_birthDateRequired'), 'warning');
+                return false;
+            }
+            if (!d.idEmployeeRelationshipType) {
+                ShowMessage(t('employee_dependent_relationshipRequired'), 'warning');
+                return false;
+            }
+        }
+        return true;
+    };
+
     const handleRelationshipTypeCreate = async (inputValue, field, index) => {
         const result = await service.addRelationshipType({ description: inputValue, isActive: true, isDeleted: false });
         if (result?.success) {
@@ -149,11 +200,32 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
         }
     };
 
+    const validateEmergencyContacts = () => {
+        for (const e of formData.employeeEmergencyContacts) {
+            if (!e.name?.trim()) {
+                ShowMessage(t('employee_emergency_nameRequired'), 'warning');
+                return false;
+            }
+            if (!e.idEmployeeRelationshipType) {
+                ShowMessage(t('employee_emergency_relationshipRequired'), 'warning');
+                return false;
+            }
+            if (!e.phone?.trim()) {
+                ShowMessage(t('employee_emergency_phoneRequired'), 'warning');
+                return false;
+            }
+        }
+        return true;
+    };
+
     const handleSubmit = async () => {
         if (!formData.nombre?.trim() || !formData.apellidoPaterno?.trim()) {
             ShowMessage(t('requiredFields'), 'warning');
             return;
         }
+        if (!validateBeneficiaries()) return;
+        if (!validateDependents()) return;
+        if (!validateEmergencyContacts()) return;
         setLoading(true);
         try {
             const payload = {
@@ -243,7 +315,7 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
                             </Grid>
                             <Grid size={{ xs: 4, sm: 4, md: 4 }}>
                                 <TextField fullWidth label={t('employee_imss')} name="imss" value={formData.imss}
-                                    onChange={handleChange} size="small" inputProps={{ maxLength: 11 }} />
+                                    onChange={handleChange} size="small" inputProps={{ maxLength: 50 }} />
                             </Grid>
                             <Grid size={{ xs: 4, sm: 4, md: 4 }}>
                                 <FormControl fullWidth size="small">
@@ -312,7 +384,7 @@ const EmployeeFormModal = ({ open, handleClose, data, isEditing, setData, idComp
                     <Box sx={{ mt: 1 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
                             <Button size="small" endIcon={<AddIcon />} variant="contained" disableElevation
-                                onClick={() => handleListAdd('beneficiaries', INITIAL_BENEFICIARY)}>
+                                onClick={handleBeneficiaryAdd}>
                                 {t('add')}
                             </Button>
                         </Box>

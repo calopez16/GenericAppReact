@@ -325,7 +325,7 @@ const TemplateVariable = Node.create({
                 dom.style.removeProperty('font-family');
                 let textDecoration = '';
                 marks.forEach(mark => {
-                    if (mark.type.name === 'bold') dom.style.fontWeight = 'bold';
+                    if (mark.type.name === 'bold') dom.style.fontWeight = '700';
                     if (mark.type.name === 'italic') dom.style.fontStyle = 'italic';
                     if (mark.type.name === 'underline') textDecoration += ' underline';
                     if (mark.type.name === 'strike') textDecoration += ' line-through';
