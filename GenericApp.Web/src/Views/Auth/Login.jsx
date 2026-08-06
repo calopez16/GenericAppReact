@@ -5,6 +5,7 @@ import { AppContext } from '@helpers/AppContext';
 import { lightTheme, darkTheme } from '@helpers/ThemeHelper';
 import { AuthenticationAPIService } from '@data/Auth/Authentication';
 import { ShowMessage, HideMessage } from '@helpers/NotificationService';
+import { API_BASE_URL } from '@config';
 import '@styles/Login.css';
 import LoginIcon from '@mui/icons-material/Login';
 import LockResetIcon from '@mui/icons-material/LockReset';
@@ -178,20 +179,53 @@ function LoginPage() {
             <Card className="login-card" sx={{ width: '100%', bgcolor: 'transparent', border: 'none' }}>
 
                 {/* ── Panel formulario ── */}
-                <Box className="login-form-panel" sx={{ bgcolor: 'background.paper' }}>
+                <Box className="login-form-panel" sx={{ bgcolor: 'background.paper', position: 'relative', pt: 8, borderRadius: 4 }}>
+
+                    {/* Logo flotante simplificado */}
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: -50,
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            zIndex: 10,
+                            width: 140,
+                            height: 140,
+                            borderRadius: '50%',
+                            bgcolor: 'primary.main',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.55)',
+                            padding: '6px',
+                        }}
+                    >
+                        <Box
+                            component="img"
+                            src={`${API_BASE_URL}/img/logo.png?t=${Date.now()}`}
+                            alt={t('app_name')}
+                            sx={{
+                                width: '100%',
+                                height: '100%',
+                                borderRadius: '50%',
+                                objectFit: 'cover',
+                                bgcolor: 'background.paper',
+                                padding: 1,
+                            }}
+                            onError={(e) => {
+                                e.target.style.display = 'none';
+                            }}
+                        />
+                    </Box>
+
+
 
                     {/* Header del formulario */}
-                    <Box sx={{ mb: 4 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                            {isRestartPasswordNeeded
-                                ? <LockResetIcon sx={{ color: 'primary.main', fontSize: 28 }} />
-                                : <LoginIcon sx={{ color: 'primary.main', fontSize: 28 }} />
-                            }
-                            <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: '-0.3px' }}>
-                                {isRestartPasswordNeeded ? t('changePassword') : t('login')}
-                            </Typography>
-                        </Box>
-                        <Typography variant="body2" sx={{ color: 'text.secondary', ml: 0.5 }}>
+                    <Box sx={{ mt: 10, mb: 2, textAlign: 'center' }}>
+                        <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: '-0.3px', mb: 1 }}>
+                            {isRestartPasswordNeeded ? t('changePassword') : t('login')}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                             {isRestartPasswordNeeded
                                 ? t('login_change_password_hint', { defaultValue: 'Establece una nueva contraseña segura para continuar.' })
                                 : t('login_subtitle', { defaultValue: 'Ingresa tus credenciales para acceder al sistema.' })
@@ -356,7 +390,7 @@ function LoginPage() {
                     </div>
 
                     {/* Footer del formulario */}
-                    <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                    <Box sx={{ mt: 1, pt: 3, borderTop: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                         {allowLanguage && (
                             <Box sx={{ display: 'flex', gap: 1 }}>
                                 <Box
