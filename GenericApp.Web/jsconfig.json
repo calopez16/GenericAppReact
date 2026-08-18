@@ -2,8 +2,16 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "@": [ "src" ]
+      "@/*": ["src/*"],
+      "@styles/*": ["src/assets/css/*"],
+      "@layout/*": ["src/Views/Layout/*"],
+      "@views/*": ["src/Views/*"],
+      "@helpers/*": ["src/Helpers/*"],
+      "@data/*": ["src/Data/*"],
+      "@config": ["src/config.jsx"],
+      "@images/*": ["src/assets/img/*"],
+      "@locales/*": ["src/locales/*"],
+      "@components/*": ["src/Components/*"]
     }
   }
-  
 }

@@ -23,6 +23,6 @@ export const DataAPIEmployeesService = () => {
         getRelationshipTypes: () => GET(`${moduleSource}/relationship-types`),
         addRelationshipType: (data) => POST(`${moduleSource}/relationship-types`, data, true),
         uploadExcel: (formData) => POST(`${moduleSource}/upload-excel`, formData, true),
-        importExcel: (data) => POST(`${moduleSource}/import-excel`, data),
+        importExcel: (data) => POST(`${moduleSource}/import-excel`, data, true),
     };
 };

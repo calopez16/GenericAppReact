@@ -80,7 +80,9 @@ namespace GenericApp.API.Controllers
             string? GetVal(int row, int col)
             {
                 var v = sheet.Cells[row, col].Text?.Trim();
-                return string.IsNullOrEmpty(v) ? null : v;
+                if (string.IsNullOrEmpty(v)) return null;
+                if (v == "- -" || v == "--" || v == "-" || v == "-   -") return null;
+                return v;
             }
 
             for (int r = dataStartRow; r <= lastRow; r++)
@@ -89,7 +91,7 @@ namespace GenericApp.API.Controllers
                     string.IsNullOrWhiteSpace(sheet.Cells[r, 4].Text))
                     continue;
 
-                rows.Add(new EmployeeExcelRowDTO
+                var row = new EmployeeExcelRowDTO
                 {
                     RowNumber = r,
                     Clave = GetVal(r, 1),
@@ -170,11 +172,212 @@ namespace GenericApp.API.Controllers
                     CelularContacto = GetVal(r, 92),
 
                     FechaInicioContrato = GetVal(r, 97),
-                    FechaVencimientoContrato = GetVal(r, 98)
-                });
+                    FechaVencimientoContrato = GetVal(r, 98),
+                    Errores = new List<EmployeeExcelRowErrorsDTO>()
+                };
+
+                ValidateEmployeeRow(row);
+                rows.Add(row);
             }
 
             return Ok(new ApiResponse { Data = rows });
+        }
+
+        private void ValidateEmployeeRow(EmployeeExcelRowDTO row)
+        {
+            var errores = row.Errores;
+
+            // Validar Clave (requerido y debe ser entero)
+            if (string.IsNullOrWhiteSpace(row.Clave))
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "FIELD_REQUIRED", Field = "Clave", Value = row.Clave ?? "" });
+            else if (!int.TryParse(row.Clave, out _))
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "INVALID_INTEGER", Field = "Clave", Value = row.Clave });
+
+            // Validar Nombre (requerido, max 150 caracteres)
+            if (string.IsNullOrWhiteSpace(row.Nombre))
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "FIELD_REQUIRED", Field = "Nombre", Value = row.Nombre ?? "" });
+            else if (row.Nombre.Length > 150)
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "Nombre", Value = row.Nombre });
+
+            // Validar ApellidoPaterno (max 150 caracteres)
+            if (!string.IsNullOrWhiteSpace(row.ApellidoPaterno) && row.ApellidoPaterno.Length > 150)
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "ApellidoPaterno", Value = row.ApellidoPaterno });
+
+            // Validar ApellidoMaterno (max 150 caracteres)
+            if (!string.IsNullOrWhiteSpace(row.ApellidoMaterno) && row.ApellidoMaterno.Length > 150)
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "ApellidoMaterno", Value = row.ApellidoMaterno });
+
+            // Validar Direccion (max 250 caracteres)
+            if (!string.IsNullOrWhiteSpace(row.Direccion) && row.Direccion.Length > 250)
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "Direccion", Value = row.Direccion });
+
+            // Validar RFC (max 50 caracteres)
+            if (!string.IsNullOrWhiteSpace(row.RFC) && row.RFC.Length > 50)
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "RFC", Value = row.RFC });
+
+            // Validar CURP (max 50 caracteres)
+            if (!string.IsNullOrWhiteSpace(row.CURP) && row.CURP.Length > 50)
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "CURP", Value = row.CURP });
+
+            // Validar IMSS (max 50 caracteres)
+            if (!string.IsNullOrWhiteSpace(row.IMSS) && row.IMSS.Length > 50)
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "IMSS", Value = row.IMSS });
+
+            // Validar Sexo (max 50 caracteres)
+            if (!string.IsNullOrWhiteSpace(row.Sexo) && row.Sexo.Length > 50)
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "Sexo", Value = row.Sexo });
+
+            // Validar EstadoCivil (max 50 caracteres)
+            if (!string.IsNullOrWhiteSpace(row.EstadoCivil) && row.EstadoCivil.Length > 50)
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "EstadoCivil", Value = row.EstadoCivil });
+
+            // Validar Puesto (max 150 caracteres)
+            if (!string.IsNullOrWhiteSpace(row.Puesto) && row.Puesto.Length > 150)
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "Puesto", Value = row.Puesto });
+
+            //// Validar FechaNacimiento (requerido y formato válido)
+            //if (string.IsNullOrWhiteSpace(row.FechaNacimiento))
+            //    errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "FIELD_REQUIRED", Field = "FechaNacimiento", Value = row.FechaNacimiento ?? "" });
+            //else 
+            if (!string.IsNullOrWhiteSpace(row.FechaNacimiento))
+                if (!DateTime.TryParse(row.FechaNacimiento, out _))
+                    errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "INVALID_DATE", Field = "FechaNacimiento", Value = row.FechaNacimiento });
+
+            // Validar FechaIngreso (formato válido si existe)
+            if (!string.IsNullOrWhiteSpace(row.FechaIngreso) && !DateTime.TryParse(row.FechaIngreso, out _))
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "INVALID_DATE", Field = "FechaIngreso", Value = row.FechaIngreso });
+
+            // Validar FechaBaja (formato válido si existe)
+            if (!string.IsNullOrWhiteSpace(row.FechaBaja) && !DateTime.TryParse(row.FechaBaja, out _))
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "INVALID_DATE", Field = "FechaBaja", Value = row.FechaBaja });
+
+            // Validar SalarioDiario (debe ser decimal válido si existe)
+            if (!string.IsNullOrWhiteSpace(row.SalarioDiario) &&
+                !decimal.TryParse(row.SalarioDiario.Replace(",", "."), System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out _))
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "INVALID_DECIMAL", Field = "SalarioDiario", Value = row.SalarioDiario });
+
+            // Validar SalarioIntegrado (debe ser decimal válido si existe)
+            if (!string.IsNullOrWhiteSpace(row.SalarioIntegrado) &&
+                !decimal.TryParse(row.SalarioIntegrado.Replace(",", "."), System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out _))
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "INVALID_DECIMAL", Field = "SalarioIntegrado", Value = row.SalarioIntegrado });
+
+            // Validar FormaDePago (max 50 caracteres)
+            if (!string.IsNullOrWhiteSpace(row.FormaDePago) && row.FormaDePago.Length > 50)
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "FormaDePago", Value = row.FormaDePago });
+
+            // Validar FechaInicioContrato (formato válido si existe)
+            if (!string.IsNullOrWhiteSpace(row.FechaInicioContrato) && !DateTime.TryParse(row.FechaInicioContrato, out _))
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "INVALID_DATE", Field = "FechaInicioContrato", Value = row.FechaInicioContrato });
+
+            // Validar FechaVencimientoContrato (formato válido si existe)
+            if (!string.IsNullOrWhiteSpace(row.FechaVencimientoContrato) && !DateTime.TryParse(row.FechaVencimientoContrato, out _))
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "INVALID_DATE", Field = "FechaVencimientoContrato", Value = row.FechaVencimientoContrato });
+
+            // Validar Beneficiarios
+            ValidateBeneficiary(errores, row.Beneficiario1, row.Parentesco1, row.Porcentaje1, 1);
+            ValidateBeneficiary(errores, row.Beneficiario2, row.Parentesco2, row.Porcentaje2, 2);
+            ValidateBeneficiary(errores, row.Beneficiario3, row.Parentesco3, row.Porcentaje3, 3);
+
+            // Validar suma de porcentajes de beneficiarios
+            var porcentajes = new[] { row.Porcentaje1, row.Porcentaje2, row.Porcentaje3 };
+            var beneficiarios = new[] { row.Beneficiario1, row.Beneficiario2, row.Beneficiario3 };
+            var totalPorcentaje = 0m;
+            var hasBeneficiarios = false;
+
+            for (int i = 0; i < 3; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(beneficiarios[i]))
+                {
+                    hasBeneficiarios = true;
+                    if (!string.IsNullOrWhiteSpace(porcentajes[i]) &&
+                        decimal.TryParse(porcentajes[i].Replace(",", "."), System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out var pct))
+                    {
+                        totalPorcentaje += pct;
+                    }
+                }
+            }
+
+            if (hasBeneficiarios && totalPorcentaje != 100)
+                errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "BENEFICIARY_PERCENTAGE_SUM", Field = "Porcentajes", Value = totalPorcentaje.ToString() });
+
+            // Validar Dependientes
+            ValidateDependent(errores, row.Padre, row.FechaNacimientoPadre, "Padre", "FechaNacimientoPadre");
+            ValidateDependent(errores, row.Madre, row.FechaNacimientoMadre, "Madre", "FechaNacimientoMadre");
+            ValidateDependent(errores, row.Conyugue, row.ConyugueFechaNacimiento, "Conyugue", "ConyugueFechaNacimiento");
+
+            ValidateDependent(errores, row.Hijo1, row.Hijo1FechaNacimiento, "Hijo1", "Hijo1FechaNacimiento");
+            ValidateDependent(errores, row.Hijo2, row.Hijo2FechaNacimiento, "Hijo2", "Hijo2FechaNacimiento");
+            ValidateDependent(errores, row.Hijo3, row.Hijo3FechaNacimiento, "Hijo3", "Hijo3FechaNacimiento");
+            ValidateDependent(errores, row.Hijo4, row.Hijo4FechaNacimiento, "Hijo4", "Hijo4FechaNacimiento");
+            ValidateDependent(errores, row.Hijo5, row.Hijo5FechaNacimiento, "Hijo5", "Hijo5FechaNacimiento");
+            ValidateDependent(errores, row.Hijo6, row.Hijo6FechaNacimiento, "Hijo6", "Hijo6FechaNacimiento");
+
+            // Validar Contacto de Emergencia
+            ValidateEmergencyContact(errores, row.ContactoEmergencia, row.ParentescoContacto, row.CelularContacto);
+        }
+
+        private void ValidateBeneficiary(List<EmployeeExcelRowErrorsDTO> errores, string? nombre, string? parentesco, string? porcentaje, int index)
+        {
+            if (!string.IsNullOrWhiteSpace(nombre))
+            {
+                // Validar longitud del nombre (max 150)
+                if (nombre.Length > 150)
+                    errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = $"Beneficiario{index}", Value = nombre });
+
+                // Validar que tenga parentesco
+                if (string.IsNullOrWhiteSpace(parentesco))
+                    errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "FIELD_REQUIRED", Field = $"Parentesco{index}", Value = parentesco ?? "" });
+
+                // Validar porcentaje
+                if (string.IsNullOrWhiteSpace(porcentaje))
+                {
+                    errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "FIELD_REQUIRED", Field = $"Porcentaje{index}", Value = porcentaje ?? "" });
+                }
+                else
+                {
+                    if (!decimal.TryParse(porcentaje.Replace(",", "."), System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out var pct))
+                    {
+                        errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "INVALID_DECIMAL", Field = $"Porcentaje{index}", Value = porcentaje });
+                    }
+                    else if (pct < 0 || pct > 100)
+                    {
+                        errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "PERCENTAGE_OUT_OF_RANGE", Field = $"Porcentaje{index}", Value = porcentaje });
+                    }
+                }
+            }
+        }
+
+        private void ValidateDependent(List<EmployeeExcelRowErrorsDTO> errores, string? nombre, string? fechaNacimiento, string nombreField, string fechaField)
+        {
+            if (!string.IsNullOrWhiteSpace(nombre))
+            {
+                // Validar longitud del nombre (max 150)
+                if (nombre.Length > 150)
+                    errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = nombreField, Value = nombre });
+
+                // Validar fecha de nacimiento si existe
+                if (!string.IsNullOrWhiteSpace(fechaNacimiento))
+                    if (!DateTime.TryParse(fechaNacimiento, out _))
+                        errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "INVALID_DATE", Field = fechaField, Value = fechaNacimiento });
+            }
+        }
+
+        private void ValidateEmergencyContact(List<EmployeeExcelRowErrorsDTO> errores, string? nombre, string? parentesco, string? telefono)
+        {
+            if (!string.IsNullOrWhiteSpace(nombre))
+            {
+                // Validar longitud del nombre (max 150)
+                if (nombre.Length > 150)
+                    errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "ContactoEmergencia", Value = nombre });
+
+                // Validar teléfono (max 25)
+                if (!string.IsNullOrWhiteSpace(telefono) && telefono.Length > 25)
+                    errores.Add(new EmployeeExcelRowErrorsDTO { ErrorCode = "MAX_LENGTH_EXCEEDED", Field = "CelularContacto", Value = telefono });
+            }
         }
 
         [HttpPost("import-excel")]
@@ -186,92 +389,126 @@ namespace GenericApp.API.Controllers
 
             int inserted = 0;
             int updated = 0;
+            int errors = 0;
+            var errorDetails = new List<object>();
 
             foreach (var row in request.Rows)
             {
-                if (!int.TryParse(row.Clave, out int clave))
-                    continue;
-
-                var existing = await _repository.FirstOrDefault<Employee>(
-                    x => x.Clave == clave && x.IdCompany == request.IdCompany && !(x.IsDeleted ?? false),
-                    x => x.EmployeeWorkInformations,
-                    x => x.Beneficiaries,
-                    x => x.Dependents,
-                    x => x.EmployeeEmergencyContacts);
-
-                DateTime ParseDate(string? val) =>
-                    DateTime.TryParse(val, out var d) ? d : DateTime.MinValue;
-
-                DateTime? ParseDateNullable(string? val) =>
-                    DateTime.TryParse(val, out var d) ? d : null;
-
-                decimal ParseDecimal(string? val) =>
-                    decimal.TryParse(val?.Replace(",", "."), System.Globalization.NumberStyles.Any,
-                        System.Globalization.CultureInfo.InvariantCulture, out var n) ? n : 0;
-
-                if (existing == null)
+                try
                 {
-                    var employee = new Employee
+                    if (!int.TryParse(row.Clave, out int clave))
                     {
-                        Clave = clave,
-                        IdCompany = request.IdCompany,
-                        ApellidoPaterno = row.ApellidoPaterno,
-                        ApellidoMaterno = row.ApellidoMaterno,
-                        Nombre = row.Nombre,
-                        Address = row.Direccion,
-                        RFC = row.RFC,
-                        CURP = row.CURP,
-                        IMSS = row.IMSS,
-                        Genre = NormalizeGenre(row.Sexo),
-                        CivilStatus = row.EstadoCivil,
-                        Position = row.Puesto,
-                        BirthDate = ParseDate(row.FechaNacimiento),
-                        IsActive = row.Activo?.ToUpper() is "SI" or "S" or "1" or "TRUE" or "YES",
-                        IsDeleted = false,
-                        EmployeeWorkInformations = new List<EmployeeWorkInformation>(),
-                        Beneficiaries = new List<EmployeeBeneficiarie>(),
-                        Dependents = new List<EmployeeDependents>(),
-                        EmployeeEmergencyContacts = new List<EmployeeEmergencyContact>(),
-                    };
+                        errors++;
+                        errorDetails.Add(new 
+                        { 
+                            RowNumber = row.RowNumber, 
+                            Clave = row.Clave, 
+                            Nombre = row.Nombre, 
+                            Error = "Clave inválida o no proporcionada" 
+                        });
+                        continue;
+                    }
 
-                    await MapRelatedData(employee, row, ParseDate, ParseDateNullable, ParseDecimal);
-                    await _repository.Add(employee);
-                    inserted++;
+                    var existing = await _repository.FirstOrDefault<Employee>(
+                        x => x.Clave == clave && x.IdCompany == request.IdCompany && !(x.IsDeleted ?? false),
+                        x => x.EmployeeWorkInformations,
+                        x => x.Beneficiaries,
+                        x => x.Dependents,
+                        x => x.EmployeeEmergencyContacts);
+
+                    DateTime ParseDate(string? val) =>
+                        DateTime.TryParse(val, out var d) ? d : DateTime.MinValue;
+
+                    DateTime? ParseDateNullable(string? val) =>
+                        DateTime.TryParse(val, out var d) ? d : null;
+
+                    decimal ParseDecimal(string? val) =>
+                        decimal.TryParse(val?.Replace(",", "."), System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out var n) ? n : 0;
+
+                    if (existing == null)
+                    {
+                        var employee = new Employee
+                        {
+                            Clave = clave,
+                            IdCompany = request.IdCompany,
+                            ApellidoPaterno = row.ApellidoPaterno,
+                            ApellidoMaterno = row.ApellidoMaterno,
+                            Nombre = row.Nombre,
+                            Address = row.Direccion,
+                            RFC = row.RFC,
+                            CURP = row.CURP,
+                            IMSS = row.IMSS,
+                            Genre = NormalizeGenre(row.Sexo),
+                            CivilStatus = row.EstadoCivil,
+                            Position = row.Puesto,
+                            BirthDate = ParseDate(row.FechaNacimiento),
+                            IsActive = row.Activo?.ToUpper() is "SI" or "S" or "1" or "TRUE" or "YES",
+                            IsDeleted = false,
+                            EmployeeWorkInformations = new List<EmployeeWorkInformation>(),
+                            Beneficiaries = new List<EmployeeBeneficiarie>(),
+                            Dependents = new List<EmployeeDependents>(),
+                            EmployeeEmergencyContacts = new List<EmployeeEmergencyContact>(),
+                        };
+
+                        await MapRelatedData(employee, row, ParseDate, ParseDateNullable, ParseDecimal);
+                        await _repository.Add(employee);
+                        inserted++;
+                    }
+                    else
+                    {
+                        existing.ApellidoPaterno = row.ApellidoPaterno ?? existing.ApellidoPaterno;
+                        existing.ApellidoMaterno = row.ApellidoMaterno ?? existing.ApellidoMaterno;
+                        existing.Nombre = row.Nombre ?? existing.Nombre;
+                        existing.Address = row.Direccion ?? existing.Address;
+                        existing.RFC = row.RFC ?? existing.RFC;
+                        existing.CURP = row.CURP ?? existing.CURP;
+                        existing.IMSS = row.IMSS ?? existing.IMSS;
+                        existing.Genre = NormalizeGenre(row.Sexo) ?? existing.Genre;
+                        existing.CivilStatus = row.EstadoCivil ?? existing.CivilStatus;
+                        existing.Position = row.Puesto ?? existing.Position;
+                        if (row.FechaNacimiento != null) existing.BirthDate = ParseDate(row.FechaNacimiento);
+                        if (row.Activo != null)
+                            existing.IsActive = row.Activo.ToUpper() is "SI" or "S" or "1" or "TRUE" or "YES";
+
+                        await _repository.RemoveRange(existing.EmployeeWorkInformations.ToList());
+                        await _repository.RemoveRange(existing.Beneficiaries.ToList());
+                        await _repository.RemoveRange(existing.Dependents.ToList());
+                        await _repository.RemoveRange(existing.EmployeeEmergencyContacts.ToList());
+
+                        existing.EmployeeWorkInformations.Clear();
+                        existing.Beneficiaries.Clear();
+                        existing.Dependents.Clear();
+                        existing.EmployeeEmergencyContacts.Clear();
+
+                        await MapRelatedData(existing, row, ParseDate, ParseDateNullable, ParseDecimal);
+                        await _repository.Update(existing);
+                        updated++;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    existing.ApellidoPaterno = row.ApellidoPaterno ?? existing.ApellidoPaterno;
-                    existing.ApellidoMaterno = row.ApellidoMaterno ?? existing.ApellidoMaterno;
-                    existing.Nombre = row.Nombre ?? existing.Nombre;
-                    existing.Address = row.Direccion ?? existing.Address;
-                    existing.RFC = row.RFC ?? existing.RFC;
-                    existing.CURP = row.CURP ?? existing.CURP;
-                    existing.IMSS = row.IMSS ?? existing.IMSS;
-                    existing.Genre = NormalizeGenre(row.Sexo) ?? existing.Genre;
-                    existing.CivilStatus = row.EstadoCivil ?? existing.CivilStatus;
-                    existing.Position = row.Puesto ?? existing.Position;
-                    if (row.FechaNacimiento != null) existing.BirthDate = ParseDate(row.FechaNacimiento);
-                    if (row.Activo != null)
-                        existing.IsActive = row.Activo.ToUpper() is "SI" or "S" or "1" or "TRUE" or "YES";
-
-                    // Eliminar todos los registros relacionados y agregarlos de nuevo
-                    await _repository.RemoveRange(existing.EmployeeWorkInformations.ToList());
-                    await _repository.RemoveRange(existing.Beneficiaries.ToList());
-                    await _repository.RemoveRange(existing.Dependents.ToList());
-                    await _repository.RemoveRange(existing.EmployeeEmergencyContacts.ToList());
-
-                    existing.EmployeeWorkInformations.Clear();
-                    existing.Beneficiaries.Clear();
-                    existing.Dependents.Clear();
-                    existing.EmployeeEmergencyContacts.Clear();
-
-                    await MapRelatedData(existing, row, ParseDate, ParseDateNullable, ParseDecimal);
-                    await _repository.Update(existing);
-                    updated++;
+                    errors++;
+                    errorDetails.Add(new 
+                    { 
+                        RowNumber = row.RowNumber, 
+                        Clave = row.Clave, 
+                        Nombre = row.Nombre, 
+                        Error = ex.Message 
+                    });
                 }
             }
 
-            return Ok(new ApiResponse { Data = new { Inserted = inserted, Updated = updated } });
+            var result = new 
+            { 
+                Inserted = inserted, 
+                Updated = updated, 
+                Errors = errors,
+                Total = request.Rows.Count(),
+                ErrorDetails = errorDetails
+            };
+
+            return Ok(new ApiResponse { Data = result });
         }
 
         private static string? NormalizeGenre(string? val)

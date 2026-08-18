@@ -16,7 +16,8 @@ export default defineConfig({
             '@data': path.resolve(__dirname, './src/Data'),
             '@config': path.resolve(__dirname, './src/config.jsx'),
             '@images': path.resolve(__dirname, './src/assets/img'),
-            '@locales': path.resolve(__dirname, './src/locales')
+            '@locales': path.resolve(__dirname, './src/locales'),
+            '@components': path.resolve(__dirname, './src/Components')
         }
     },
     server: {

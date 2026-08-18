@@ -1,18 +1,22 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, Box, Typography, IconButton, Divider, TextField,
     LinearProgress, Paper, Table, TableBody, TableCell,
-    TableContainer, TableHead, TableRow, Chip, Tooltip, CircularProgress
+    TableContainer, TableHead, TableRow, Chip, Tooltip, CircularProgress, Badge
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import TableViewIcon from '@mui/icons-material/TableView';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SaveIcon from '@mui/icons-material/Save';
+import ErrorIcon from '@mui/icons-material/Error';
+import WarningIcon from '@mui/icons-material/Warning';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import { DataAPIEmployeesService } from '@data/Employees/Data';
+import ConfirmationDialog from '@components/ConfirmationDialog';
 
 const PREVIEW_COLUMNS = [
     { key: 'rowNumber', labelKey: 'col_rowNumber', width: 60 },
@@ -156,15 +160,59 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany }) => {
     };
 
     const [saving, setSaving] = useState(false);
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+    const getErrorsForField = useCallback((row, fieldKey) => {
+        if (!row.errores || !Array.isArray(row.errores)) return [];
+        return row.errores.filter(err => {
+            const field = err.field?.toLowerCase();
+            const key = fieldKey.toLowerCase();
+            return field === key || field === key.replace(/[0-9]/g, '');
+        });
+    }, []);
+
+    const rowsWithErrors = useMemo(() => {
+        if (!previewData) return [];
+        return previewData.filter(row => row.errores && row.errores.length > 0);
+    }, [previewData]);
+
+    const totalErrors = useMemo(() => {
+        if (!previewData) return 0;
+        return previewData.reduce((sum, row) => sum + (row.errores?.length || 0), 0);
+    }, [previewData]);
+
+    const handleDiscardErrorRows = () => {
+        if (!previewData) return;
+        const validRows = previewData.filter(row => !row.errores || row.errores.length === 0);
+        setPreviewData(validRows);
+        ShowMessage(t('excel_discardedRows', { count: rowsWithErrors.length }), 'info');
+    };
+
+    const handleSaveClick = () => {
+        if (!previewData?.length) return;
+        if (rowsWithErrors.length > 0) {
+            setShowConfirmDialog(true);
+            return;
+        }
+        handleSave();
+    };
 
     const handleSave = async () => {
-        if (!previewData?.length) return;
+        setShowConfirmDialog(false);
         setSaving(true);
         try {
             const result = await service.importExcel({ idCompany, rows: previewData });
             if (result?.success !== false) {
-                const { inserted = 0, updated = 0 } = result?.data ?? {};
-                ShowMessage(t('excel_importSuccess', { inserted, updated }), 'success');
+                const data = result?.data ?? {};
+                const inserted = data.inserted || data.Inserted || 0;
+                const updated = data.updated || data.Updated || 0;
+                const errors = data.errors || data.Errors || 0;
+
+                if (errors > 0) {
+                    ShowMessage(t('excel_importPartialSuccess', { inserted, updated, errors }), 'warning');
+                } else {
+                    ShowMessage(t('excel_importSuccess', { inserted, updated }), 'success');
+                }
                 handleModalClose();
             } else {
                 ShowMessage(t('error'), 'error');
@@ -185,12 +233,22 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany }) => {
                         {t('excel_loadTitle')}
                     </Typography>
                     {previewData && (
-                        <Chip
-                            size="small"
-                            color="success"
-                            icon={<CheckCircleIcon />}
-                            label={`${previewData.length} ${t('excel_rowsFound')}`}
-                        />
+                        <>
+                            <Chip
+                                size="small"
+                                color="success"
+                                icon={<CheckCircleIcon />}
+                                label={`${previewData.length} ${t('excel_rowsFound')}`}
+                            />
+                            {totalErrors > 0 && (
+                                <Chip
+                                    size="small"
+                                    color="error"
+                                    icon={<WarningIcon />}
+                                    label={`${totalErrors} ${t('excel_errorsFound')} ${t('excel_inRowsCount', { count: rowsWithErrors.length })}`}
+                                />
+                            )}
+                        </>
                     )}
                 </Box>
                 <IconButton onClick={handleModalClose} size="small"><CloseIcon /></IconButton>
@@ -281,15 +339,104 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany }) => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {previewData.map((row, idx) => (
-                                        <TableRow key={idx} hover>
-                                            {PREVIEW_COLUMNS.map(col => (
-                                                <TableCell key={col.key} sx={{ whiteSpace: 'nowrap' }}>
-                                                    {row[col.key] ?? ''}
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    ))}
+                                    {previewData.map((row, idx) => {
+                                        const hasErrors = row.errores && row.errores.length > 0;
+
+                                        return (
+                                            <Tooltip
+                                                key={idx}
+                                                title={
+                                                    hasErrors ? (
+                                                        <Box sx={{ maxWidth: 500 }}>
+                                                            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, fontSize: '0.9rem' }}>
+                                                                {t('excel_row_errors', { row: row.rowNumber })}
+                                                            </Typography>
+                                                            {row.errores.map((err, errIdx) => (
+                                                                <Box key={errIdx} sx={{ mb: 1, pb: 1, borderBottom: errIdx < row.errores.length - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
+                                                                    <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block' }}>
+                                                                        {t(err.errorCode)}
+                                                                    </Typography>
+                                                                    <Typography variant="caption" display="block" sx={{ pl: 1.5 }}>
+                                                                        {t('excel_error_field')}: <strong>{err.field}</strong>
+                                                                    </Typography>
+                                                                    <Typography variant="caption" display="block" sx={{ pl: 1.5 }}>
+                                                                        {t('excel_error_value')}: {err.value || t('excel_error_empty')}
+                                                                    </Typography>
+                                                                </Box>
+                                                            ))}
+                                                        </Box>
+                                                    ) : ''
+                                                }
+                                                arrow
+                                                followCursor
+                                                placement="right"
+                                                disableHoverListener={!hasErrors}
+                                            >
+                                                <TableRow 
+                                                    hover
+                                                    sx={{
+                                                        bgcolor: hasErrors ? 'error.light' : 'inherit',
+                                                        '&:hover': {
+                                                            bgcolor: hasErrors ? 'error.main' : 'action.hover'
+                                                        },
+                                                        cursor: hasErrors ? 'help' : 'default'
+                                                    }}
+                                                >
+                                                    {PREVIEW_COLUMNS.map(col => {
+                                                        const fieldErrors = getErrorsForField(row, col.key);
+                                                        const hasFieldError = fieldErrors.length > 0;
+
+                                                        return (
+                                                            <TableCell 
+                                                                key={col.key} 
+                                                                sx={{ 
+                                                                    whiteSpace: 'nowrap',
+                                                                    bgcolor: hasFieldError ? 'error.dark' : 'inherit',
+                                                                    color: hasFieldError ? 'error.contrastText' : 'inherit',
+                                                                    fontWeight: hasFieldError ? 'bold' : 'normal',
+                                                                    position: 'relative'
+                                                                }}
+                                                            >
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                    {hasFieldError ? (
+                                                                        <Tooltip 
+                                                                            title={
+                                                                                <Box>
+                                                                                    {fieldErrors.map((err, errIdx) => (
+                                                                                        <Box key={errIdx} sx={{ mb: 0.5 }}>
+                                                                                            <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                                                                                                {t(err.errorCode)}
+                                                                                            </Typography>
+                                                                                            <Typography variant="caption" display="block">
+                                                                                                {t('excel_error_field')}: {err.field}
+                                                                                            </Typography>
+                                                                                            <Typography variant="caption" display="block">
+                                                                                                {t('excel_error_value')}: {err.value || t('excel_error_empty')}
+                                                                                            </Typography>
+                                                                                        </Box>
+                                                                                    ))}
+                                                                                </Box>
+                                                                            }
+                                                                            arrow
+                                                                            placement="top"
+                                                                            enterDelay={100}
+                                                                        >
+                                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'help' }}>
+                                                                                <ErrorIcon sx={{ fontSize: 16 }} />
+                                                                                <span>{row[col.key] ?? ''}</span>
+                                                                            </Box>
+                                                                        </Tooltip>
+                                                                    ) : (
+                                                                        <span>{row[col.key] ?? ''}</span>
+                                                                    )}
+                                                                </Box>
+                                                            </TableCell>
+                                                        );
+                                                    })}
+                                                </TableRow>
+                                            </Tooltip>
+                                        );
+                                    })}
                                 </TableBody>
                             </Table>
                         </TableContainer>
@@ -298,24 +445,49 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany }) => {
             </DialogContent>
 
             <Divider />
-            <DialogActions sx={{ px: 3, py: 2, gap: 1, justifyContent: 'flex-end' }}>
-                <Button variant="outlined" onClick={handleModalClose} disabled={saving}>
-                    {t('cancel')}
-                </Button>
-                {previewData && (
-                    <Button variant="contained" disableElevation onClick={handleReset} disabled={saving}>
-                        {t('excel_loadAnother')}
+            <DialogActions sx={{ px: 3, py: 2, gap: 1, justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    {previewData && rowsWithErrors.length > 0 && (
+                        <Button 
+                            variant="outlined" 
+                            color="error"
+                            startIcon={<DeleteSweepIcon />}
+                            onClick={handleDiscardErrorRows} 
+                            disabled={saving}
+                        >
+                            {t('excel_discardErrors')}
+                        </Button>
+                    )}
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button variant="outlined" onClick={handleModalClose} disabled={saving}>
+                        {t('cancel')}
                     </Button>
-                )}
-                {previewData && (
-                    <Button variant="contained" disableElevation color="success"
-                        endIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
-                        onClick={handleSave} disabled={saving}>
-                        {saving ? t('loading') : t('excel_saveData')}
-                    </Button>
-                )}
-
+                    {previewData && (
+                        <Button variant="contained" disableElevation onClick={handleReset} disabled={saving}>
+                            {t('excel_loadAnother')}
+                        </Button>
+                    )}
+                    {previewData && (
+                        <Button variant="contained" disableElevation color="success"
+                            endIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
+                            onClick={handleSaveClick} disabled={saving}>
+                            {saving ? t('loading') : t('excel_saveData')}
+                        </Button>
+                    )}
+                </Box>
             </DialogActions>
+
+            <ConfirmationDialog
+                open={showConfirmDialog}
+                title={t('excel_confirmTitle')}
+                message={t('excel_confirmMessage', { count: rowsWithErrors.length, total: previewData?.length || 0 })}
+                confirmText={t('excel_confirmSave')}
+                cancelText={t('cancel')}
+                onConfirm={handleSave}
+                onCancel={() => setShowConfirmDialog(false)}
+                severity="warning"
+            />
         </Dialog>
     );
 };

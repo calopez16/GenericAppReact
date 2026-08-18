@@ -97,12 +97,12 @@ const EmployeeTableList = ({
                                         </TableCell>
                                         <TableCell>
                                             <Typography variant="body2" color="text.secondary">
-                                                {employee?.rfc ?? '—'}
+                                                {employee?.rfc ?? ''}
                                             </Typography>
                                         </TableCell>
                                         <TableCell>
                                             <Typography variant="body2" color="text.secondary">
-                                                {employee?.position ?? '—'}
+                                                {employee?.position ?? ''}
                                             </Typography>
                                         </TableCell>
                                         <TableCell align="center">

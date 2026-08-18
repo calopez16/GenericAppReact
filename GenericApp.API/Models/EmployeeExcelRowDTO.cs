@@ -77,5 +77,14 @@ namespace GenericApp.API.Models
         public string? CodigoPostal { get; set; }
         public string? CorreoElectronico { get; set; }
         public string? CelularTrabajador { get; set; }
+
+        public List<EmployeeExcelRowErrorsDTO> Errores { get; set; }
+    }
+
+    public class EmployeeExcelRowErrorsDTO
+    {
+        public string ErrorCode { get; set; }
+        public string Field { get; set; }
+        public string Value { get; set; }
     }
 }

@@ -72,13 +72,13 @@ const EmployeeCardList = ({
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
                     <BadgeIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
                     <Typography variant="body2" color="text.secondary">
-                        {t('employee_rfc')}: {employee.rfc ?? '—'}
+                        {t('employee_rfc')}: {employee.rfc ?? ''}
                     </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
                     <WorkIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
                     <Typography variant="body2" color="text.secondary">
-                        {employee.position ?? '—'}
+                        {employee.position ?? ''}
                     </Typography>
                 </Box>
 
