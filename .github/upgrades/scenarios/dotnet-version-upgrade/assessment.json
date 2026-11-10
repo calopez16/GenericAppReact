@@ -1,0 +1,1622 @@
+{
+  "settings": {
+    "components": {
+      "code": true,
+      "binaries": false
+    },
+    "targetId": "net10.0",
+    "targetDisplayName": ".NETCoreApp,Version=v10.0"
+  },
+  "analysisStartTime": "2026-11-10T04:42:22.0451733Z",
+  "analysisEndTime": "2026-11-10T04:42:32.2590144Z",
+  "privacyModeHelpUrl": "https://go.microsoft.com/fwlink/?linkid=2270980",
+  "stats": {
+    "summary": {
+      "projects": 4,
+      "issues": 8,
+      "incidents": 56,
+      "effort": 56
+    },
+    "charts": {
+      "severity": {
+        "Mandatory": 30,
+        "Optional": 2,
+        "Potential": 24,
+        "Information": 0
+      },
+      "category": {
+        "NuGet": 16,
+        "Project": 4,
+        "Api": 36
+      }
+    }
+  },
+  "projects": [
+    {
+      "path": "GenericApp.API\\GenericApp.API.csproj",
+      "startingProject": true,
+      "issues": 7,
+      "storyPoints": 41,
+      "properties": {
+        "appName": "GenericApp.API",
+        "projectKind": "AspNetCore",
+        "frameworks": [
+          "net9.0"
+        ],
+        "languages": [
+          "C#"
+        ],
+        "tools": [
+          "MSBuild"
+        ],
+        "isSdkStyle": true,
+        "isTestProject": false,
+        "numberOfFiles": 61,
+        "numberOfCodeFiles": 46,
+        "linesTotal": 111828,
+        "linesOfCode": 6831,
+        "totalApiScanned": 10182,
+        "minLinesOfCodeToChange": 33,
+        "maxLinesOfCodeToChange": 33
+      },
+      "ruleInstances": [
+        {
+          "incidentId": "d5697223-643e-4020-8166-3ca82f1bfd69",
+          "ruleId": "NuGet.0002",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.AspNetCore.Authentication.JwtBearer, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.AspNetCore.Authentication.JwtBearer, and replace with new package Microsoft.AspNetCore.Authentication.JwtBearer 10.0.14",
+              "protected": "Microsoft.AspNetCore.Authentication.JwtBearer, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.AspNetCore.Authentication.JwtBearer, and replace with new package Microsoft.AspNetCore.Authentication.JwtBearer 10.0.14"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\GenericApp.API.csproj",
+            "snippet": "Microsoft.AspNetCore.Authentication.JwtBearer, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.AspNetCore.Authentication.JwtBearer, and replace with new package Microsoft.AspNetCore.Authentication.JwtBearer 10.0.14",
+            "protectedSnippet": "Microsoft.AspNetCore.Authentication.JwtBearer, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.AspNetCore.Authentication.JwtBearer, and replace with new package Microsoft.AspNetCore.Authentication.JwtBearer 10.0.14",
+            "label": "Microsoft.AspNetCore.Authentication.JwtBearer 6.0.36",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Authentication.JwtBearer",
+              "PackageVersion": "6.0.36",
+              "PackageNewVersion": "10.0.14",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "e2d47494-284b-45af-adb4-c917ed1461ac",
+          "ruleId": "NuGet.0002",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.AspNetCore.Identity.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.AspNetCore.Identity.EntityFrameworkCore, and replace with new package Microsoft.AspNetCore.Identity.EntityFrameworkCore 10.0.14",
+              "protected": "Microsoft.AspNetCore.Identity.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.AspNetCore.Identity.EntityFrameworkCore, and replace with new package Microsoft.AspNetCore.Identity.EntityFrameworkCore 10.0.14"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\GenericApp.API.csproj",
+            "snippet": "Microsoft.AspNetCore.Identity.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.AspNetCore.Identity.EntityFrameworkCore, and replace with new package Microsoft.AspNetCore.Identity.EntityFrameworkCore 10.0.14",
+            "protectedSnippet": "Microsoft.AspNetCore.Identity.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.AspNetCore.Identity.EntityFrameworkCore, and replace with new package Microsoft.AspNetCore.Identity.EntityFrameworkCore 10.0.14",
+            "label": "Microsoft.AspNetCore.Identity.EntityFrameworkCore 6.0.36",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+              "PackageVersion": "6.0.36",
+              "PackageNewVersion": "10.0.14",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "30aa1830-0016-40ea-b9e6-046869adfe63",
+          "ruleId": "NuGet.0002",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.EntityFrameworkCore.Design, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Design, and replace with new package Microsoft.EntityFrameworkCore.Design 10.0.14",
+              "protected": "Microsoft.EntityFrameworkCore.Design, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Design, and replace with new package Microsoft.EntityFrameworkCore.Design 10.0.14"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\GenericApp.API.csproj",
+            "snippet": "Microsoft.EntityFrameworkCore.Design, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Design, and replace with new package Microsoft.EntityFrameworkCore.Design 10.0.14",
+            "protectedSnippet": "Microsoft.EntityFrameworkCore.Design, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Design, and replace with new package Microsoft.EntityFrameworkCore.Design 10.0.14",
+            "label": "Microsoft.EntityFrameworkCore.Design 6.0.36",
+            "properties": {
+              "PackageId": "Microsoft.EntityFrameworkCore.Design",
+              "PackageVersion": "6.0.36",
+              "PackageNewVersion": "10.0.14",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "2e088cd0-8560-4e04-b25b-1b0ff52ff9d1",
+          "ruleId": "NuGet.0002",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.EntityFrameworkCore.SqlServer, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.SqlServer, and replace with new package Microsoft.EntityFrameworkCore.SqlServer 10.0.14",
+              "protected": "Microsoft.EntityFrameworkCore.SqlServer, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.SqlServer, and replace with new package Microsoft.EntityFrameworkCore.SqlServer 10.0.14"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\GenericApp.API.csproj",
+            "snippet": "Microsoft.EntityFrameworkCore.SqlServer, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.SqlServer, and replace with new package Microsoft.EntityFrameworkCore.SqlServer 10.0.14",
+            "protectedSnippet": "Microsoft.EntityFrameworkCore.SqlServer, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.SqlServer, and replace with new package Microsoft.EntityFrameworkCore.SqlServer 10.0.14",
+            "label": "Microsoft.EntityFrameworkCore.SqlServer 6.0.36",
+            "properties": {
+              "PackageId": "Microsoft.EntityFrameworkCore.SqlServer",
+              "PackageVersion": "6.0.36",
+              "PackageNewVersion": "10.0.14",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "db65fd2c-033e-4117-9250-f8e3aa90f952",
+          "ruleId": "NuGet.0003",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "System.Text.RegularExpressions, 4.3.1\n\nRecomendaci\u00F3n:\n\nFuncionalidad de paquete incluida con la nueva referencia de marco",
+              "protected": "System.Text.RegularExpressions, 4.3.1\n\nRecomendaci\u00F3n:\n\nFuncionalidad de paquete incluida con la nueva referencia de marco"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\GenericApp.API.csproj",
+            "snippet": "System.Text.RegularExpressions, 4.3.1\n\nRecomendaci\u00F3n:\n\nFuncionalidad de paquete incluida con la nueva referencia de marco",
+            "protectedSnippet": "System.Text.RegularExpressions, 4.3.1\n\nRecomendaci\u00F3n:\n\nFuncionalidad de paquete incluida con la nueva referencia de marco",
+            "label": "System.Text.RegularExpressions 4.3.1",
+            "properties": {
+              "PackageId": "System.Text.RegularExpressions",
+              "PackageVersion": "4.3.1",
+              "PackageNewVersion": null,
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "b5b6b813-3686-4557-add4-9d14bb948e5e",
+          "ruleId": "NuGet.0004",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "AngleSharp, 1.2.0\n\nRecomendaci\u00F3n:\n\nAngleSharp, 1.10.1",
+              "protected": "AngleSharp, 1.2.0\n\nRecomendaci\u00F3n:\n\nAngleSharp, 1.10.1"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\GenericApp.API.csproj",
+            "snippet": "AngleSharp, 1.2.0\n\nRecomendaci\u00F3n:\n\nAngleSharp, 1.10.1",
+            "protectedSnippet": "AngleSharp, 1.2.0\n\nRecomendaci\u00F3n:\n\nAngleSharp, 1.10.1",
+            "label": "AngleSharp 1.2.0",
+            "properties": {
+              "PackageId": "AngleSharp",
+              "PackageVersion": "1.2.0",
+              "PackageNewVersion": "1.10.1",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "ae9547bb-ff2d-442f-a673-69236353ae6d",
+          "ruleId": "NuGet.0004",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "AutoMapper, 12.0.0\n\nRecomendaci\u00F3n:\n\nAutoMapper, 16.3.0",
+              "protected": "AutoMapper, 12.0.0\n\nRecomendaci\u00F3n:\n\nAutoMapper, 16.3.0"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\GenericApp.API.csproj",
+            "snippet": "AutoMapper, 12.0.0\n\nRecomendaci\u00F3n:\n\nAutoMapper, 16.3.0",
+            "protectedSnippet": "AutoMapper, 12.0.0\n\nRecomendaci\u00F3n:\n\nAutoMapper, 16.3.0",
+            "label": "AutoMapper 12.0.0",
+            "properties": {
+              "PackageId": "AutoMapper",
+              "PackageVersion": "12.0.0",
+              "PackageNewVersion": "16.3.0",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "c788ce07-f143-4a7f-af9f-04aef0e40b5a",
+          "ruleId": "Project.0002",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Marco de destino actual: net9.0\nMarco de destino recomendado: net10.0",
+              "protected": "Marco de destino actual: net9.0\nMarco de destino recomendado: net10.0"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\GenericApp.API.csproj",
+            "snippet": "Marco de destino actual: net9.0\nMarco de destino recomendado: net10.0",
+            "protectedSnippet": "Marco de destino actual: net9.0\nMarco de destino recomendado: net10.0",
+            "properties": {
+              "CurrentTargetFramework": "net9.0",
+              "RecommendedTargetFramework": "net10.0"
+            }
+          }
+        },
+        {
+          "incidentId": "9bdb76fe-480f-4e1c-ba08-0f10bb03a0a5",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "return new JwtSecurityTokenHandler().WriteToken(securityToken);",
+              "protected": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "return new JwtSecurityTokenHandler().WriteToken(securityToken);",
+            "protectedSnippet": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler",
+            "label": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 269,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "54ccbca2-526e-4112-87fa-266717e80014",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "return new JwtSecurityTokenHandler().WriteToken(securityToken);",
+              "protected": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.#ctor"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "return new JwtSecurityTokenHandler().WriteToken(securityToken);",
+            "protectedSnippet": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.#ctor",
+            "label": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.#ctor",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 269,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "72d743f5-5d02-4958-8fda-6f41230458cc",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "return new JwtSecurityTokenHandler().WriteToken(securityToken);",
+              "protected": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.WriteToken(Microsoft.IdentityModel.Tokens.SecurityToken)"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "return new JwtSecurityTokenHandler().WriteToken(securityToken);",
+            "protectedSnippet": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.WriteToken(Microsoft.IdentityModel.Tokens.SecurityToken)",
+            "label": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.WriteToken(Microsoft.IdentityModel.Tokens.SecurityToken)",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 269,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "94e17c32-c67f-47af-af1e-46ae585bd426",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var securityToken = new JwtSecurityToken(\r\n                    issuer: null,\r\n                    audience: null,\r\n                    claims: claims,\r\n                    expires: expirationDate,\r\n                    signingCredentials: credentials);",
+              "protected": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityToken"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var securityToken = new JwtSecurityToken(\r\n                    issuer: null,\r\n                    audience: null,\r\n                    claims: claims,\r\n                    expires: expirationDate,\r\n                    signingCredentials: credentials);",
+            "protectedSnippet": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityToken",
+            "label": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityToken",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 262,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "c64bd917-3f1b-4b5c-b6e9-a211068537ea",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var securityToken = new JwtSecurityToken(\r\n                    issuer: null,\r\n                    audience: null,\r\n                    claims: claims,\r\n                    expires: expirationDate,\r\n                    signingCredentials: credentials);",
+              "protected": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityToken.#ctor(System.String,System.String,System.Collections.Generic.IEnumerable{System.Security.Claims.Claim},System.Nullable{System.DateTime},System.Nullable{System.DateTime},Microsoft.IdentityModel.Tokens.SigningCredentials)"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var securityToken = new JwtSecurityToken(\r\n                    issuer: null,\r\n                    audience: null,\r\n                    claims: claims,\r\n                    expires: expirationDate,\r\n                    signingCredentials: credentials);",
+            "protectedSnippet": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityToken.#ctor(System.String,System.String,System.Collections.Generic.IEnumerable{System.Security.Claims.Claim},System.Nullable{System.DateTime},System.Nullable{System.DateTime},Microsoft.IdentityModel.Tokens.SigningCredentials)",
+            "label": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityToken.#ctor(System.String,System.String,System.Collections.Generic.IEnumerable{System.Security.Claims.Claim},System.Nullable{System.DateTime},System.Nullable{System.DateTime},Microsoft.IdentityModel.Tokens.SigningCredentials)",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 262,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "1c1ca484-91c5-4c83-83f1-eb63b6d98f40",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var emailUser = tokenInfo.Claims.FirstOrDefault(x =\u003E x.Type == ClaimTypes.Email);",
+              "protected": "P:System.IdentityModel.Tokens.Jwt.JwtSecurityToken.Claims"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var emailUser = tokenInfo.Claims.FirstOrDefault(x =\u003E x.Type == ClaimTypes.Email);",
+            "protectedSnippet": "P:System.IdentityModel.Tokens.Jwt.JwtSecurityToken.Claims",
+            "label": "P:System.IdentityModel.Tokens.Jwt.JwtSecurityToken.Claims",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 180,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "c8dce49a-cc1c-4961-a486-499de3a9c3b8",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var tokenInfo = validator.ReadJwtToken(jwtToken);",
+              "protected": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityToken"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var tokenInfo = validator.ReadJwtToken(jwtToken);",
+            "protectedSnippet": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityToken",
+            "label": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityToken",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 179,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "49ad68f6-d335-482b-b8d7-016f111251b8",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var tokenInfo = validator.ReadJwtToken(jwtToken);",
+              "protected": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.ReadJwtToken(System.String)"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var tokenInfo = validator.ReadJwtToken(jwtToken);",
+            "protectedSnippet": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.ReadJwtToken(System.String)",
+            "label": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.ReadJwtToken(System.String)",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 179,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "c562c6fd-0a68-4932-bc0d-281784042f48",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var validator = new JwtSecurityTokenHandler();",
+              "protected": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var validator = new JwtSecurityTokenHandler();",
+            "protectedSnippet": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler",
+            "label": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 174,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "bcfe2653-cc12-4ba0-b306-10b8f6bdafe3",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var validator = new JwtSecurityTokenHandler();",
+              "protected": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.#ctor"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var validator = new JwtSecurityTokenHandler();",
+            "protectedSnippet": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.#ctor",
+            "label": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.#ctor",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 174,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "34b4c14d-1fc8-4296-9d67-3c177af244a6",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var emailUser = tokenInfo.Claims.FirstOrDefault(x =\u003E x.Type == ClaimTypes.Email);",
+              "protected": "P:System.IdentityModel.Tokens.Jwt.JwtSecurityToken.Claims"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var emailUser = tokenInfo.Claims.FirstOrDefault(x =\u003E x.Type == ClaimTypes.Email);",
+            "protectedSnippet": "P:System.IdentityModel.Tokens.Jwt.JwtSecurityToken.Claims",
+            "label": "P:System.IdentityModel.Tokens.Jwt.JwtSecurityToken.Claims",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 131,
+            "column": 20
+          }
+        },
+        {
+          "incidentId": "9c2c6a8e-fc77-41ce-90fa-9e21483ea4bf",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var tokenInfo = validator.ReadJwtToken(jwtToken);",
+              "protected": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityToken"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var tokenInfo = validator.ReadJwtToken(jwtToken);",
+            "protectedSnippet": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityToken",
+            "label": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityToken",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 130,
+            "column": 20
+          }
+        },
+        {
+          "incidentId": "820f208e-46f0-46e3-aea5-1079a8c18602",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var tokenInfo = validator.ReadJwtToken(jwtToken);",
+              "protected": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.ReadJwtToken(System.String)"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var tokenInfo = validator.ReadJwtToken(jwtToken);",
+            "protectedSnippet": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.ReadJwtToken(System.String)",
+            "label": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.ReadJwtToken(System.String)",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 130,
+            "column": 20
+          }
+        },
+        {
+          "incidentId": "8d2928fc-5f1d-452a-a0a0-477db2e74176",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var validator = new JwtSecurityTokenHandler();",
+              "protected": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var validator = new JwtSecurityTokenHandler();",
+            "protectedSnippet": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler",
+            "label": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 125,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "d9801911-32a1-433d-822f-b0dc435bc4d5",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var validator = new JwtSecurityTokenHandler();",
+              "protected": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.#ctor"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var validator = new JwtSecurityTokenHandler();",
+            "protectedSnippet": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.#ctor",
+            "label": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.#ctor",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 125,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "bcc222b2-df32-4bb1-8c76-f6cd0b4250df",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var validator = new JwtSecurityTokenHandler();",
+              "protected": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var validator = new JwtSecurityTokenHandler();",
+            "protectedSnippet": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler",
+            "label": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 70,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "65fd3596-967f-419b-aed6-c9af53d4d779",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var validator = new JwtSecurityTokenHandler();",
+              "protected": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.#ctor"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\AuthController.cs",
+            "snippet": "var validator = new JwtSecurityTokenHandler();",
+            "protectedSnippet": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.#ctor",
+            "label": "M:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.#ctor",
+            "properties": {
+              "CharCount": "14524"
+            },
+            "line": 70,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "77bcac2a-075a-4b5f-9b5b-feb9ec1feba4",
+          "ruleId": "Api.0002",
+          "description": "Breaking change: Ambiguous overload resolution affecting StringValues implicit operators ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var signPath = signInfo.IsEmployee ?? true\r\n                                    ? Path.Combine(_env.WebRootPath, \u0022img\u0022, signInfo.SignFileName)\r\n                                    : Path.Combine(_env.WebRootPath, \u0022img\u0022, signsPath, idCompany.ToString(), signInfo.SignFileName);",
+              "protected": "M:System.IO.Path.Combine(System.ReadOnlySpan{System.String})"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\ContractTemplatesController.cs",
+            "snippet": "var signPath = signInfo.IsEmployee ?? true\r\n                                    ? Path.Combine(_env.WebRootPath, \u0022img\u0022, signInfo.SignFileName)\r\n                                    : Path.Combine(_env.WebRootPath, \u0022img\u0022, signsPath, idCompany.ToString(), signInfo.SignFileName);",
+            "protectedSnippet": "M:System.IO.Path.Combine(System.ReadOnlySpan{System.String})",
+            "label": "M:System.IO.Path.Combine(System.ReadOnlySpan{System.String})",
+            "properties": {
+              "CharCount": "57164"
+            },
+            "links": [
+              {
+                "title": "Documentaci\u00F3n de la API",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/core-libraries/9.0/ambiguous-overload.md",
+                "isCustom": false
+              }
+            ],
+            "line": 540,
+            "column": 36
+          }
+        },
+        {
+          "incidentId": "0459a52b-4b6a-45a9-9dbf-01d783ea54aa",
+          "ruleId": "Api.0002",
+          "description": "Breaking change: Ambiguous overload resolution affecting StringValues implicit operators ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var signPath = Path.Combine(_env.WebRootPath, \u0022img\u0022, signsPath, idCompany.ToString(), signInfo.SignFileName);",
+              "protected": "M:System.IO.Path.Combine(System.ReadOnlySpan{System.String})"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\ContractsController.cs",
+            "snippet": "var signPath = Path.Combine(_env.WebRootPath, \u0022img\u0022, signsPath, idCompany.ToString(), signInfo.SignFileName);",
+            "protectedSnippet": "M:System.IO.Path.Combine(System.ReadOnlySpan{System.String})",
+            "label": "M:System.IO.Path.Combine(System.ReadOnlySpan{System.String})",
+            "properties": {
+              "CharCount": "78802"
+            },
+            "links": [
+              {
+                "title": "Documentaci\u00F3n de la API",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/core-libraries/9.0/ambiguous-overload.md",
+                "isCustom": false
+              }
+            ],
+            "line": 835,
+            "column": 40
+          }
+        },
+        {
+          "incidentId": "dfc9dd89-6835-4ae0-88cf-dfd6ffc46008",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: Adding a ZipArchiveEntry with CompressionLevel sets ZIP central directory header general-purpose bit flags ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var entry = archive.CreateEntry(contract.DocumentName, CompressionLevel.Fastest);",
+              "protected": "M:System.IO.Compression.ZipArchive.CreateEntry(System.String,System.IO.Compression.CompressionLevel)"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Controllers\\ContractsController.cs",
+            "snippet": "var entry = archive.CreateEntry(contract.DocumentName, CompressionLevel.Fastest);",
+            "protectedSnippet": "M:System.IO.Compression.ZipArchive.CreateEntry(System.String,System.IO.Compression.CompressionLevel)",
+            "label": "M:System.IO.Compression.ZipArchive.CreateEntry(System.String,System.IO.Compression.CompressionLevel)",
+            "properties": {
+              "CharCount": "78802"
+            },
+            "links": [
+              {
+                "title": "Documentaci\u00F3n de la API",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/core-libraries/9.0/compressionlevel-bits.md",
+                "isCustom": false
+              }
+            ],
+            "line": 525,
+            "column": 20
+          }
+        },
+        {
+          "incidentId": "e505dc3f-a9e8-494a-81ab-cbac994f9a7e",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "services.AddAutoMapper(typeof(Startup).Assembly);",
+              "protected": "T:Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "services.AddAutoMapper(typeof(Startup).Assembly);",
+            "protectedSnippet": "T:Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions",
+            "label": "T:Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions",
+            "properties": {
+              "CharCount": "5477"
+            },
+            "line": 87,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "ae0685ff-ca09-4a9f-bfbe-b29ca28c826f",
+          "ruleId": "Api.0001",
+          "description": "Breaking change: DynamicallyAccessedMembers annotation removed from trim-unsafe configuration APIs ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "builder.WithOrigins(Configuration.GetSection(\u0022AllowedHostsCorsOrigins\u0022).Get\u003Cstring[]\u003E()).AllowAnyMethod().AllowAnyHeader();",
+              "protected": "M:Microsoft.Extensions.Configuration.ConfigurationBinder.Get\u0060\u00601(Microsoft.Extensions.Configuration.IConfiguration)"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "builder.WithOrigins(Configuration.GetSection(\u0022AllowedHostsCorsOrigins\u0022).Get\u003Cstring[]\u003E()).AllowAnyMethod().AllowAnyHeader();",
+            "protectedSnippet": "M:Microsoft.Extensions.Configuration.ConfigurationBinder.Get\u0060\u00601(Microsoft.Extensions.Configuration.IConfiguration)",
+            "label": "M:Microsoft.Extensions.Configuration.ConfigurationBinder.Get\u0060\u00601(Microsoft.Extensions.Configuration.IConfiguration)",
+            "properties": {
+              "CharCount": "5477"
+            },
+            "links": [
+              {
+                "title": "Documentaci\u00F3n de la API",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/extensions/10.0/dynamically-accessed-members-configuration.md",
+                "isCustom": false
+              }
+            ],
+            "line": 82,
+            "column": 20
+          }
+        },
+        {
+          "incidentId": "9d18743c-6b33-4849-ab17-a474905f38fc",
+          "ruleId": "Api.0002",
+          "description": "API is available in package Microsoft.AspNetCore.Identity.EntityFrameworkCore, 8.0.6. Add package reference to Microsoft.AspNetCore.Identity.EntityFrameworkCore, 8.0.6",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "services.AddIdentity\u003CIdentityUser, IdentityRole\u003E()\r\n                .AddEntityFrameworkStores\u003CApplicationDBContext\u003E()\r\n                .AddDefaultTokenProviders();",
+              "protected": "T:Microsoft.Extensions.DependencyInjection.IdentityEntityFrameworkBuilderExtensions"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "services.AddIdentity\u003CIdentityUser, IdentityRole\u003E()\r\n                .AddEntityFrameworkStores\u003CApplicationDBContext\u003E()\r\n                .AddDefaultTokenProviders();",
+            "protectedSnippet": "T:Microsoft.Extensions.DependencyInjection.IdentityEntityFrameworkBuilderExtensions",
+            "label": "T:Microsoft.Extensions.DependencyInjection.IdentityEntityFrameworkBuilderExtensions",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+              "PackageNewVersion": "8.0.6",
+              "CharCount": "5477"
+            },
+            "line": 69,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "9d576780-ce75-4359-bc6e-0188e025d9e1",
+          "ruleId": "Api.0002",
+          "description": "API is available in package Microsoft.AspNetCore.Identity.EntityFrameworkCore, 8.0.6. Add package reference to Microsoft.AspNetCore.Identity.EntityFrameworkCore, 8.0.6",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "services.AddIdentity\u003CIdentityUser, IdentityRole\u003E()\r\n                .AddEntityFrameworkStores\u003CApplicationDBContext\u003E()\r\n                .AddDefaultTokenProviders();",
+              "protected": "M:Microsoft.Extensions.DependencyInjection.IdentityEntityFrameworkBuilderExtensions.AddEntityFrameworkStores\u0060\u00601(Microsoft.AspNetCore.Identity.IdentityBuilder)"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "services.AddIdentity\u003CIdentityUser, IdentityRole\u003E()\r\n                .AddEntityFrameworkStores\u003CApplicationDBContext\u003E()\r\n                .AddDefaultTokenProviders();",
+            "protectedSnippet": "M:Microsoft.Extensions.DependencyInjection.IdentityEntityFrameworkBuilderExtensions.AddEntityFrameworkStores\u0060\u00601(Microsoft.AspNetCore.Identity.IdentityBuilder)",
+            "label": "M:Microsoft.Extensions.DependencyInjection.IdentityEntityFrameworkBuilderExtensions.AddEntityFrameworkStores\u0060\u00601(Microsoft.AspNetCore.Identity.IdentityBuilder)",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+              "PackageNewVersion": "8.0.6",
+              "CharCount": "5477"
+            },
+            "line": 69,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "a3206741-a475-4076-8147-f0a4799a08f8",
+          "ruleId": "Api.0002",
+          "description": "API is available in package Microsoft.AspNetCore.Authentication.JwtBearer, 8.0.6. Add package reference to Microsoft.AspNetCore.Authentication.JwtBearer, 8.0.6",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\r\n                .AddJwtBearer(op =\u003E\r\n                op.TokenValidationParameters = new TokenValidationParameters\r\n                {\r\n                    ValidateIssuer = false,\r\n                    ValidateAudience = false,\r\n                    ValidateLifetime = true,\r\n                    ValidateIssuerSigningKey = false,\r\n                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration[\u0022jwt:SecurityKeyJwt\u0022])),\r\n                    ClockSkew = TimeSpan.Zero\r\n                });",
+              "protected": "P:Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions.TokenValidationParameters"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\r\n                .AddJwtBearer(op =\u003E\r\n                op.TokenValidationParameters = new TokenValidationParameters\r\n                {\r\n                    ValidateIssuer = false,\r\n                    ValidateAudience = false,\r\n                    ValidateLifetime = true,\r\n                    ValidateIssuerSigningKey = false,\r\n                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration[\u0022jwt:SecurityKeyJwt\u0022])),\r\n                    ClockSkew = TimeSpan.Zero\r\n                });",
+            "protectedSnippet": "P:Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions.TokenValidationParameters",
+            "label": "P:Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions.TokenValidationParameters",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Authentication.JwtBearer",
+              "PackageNewVersion": "8.0.6",
+              "CharCount": "5477"
+            },
+            "line": 35,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "87b5c623-009e-43a5-a857-facef4604e92",
+          "ruleId": "Api.0002",
+          "description": "API is available in package Microsoft.AspNetCore.Authentication.JwtBearer, 8.0.6. Add package reference to Microsoft.AspNetCore.Authentication.JwtBearer, 8.0.6",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\r\n                .AddJwtBearer(op =\u003E\r\n                op.TokenValidationParameters = new TokenValidationParameters\r\n                {\r\n                    ValidateIssuer = false,\r\n                    ValidateAudience = false,\r\n                    ValidateLifetime = true,\r\n                    ValidateIssuerSigningKey = false,\r\n                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration[\u0022jwt:SecurityKeyJwt\u0022])),\r\n                    ClockSkew = TimeSpan.Zero\r\n                });",
+              "protected": "T:Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\r\n                .AddJwtBearer(op =\u003E\r\n                op.TokenValidationParameters = new TokenValidationParameters\r\n                {\r\n                    ValidateIssuer = false,\r\n                    ValidateAudience = false,\r\n                    ValidateLifetime = true,\r\n                    ValidateIssuerSigningKey = false,\r\n                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration[\u0022jwt:SecurityKeyJwt\u0022])),\r\n                    ClockSkew = TimeSpan.Zero\r\n                });",
+            "protectedSnippet": "T:Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults",
+            "label": "T:Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Authentication.JwtBearer",
+              "PackageNewVersion": "8.0.6",
+              "CharCount": "5477"
+            },
+            "line": 35,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "3f62df62-7065-46cd-ae35-da41045828b7",
+          "ruleId": "Api.0002",
+          "description": "API is available in package Microsoft.AspNetCore.Authentication.JwtBearer, 8.0.6. Add package reference to Microsoft.AspNetCore.Authentication.JwtBearer, 8.0.6",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\r\n                .AddJwtBearer(op =\u003E\r\n                op.TokenValidationParameters = new TokenValidationParameters\r\n                {\r\n                    ValidateIssuer = false,\r\n                    ValidateAudience = false,\r\n                    ValidateLifetime = true,\r\n                    ValidateIssuerSigningKey = false,\r\n                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration[\u0022jwt:SecurityKeyJwt\u0022])),\r\n                    ClockSkew = TimeSpan.Zero\r\n                });",
+              "protected": "F:Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\r\n                .AddJwtBearer(op =\u003E\r\n                op.TokenValidationParameters = new TokenValidationParameters\r\n                {\r\n                    ValidateIssuer = false,\r\n                    ValidateAudience = false,\r\n                    ValidateLifetime = true,\r\n                    ValidateIssuerSigningKey = false,\r\n                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration[\u0022jwt:SecurityKeyJwt\u0022])),\r\n                    ClockSkew = TimeSpan.Zero\r\n                });",
+            "protectedSnippet": "F:Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme",
+            "label": "F:Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Authentication.JwtBearer",
+              "PackageNewVersion": "8.0.6",
+              "CharCount": "5477"
+            },
+            "line": 35,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "a068b6a2-d9f6-4f8f-a17e-d26dbe9226de",
+          "ruleId": "Api.0002",
+          "description": "API is available in package Microsoft.AspNetCore.Authentication.JwtBearer, 8.0.6. Add package reference to Microsoft.AspNetCore.Authentication.JwtBearer, 8.0.6",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\r\n                .AddJwtBearer(op =\u003E\r\n                op.TokenValidationParameters = new TokenValidationParameters\r\n                {\r\n                    ValidateIssuer = false,\r\n                    ValidateAudience = false,\r\n                    ValidateLifetime = true,\r\n                    ValidateIssuerSigningKey = false,\r\n                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration[\u0022jwt:SecurityKeyJwt\u0022])),\r\n                    ClockSkew = TimeSpan.Zero\r\n                });",
+              "protected": "T:Microsoft.Extensions.DependencyInjection.JwtBearerExtensions"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\r\n                .AddJwtBearer(op =\u003E\r\n                op.TokenValidationParameters = new TokenValidationParameters\r\n                {\r\n                    ValidateIssuer = false,\r\n                    ValidateAudience = false,\r\n                    ValidateLifetime = true,\r\n                    ValidateIssuerSigningKey = false,\r\n                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration[\u0022jwt:SecurityKeyJwt\u0022])),\r\n                    ClockSkew = TimeSpan.Zero\r\n                });",
+            "protectedSnippet": "T:Microsoft.Extensions.DependencyInjection.JwtBearerExtensions",
+            "label": "T:Microsoft.Extensions.DependencyInjection.JwtBearerExtensions",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Authentication.JwtBearer",
+              "PackageNewVersion": "8.0.6",
+              "CharCount": "5477"
+            },
+            "line": 35,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "cfb2ce75-82d8-45cb-8f7a-5bad8f9f42f9",
+          "ruleId": "Api.0002",
+          "description": "API is available in package Microsoft.AspNetCore.Authentication.JwtBearer, 8.0.6. Add package reference to Microsoft.AspNetCore.Authentication.JwtBearer, 8.0.6",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\r\n                .AddJwtBearer(op =\u003E\r\n                op.TokenValidationParameters = new TokenValidationParameters\r\n                {\r\n                    ValidateIssuer = false,\r\n                    ValidateAudience = false,\r\n                    ValidateLifetime = true,\r\n                    ValidateIssuerSigningKey = false,\r\n                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration[\u0022jwt:SecurityKeyJwt\u0022])),\r\n                    ClockSkew = TimeSpan.Zero\r\n                });",
+              "protected": "M:Microsoft.Extensions.DependencyInjection.JwtBearerExtensions.AddJwtBearer(Microsoft.AspNetCore.Authentication.AuthenticationBuilder,System.Action{Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions})"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\r\n                .AddJwtBearer(op =\u003E\r\n                op.TokenValidationParameters = new TokenValidationParameters\r\n                {\r\n                    ValidateIssuer = false,\r\n                    ValidateAudience = false,\r\n                    ValidateLifetime = true,\r\n                    ValidateIssuerSigningKey = false,\r\n                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration[\u0022jwt:SecurityKeyJwt\u0022])),\r\n                    ClockSkew = TimeSpan.Zero\r\n                });",
+            "protectedSnippet": "M:Microsoft.Extensions.DependencyInjection.JwtBearerExtensions.AddJwtBearer(Microsoft.AspNetCore.Authentication.AuthenticationBuilder,System.Action{Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions})",
+            "label": "M:Microsoft.Extensions.DependencyInjection.JwtBearerExtensions.AddJwtBearer(Microsoft.AspNetCore.Authentication.AuthenticationBuilder,System.Action{Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions})",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Authentication.JwtBearer",
+              "PackageNewVersion": "8.0.6",
+              "CharCount": "5477"
+            },
+            "line": 35,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "c5bc21da-f7f4-4a3e-ace1-8c4f60db54c0",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();",
+              "protected": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();",
+            "protectedSnippet": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler",
+            "label": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler",
+            "properties": {
+              "CharCount": "5477"
+            },
+            "line": 22,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "d752edb7-28aa-4a4e-9197-e3a1b4c952bc",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();",
+              "protected": "F:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();",
+            "protectedSnippet": "F:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap",
+            "label": "F:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap",
+            "properties": {
+              "CharCount": "5477"
+            },
+            "line": 22,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "60549305-dd74-4d0f-a0cd-feebe362aa3b",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();",
+              "protected": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();",
+            "protectedSnippet": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler",
+            "label": "T:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler",
+            "properties": {
+              "CharCount": "5477"
+            },
+            "line": 22,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "a015f3cc-e6e1-408e-a73c-817b6ef57717",
+          "ruleId": "Api.0001",
+          "description": "API is unavailable in net8.0 ",
+          "projectPath": "GenericApp.API\\GenericApp.API.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();",
+              "protected": "F:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap"
+            },
+            "kind": "File",
+            "path": "GenericApp.API\\Startup.cs",
+            "snippet": "JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();",
+            "protectedSnippet": "F:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap",
+            "label": "F:System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap",
+            "properties": {
+              "CharCount": "5477"
+            },
+            "line": 22,
+            "column": 12
+          }
+        }
+      ],
+      "features": [
+        {
+          "featureId": "IdentityModel",
+          "incidents": [
+            "a015f3cc-e6e1-408e-a73c-817b6ef57717",
+            "60549305-dd74-4d0f-a0cd-feebe362aa3b",
+            "d752edb7-28aa-4a4e-9197-e3a1b4c952bc",
+            "c5bc21da-f7f4-4a3e-ace1-8c4f60db54c0",
+            "65fd3596-967f-419b-aed6-c9af53d4d779",
+            "bcc222b2-df32-4bb1-8c76-f6cd0b4250df",
+            "d9801911-32a1-433d-822f-b0dc435bc4d5",
+            "8d2928fc-5f1d-452a-a0a0-477db2e74176",
+            "820f208e-46f0-46e3-aea5-1079a8c18602",
+            "9c2c6a8e-fc77-41ce-90fa-9e21483ea4bf",
+            "34b4c14d-1fc8-4296-9d67-3c177af244a6",
+            "bcfe2653-cc12-4ba0-b306-10b8f6bdafe3",
+            "c562c6fd-0a68-4932-bc0d-281784042f48",
+            "49ad68f6-d335-482b-b8d7-016f111251b8",
+            "c8dce49a-cc1c-4961-a486-499de3a9c3b8",
+            "1c1ca484-91c5-4c83-83f1-eb63b6d98f40",
+            "c64bd917-3f1b-4b5c-b6e9-a211068537ea",
+            "94e17c32-c67f-47af-af1e-46ae585bd426",
+            "72d743f5-5d02-4958-8fda-6f41230458cc",
+            "54ccbca2-526e-4112-87fa-266717e80014",
+            "9bdb76fe-480f-4e1c-ba08-0f10bb03a0a5"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "GenericApp.BLL\\GenericApp.BLL.csproj",
+      "startingProject": true,
+      "issues": 3,
+      "storyPoints": 3,
+      "properties": {
+        "appName": "GenericApp.BLL",
+        "projectKind": "ClassLibrary",
+        "frameworks": [
+          "net6.0"
+        ],
+        "languages": [
+          "C#"
+        ],
+        "tools": [
+          "MSBuild"
+        ],
+        "isSdkStyle": true,
+        "isTestProject": false,
+        "numberOfFiles": 2,
+        "numberOfCodeFiles": 2,
+        "linesTotal": 375,
+        "linesOfCode": 375,
+        "totalApiScanned": 257,
+        "minLinesOfCodeToChange": 0,
+        "maxLinesOfCodeToChange": 0
+      },
+      "ruleInstances": [
+        {
+          "incidentId": "7b6fdc8a-8fac-444e-b519-2a2aa98a04e1",
+          "ruleId": "NuGet.0002",
+          "projectPath": "GenericApp.BLL\\GenericApp.BLL.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore, and replace with new package Microsoft.EntityFrameworkCore 10.0.14",
+              "protected": "Microsoft.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore, and replace with new package Microsoft.EntityFrameworkCore 10.0.14"
+            },
+            "kind": "File",
+            "path": "GenericApp.BLL\\GenericApp.BLL.csproj",
+            "snippet": "Microsoft.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore, and replace with new package Microsoft.EntityFrameworkCore 10.0.14",
+            "protectedSnippet": "Microsoft.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore, and replace with new package Microsoft.EntityFrameworkCore 10.0.14",
+            "label": "Microsoft.EntityFrameworkCore 6.0.36",
+            "properties": {
+              "PackageId": "Microsoft.EntityFrameworkCore",
+              "PackageVersion": "6.0.36",
+              "PackageNewVersion": "10.0.14",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "affd6861-1513-4358-8fa6-84380f55ac14",
+          "ruleId": "NuGet.0003",
+          "projectPath": "GenericApp.BLL\\GenericApp.BLL.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "System.Text.RegularExpressions, 4.3.1\n\nRecomendaci\u00F3n:\n\nFuncionalidad de paquete incluida con la nueva referencia de marco",
+              "protected": "System.Text.RegularExpressions, 4.3.1\n\nRecomendaci\u00F3n:\n\nFuncionalidad de paquete incluida con la nueva referencia de marco"
+            },
+            "kind": "File",
+            "path": "GenericApp.BLL\\GenericApp.BLL.csproj",
+            "snippet": "System.Text.RegularExpressions, 4.3.1\n\nRecomendaci\u00F3n:\n\nFuncionalidad de paquete incluida con la nueva referencia de marco",
+            "protectedSnippet": "System.Text.RegularExpressions, 4.3.1\n\nRecomendaci\u00F3n:\n\nFuncionalidad de paquete incluida con la nueva referencia de marco",
+            "label": "System.Text.RegularExpressions 4.3.1",
+            "properties": {
+              "PackageId": "System.Text.RegularExpressions",
+              "PackageVersion": "4.3.1",
+              "PackageNewVersion": null,
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "93b50e3e-d3ce-4208-ae71-ba0179763792",
+          "ruleId": "Project.0002",
+          "projectPath": "GenericApp.BLL\\GenericApp.BLL.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Marco de destino actual: net6.0\nMarco de destino recomendado: net10.0",
+              "protected": "Marco de destino actual: net6.0\nMarco de destino recomendado: net10.0"
+            },
+            "kind": "File",
+            "path": "GenericApp.BLL\\GenericApp.BLL.csproj",
+            "snippet": "Marco de destino actual: net6.0\nMarco de destino recomendado: net10.0",
+            "protectedSnippet": "Marco de destino actual: net6.0\nMarco de destino recomendado: net10.0",
+            "properties": {
+              "CurrentTargetFramework": "net6.0",
+              "RecommendedTargetFramework": "net10.0"
+            }
+          }
+        }
+      ],
+      "features": []
+    },
+    {
+      "path": "GenericApp.Data\\GenericApp.Data.csproj",
+      "startingProject": true,
+      "issues": 4,
+      "storyPoints": 11,
+      "properties": {
+        "appName": "GenericApp.Data",
+        "projectKind": "ClassLibrary",
+        "frameworks": [
+          "net6.0"
+        ],
+        "languages": [
+          "C#"
+        ],
+        "tools": [
+          "MSBuild"
+        ],
+        "isSdkStyle": true,
+        "isTestProject": false,
+        "numberOfFiles": 135,
+        "numberOfCodeFiles": 135,
+        "linesTotal": 113538,
+        "linesOfCode": 113538,
+        "totalApiScanned": 171185,
+        "minLinesOfCodeToChange": 3,
+        "maxLinesOfCodeToChange": 3
+      },
+      "ruleInstances": [
+        {
+          "incidentId": "a01afe25-acfb-4177-b0b7-614a1d90a390",
+          "ruleId": "NuGet.0002",
+          "projectPath": "GenericApp.Data\\GenericApp.Data.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.AspNetCore.Identity.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.AspNetCore.Identity.EntityFrameworkCore, and replace with new package Microsoft.AspNetCore.Identity.EntityFrameworkCore 10.0.14",
+              "protected": "Microsoft.AspNetCore.Identity.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.AspNetCore.Identity.EntityFrameworkCore, and replace with new package Microsoft.AspNetCore.Identity.EntityFrameworkCore 10.0.14"
+            },
+            "kind": "File",
+            "path": "GenericApp.Data\\GenericApp.Data.csproj",
+            "snippet": "Microsoft.AspNetCore.Identity.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.AspNetCore.Identity.EntityFrameworkCore, and replace with new package Microsoft.AspNetCore.Identity.EntityFrameworkCore 10.0.14",
+            "protectedSnippet": "Microsoft.AspNetCore.Identity.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.AspNetCore.Identity.EntityFrameworkCore, and replace with new package Microsoft.AspNetCore.Identity.EntityFrameworkCore 10.0.14",
+            "label": "Microsoft.AspNetCore.Identity.EntityFrameworkCore 6.0.36",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+              "PackageVersion": "6.0.36",
+              "PackageNewVersion": "10.0.14",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "9044c587-4c45-439b-b504-35bd7821bc71",
+          "ruleId": "NuGet.0002",
+          "projectPath": "GenericApp.Data\\GenericApp.Data.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore, and replace with new package Microsoft.EntityFrameworkCore 10.0.14",
+              "protected": "Microsoft.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore, and replace with new package Microsoft.EntityFrameworkCore 10.0.14"
+            },
+            "kind": "File",
+            "path": "GenericApp.Data\\GenericApp.Data.csproj",
+            "snippet": "Microsoft.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore, and replace with new package Microsoft.EntityFrameworkCore 10.0.14",
+            "protectedSnippet": "Microsoft.EntityFrameworkCore, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore, and replace with new package Microsoft.EntityFrameworkCore 10.0.14",
+            "label": "Microsoft.EntityFrameworkCore 6.0.36",
+            "properties": {
+              "PackageId": "Microsoft.EntityFrameworkCore",
+              "PackageVersion": "6.0.36",
+              "PackageNewVersion": "10.0.14",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "f5c7478e-9f75-485e-8bfe-eca81f72badf",
+          "ruleId": "NuGet.0002",
+          "projectPath": "GenericApp.Data\\GenericApp.Data.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.EntityFrameworkCore.Design, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Design, and replace with new package Microsoft.EntityFrameworkCore.Design 10.0.14",
+              "protected": "Microsoft.EntityFrameworkCore.Design, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Design, and replace with new package Microsoft.EntityFrameworkCore.Design 10.0.14"
+            },
+            "kind": "File",
+            "path": "GenericApp.Data\\GenericApp.Data.csproj",
+            "snippet": "Microsoft.EntityFrameworkCore.Design, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Design, and replace with new package Microsoft.EntityFrameworkCore.Design 10.0.14",
+            "protectedSnippet": "Microsoft.EntityFrameworkCore.Design, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Design, and replace with new package Microsoft.EntityFrameworkCore.Design 10.0.14",
+            "label": "Microsoft.EntityFrameworkCore.Design 6.0.36",
+            "properties": {
+              "PackageId": "Microsoft.EntityFrameworkCore.Design",
+              "PackageVersion": "6.0.36",
+              "PackageNewVersion": "10.0.14",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "b9e13f27-3ef6-463e-b1e2-0d358dc836d7",
+          "ruleId": "NuGet.0002",
+          "projectPath": "GenericApp.Data\\GenericApp.Data.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.EntityFrameworkCore.Proxies, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Proxies, and replace with new package Microsoft.EntityFrameworkCore.Proxies 10.0.14",
+              "protected": "Microsoft.EntityFrameworkCore.Proxies, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Proxies, and replace with new package Microsoft.EntityFrameworkCore.Proxies 10.0.14"
+            },
+            "kind": "File",
+            "path": "GenericApp.Data\\GenericApp.Data.csproj",
+            "snippet": "Microsoft.EntityFrameworkCore.Proxies, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Proxies, and replace with new package Microsoft.EntityFrameworkCore.Proxies 10.0.14",
+            "protectedSnippet": "Microsoft.EntityFrameworkCore.Proxies, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Proxies, and replace with new package Microsoft.EntityFrameworkCore.Proxies 10.0.14",
+            "label": "Microsoft.EntityFrameworkCore.Proxies 6.0.36",
+            "properties": {
+              "PackageId": "Microsoft.EntityFrameworkCore.Proxies",
+              "PackageVersion": "6.0.36",
+              "PackageNewVersion": "10.0.14",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "77f52ddc-d045-41e8-a3bd-0997ecab9a0e",
+          "ruleId": "NuGet.0002",
+          "projectPath": "GenericApp.Data\\GenericApp.Data.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.EntityFrameworkCore.SqlServer, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.SqlServer, and replace with new package Microsoft.EntityFrameworkCore.SqlServer 10.0.14",
+              "protected": "Microsoft.EntityFrameworkCore.SqlServer, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.SqlServer, and replace with new package Microsoft.EntityFrameworkCore.SqlServer 10.0.14"
+            },
+            "kind": "File",
+            "path": "GenericApp.Data\\GenericApp.Data.csproj",
+            "snippet": "Microsoft.EntityFrameworkCore.SqlServer, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.SqlServer, and replace with new package Microsoft.EntityFrameworkCore.SqlServer 10.0.14",
+            "protectedSnippet": "Microsoft.EntityFrameworkCore.SqlServer, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.SqlServer, and replace with new package Microsoft.EntityFrameworkCore.SqlServer 10.0.14",
+            "label": "Microsoft.EntityFrameworkCore.SqlServer 6.0.36",
+            "properties": {
+              "PackageId": "Microsoft.EntityFrameworkCore.SqlServer",
+              "PackageVersion": "6.0.36",
+              "PackageNewVersion": "10.0.14",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "f76d1651-dd65-43e4-8ae2-7417e0c0f934",
+          "ruleId": "NuGet.0002",
+          "projectPath": "GenericApp.Data\\GenericApp.Data.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.EntityFrameworkCore.Tools, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Tools, and replace with new package Microsoft.EntityFrameworkCore.Tools 10.0.14",
+              "protected": "Microsoft.EntityFrameworkCore.Tools, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Tools, and replace with new package Microsoft.EntityFrameworkCore.Tools 10.0.14"
+            },
+            "kind": "File",
+            "path": "GenericApp.Data\\GenericApp.Data.csproj",
+            "snippet": "Microsoft.EntityFrameworkCore.Tools, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Tools, and replace with new package Microsoft.EntityFrameworkCore.Tools 10.0.14",
+            "protectedSnippet": "Microsoft.EntityFrameworkCore.Tools, 6.0.36\n\nRecomendaci\u00F3n:\n\nRemove Microsoft.EntityFrameworkCore.Tools, and replace with new package Microsoft.EntityFrameworkCore.Tools 10.0.14",
+            "label": "Microsoft.EntityFrameworkCore.Tools 6.0.36",
+            "properties": {
+              "PackageId": "Microsoft.EntityFrameworkCore.Tools",
+              "PackageVersion": "6.0.36",
+              "PackageNewVersion": "10.0.14",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "de2cb613-604d-48f1-971c-92dfb1fca852",
+          "ruleId": "NuGet.0003",
+          "projectPath": "GenericApp.Data\\GenericApp.Data.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "System.Text.RegularExpressions, 4.3.1\n\nRecomendaci\u00F3n:\n\nFuncionalidad de paquete incluida con la nueva referencia de marco",
+              "protected": "System.Text.RegularExpressions, 4.3.1\n\nRecomendaci\u00F3n:\n\nFuncionalidad de paquete incluida con la nueva referencia de marco"
+            },
+            "kind": "File",
+            "path": "GenericApp.Data\\GenericApp.Data.csproj",
+            "snippet": "System.Text.RegularExpressions, 4.3.1\n\nRecomendaci\u00F3n:\n\nFuncionalidad de paquete incluida con la nueva referencia de marco",
+            "protectedSnippet": "System.Text.RegularExpressions, 4.3.1\n\nRecomendaci\u00F3n:\n\nFuncionalidad de paquete incluida con la nueva referencia de marco",
+            "label": "System.Text.RegularExpressions 4.3.1",
+            "properties": {
+              "PackageId": "System.Text.RegularExpressions",
+              "PackageVersion": "4.3.1",
+              "PackageNewVersion": null,
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "084cb2bf-005e-4497-8611-b0e10bce00dc",
+          "ruleId": "Project.0002",
+          "projectPath": "GenericApp.Data\\GenericApp.Data.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Marco de destino actual: net6.0\nMarco de destino recomendado: net10.0",
+              "protected": "Marco de destino actual: net6.0\nMarco de destino recomendado: net10.0"
+            },
+            "kind": "File",
+            "path": "GenericApp.Data\\GenericApp.Data.csproj",
+            "snippet": "Marco de destino actual: net6.0\nMarco de destino recomendado: net10.0",
+            "protectedSnippet": "Marco de destino actual: net6.0\nMarco de destino recomendado: net10.0",
+            "properties": {
+              "CurrentTargetFramework": "net6.0",
+              "RecommendedTargetFramework": "net10.0"
+            }
+          }
+        },
+        {
+          "incidentId": "a026b740-a924-4b10-bd31-7ce316c43aae",
+          "ruleId": "Api.0002",
+          "description": "API is available in package Microsoft.AspNetCore.Identity.EntityFrameworkCore, 8.0.6. Add package reference to Microsoft.AspNetCore.Identity.EntityFrameworkCore, 8.0.6",
+          "projectPath": "GenericApp.Data\\GenericApp.Data.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": ": base(options)",
+              "protected": "M:Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)"
+            },
+            "kind": "File",
+            "path": "GenericApp.Data\\ApplicationDBContext.cs",
+            "snippet": ": base(options)",
+            "protectedSnippet": "M:Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)",
+            "label": "M:Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+              "PackageNewVersion": "8.0.6",
+              "CharCount": "37960"
+            },
+            "line": 12,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "60a25444-947c-429b-854e-e9d0533a0b81",
+          "ruleId": "Api.0002",
+          "description": "API is available in package Microsoft.AspNetCore.Identity.EntityFrameworkCore, 8.0.6. Add package reference to Microsoft.AspNetCore.Identity.EntityFrameworkCore, 8.0.6",
+          "projectPath": "GenericApp.Data\\GenericApp.Data.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": ": base(options)",
+              "protected": "M:Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)"
+            },
+            "kind": "File",
+            "path": "GenericApp.Data\\ApplicationDBContext.cs",
+            "snippet": ": base(options)",
+            "protectedSnippet": "M:Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)",
+            "label": "M:Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+              "PackageNewVersion": "8.0.6",
+              "CharCount": "37960"
+            },
+            "line": 12,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "016fd861-cc35-40a9-acf5-b14146cee7af",
+          "ruleId": "Api.0002",
+          "description": "API is available in package Microsoft.AspNetCore.Identity.EntityFrameworkCore, 8.0.6. Add package reference to Microsoft.AspNetCore.Identity.EntityFrameworkCore, 8.0.6",
+          "projectPath": "GenericApp.Data\\GenericApp.Data.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "IdentityDbContext",
+              "protected": "T:Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext"
+            },
+            "kind": "File",
+            "path": "GenericApp.Data\\ApplicationDBContext.cs",
+            "snippet": "IdentityDbContext",
+            "protectedSnippet": "T:Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext",
+            "label": "T:Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext",
+            "properties": {
+              "PackageId": "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+              "PackageNewVersion": "8.0.6",
+              "CharCount": "37960"
+            },
+            "line": 8,
+            "column": 40
+          }
+        }
+      ],
+      "features": []
+    },
+    {
+      "path": "GenericApp.Web\\GenericApp.Web.esproj",
+      "startingProject": true,
+      "issues": 1,
+      "storyPoints": 1,
+      "properties": {
+        "appName": "GenericApp.Web",
+        "projectKind": "DotNetCoreApp",
+        "frameworks": [
+          "net6.0"
+        ],
+        "languages": [
+          ""
+        ],
+        "tools": [
+          "MSBuild"
+        ],
+        "isSdkStyle": true,
+        "isTestProject": false,
+        "numberOfFiles": 0,
+        "numberOfCodeFiles": 0,
+        "linesTotal": 0,
+        "linesOfCode": 0,
+        "totalApiScanned": 0,
+        "minLinesOfCodeToChange": 0,
+        "maxLinesOfCodeToChange": 0
+      },
+      "ruleInstances": [
+        {
+          "incidentId": "dc305dbb-ec0f-4b88-afc4-81fca7c6cf3a",
+          "ruleId": "Project.0002",
+          "projectPath": "GenericApp.Web\\GenericApp.Web.esproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Marco de destino actual: net6.0\nMarco de destino recomendado: net10.0",
+              "protected": "Marco de destino actual: net6.0\nMarco de destino recomendado: net10.0"
+            },
+            "kind": "File",
+            "path": "GenericApp.Web\\GenericApp.Web.esproj",
+            "snippet": "Marco de destino actual: net6.0\nMarco de destino recomendado: net10.0",
+            "protectedSnippet": "Marco de destino actual: net6.0\nMarco de destino recomendado: net10.0",
+            "properties": {
+              "CurrentTargetFramework": "net6.0",
+              "RecommendedTargetFramework": "net10.0"
+            }
+          }
+        }
+      ],
+      "features": []
+    }
+  ],
+  "rules": {
+    "NuGet.0002": {
+      "id": "NuGet.0002",
+      "isFeature": false,
+      "description": "Se recomienda actualizar el paquete NuGet para la plataforma de destino seleccionada.\n\nSe recomienda que los paquetes .NET est\u00E1ndar tengan versiones que coincidan con la versi\u00F3n de .NET de destino del proyecto.\n\nTambi\u00E9n se sabe que otros paquetes funcionan mejor para las plataformas de destino seleccionadas.",
+      "label": "Se recomienda actualizar el paquete NuGet",
+      "severity": "Potential",
+      "effort": 1,
+      "links": [
+        {
+          "url": "https://go.microsoft.com/fwlink/?linkid=2262530",
+          "isCustom": false
+        }
+      ]
+    },
+    "NuGet.0003": {
+      "id": "NuGet.0003",
+      "isFeature": false,
+      "description": "La funcionalidad del paquete NuGet se incluye con la referencia del marco.\n\nEs necesario quitar el paquete.",
+      "label": "La funcionalidad del paquete NuGet se incluye con la referencia del marco",
+      "severity": "Mandatory",
+      "effort": 1,
+      "links": [
+        {
+          "url": "https://go.microsoft.com/fwlink/?linkid=2262609",
+          "isCustom": false
+        }
+      ]
+    },
+    "Project.0002": {
+      "id": "Project.0002",
+      "isFeature": false,
+      "description": "El marco de destino del proyecto deben cambiarse al nuevo marco de destino que seleccion\u00F3 para esta actualizaci\u00F3n.\n\nDurante la actualizaci\u00F3n, el marco de destino se ajustar\u00E1 a la plataforma correspondiente cuando proceda. En algunos casos, el proyecto dar\u00EDa como resultado varios marcos de destino despu\u00E9s de la actualizaci\u00F3n si usara caracter\u00EDsticas que ahora tienen sus propias plataformas en marcos de .NET modernos (windows, iOS, Android, etc.).",
+      "label": "Es necesario cambiar el marco de destino del proyecto",
+      "severity": "Mandatory",
+      "effort": 1,
+      "links": [
+        {
+          "title": "Informaci\u00F3n general sobre la portabilidad de .NET Framework a .NET",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2265227",
+          "isCustom": false
+        },
+        {
+          "title": "SDK de proyecto .NET",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2265226",
+          "isCustom": false
+        }
+      ]
+    },
+    "Api.0002": {
+      "id": "Api.0002",
+      "isFeature": false,
+      "description": "La API es incompatible a nivel de origen para la versi\u00F3n de .NET seleccionada: requiere cambios en el c\u00F3digo para compilarse correctamente cuando se dirige a una nueva versi\u00F3n, como eliminar API obsoletas o cambiar las firmas de los m\u00E9todos.",
+      "label": "El origen no es compatible con la versi\u00F3n de .NET seleccionada",
+      "severity": "Potential",
+      "effort": 1,
+      "links": [
+        {
+          "title": "Cambios importantes en .NET",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2262679",
+          "isCustom": false
+        }
+      ]
+    },
+    "NuGet.0004": {
+      "id": "NuGet.0004",
+      "isFeature": false,
+      "description": "El paquete NuGet contiene vulnerabilidades de seguridad.\n\nEl paquete debe actualizarse a una versi\u00F3n m\u00E1s reciente que solucione vulnerabilidades de seguridad conocidas.",
+      "label": "El paquete NuGet contiene una vulnerabilidad de seguridad.",
+      "severity": "Optional",
+      "effort": 1
+    },
+    "Api.0001": {
+      "id": "Api.0001",
+      "isFeature": false,
+      "description": "La API es binariamente incompatible con la versi\u00F3n de .NET seleccionada: afecta a los archivos binarios existentes y suele requerir recompilaci\u00F3n, porque la API ha cambiado de forma que impide que los binarios antiguos se carguen o ejecuten.",
+      "label": "Binario incompatible para la versi\u00F3n de .NET seleccionada",
+      "severity": "Mandatory",
+      "effort": 1,
+      "links": [
+        {
+          "title": "Cambios importantes en .NET",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2262679",
+          "isCustom": false
+        }
+      ]
+    },
+    "Api.0003": {
+      "id": "Api.0003",
+      "isFeature": false,
+      "description": "La API tiene un cambio de comportamiento en la versi\u00F3n de .NET seleccionada: el c\u00F3digo y los archivos binarios pueden comportarse de forma diferente en el runtime sin necesidad de recompilaci\u00F3n, pero el nuevo comportamiento podr\u00EDa no ser deseable y requerir actualizaciones.",
+      "label": "Cambio de comportamiento en la versi\u00F3n de .NET seleccionada",
+      "severity": "Potential",
+      "effort": 1
+    },
+    "IdentityModel": {
+      "id": "IdentityModel",
+      "isFeature": false,
+      "description": "Windows Identity Foundation (WIF), SAML, and claims-based authentication APIs that have been replaced by modern identity libraries. WIF was the original identity framework for .NET Framework. Migrate to Microsoft.IdentityModel.* packages (modern identity stack).",
+      "label": "IdentityModel \u0026 Claims-based Security",
+      "severity": "Mandatory",
+      "effort": 4,
+      "links": [
+        {
+          "title": "Microsoft.IdentityModel packages",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2341614",
+          "isCustom": false
+        }
+      ]
+    }
+  }
+}

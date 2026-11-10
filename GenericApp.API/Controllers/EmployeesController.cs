@@ -60,7 +60,7 @@ namespace GenericApp.API.Controllers
 
         [HttpPost("upload-excel")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User))]
-        public ActionResult UploadExcel([FromForm] IFormFile file, [FromForm] int dataStartRow = 2)
+        public ActionResult UploadExcel(IFormFile file, [FromForm] int dataStartRow = 2)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new ApiResponse { Message = "No file provided" });
