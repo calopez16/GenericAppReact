@@ -1225,9 +1225,11 @@ namespace GenericApp.API.Controllers
             return first.ToLowerInvariant() switch
             {
                 "lato" => Fonts.Lato,
-                "arial" => "Arial",
-                "helvetica" => "Arial",  // fallback
-                "helvetica neue" => "Arial",
+                // QuestPDF 2026.9+ no usa fuentes del sistema por defecto.
+                // Fallback a Lato (registrada por QuestPDF.Fonts.Lato.br) para evitar fallos en runtime.
+                "arial" => Fonts.Lato,
+                "helvetica" => Fonts.Lato,
+                "helvetica neue" => Fonts.Lato,
                 "times new roman" or "times" => "Times New Roman",
                 "courier new" or "courier" => Fonts.CourierNew,
                 "georgia" => "Georgia",

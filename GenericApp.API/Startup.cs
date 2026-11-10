@@ -85,7 +85,7 @@ namespace GenericApp
             });
 
             services.AddScoped<IRepository, Repository>();
-            services.AddAutoMapper(typeof(Startup).Assembly);
+            services.AddAutoMapper(_ => { }, typeof(Startup).Assembly);
 
             //services.AddDataProtection();
         }

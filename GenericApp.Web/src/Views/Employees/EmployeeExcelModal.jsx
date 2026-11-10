@@ -89,7 +89,7 @@ const PREVIEW_COLUMNS = [
     { key: 'fechaVencimientoContrato', labelKey: 'col_fechaVencimientoContrato' },
 ];
 
-const EmployeeExcelModal = ({ open, handleClose, idCompany }) => {
+const EmployeeExcelModal = ({ open, handleClose, idCompany, onImported }) => {
     const { t } = useTranslation();
     const service = DataAPIEmployeesService();
     const fileInputRef = useRef(null);
@@ -213,6 +213,7 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany }) => {
                 } else {
                     ShowMessage(t('excel_importSuccess', { inserted, updated }), 'success');
                 }
+                onImported?.();
                 handleModalClose();
             } else {
                 ShowMessage(t('error'), 'error');

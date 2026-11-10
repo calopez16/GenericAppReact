@@ -65,7 +65,7 @@ namespace GenericApp.API.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest(new ApiResponse { Message = "No file provided" });
 
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            ExcelPackage.License.SetNonCommercialPersonal("GenericApp");
 
             var rows = new List<EmployeeExcelRowDTO>();
 

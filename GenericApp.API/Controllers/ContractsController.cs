@@ -174,18 +174,19 @@ namespace GenericApp.API.Controllers
                         BirthDate = x.BirthDate,
                         IsActive = x.IsActive,
                         IdCompany = x.IdCompany,
+                        // Siempre devolver el historial completo de contratos del empleado
+                        // para mostrarlo al expandir el registro en UI.
                         Contracts = x.Contracts
-                            .Where(s => !(s.IsDeleted ?? false) &&
-                                (!dateFrom.HasValue || (s.SignatureDate ?? s.CreateDate) >= dateFrom.Value.Date) &&
-                                (!dateTo.HasValue || (s.SignatureDate ?? s.CreateDate) <= dateTo.Value.Date.AddDays(1).AddTicks(-1)))
-                            .OrderByDescending(o => o.SignatureDate)
+                            .Where(s => !(s.IsDeleted ?? false))
+                            .OrderByDescending(s => s.SignatureDate ?? s.CreateDate)
                             .Select(s => new ContractDTO
                             {
                                 IdContract = s.IdContract,
                                 VirtualPath = s.VirtualPath,
                                 DocumentName = s.DocumentName,
                                 SignatureDate = s.SignatureDate
-                            }).OrderBy(x => x.SignatureDate).ToList()
+                            })
+                            .ToList()
                     })
                     .ToList();
 
@@ -665,7 +666,7 @@ namespace GenericApp.API.Controllers
                 //return employee.Beneficiaries?.ElementAtOrDefault(0)?.BirthDate ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1_Telefono):
                     return "";
-                case nameof(ContractTemplateVariablesEnum.Beneficiario1_Percentage):
+                case nameof(ContractTemplateVariablesEnum.Beneficiario1_Porcentaje):
                     return employee.Beneficiaries?.ElementAtOrDefault(0)?.Percentage?.ToString("N0") ?? "0";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1_Parentezco):
                     return employee.Beneficiaries?.ElementAtOrDefault(0)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
@@ -680,7 +681,7 @@ namespace GenericApp.API.Controllers
                 //return employee.Beneficiaries?.ElementAtOrDefault(1)?.BirthDate ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario2_Telefono):
                     return "";
-                case nameof(ContractTemplateVariablesEnum.Beneficiario2_Percentage):
+                case nameof(ContractTemplateVariablesEnum.Beneficiario2_Porcentaje):
                     return employee.Beneficiaries?.ElementAtOrDefault(1)?.Percentage?.ToString("N0") ?? "0";
                 //return employee.Beneficiaries?.ElementAtOrDefault(1)?.Phone ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario2_Parentezco):
@@ -697,7 +698,7 @@ namespace GenericApp.API.Controllers
                 //return employee.Beneficiaries?.ElementAtOrDefault(2)?.BirthDate ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario3_Telefono):
                     return "";
-                case nameof(ContractTemplateVariablesEnum.Beneficiario3_Percentage):
+                case nameof(ContractTemplateVariablesEnum.Beneficiario3_Porcentaje):
                     return employee.Beneficiaries?.ElementAtOrDefault(2)?.Percentage?.ToString("N0") ?? "0";
                 //return employee.Beneficiaries?.ElementAtOrDefault(0)?.Phone ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario4):
@@ -710,11 +711,17 @@ namespace GenericApp.API.Controllers
                 //return employee.Beneficiaries?.ElementAtOrDefault(3)?.BirthDate ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario4_Telefono):
                     return "";
-                case nameof(ContractTemplateVariablesEnum.Beneficiario4_Percentage):
+                case nameof(ContractTemplateVariablesEnum.Beneficiario4_Porcentaje):
                     return employee.Beneficiaries?.ElementAtOrDefault(3)?.Percentage?.ToString("N0") ?? "0";
                 //return employee.Beneficiaries?.ElementAtOrDefault(3)?.Phone ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario4_Parentezco):
                     return employee.Beneficiaries?.ElementAtOrDefault(3)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
+                case nameof(ContractTemplateVariablesEnum.ContactoEmergencia):
+                    return employee.EmployeeEmergencyContacts?.ElementAtOrDefault(0)?.Name ?? "0";
+                case nameof(ContractTemplateVariablesEnum.ContactoEmergenciaParentezco):
+                    return employee.EmployeeEmergencyContacts?.ElementAtOrDefault(0)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "0";
+                case nameof(ContractTemplateVariablesEnum.ContactoEmergenciaTelefono):
+                    return employee.EmployeeEmergencyContacts?.ElementAtOrDefault(0)?.Phone ?? "0";
                 default:
                     break;
             }
@@ -1550,9 +1557,11 @@ namespace GenericApp.API.Controllers
             return first.ToLowerInvariant() switch
             {
                 "lato" => Fonts.Lato,
-                "arial" => "Arial",
-                "helvetica" => "Arial",  // fallback
-                "helvetica neue" => "Arial",
+                // QuestPDF 2026.9+ no usa fuentes del sistema por defecto.
+                // Fallback a Lato (registrada por QuestPDF.Fonts.Lato.br) para evitar fallos en runtime.
+                "arial" => Fonts.Lato,
+                "helvetica" => Fonts.Lato,
+                "helvetica neue" => Fonts.Lato,
                 "times new roman" or "times" => "Times New Roman",
                 "courier new" or "courier" => Fonts.CourierNew,
                 "georgia" => "Georgia",

@@ -40,6 +40,7 @@ function Index() {
     const [isEditing, setIsEditing] = useState(false);
     const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
     const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
+    const [reloadToken, setReloadToken] = useState(0);
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
@@ -71,7 +72,7 @@ function Index() {
             }
         };
         loadEmployees();
-    }, [page, rowsPerPage, debouncedSearchTerm, companySelected]);
+    }, [page, rowsPerPage, debouncedSearchTerm, companySelected, reloadToken]);
 
     const handlePageChange = (_, newPage) => setPage(newPage);
     const handleRowsPerPageChange = (event) => {
@@ -303,6 +304,7 @@ function Index() {
                 open={isExcelModalOpen}
                 handleClose={() => setIsExcelModalOpen(false)}
                 idCompany={companySelected?.idCompany}
+                onImported={() => setReloadToken(prev => prev + 1)}
             />
         </Box>
     );
