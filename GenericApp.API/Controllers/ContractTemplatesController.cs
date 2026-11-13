@@ -1221,24 +1221,24 @@ namespace GenericApp.API.Controllers
                            .Trim()
                            .Trim('"', '\'', '\u2018', '\u2019', '\u201C', '\u201D');
 
-            // Map common aliases to canonical names understood by Skia/OS fonts
+            // QuestPDF 2026.9+ no usa fuentes del sistema por defecto.
+            // Para evitar errores por fuentes no registradas, normalizamos a Lato.
             return first.ToLowerInvariant() switch
             {
                 "lato" => Fonts.Lato,
-                // QuestPDF 2026.9+ no usa fuentes del sistema por defecto.
-                // Fallback a Lato (registrada por QuestPDF.Fonts.Lato.br) para evitar fallos en runtime.
+                "montserrat" => Fonts.Lato,
                 "arial" => Fonts.Lato,
                 "helvetica" => Fonts.Lato,
                 "helvetica neue" => Fonts.Lato,
-                "times new roman" or "times" => "Times New Roman",
-                "courier new" or "courier" => Fonts.CourierNew,
-                "georgia" => "Georgia",
-                "verdana" => Fonts.Verdana,
-                "trebuchet ms" or "trebuchet" => "Trebuchet MS",
-                "tahoma" => "Tahoma",
-                "calibri" => "Calibri",
+                "times new roman" or "times" => Fonts.Lato,
+                "courier new" or "courier" => Fonts.Lato,
+                "georgia" => Fonts.Lato,
+                "verdana" => Fonts.Lato,
+                "trebuchet ms" or "trebuchet" => Fonts.Lato,
+                "tahoma" => Fonts.Lato,
+                "calibri" => Fonts.Lato,
                 "sans-serif" or "serif" or "monospace" or "cursive" or "fantasy" => null,
-                _ => string.IsNullOrWhiteSpace(first) ? null : first
+                _ => string.IsNullOrWhiteSpace(first) ? null : Fonts.Lato
             };
         }
 

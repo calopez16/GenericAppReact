@@ -60,7 +60,16 @@ namespace GenericApp.API.Controllers
             query = query.Where(x => x.IdCompany == idCompany && !(x.IsDeleted ?? false));
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
-                query = query.Where(x => (x.DocumentName != null && x.DocumentName.Contains(searchTerm)));
+            {
+                var term = searchTerm.Trim();
+                var hasClaveFilter = int.TryParse(term, out var claveFilter);
+
+                query = query.Where(x =>
+                    (x.IdEmployeeNavigation.Nombre != null && x.IdEmployeeNavigation.Nombre.Contains(term)) ||
+                    (x.IdEmployeeNavigation.ApellidoPaterno != null && x.IdEmployeeNavigation.ApellidoPaterno.Contains(term)) ||
+                    (x.IdEmployeeNavigation.ApellidoMaterno != null && x.IdEmployeeNavigation.ApellidoMaterno.Contains(term)) ||
+                    (hasClaveFilter && x.IdEmployeeNavigation.Clave == claveFilter));
+            }
 
             if (dateFrom.HasValue)
                 query = query.Where(x => (x.SignatureDate ?? x.CreateDate) >= dateFrom.Value.Date);
@@ -131,21 +140,19 @@ namespace GenericApp.API.Controllers
 
                 query = query.Include(x => x.Contracts);
 
-                if (dateFrom.HasValue || dateTo.HasValue)
+                if (showNoContract)
                 {
-                    if (showNoContract)
-                    {
-                        // Employees who have NO contract signed within the date range
-                        query = query.Where(x => !x.Contracts.Any(c =>
-                            !(c.IsDeleted ?? false) &&
-                            (!dateFrom.HasValue || (c.SignatureDate ?? c.CreateDate) >= dateFrom.Value.Date) &&
-                            (!dateTo.HasValue || (c.SignatureDate ?? c.CreateDate) <= dateTo.Value.Date.AddDays(1).AddTicks(-1))));
-                    }
-                }
-                else if (showNoContract)
-                {
-                    // No date filter: employees with no contracts at all
+                    // Ignore date filters and show employees without contracts
                     query = query.Where(x => !x.Contracts.Any(c => !(c.IsDeleted ?? false)));
+                }
+                else if (dateFrom.HasValue || dateTo.HasValue)
+                {
+                    // Employees who have at least one contract signed within the selected date range
+                    query = query.Where(x => x.Contracts.Any(c =>
+                        !(c.IsDeleted ?? false) &&
+                        c.SignatureDate.HasValue &&
+                        (!dateFrom.HasValue || c.SignatureDate.Value >= dateFrom.Value.Date) &&
+                        (!dateTo.HasValue || c.SignatureDate.Value <= dateTo.Value.Date.AddDays(1).AddTicks(-1))));
                 }
 
                 query = query.OrderByDescending(x => x.Contracts.Any(c => !(c.IsDeleted ?? false)))
@@ -177,7 +184,14 @@ namespace GenericApp.API.Controllers
                         // Siempre devolver el historial completo de contratos del empleado
                         // para mostrarlo al expandir el registro en UI.
                         Contracts = x.Contracts
-                            .Where(s => !(s.IsDeleted ?? false))
+                            .Where(s =>
+                                !(s.IsDeleted ?? false) &&
+                                (
+                                    (!dateFrom.HasValue && !dateTo.HasValue) ||
+                                    (s.SignatureDate.HasValue &&
+                                        (!dateFrom.HasValue || s.SignatureDate.Value >= dateFrom.Value.Date) &&
+                                        (!dateTo.HasValue || s.SignatureDate.Value <= dateTo.Value.Date.AddDays(1).AddTicks(-1)))
+                                ))
                             .OrderByDescending(s => s.SignatureDate ?? s.CreateDate)
                             .Select(s => new ContractDTO
                             {
@@ -334,13 +348,14 @@ namespace GenericApp.API.Controllers
                 pdfDocument.GeneratePdf(filePath);
 
                 var contractFolderVirtualPath = _configuration["contractsSettings:contractsPath"] ?? "contratos";
+                var signatureDate = model.SignatureDate ?? DateTime.Now;
 
                 var contract = new Contract
                 {
                     IdEmployee = model.IdEmployee,
                     IdCompany = model.IdCompany,
                     CreateDate = DateTime.Now,
-                    SignatureDate = DateTime.Now,
+                    SignatureDate = signatureDate,
                     DocumentName = documentName,
                     VirtualPath = $"/{contractFolderVirtualPath}/{documentName}",
                     IsActive = true,
@@ -359,7 +374,7 @@ namespace GenericApp.API.Controllers
                         IdEmployee = model.IdEmployee,
                         IdCompany = model.IdCompany,
                         CreateDate = DateTime.Now,
-                        SignatureDate = DateTime.Now,
+                        SignatureDate = signatureDate,
                         DocumentName = documentName,
                         VirtualPath = $"/{contractFolderVirtualPath}/{documentName}",
                         IsActive = true,
@@ -512,6 +527,7 @@ namespace GenericApp.API.Controllers
                 return BadRequest(new ApiResponse { Message = "At least one contract ID is required" });
 
             var contractsFolder = Path.Combine(_env.WebRootPath, _configuration["contractsSettings:contractsPath"] ?? "contratos");
+            var usedEntryNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             var memoryStream = new MemoryStream();
             using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, leaveOpen: true))
@@ -519,12 +535,39 @@ namespace GenericApp.API.Controllers
                 foreach (var id in contractIds)
                 {
                     var contract = await _repository.GetById<Contract>(id);
-                    if (contract == null) continue;
+                    if (contract == null || string.IsNullOrWhiteSpace(contract.DocumentName)) continue;
+
+                    var employee = await _repository.GetById<Employee>(contract.IdEmployee);
+                    var employeeRfc = employee?.RFC?.Trim();
 
                     var filePath = Path.Combine(contractsFolder, contract.DocumentName);
                     if (!System.IO.File.Exists(filePath)) continue;
 
-                    var entry = archive.CreateEntry(contract.DocumentName, CompressionLevel.Fastest);
+                    var extension = Path.GetExtension(contract.DocumentName);
+                    if (string.IsNullOrWhiteSpace(extension)) extension = ".pdf";
+
+                    var baseEntryName = string.IsNullOrWhiteSpace(employeeRfc)
+                        ? Path.GetFileNameWithoutExtension(contract.DocumentName)
+                        : employeeRfc;
+
+                    baseEntryName = Regex.Replace(baseEntryName ?? string.Empty, "[^a-zA-Z0-9]", string.Empty);
+
+                    if (string.IsNullOrWhiteSpace(baseEntryName))
+                        baseEntryName = $"Contrato{contract.IdContract}";
+
+                    var entryName = $"{baseEntryName}{extension}";
+                    if (!usedEntryNames.Add(entryName))
+                    {
+                        entryName = $"{baseEntryName}{contract.IdContract}{extension}";
+                        var suffix = 1;
+                        while (!usedEntryNames.Add(entryName))
+                        {
+                            entryName = $"{baseEntryName}{contract.IdContract}{suffix}{extension}";
+                            suffix++;
+                        }
+                    }
+
+                    var entry = archive.CreateEntry(entryName, CompressionLevel.Fastest);
                     using var entryStream = entry.Open();
                     using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
                     await fileStream.CopyToAsync(entryStream);
@@ -607,14 +650,18 @@ namespace GenericApp.API.Controllers
 
         private string GetVariableValue(ContractTemplateVariable variable, Employee employee, Company? company = null)
         {
-            var type = variable.Type?.ToLower() ?? "";
-            var code = variable.Code?.ToLower() ?? "";
+            if (variable == null || employee == null)
+                return "";
+
             var fechaActual = DateTime.Now;
+            var workInfo = employee.EmployeeWorkInformations?.FirstOrDefault();
+            var beneficiaries = employee.Beneficiaries ?? new List<EmployeeBeneficiarie>();
+            var emergencyContact = employee.EmployeeEmergencyContacts?.FirstOrDefault();
 
             switch (variable.Code)
             {
                 case nameof(ContractTemplateVariablesEnum.nombreEmpresa):
-                    return company.RazonSocial;
+                    return company?.RazonSocial ?? "";
                 case nameof(ContractTemplateVariablesEnum.fechaActualContrato):
                     return fechaActual.ToString("d 'días del mes de' MMMM 'del año' yyyy", new CultureInfo("es-ES"));
                 case nameof(ContractTemplateVariablesEnum.clave):
@@ -624,10 +671,10 @@ namespace GenericApp.API.Controllers
                 case nameof(ContractTemplateVariablesEnum.nacionalidad):
                     return "MEXICANA";
                 case nameof(ContractTemplateVariablesEnum.edad):
-                    DateTime fechaNacimiento = employee.BirthDate;
-                    int edad = fechaActual.Year - fechaNacimiento.Year;
-                    // Ajuste por si no ha cumplido años este año
-                    if (fechaActual < fechaNacimiento.AddYears(edad))
+                    if (employee.BirthDate == default)
+                        return "";
+                    var edad = fechaActual.Year - employee.BirthDate.Year;
+                    if (fechaActual < employee.BirthDate.AddYears(edad))
                         edad--;
                     return edad.ToString();
                 case nameof(ContractTemplateVariablesEnum.sexo):
@@ -647,85 +694,72 @@ namespace GenericApp.API.Controllers
                 case nameof(ContractTemplateVariablesEnum.turno):
                     return "Matutino";
                 case nameof(ContractTemplateVariablesEnum.salarioDiarioBase):
-                    return employee.EmployeeWorkInformations?.FirstOrDefault()?.DailySalary.ToString("$ #.##") ?? "$0.00";
+                    return workInfo != null ? workInfo.DailySalary.ToString("$ #.##") : "$0.00";
                 case nameof(ContractTemplateVariablesEnum.fechaInicioContrato):
-                    return employee.EmployeeWorkInformations?.FirstOrDefault()?.InitialDate.ToString("dd/MM/yyyy") ?? "";
+                    return workInfo != null && workInfo.InitialDate != default ? workInfo.InitialDate.ToString("dd/MM/yyyy") : "";
                 case nameof(ContractTemplateVariablesEnum.fechaTerminacionContrato):
-                    return employee.EmployeeWorkInformations?.FirstOrDefault()?.ContractExpiration.ToString("dd/MM/yyyy") ?? "";
+                    return workInfo != null && workInfo.ContractExpiration != default ? workInfo.ContractExpiration.ToString("dd/MM/yyyy") : "";
                 case nameof(ContractTemplateVariablesEnum.fechaActualFormatoCorto):
                     return fechaActual.ToString("dd/MM/yyyy");
                 case nameof(ContractTemplateVariablesEnum.fechaActualFormatoLargo):
                     return fechaActual.ToString("d 'de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1):
-                    return employee.Beneficiaries?.ElementAtOrDefault(0)?.Name ?? "";
+                    return beneficiaries.ElementAtOrDefault(0)?.Name ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1_Domicilio):
                     return "MISMO";
-                //return employee.Beneficiaries?.ElementAtOrDefault(0)?.Address ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1_FechaNacimiento):
                     return "";
-                //return employee.Beneficiaries?.ElementAtOrDefault(0)?.BirthDate ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1_Telefono):
                     return "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1_Porcentaje):
-                    return employee.Beneficiaries?.ElementAtOrDefault(0)?.Percentage?.ToString("N0") ?? "0";
+                    return beneficiaries.ElementAtOrDefault(0)?.Percentage?.ToString("N0") ?? "0";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1_Parentezco):
-                    return employee.Beneficiaries?.ElementAtOrDefault(0)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
-                //return employee.Beneficiaries?.ElementAtOrDefault(0)?.Phone ?? "";
+                    return beneficiaries.ElementAtOrDefault(0)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario2):
-                    return employee.Beneficiaries?.ElementAtOrDefault(1)?.Name ?? "";
+                    return beneficiaries.ElementAtOrDefault(1)?.Name ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario2_Domicilio):
                     return "MISMO";
-                //return employee.Beneficiaries?.ElementAtOrDefault(1)?.Address ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario2_FechaNacimiento):
                     return "";
-                //return employee.Beneficiaries?.ElementAtOrDefault(1)?.BirthDate ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario2_Telefono):
                     return "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario2_Porcentaje):
-                    return employee.Beneficiaries?.ElementAtOrDefault(1)?.Percentage?.ToString("N0") ?? "0";
-                //return employee.Beneficiaries?.ElementAtOrDefault(1)?.Phone ?? "";
+                    return beneficiaries.ElementAtOrDefault(1)?.Percentage?.ToString("N0") ?? "0";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario2_Parentezco):
-                    return employee.Beneficiaries?.ElementAtOrDefault(1)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
+                    return beneficiaries.ElementAtOrDefault(1)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario3):
-                    return employee.Beneficiaries?.ElementAtOrDefault(2)?.Name ?? "";
+                    return beneficiaries.ElementAtOrDefault(2)?.Name ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario3_Domicilio):
                     return "MISMO";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario3_Parentezco):
-                    return employee.Beneficiaries?.ElementAtOrDefault(2)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
-                //return employee.Beneficiaries?.ElementAtOrDefault(2)?.Address ?? "";
+                    return beneficiaries.ElementAtOrDefault(2)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario3_FechaNacimiento):
                     return "";
-                //return employee.Beneficiaries?.ElementAtOrDefault(2)?.BirthDate ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario3_Telefono):
                     return "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario3_Porcentaje):
-                    return employee.Beneficiaries?.ElementAtOrDefault(2)?.Percentage?.ToString("N0") ?? "0";
-                //return employee.Beneficiaries?.ElementAtOrDefault(0)?.Phone ?? "";
+                    return beneficiaries.ElementAtOrDefault(2)?.Percentage?.ToString("N0") ?? "0";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario4):
-                    return employee.Beneficiaries?.ElementAtOrDefault(3)?.Name ?? "";
+                    return beneficiaries.ElementAtOrDefault(3)?.Name ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario4_Domicilio):
                     return "MISMO";
-                //return employee.Beneficiaries?.ElementAtOrDefault(3)?.Address ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario4_FechaNacimiento):
                     return "";
-                //return employee.Beneficiaries?.ElementAtOrDefault(3)?.BirthDate ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario4_Telefono):
                     return "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario4_Porcentaje):
-                    return employee.Beneficiaries?.ElementAtOrDefault(3)?.Percentage?.ToString("N0") ?? "0";
-                //return employee.Beneficiaries?.ElementAtOrDefault(3)?.Phone ?? "";
+                    return beneficiaries.ElementAtOrDefault(3)?.Percentage?.ToString("N0") ?? "0";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario4_Parentezco):
-                    return employee.Beneficiaries?.ElementAtOrDefault(3)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
+                    return beneficiaries.ElementAtOrDefault(3)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "";
                 case nameof(ContractTemplateVariablesEnum.ContactoEmergencia):
-                    return employee.EmployeeEmergencyContacts?.ElementAtOrDefault(0)?.Name ?? "0";
+                    return emergencyContact?.Name ?? "0";
                 case nameof(ContractTemplateVariablesEnum.ContactoEmergenciaParentezco):
-                    return employee.EmployeeEmergencyContacts?.ElementAtOrDefault(0)?.IdEmployeeRelationshipTypeNavigation?.Description ?? "0";
+                    return emergencyContact?.IdEmployeeRelationshipTypeNavigation?.Description ?? "0";
                 case nameof(ContractTemplateVariablesEnum.ContactoEmergenciaTelefono):
-                    return employee.EmployeeEmergencyContacts?.ElementAtOrDefault(0)?.Phone ?? "0";
+                    return emergencyContact?.Phone ?? "0";
                 default:
-                    break;
+                    return "";
             }
-            return "";
         }
 
         /// <summary>
@@ -1553,24 +1587,24 @@ namespace GenericApp.API.Controllers
                            .Trim()
                            .Trim('"', '\'', '\u2018', '\u2019', '\u201C', '\u201D');
 
-            // Map common aliases to canonical names understood by Skia/OS fonts
+            // QuestPDF 2026.9+ no usa fuentes del sistema por defecto.
+            // Para evitar errores por fuentes no registradas, normalizamos a Lato.
             return first.ToLowerInvariant() switch
             {
                 "lato" => Fonts.Lato,
-                // QuestPDF 2026.9+ no usa fuentes del sistema por defecto.
-                // Fallback a Lato (registrada por QuestPDF.Fonts.Lato.br) para evitar fallos en runtime.
+                "montserrat" => Fonts.Lato,
                 "arial" => Fonts.Lato,
                 "helvetica" => Fonts.Lato,
                 "helvetica neue" => Fonts.Lato,
-                "times new roman" or "times" => "Times New Roman",
-                "courier new" or "courier" => Fonts.CourierNew,
-                "georgia" => "Georgia",
-                "verdana" => Fonts.Verdana,
-                "trebuchet ms" or "trebuchet" => "Trebuchet MS",
-                "tahoma" => "Tahoma",
-                "calibri" => "Calibri",
+                "times new roman" or "times" => Fonts.Lato,
+                "courier new" or "courier" => Fonts.Lato,
+                "georgia" => Fonts.Lato,
+                "verdana" => Fonts.Lato,
+                "trebuchet ms" or "trebuchet" => Fonts.Lato,
+                "tahoma" => Fonts.Lato,
+                "calibri" => Fonts.Lato,
                 "sans-serif" or "serif" or "monospace" or "cursive" or "fantasy" => null,
-                _ => string.IsNullOrWhiteSpace(first) ? null : first
+                _ => string.IsNullOrWhiteSpace(first) ? null : Fonts.Lato
             };
         }
 

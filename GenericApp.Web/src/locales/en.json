@@ -602,6 +602,7 @@
   "sign": "Sign",
   "signature": "Signature",
   "signatureCaptured": "Signature Captured",
+  "signatureDateCapture": "Signature date and time",
   "signatureDate": "Signature Date",
   "signatureRequired": "Signature is required",
   "signatureSaved": "Signature captured successfully",

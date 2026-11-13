@@ -3,7 +3,7 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, Box, Typography, IconButton, Divider, TextField,
     LinearProgress, Paper, Table, TableBody, TableCell,
-    TableContainer, TableHead, TableRow, Chip, Tooltip, CircularProgress, Badge
+    TableContainer, TableHead, TableRow, Chip, Tooltip, CircularProgress, Badge, TablePagination, Checkbox, FormControlLabel
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
@@ -102,6 +102,9 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany, onImported }) => {
     const [dragging, setDragging] = useState(false);
     const [loading, setLoading] = useState(false);
     const [previewData, setPreviewData] = useState(null);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(50);
+    const [showOnlyErrors, setShowOnlyErrors] = useState(false);
 
     const handleUpload = async (selectedFile, startRow) => {
         if (!selectedFile) return;
@@ -113,6 +116,7 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany, onImported }) => {
             const result = await service.uploadExcel(formData);
             if (result?.success !== false && result?.data) {
                 setPreviewData(result.data);
+                setPage(0);
                 if (!result.data.length) ShowMessage(t('excel_noRows'), 'info');
             } else {
                 ShowMessage(t('error'), 'error');
@@ -124,6 +128,172 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany, onImported }) => {
         }
     };
 
+    const getErrorsForField = useCallback((row, fieldKey) => {
+        if (!row.errores || !Array.isArray(row.errores)) return [];
+        return row.errores.filter(err => {
+            const field = err.field?.toLowerCase();
+            const key = fieldKey.toLowerCase();
+            return field === key || field === key.replace(/[0-9]/g, '');
+        });
+    }, []);
+
+    const filteredPreviewData = useMemo(() => {
+        if (!previewData) return [];
+        if (!showOnlyErrors) return previewData;
+        return previewData.filter(row => row.errores && row.errores.length > 0);
+    }, [previewData, showOnlyErrors]);
+
+    const pagedPreviewData = useMemo(() => {
+        if (!filteredPreviewData) return [];
+        const start = page * rowsPerPage;
+        return filteredPreviewData.slice(start, start + rowsPerPage);
+    }, [filteredPreviewData, page, rowsPerPage]);
+
+    const previewTable = useMemo(() => {
+        if (!previewData) return null;
+
+        return (
+            <Box sx={{ mt: 1, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                <TableContainer component={Paper} elevation={0}
+                    sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, flex: 1, minHeight: 0 }}>
+                    <Table size="small" stickyHeader>
+                        <TableHead
+                            sx={{
+                                '& .MuiTableCell-stickyHeader': {
+                                    bgcolor: 'background.paper',
+                                    backgroundImage: 'none'
+                                }
+                            }}
+                        >
+                            <TableRow>
+                                {PREVIEW_COLUMNS.map(col => (
+                                    <TableCell
+                                        key={col.key}
+                                        sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: col.width ?? 120 }}
+                                    >
+                                        {t(col.labelKey)}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {pagedPreviewData.map((row, idx) => {
+                                const hasErrors = row.errores && row.errores.length > 0;
+
+                                return (
+                                    <Tooltip
+                                        key={row.rowNumber ?? `${page}-${idx}`}
+                                        title={
+                                            hasErrors ? (
+                                                <Box sx={{ maxWidth: 500 }}>
+                                                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, fontSize: '0.9rem' }}>
+                                                        {t('excel_row_errors', { row: row.rowNumber })}
+                                                    </Typography>
+                                                    {row.errores.map((err, errIdx) => (
+                                                        <Box key={errIdx} sx={{ mb: 1, pb: 1, borderBottom: errIdx < row.errores.length - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
+                                                            <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block' }}>
+                                                                {t(err.errorCode)}
+                                                            </Typography>
+                                                            <Typography variant="caption" display="block" sx={{ pl: 1.5 }}>
+                                                                {t('excel_error_field')}: <strong>{err.field}</strong>
+                                                            </Typography>
+                                                            <Typography variant="caption" display="block" sx={{ pl: 1.5 }}>
+                                                                {t('excel_error_value')}: {err.value || t('excel_error_empty')}
+                                                            </Typography>
+                                                        </Box>
+                                                    ))}
+                                                </Box>
+                                            ) : ''
+                                        }
+                                        arrow
+                                        followCursor
+                                        placement="right"
+                                        disableHoverListener={!hasErrors}
+                                    >
+                                        <TableRow
+                                            hover
+                                            sx={{
+                                                bgcolor: hasErrors ? 'error.light' : 'inherit',
+                                                '&:hover': {
+                                                    bgcolor: hasErrors ? 'error.main' : 'action.hover'
+                                                },
+                                                cursor: hasErrors ? 'help' : 'default'
+                                            }}
+                                        >
+                                            {PREVIEW_COLUMNS.map(col => {
+                                                const fieldErrors = getErrorsForField(row, col.key);
+                                                const hasFieldError = fieldErrors.length > 0;
+
+                                                return (
+                                                    <TableCell
+                                                        key={col.key}
+                                                        sx={{
+                                                            whiteSpace: 'nowrap',
+                                                            bgcolor: hasFieldError ? 'error.dark' : 'inherit',
+                                                            color: hasFieldError ? 'error.contrastText' : 'inherit',
+                                                            fontWeight: hasFieldError ? 'bold' : 'normal',
+                                                            position: 'relative'
+                                                        }}
+                                                    >
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                            {hasFieldError ? (
+                                                                <Tooltip
+                                                                    title={
+                                                                        <Box>
+                                                                            {fieldErrors.map((err, errIdx) => (
+                                                                                <Box key={errIdx} sx={{ mb: 0.5 }}>
+                                                                                    <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                                                                                        {t(err.errorCode)}
+                                                                                    </Typography>
+                                                                                    <Typography variant="caption" display="block">
+                                                                                        {t('excel_error_field')}: {err.field}
+                                                                                    </Typography>
+                                                                                    <Typography variant="caption" display="block">
+                                                                                        {t('excel_error_value')}: {err.value || t('excel_error_empty')}
+                                                                                    </Typography>
+                                                                                </Box>
+                                                                            ))}
+                                                                        </Box>
+                                                                    }
+                                                                    arrow
+                                                                    placement="top"
+                                                                    enterDelay={100}
+                                                                >
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'help' }}>
+                                                                        <ErrorIcon sx={{ fontSize: 16 }} />
+                                                                        <span>{row[col.key] ?? ''}</span>
+                                                                    </Box>
+                                                                </Tooltip>
+                                                            ) : (
+                                                                <span>{row[col.key] ?? ''}</span>
+                                                            )}
+                                                        </Box>
+                                                    </TableCell>
+                                                );
+                                            })}
+                                        </TableRow>
+                                    </Tooltip>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                <TablePagination
+                    component="div"
+                    count={filteredPreviewData.length}
+                    page={page}
+                    onPageChange={(_, newPage) => setPage(newPage)}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={(event) => {
+                        setRowsPerPage(parseInt(event.target.value, 10));
+                        setPage(0);
+                    }}
+                    rowsPerPageOptions={[25, 50, 100, 200]}
+                />
+            </Box>
+        );
+    }, [previewData, pagedPreviewData, filteredPreviewData, getErrorsForField, t, page, rowsPerPage]);
+
     const handleFileSelect = (selectedFile) => {
         if (!selectedFile) return;
         const ext = selectedFile.name.split('.').pop().toLowerCase();
@@ -133,6 +303,8 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany, onImported }) => {
         }
         setFile(selectedFile);
         setPreviewData(null);
+        setPage(0);
+        setShowOnlyErrors(false);
         handleUpload(selectedFile, dataStartRow);
     };
 
@@ -149,6 +321,8 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany, onImported }) => {
     const handleReset = () => {
         setFile(null);
         setPreviewData(null);
+        setPage(0);
+        setShowOnlyErrors(false);
         const saved = localStorage.getItem('employee_excel_dataStartRow');
         setDataStartRow(saved ? parseInt(saved) : 7);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -161,15 +335,6 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany, onImported }) => {
 
     const [saving, setSaving] = useState(false);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-
-    const getErrorsForField = useCallback((row, fieldKey) => {
-        if (!row.errores || !Array.isArray(row.errores)) return [];
-        return row.errores.filter(err => {
-            const field = err.field?.toLowerCase();
-            const key = fieldKey.toLowerCase();
-            return field === key || field === key.replace(/[0-9]/g, '');
-        });
-    }, []);
 
     const rowsWithErrors = useMemo(() => {
         if (!previewData) return [];
@@ -185,6 +350,8 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany, onImported }) => {
         if (!previewData) return;
         const validRows = previewData.filter(row => !row.errores || row.errores.length === 0);
         setPreviewData(validRows);
+        setShowOnlyErrors(false);
+        setPage(0);
         ShowMessage(t('excel_discardedRows', { count: rowsWithErrors.length }), 'info');
     };
 
@@ -226,7 +393,12 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany, onImported }) => {
     };
 
     return (
-        <Dialog open={open} onClose={handleModalClose} fullScreen>
+        <Dialog
+            open={open}
+            onClose={handleModalClose}
+            fullScreen
+            sx={{ '& .MuiDialog-paper': { overflow: 'hidden' } }}
+        >
             <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <TableViewIcon color="primary" />
@@ -256,10 +428,10 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany, onImported }) => {
             </DialogTitle>
             <Divider />
 
-            <DialogContent>
+            <DialogContent sx={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 {/* Upload zone */}
                 {!previewData && (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 130px)', gap: 2 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 2 }}>
                         {/* Data start row field at top */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, pt: 1 }}>
                             <TextField
@@ -321,128 +493,26 @@ const EmployeeExcelModal = ({ open, handleClose, idCompany, onImported }) => {
                     </Box>
                 )}
 
-                {/* Preview table */}
-                {previewData && (
-                    <Box sx={{ mt: 1 }}>
-                        <TableContainer component={Paper} elevation={0}
-                            sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, maxHeight: 'calc(100vh - 220px)' }}>
-                            <Table size="small" stickyHeader>
-                                <TableHead>
-                                    <TableRow>
-                                        {PREVIEW_COLUMNS.map(col => (
-                                            <TableCell
-                                                key={col.key}
-                                                sx={{ fontWeight: 'bold', bgcolor: 'action.hover', whiteSpace: 'nowrap', minWidth: col.width ?? 120 }}
-                                            >
-                                                {t(col.labelKey)}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {previewData.map((row, idx) => {
-                                        const hasErrors = row.errores && row.errores.length > 0;
-
-                                        return (
-                                            <Tooltip
-                                                key={idx}
-                                                title={
-                                                    hasErrors ? (
-                                                        <Box sx={{ maxWidth: 500 }}>
-                                                            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, fontSize: '0.9rem' }}>
-                                                                {t('excel_row_errors', { row: row.rowNumber })}
-                                                            </Typography>
-                                                            {row.errores.map((err, errIdx) => (
-                                                                <Box key={errIdx} sx={{ mb: 1, pb: 1, borderBottom: errIdx < row.errores.length - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
-                                                                    <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block' }}>
-                                                                        {t(err.errorCode)}
-                                                                    </Typography>
-                                                                    <Typography variant="caption" display="block" sx={{ pl: 1.5 }}>
-                                                                        {t('excel_error_field')}: <strong>{err.field}</strong>
-                                                                    </Typography>
-                                                                    <Typography variant="caption" display="block" sx={{ pl: 1.5 }}>
-                                                                        {t('excel_error_value')}: {err.value || t('excel_error_empty')}
-                                                                    </Typography>
-                                                                </Box>
-                                                            ))}
-                                                        </Box>
-                                                    ) : ''
-                                                }
-                                                arrow
-                                                followCursor
-                                                placement="right"
-                                                disableHoverListener={!hasErrors}
-                                            >
-                                                <TableRow 
-                                                    hover
-                                                    sx={{
-                                                        bgcolor: hasErrors ? 'error.light' : 'inherit',
-                                                        '&:hover': {
-                                                            bgcolor: hasErrors ? 'error.main' : 'action.hover'
-                                                        },
-                                                        cursor: hasErrors ? 'help' : 'default'
-                                                    }}
-                                                >
-                                                    {PREVIEW_COLUMNS.map(col => {
-                                                        const fieldErrors = getErrorsForField(row, col.key);
-                                                        const hasFieldError = fieldErrors.length > 0;
-
-                                                        return (
-                                                            <TableCell 
-                                                                key={col.key} 
-                                                                sx={{ 
-                                                                    whiteSpace: 'nowrap',
-                                                                    bgcolor: hasFieldError ? 'error.dark' : 'inherit',
-                                                                    color: hasFieldError ? 'error.contrastText' : 'inherit',
-                                                                    fontWeight: hasFieldError ? 'bold' : 'normal',
-                                                                    position: 'relative'
-                                                                }}
-                                                            >
-                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                                    {hasFieldError ? (
-                                                                        <Tooltip 
-                                                                            title={
-                                                                                <Box>
-                                                                                    {fieldErrors.map((err, errIdx) => (
-                                                                                        <Box key={errIdx} sx={{ mb: 0.5 }}>
-                                                                                            <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                                                                                                {t(err.errorCode)}
-                                                                                            </Typography>
-                                                                                            <Typography variant="caption" display="block">
-                                                                                                {t('excel_error_field')}: {err.field}
-                                                                                            </Typography>
-                                                                                            <Typography variant="caption" display="block">
-                                                                                                {t('excel_error_value')}: {err.value || t('excel_error_empty')}
-                                                                                            </Typography>
-                                                                                        </Box>
-                                                                                    ))}
-                                                                                </Box>
-                                                                            }
-                                                                            arrow
-                                                                            placement="top"
-                                                                            enterDelay={100}
-                                                                        >
-                                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'help' }}>
-                                                                                <ErrorIcon sx={{ fontSize: 16 }} />
-                                                                                <span>{row[col.key] ?? ''}</span>
-                                                                            </Box>
-                                                                        </Tooltip>
-                                                                    ) : (
-                                                                        <span>{row[col.key] ?? ''}</span>
-                                                                    )}
-                                                                </Box>
-                                                            </TableCell>
-                                                        );
-                                                    })}
-                                                </TableRow>
-                                            </Tooltip>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                {previewData && rowsWithErrors.length > 0 && (
+                    <Box sx={{ px: 0.5, pt: 0.5 }}>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={showOnlyErrors}
+                                    onChange={(e) => {
+                                        setShowOnlyErrors(e.target.checked);
+                                        setPage(0);
+                                    }}
+                                    size="small"
+                                />
+                            }
+                            label="Solo mostrar errores"
+                        />
                     </Box>
                 )}
+
+                {/* Preview table */}
+                {previewTable}
             </DialogContent>
 
             <Divider />

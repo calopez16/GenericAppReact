@@ -592,6 +592,7 @@
   "sign": "Firmar",
   "signature": "Firma",
   "signatureCaptured": "Firma Capturada",
+  "signatureDateCapture": "Fecha y hora de firma",
   "signatureDate": "Fecha de firma",
   "signatureRequired": "La firma es requerida",
   "signatureSaved": "Firma capturada correctamente",

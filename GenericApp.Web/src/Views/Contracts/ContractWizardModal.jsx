@@ -54,6 +54,12 @@ const ENABLE_TEMPLATE_SELECTION = true;
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 150;
 
+const getCurrentLocalDateTimeValue = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+};
+
 const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null, initialStep = 0 }) => {
     const { t } = useTranslation();
     const theme = useTheme();
@@ -64,6 +70,7 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
 
     const [activeStep, setActiveStep] = useState(0);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [signatureDate, setSignatureDate] = useState(getCurrentLocalDateTimeValue);
     const [selectedTemplates, setSelectedTemplates] = useState([]);
     const [signatureData, setSignatureData] = useState(null);
     const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
@@ -133,6 +140,8 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
             } else {
                 setActiveStep(0);
             }
+
+            setSignatureDate(getCurrentLocalDateTimeValue());
         }
     }, [open]);
 
@@ -334,6 +343,7 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
     const handleClose = () => {
         setActiveStep(0);
         setSelectedEmployee(null);
+        setSignatureDate(getCurrentLocalDateTimeValue());
         setEmployeeSearchTerm('');
         setSignatureData(null);
         setIsSaving(false);
@@ -413,7 +423,8 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
                     idCompany: companySelected.idCompany,
                     templateIds: selectedTemplates.map(t => t.idTemplate),
                     signatureBase64: base64Image, // Enviado directamente
-                    signatureString: sigString
+                    signatureString: sigString,
+                    signatureDate: signatureDate || null
                 };
 
                 const result = await contractService.addData(payload, true);
@@ -423,7 +434,8 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
                         onComplete({
                             employee: selectedEmployee,
                             templates: selectedTemplates,
-                            signature: { base64: base64Image, sigString }
+                            signature: { base64: base64Image, sigString },
+                            signatureDate
                         });
                     }
                     handleClose();
@@ -463,7 +475,7 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
         if (showPreview) {
             switch (activeStep) {
                 case 0:
-                    return selectedEmployee !== null;
+                    return selectedEmployee !== null && !!signatureDate;
                 case 1:
                     return selectedTemplates.length > 0;
                 case 2:
@@ -476,7 +488,7 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
         } else {
             switch (activeStep) {
                 case 0:
-                    return selectedEmployee !== null;
+                    return selectedEmployee !== null && !!signatureDate;
                 case 1:
                     return selectedTemplates.length > 0;
                 case 2:
@@ -606,12 +618,29 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
                                 </Typography>
                             </Paper>
                         )}
+
                     </Box>
                 );
 
             case 1:
                 return (
                     <Box>
+                        
+                        <Box sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <DrawIcon sx={{ color: 'primary.main' }} />
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                {t('signatureDateCapture') || 'Fecha y hora de firma'}
+                            </Typography>
+                        </Box>
+                        <TextField
+                            sx={{ mb: 2, width: 280, maxWidth: '100%' }}
+                            label={t('signatureDateCapture') || 'Fecha y hora de firma'}
+                            type="datetime-local"
+                            value={signatureDate}
+                            onChange={(event) => setSignatureDate(event.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                            required
+                        />
                         <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                             <ArticleIcon sx={{ color: 'primary.main' }} />
                             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>

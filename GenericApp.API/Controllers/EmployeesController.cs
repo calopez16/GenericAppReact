@@ -387,6 +387,48 @@ namespace GenericApp.API.Controllers
             if (request?.Rows == null || !request.Rows.Any())
                 return BadRequest(new ApiResponse { Message = "No rows to import" });
 
+            DateTime ParseDate(string? val) =>
+                DateTime.TryParse(val, out var d) ? d : DateTime.MinValue;
+
+            DateTime? ParseDateNullable(string? val) =>
+                DateTime.TryParse(val, out var d) ? d : null;
+
+            decimal ParseDecimal(string? val) =>
+                decimal.TryParse(val?.Replace(",", "."), System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out var n) ? n : 0;
+
+            var validClaves = request.Rows
+                .Select(x => int.TryParse(x.Clave, out var c) ? (int?)c : null)
+                .Where(x => x.HasValue)
+                .Select(x => x!.Value)
+                .Distinct()
+                .ToList();
+
+            var existingEmployees = await _repository.FindBy<Employee>(
+                x => x.IdCompany == request.IdCompany &&
+                     validClaves.Contains(x.Clave) &&
+                     !(x.IsDeleted ?? false),
+                includes:
+                [
+                    x => x.EmployeeWorkInformations,
+                    x => x.Beneficiaries,
+                    x => x.Dependents,
+                    x => x.EmployeeEmergencyContacts
+                ]);
+
+            var employeeByClave = existingEmployees
+                .GroupBy(x => x.Clave)
+                .ToDictionary(x => x.Key, x => x.First());
+
+            var relationshipTypes = await _repository.FindBy<EmployeeRelationshipType>(x => !(x.IsDeleted ?? false));
+            var relationshipTypeCache = relationshipTypes
+                .Where(x => !string.IsNullOrWhiteSpace(x.Description))
+                .GroupBy(x => x.Description!.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    x => x.Key,
+                    x => x.First().IdEmployeeRelationshipType,
+                    StringComparer.OrdinalIgnoreCase);
+
             int inserted = 0;
             int updated = 0;
             int errors = 0;
@@ -399,32 +441,17 @@ namespace GenericApp.API.Controllers
                     if (!int.TryParse(row.Clave, out int clave))
                     {
                         errors++;
-                        errorDetails.Add(new 
-                        { 
-                            RowNumber = row.RowNumber, 
-                            Clave = row.Clave, 
-                            Nombre = row.Nombre, 
-                            Error = "Clave inválida o no proporcionada" 
+                        errorDetails.Add(new
+                        {
+                            RowNumber = row.RowNumber,
+                            Clave = row.Clave,
+                            Nombre = row.Nombre,
+                            Error = "Clave inválida o no proporcionada"
                         });
                         continue;
                     }
 
-                    var existing = await _repository.FirstOrDefault<Employee>(
-                        x => x.Clave == clave && x.IdCompany == request.IdCompany && !(x.IsDeleted ?? false),
-                        x => x.EmployeeWorkInformations,
-                        x => x.Beneficiaries,
-                        x => x.Dependents,
-                        x => x.EmployeeEmergencyContacts);
-
-                    DateTime ParseDate(string? val) =>
-                        DateTime.TryParse(val, out var d) ? d : DateTime.MinValue;
-
-                    DateTime? ParseDateNullable(string? val) =>
-                        DateTime.TryParse(val, out var d) ? d : null;
-
-                    decimal ParseDecimal(string? val) =>
-                        decimal.TryParse(val?.Replace(",", "."), System.Globalization.NumberStyles.Any,
-                            System.Globalization.CultureInfo.InvariantCulture, out var n) ? n : 0;
+                    employeeByClave.TryGetValue(clave, out var existing);
 
                     if (existing == null)
                     {
@@ -451,8 +478,9 @@ namespace GenericApp.API.Controllers
                             EmployeeEmergencyContacts = new List<EmployeeEmergencyContact>(),
                         };
 
-                        await MapRelatedData(employee, row, ParseDate, ParseDateNullable, ParseDecimal);
+                        await MapRelatedData(employee, row, ParseDate, ParseDateNullable, ParseDecimal, relationshipTypeCache);
                         await _repository.Add(employee);
+                        employeeByClave[clave] = employee;
                         inserted++;
                     }
                     else
@@ -481,7 +509,7 @@ namespace GenericApp.API.Controllers
                         existing.Dependents.Clear();
                         existing.EmployeeEmergencyContacts.Clear();
 
-                        await MapRelatedData(existing, row, ParseDate, ParseDateNullable, ParseDecimal);
+                        await MapRelatedData(existing, row, ParseDate, ParseDateNullable, ParseDecimal, relationshipTypeCache);
                         await _repository.Update(existing);
                         updated++;
                     }
@@ -489,20 +517,20 @@ namespace GenericApp.API.Controllers
                 catch (Exception ex)
                 {
                     errors++;
-                    errorDetails.Add(new 
-                    { 
-                        RowNumber = row.RowNumber, 
-                        Clave = row.Clave, 
-                        Nombre = row.Nombre, 
-                        Error = ex.Message 
+                    errorDetails.Add(new
+                    {
+                        RowNumber = row.RowNumber,
+                        Clave = row.Clave,
+                        Nombre = row.Nombre,
+                        Error = ex.Message
                     });
                 }
             }
 
-            var result = new 
-            { 
-                Inserted = inserted, 
-                Updated = updated, 
+            var result = new
+            {
+                Inserted = inserted,
+                Updated = updated,
                 Errors = errors,
                 Total = request.Rows.Count(),
                 ErrorDetails = errorDetails
@@ -523,18 +551,13 @@ namespace GenericApp.API.Controllers
         /// <summary>
         /// Busca un tipo de parentesco por descripción. Si no existe, lo crea y devuelve el ID.
         /// </summary>
-        private async Task<int?> GetOrCreateRelationshipTypeAsync(string? description)
+        private async Task<int?> GetOrCreateRelationshipTypeAsync(string? description, IDictionary<string, int> relationshipTypeCache)
         {
             if (string.IsNullOrWhiteSpace(description)) return null;
 
             var normalized = description.Trim();
-            var existing = await _repository.FirstOrDefault<EmployeeRelationshipType>(
-                x => x.Description != null &&
-                     x.Description.ToLower() == normalized.ToLower() &&
-                     !(x.IsDeleted ?? false));
-
-            if (existing != null)
-                return existing.IdEmployeeRelationshipType;
+            if (relationshipTypeCache.TryGetValue(normalized, out var existingId))
+                return existingId;
 
             var newType = new EmployeeRelationshipType
             {
@@ -543,6 +566,7 @@ namespace GenericApp.API.Controllers
                 IsDeleted = false,
             };
             await _repository.Add(newType);
+            relationshipTypeCache[normalized] = newType.IdEmployeeRelationshipType;
             return newType.IdEmployeeRelationshipType;
         }
 
@@ -551,7 +575,8 @@ namespace GenericApp.API.Controllers
             EmployeeExcelRowDTO row,
             Func<string?, DateTime> parseDate,
             Func<string?, DateTime?> parseDateNullable,
-            Func<string?, decimal> parseDecimal)
+            Func<string?, decimal> parseDecimal,
+            IDictionary<string, int> relationshipTypeCache)
         {
             // Work information
             if (!string.IsNullOrEmpty(row.SalarioDiario) || !string.IsNullOrEmpty(row.FechaIngreso))
@@ -579,7 +604,7 @@ namespace GenericApp.API.Controllers
             {
                 if (!string.IsNullOrEmpty(name))
                 {
-                    var relationshipTypeId = await GetOrCreateRelationshipTypeAsync(parentesco);
+                    var relationshipTypeId = await GetOrCreateRelationshipTypeAsync(parentesco, relationshipTypeCache);
                     employee.Beneficiaries.Add(new EmployeeBeneficiarie
                     {
                         Name = name,
@@ -594,7 +619,7 @@ namespace GenericApp.API.Controllers
             // Emergency contact
             if (!string.IsNullOrEmpty(row.ContactoEmergencia))
             {
-                var relationshipTypeId = await GetOrCreateRelationshipTypeAsync(row.ParentescoContacto);
+                var relationshipTypeId = await GetOrCreateRelationshipTypeAsync(row.ParentescoContacto, relationshipTypeCache);
 
                 employee.EmployeeEmergencyContacts.Add(new EmployeeEmergencyContact
                 {
@@ -610,7 +635,7 @@ namespace GenericApp.API.Controllers
             async Task AddDependent(string? name, string? birthDate, string? relationship, bool? isAlive = null)
             {
                 if (string.IsNullOrEmpty(name)) return;
-                var relationshipTypeId = await GetOrCreateRelationshipTypeAsync(relationship);
+                var relationshipTypeId = await GetOrCreateRelationshipTypeAsync(relationship, relationshipTypeCache);
                 employee.Dependents.Add(new EmployeeDependents
                 {
                     Name = name,
@@ -668,7 +693,7 @@ namespace GenericApp.API.Controllers
 
             var totalRows = query.Count();
             var data = query.
-                OrderBy(x => x.Nombre)
+                OrderByDescending(x => x.IsActive).ThenBy(x => x.Nombre)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .Select(x => new EmployeeDTO
@@ -738,14 +763,15 @@ namespace GenericApp.API.Controllers
         {
             var employeeExists = await _repository.FirstOrDefault<Employee>(x =>
                 x.IdCompany == model.IdCompany &&
-                (!string.IsNullOrEmpty(model.RFC) && x.RFC != null && x.RFC.ToLower().Equals(model.RFC.ToLower()) ||
-                 !string.IsNullOrEmpty(model.CURP) && x.CURP != null && x.CURP.ToLower().Equals(model.CURP.ToLower()))
+                ((model.Clave.HasValue && x.Clave == model.Clave.Value) ||
+                 (!string.IsNullOrEmpty(model.RFC) && x.RFC != null && x.RFC.ToLower().Equals(model.RFC.ToLower())) ||
+                 (!string.IsNullOrEmpty(model.CURP) && x.CURP != null && x.CURP.ToLower().Equals(model.CURP.ToLower())))
                 && !(x.IsDeleted ?? false));
             if (employeeExists != null)
                 return Conflict(
                     new ApiResponse
                     {
-                        Conflict = $"{(!string.IsNullOrEmpty(model.RFC) && (employeeExists.RFC?.ToLower().Equals(model.RFC.ToLower()) ?? false) ? model.RFC : "")}, {(!string.IsNullOrEmpty(model.CURP) && (employeeExists.CURP?.ToLower().Equals(model.CURP.ToLower()) ?? false) ? model.CURP : "")}".Trim(',', ' ')
+                        Conflict = $"{(model.Clave.HasValue && employeeExists.Clave == model.Clave.Value ? model.Clave.ToString() : "")}, {(!string.IsNullOrEmpty(model.RFC) && (employeeExists.RFC?.ToLower().Equals(model.RFC.ToLower()) ?? false) ? model.RFC : "")}, {(!string.IsNullOrEmpty(model.CURP) && (employeeExists.CURP?.ToLower().Equals(model.CURP.ToLower()) ?? false) ? model.CURP : "")}".Trim(',', ' ')
                     }
                 );
 
@@ -787,14 +813,15 @@ namespace GenericApp.API.Controllers
             var employeeExists = await _repository.FirstOrDefault<Employee>(x =>
                 x.IdEmployee != model.IdEmployee &&
                 x.IdCompany == model.IdCompany &&
-                (!string.IsNullOrEmpty(model.RFC) && x.RFC != null && x.RFC.ToLower().Equals(model.RFC.ToLower()) ||
-                 !string.IsNullOrEmpty(model.CURP) && x.CURP != null && x.CURP.ToLower().Equals(model.CURP.ToLower()))
+                ((model.Clave.HasValue && x.Clave == model.Clave.Value) ||
+                 (!string.IsNullOrEmpty(model.RFC) && x.RFC != null && x.RFC.ToLower().Equals(model.RFC.ToLower())) ||
+                 (!string.IsNullOrEmpty(model.CURP) && x.CURP != null && x.CURP.ToLower().Equals(model.CURP.ToLower())))
                 && !(x.IsDeleted ?? false));
             if (employeeExists != null)
                 return Conflict(
                     new ApiResponse
                     {
-                        Conflict = $"{(!string.IsNullOrEmpty(model.RFC) && (employeeExists.RFC?.ToLower().Equals(model.RFC.ToLower()) ?? false) ? model.RFC : "")}, {(!string.IsNullOrEmpty(model.CURP) && (employeeExists.CURP?.ToLower().Equals(model.CURP.ToLower()) ?? false) ? model.CURP : "")}".Trim(',', ' ')
+                        Conflict = $"{(model.Clave.HasValue && employeeExists.Clave == model.Clave.Value ? model.Clave.ToString() : "")}, {(!string.IsNullOrEmpty(model.RFC) && (employeeExists.RFC?.ToLower().Equals(model.RFC.ToLower()) ?? false) ? model.RFC : "")}, {(!string.IsNullOrEmpty(model.CURP) && (employeeExists.CURP?.ToLower().Equals(model.CURP.ToLower()) ?? false) ? model.CURP : "")}".Trim(',', ' ')
                     }
                 );
 

@@ -7,5 +7,6 @@ namespace GenericApp.API.Models
         public List<int> TemplateIds { get; set; } = new List<int>();
         public string? SignatureBase64 { get; set; }
         public string? SignatureString { get; set; }
+        public DateTime? SignatureDate { get; set; }
     }
 }
