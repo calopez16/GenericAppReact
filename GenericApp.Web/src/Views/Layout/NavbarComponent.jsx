@@ -1,7 +1,6 @@
 ﻿import React, { useContext, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
-import { API_BASE_URL } from '@config';
 
 // Importaciones de imágenes para banderas
 import espanishFlag from '@images/lang/es-flag.png';
@@ -258,7 +257,7 @@ const NavbarComponent = ({ handleLogout, toggleSidebar }) => {
                                 <Tooltip title={companySelected ? companySelected.name : t('selectCompany')}>
                                     <IconButton onClick={handleOpenCompanyModal} sx={{ mr: 1 }} color="inherit">
                                         <Avatar
-                                            src={API_BASE_URL + "/img/logos/" + companySelected?.logoName}
+                                            src={import.meta.env.VITE_API_BASE_URL + "/img/logos/" + companySelected?.logoName}
                                             alt={companySelected?.name}
                                             sx={{ width: 40, height: 40 }}
                                         >

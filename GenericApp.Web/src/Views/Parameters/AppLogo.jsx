@@ -1,7 +1,6 @@
 ﻿import React, { useState, useMemo } from 'react';
 import { Button, Box, Typography, Paper } from '@mui/material';
 import { ArrowForward } from '@mui/icons-material';
-import { API_BASE_URL } from '@config';
 import { DataAPIParametersService } from '@data/Parameters/Data';
 import { ShowMessage } from '@helpers/NotificationService';
 import { useTranslation } from 'react-i18next';
@@ -15,8 +14,8 @@ const LogoEditor = () => {
     const [reloadKey, setReloadKey] = useState(+ (new Date()).getMilliseconds());
 
     const LOGO_URL = useMemo(() =>
-        API_BASE_URL + '/img/logo.png?key=' + reloadKey,
-        [API_BASE_URL, reloadKey]
+        import.meta.env.VITE_API_BASE_URL + '/img/logo.png?key=' + reloadKey,
+        [reloadKey]
     );
 
     // ... (handleFileChange y handleCancel se mantienen iguales)

@@ -1388,7 +1388,7 @@ const ContractTemplateFormModal = ({ open, handleClose, data, isEditing, setData
                                 />
                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
                                     {filteredVariables.map((v) => (
-                                        <Tooltip key={v.code} title={`${v.code} - ${v.description}`} placement="right">
+                                        <Tooltip key={v.idContractTemplateVariable} title={`${v.code} - ${v.description}`} placement="right">
                                             <Chip
                                                 label={v.description}
                                                 size="small"

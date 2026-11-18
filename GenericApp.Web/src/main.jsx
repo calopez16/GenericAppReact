@@ -9,7 +9,6 @@ import { AppContextProvider, AppContext } from '@helpers/AppContext';
 import { NotificationContext } from '@helpers/NotificationContext';
 import { lightTheme, darkTheme } from '@helpers/ThemeHelper';
 import '@locales/i18n';
-import { APP_BASE_URL } from '@config';
 
 const PageLoader = () => (
     <Box display="flex" justifyContent="center" alignItems="center" height="100vh">

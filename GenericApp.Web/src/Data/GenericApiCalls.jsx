@@ -1,5 +1,4 @@
 ﻿import { AuthHelper } from '@helpers/AuthHelper';
-import { API_BASE_URL, APP_BASE_URL } from '@config';
 
 const API_ENDPOINT_REFRESH_TOKEN = "Auth/refresh-token";
 const API_ENDPOINT_LOGIN = "Auth/login";
@@ -56,7 +55,7 @@ const handleResponse = async (response, isReturnData, responseType = 'json') => 
 
 // MODIFICADO: El último parámetro ahora se llama 'config' y soporta booleano u objeto
 const sendRequest = async (endPoint, method, data = null, config = false) => {
-    const url = `${API_BASE_URL}/${endPoint}`;
+    const url = `${import.meta.env.VITE_API_BASE_URL}/${endPoint}`;
     const token = AuthHelper.getAccessToken();
 
     // LÓGICA DE COMPATIBILIDAD:
@@ -90,7 +89,6 @@ const sendRequest = async (endPoint, method, data = null, config = false) => {
         let response = await fetch(url, options);
 
         if (response.status === 403) {
-            //window.location.href = `${APP_BASE_URL}/unauthorized`;
             return false;
         }
 
@@ -118,7 +116,7 @@ const sendRequest = async (endPoint, method, data = null, config = false) => {
             isRefreshing = true;
 
             try {
-                const refreshTokenResponse = await fetch(`${API_BASE_URL}/${API_ENDPOINT_REFRESH_TOKEN}`, {
+                const refreshTokenResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/${API_ENDPOINT_REFRESH_TOKEN}`, {
                     method: 'GET',
                     headers: { ...(token && { 'Authorization': `Bearer ${token}` }) },
                 });

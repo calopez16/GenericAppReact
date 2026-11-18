@@ -305,7 +305,8 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
                 const payload = {
                     idEmployee: selectedEmployee.idEmployee,
                     idCompany: companySelected.idCompany,
-                    templateIds: selectedTemplates.map(t => t.idTemplate)
+                    templateIds: selectedTemplates.map(t => t.idTemplate),
+                    signatureDate: signatureDate || null
                 };
 
                 const response = await contractService.getPreview(payload);
@@ -330,7 +331,7 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
                 URL.revokeObjectURL(pdfPreviewUrl);
             }
         };
-    }, [activeStep, selectedEmployee, selectedTemplates, showPreview]);
+    }, [activeStep, selectedEmployee, selectedTemplates, showPreview, signatureDate]);
 
     const handleNext = () => {
         setActiveStep((prev) => prev + 1);
@@ -369,7 +370,8 @@ const ContractWizardModal = ({ open, onClose, onComplete, initialEmployee = null
             const payload = {
                 idEmployee: selectedEmployee.idEmployee,
                 idCompany: companySelected.idCompany,
-                templateIds: selectedTemplates.map(t => t.idTemplate)
+                templateIds: selectedTemplates.map(t => t.idTemplate),
+                signatureDate: signatureDate || null
             };
 
             const response = await contractService.getPreview(payload);

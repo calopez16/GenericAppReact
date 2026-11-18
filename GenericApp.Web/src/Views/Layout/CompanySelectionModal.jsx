@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE_URL } from '@config';
 import { useTranslation } from 'react-i18next';
 import {
     Dialog,
@@ -133,7 +132,7 @@ const CompanySelectionModal = ({ open, onClose, onSelectCompany, selectedCompany
                                         >
                                             <ListItemAvatar sx={{ mr: 1.5 }}>
                                                 <Avatar
-                                                    src={API_BASE_URL + "/img/logos/" + company?.logoName}
+                                                    src={import.meta.env.VITE_API_BASE_URL + "/img/logos/" + company?.logoName}
                                                     alt={company.name}
                                                     sx={{ width: 68, height: 68, borderRadius: 2 }}
                                                 >

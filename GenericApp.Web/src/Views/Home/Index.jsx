@@ -2,7 +2,6 @@
 import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
 import AppLogoImage from '@images/logo.png'
-import { API_BASE_URL } from '@config';
 import { DataAPIDashboardService } from '@data/Dashboard/Data';
 
 // Importaciones de MUI
@@ -141,7 +140,7 @@ const DashboardPage = () => {
         { title: t('dashboard.cards.avg_temp'), data: tempData, icon: <AcUnitIcon color="warning" /> },
     ];
 
-    const displayLogo = hasCompany ? `${API_BASE_URL}/img/logos/${companySelected.logoName}` : AppLogoImage;
+    const displayLogo = hasCompany ? `${import.meta.env.VITE_API_BASE_URL}/img/logos/${companySelected.logoName}` : AppLogoImage;
     const displayName = hasCompany ? companySelected.name : t('app_name');
 
     return (

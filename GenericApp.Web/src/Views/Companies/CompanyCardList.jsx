@@ -15,7 +15,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BusinessIcon from '@mui/icons-material/Business';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import { API_BASE_URL } from '@config';
 import EmptyData from '@layout/EmptyData';
 
 const CompanyCardList = ({
@@ -30,7 +29,7 @@ const CompanyCardList = ({
 }) => {
 
     const MobileCompanyCard = ({ company }) => {
-        const logoSrc = company.logoName ? `${API_BASE_URL}/img/logos/${company.logoName}` : null;
+        const logoSrc = company.logoName ? `${import.meta.env.VITE_API_BASE_URL}/img/logos/${company.logoName}` : null;
 
         return (
             <Paper

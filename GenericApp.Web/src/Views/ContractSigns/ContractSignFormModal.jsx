@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -9,8 +9,7 @@ import {
     Box,
     IconButton,
     Typography,
-    Paper,
-    Avatar
+    Paper
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DrawIcon from '@mui/icons-material/Draw';
@@ -22,13 +21,11 @@ import { DataAPIContractSignsService } from '@data/ContractSigns/Data';
 import { AppContext } from '@helpers/AppContext';
 import SignaturePadModal from '@/Components/SignaturePadModal';
 import ImageCropModal from '@/Components/ImageCropModal';
-import { API_BASE_URL } from '@config';
 
 function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) {
     const { t } = useTranslation();
     const { companySelected } = useContext(AppContext);
     const signDataService = DataAPIContractSignsService();
-    const signaturePadRef = useRef(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -46,7 +43,7 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
             setFormData({
                 name: data.name || '',
                 signFile: null,
-                signPreview: data.signFileName ? `${API_BASE_URL}/img/signs/${companySelected?.idCompany}/${data.signFileName}` : null
+                signPreview: data.signFileName ? `${import.meta.env.VITE_API_BASE_URL}/img/signs/${companySelected?.idCompany}/${data.signFileName}` : null
             });
         } else {
             setFormData({
@@ -101,9 +98,6 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
             signFile: file,
             signPreview: url
         }));
-        if (errors.signFile) {
-            setErrors(prev => ({ ...prev, signFile: '' }));
-        }
         if (tempImageUrl) {
             URL.revokeObjectURL(tempImageUrl);
             setTempImageUrl(null);
@@ -123,9 +117,6 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
         if (!formData.name.trim()) {
             newErrors.name = t('fieldRequired');
         }
-        if (!isEditing && !formData.signFile) {
-            newErrors.signFile = t('signatureRequired');
-        }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -141,12 +132,14 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
                 submitData.append('IdContractSign', data.idContractSign);
             }
 
-            submitData.append('Name', formData.name);
+            submitData.append('Name', formData.name.trim());
             submitData.append('IdCompany', companySelected?.idCompany || 0);
             submitData.append('IsActive', true);
 
             if (formData.signFile) {
                 submitData.append('Sign', formData.signFile);
+            } else if (isEditing && data.signFileName && !formData.signPreview) {
+                submitData.append('RemoveSign', true);
             }
 
             const response = isEditing
@@ -159,7 +152,7 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
                     if (isEditing) {
                         return prev.map(item =>
                             item.idContractSign === data.idContractSign
-                                ? { ...item, name: formData.name, signFileName: response.data?.signFileName || item.signFileName }
+                                ? { ...item, ...response.data }
                                 : item
                         );
                     } else {
@@ -222,12 +215,12 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
                             onChange={handleChange}
                             error={!!errors.name}
                             helperText={errors.name}
+                            inputProps={{ maxLength: 150 }}
                             required
                         />
-
                         <Box>
                             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                                {t('signature')} {!isEditing && '*'}
+                                {t('signature')}
                             </Typography>
 
                             {formData.signPreview ? (
@@ -290,12 +283,6 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
                                         {t('drawSignature')}
                                     </Button>
                                 </Box>
-                            )}
-
-                            {errors.signFile && (
-                                <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
-                                    {errors.signFile}
-                                </Typography>
                             )}
                         </Box>
                     </Box>

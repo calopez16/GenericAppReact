@@ -74,6 +74,8 @@
         Beneficiario4_Parentezco,
         ContactoEmergencia,
         ContactoEmergenciaParentezco,
-        ContactoEmergenciaTelefono
+        ContactoEmergenciaTelefono,
+        Fecha_FirmaContrato_FormatoCorto,
+        Fecha_FirmaContrato_FormatoLargo,
     }
 }

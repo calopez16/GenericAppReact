@@ -21,7 +21,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ImageIcon from '@mui/icons-material/Image';
 import { AppContext } from '@helpers/AppContext';
 import EmptyData from '@layout/EmptyData';
-import { API_BASE_URL } from '@config';
 
 const ANIMATION_DURATION = 500;
 
@@ -133,7 +132,7 @@ function ContractSignTableList({
                                             {sign.signFileName ? (
                                                 <Avatar
                                                     variant="rounded"
-                                                    src={`${API_BASE_URL}/img/signs/${companySelected?.idCompany}/${sign.signFileName}`}
+                                                    src={`${import.meta.env.VITE_API_BASE_URL}/img/signs/${companySelected?.idCompany}/${sign.signFileName}`}
                                                     sx={{ width: 80, height: 50 }}
                                                 >
                                                     <ImageIcon />

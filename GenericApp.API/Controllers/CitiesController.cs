@@ -299,9 +299,8 @@ namespace GenericApp.API.Controllers
 
                 return Ok(new ApiResponse { Data = statesDTO });
             }
-            catch (Exception ex)
+            catch 
             {
-
                 throw;
             }
         }

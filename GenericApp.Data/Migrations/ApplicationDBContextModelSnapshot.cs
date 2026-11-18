@@ -17,10 +17,10 @@ namespace GenericApp.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.36")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("GenericApp.Data.Models.ApplicationLog", b =>
                 {
@@ -28,7 +28,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdApplicationLog"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdApplicationLog"));
 
                     b.Property<DateTime>("Date")
                         .ValueGeneratedOnAdd()
@@ -76,7 +76,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCity"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCity"));
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -199,7 +199,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCompany"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCompany"));
 
                     b.Property<string>("Address")
                         .HasMaxLength(250)
@@ -272,7 +272,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdContract"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdContract"));
 
                     b.Property<DateTime>("CreateDate")
                         .ValueGeneratedOnAdd()
@@ -321,7 +321,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdContractSign"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdContractSign"));
 
                     b.Property<int?>("IdCompany")
                         .HasColumnType("int");
@@ -358,7 +358,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdTemplate"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdTemplate"));
 
                     b.Property<string>("Content")
                         .HasColumnType("nvarchar(max)");
@@ -401,7 +401,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdContractTemplateContractSign"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdContractTemplateContractSign"));
 
                     b.Property<int>("IdContractSign")
                         .HasColumnType("int");
@@ -434,7 +434,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdContractTemplateVariable"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdContractTemplateVariable"));
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -831,7 +831,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCountry"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCountry"));
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -875,7 +875,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmployee"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmployee"));
 
                     b.Property<string>("Address")
                         .HasMaxLength(250)
@@ -949,7 +949,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmployeeBeneficiarie"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmployeeBeneficiarie"));
 
                     b.Property<int>("IdEmployee")
                         .HasColumnType("int");
@@ -992,7 +992,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmployeeDependents"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmployeeDependents"));
 
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("datetime2");
@@ -1038,7 +1038,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmployeeEmergencyContact"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmployeeEmergencyContact"));
 
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("datetime2");
@@ -1082,7 +1082,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmployeeRelationshipType"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmployeeRelationshipType"));
 
                     b.Property<string>("Description")
                         .HasMaxLength(150)
@@ -1109,7 +1109,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmployeeWorkInformation"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmployeeWorkInformation"));
 
                     b.Property<DateTime>("ContractExpiration")
                         .HasColumnType("datetime2");
@@ -1153,7 +1153,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdParameter"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdParameter"));
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1182,7 +1182,7 @@ namespace GenericApp.Data.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdRefreshTokenAspNetUser"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdRefreshTokenAspNetUser"));
 
                     b.Property<DateTime>("CreationDate")
                         .ValueGeneratedOnAdd()
@@ -1215,7 +1215,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdSeason"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdSeason"));
 
                     b.Property<string>("Description")
                         .HasMaxLength(250)
@@ -1266,7 +1266,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdState"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdState"));
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1957,10 +1957,9 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUserDetail"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUserDetail"));
 
-                    b.Property<int?>("IdCompany")
-                        .IsRequired()
+                    b.Property<int>("IdCompany")
                         .HasColumnType("int");
 
                     b.Property<string>("IdUser")
@@ -2037,7 +2036,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("nvarchar(max)");
@@ -2131,7 +2130,7 @@ namespace GenericApp.Data.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEBV1B6Jv9waxVKRrM9vewkulgA5AgCssrq19fmbbyiTHIrnBdalh0sIt65qH2RJvxA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDybxROSGLObsuuHQIdujPbOy/FmYRbO14yg4aDny2H+i5UudzrXuKEEPvus6fp1CA==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000000",
                             TwoFactorEnabled = false,
@@ -2145,7 +2144,7 @@ namespace GenericApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("nvarchar(max)");

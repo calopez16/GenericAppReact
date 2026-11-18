@@ -1,6 +1,5 @@
 ﻿// Este helper centraliza el acceso al token en localStorage.
 // Así, tanto el AppContext como el interceptor de API leen del mismo lugar.
-import { APP_BASE_URL } from '@config';
 import { StorageHelper } from '@helpers/StorageHelper';
 
 export const AuthHelper = {

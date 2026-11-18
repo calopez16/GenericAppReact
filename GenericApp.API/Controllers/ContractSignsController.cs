@@ -127,11 +127,7 @@ namespace GenericApp.API.Controllers
                 return NotFound(new ApiResponse { Message = "Firma no encontrada" });
 
             // El Mapper se encarga de convertir las entidades cargadas al DTO
-            var contractSignDTO = _mapper.Map<ContractSignDTO>(new ContractSignDTO
-            {
-                IdContractSign = contractSign.IdContractSign,
-                Name = contractSign.Name
-            });
+            var contractSignDTO = _mapper.Map<ContractSignDTO>(contractSign);
 
             return Ok(new ApiResponse { Data = contractSignDTO });
         }
@@ -187,15 +183,20 @@ namespace GenericApp.API.Controllers
                 );
 
             var contractSignDB = await _repository.GetById<ContractSign>(model.IdContractSign);
+            if (contractSignDB == null)
+                return NotFound(new ApiResponse { Message = "Firma no encontrada" });
+
             contractSignDB.Name = model.Name;
 
-            if (model.Sign != null)
+            if (model.Sign != null || model.RemoveSign)
             {
                 if (!string.IsNullOrEmpty(contractSignDB.SignFileName))
                 {
-                    await DeleteFirma(contractSignDB.SignFileName, contractSignDB.IdCompany ?? 1);
+                    DeleteFirma(contractSignDB.SignFileName, contractSignDB.IdCompany ?? 1);
                 }
-                contractSignDB.SignFileName = await GuardarFirma(model.Sign, model.IdCompany);
+                contractSignDB.SignFileName = model.Sign != null
+                    ? await GuardarFirma(model.Sign, model.IdCompany)
+                    : null;
             }
 
             var result = await _repository.Update(contractSignDB);
@@ -229,25 +230,11 @@ namespace GenericApp.API.Controllers
         }
 
 
-        private async Task<bool> DeleteFirma(string logoName, int idCompany)
+        private void DeleteFirma(string logoName, int idCompany)
         {
-            try
-            {
-                var signPath = _configuration["contractsSettings:contractsSignsPath"] ?? "Signs";
-                string carpeta = Path.Combine(_env.WebRootPath, signPath, idCompany.ToString());
-                if (!Directory.Exists(carpeta))
-                    return default;
-
-                string rutaCompleta = Path.Combine(carpeta, logoName);
-
-                if (System.IO.File.Exists(rutaCompleta))
-                    System.IO.File.Delete(rutaCompleta);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-            return true;
+            var signPath = _configuration["contractsSettings:contractsSignsPath"] ?? "Signs";
+            string rutaCompleta = Path.Combine(_env.WebRootPath, "img", signPath, idCompany.ToString(), logoName);
+            System.IO.File.Delete(rutaCompleta);
         }
 
         /// <summary>

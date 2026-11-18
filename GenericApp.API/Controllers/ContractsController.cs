@@ -275,7 +275,7 @@ namespace GenericApp.API.Controllers
                 var processedTemplates = new List<(ContractTemplate Template, string ProcessedContent)>();
                 foreach (var template in templates)
                 {
-                    var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company, model.SignatureBase64);
+                    var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company,model.SignatureDate ?? DateTime.Now, model.SignatureBase64);
                     processedTemplates.Add((template, contentWithData));
                 }
 
@@ -330,7 +330,7 @@ namespace GenericApp.API.Controllers
 
                                 RenderNodes(col, childNodes);
 
-                                RenderSignatures(col, contractSigns, model.IdCompany, model.SignatureBase64, employeeName, employee.Position);
+                                RenderSignatures(col, contractSigns, model.IdCompany, model.SignatureBase64, employeeName);
                             }
                         });
 
@@ -430,7 +430,7 @@ namespace GenericApp.API.Controllers
                 var processedTemplates = new List<(ContractTemplate Template, string ProcessedContent)>();
                 foreach (var template in templates)
                 {
-                    var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company, null, true);
+                    var contentWithData = await ReplaceVariables(template.Content ?? "", employee, company, model.SignatureDate ?? DateTime.Now, null, true);
                     processedTemplates.Add((template, contentWithData));
                 }
 
@@ -487,7 +487,7 @@ namespace GenericApp.API.Controllers
 
                                 RenderNodes(col, childNodes);
 
-                                RenderSignatures(col, contractSigns, model.IdCompany, model.SignatureBase64, employeeName, employee.Position);
+                                RenderSignatures(col, contractSigns, model.IdCompany, model.SignatureBase64, employeeName);
 
                             }
                         });
@@ -620,7 +620,7 @@ namespace GenericApp.API.Controllers
         }
 
         #region Helpers
-        private async Task<string> ReplaceVariables(string htmlContent, Employee employee, Company? company, string? signatureBase64 = null, bool isPreview = false)
+        private async Task<string> ReplaceVariables(string htmlContent, Employee employee, Company? company, DateTime contractSignDate, string? signatureBase64 = null, bool isPreview = false)
         {
             var contractTemplateVariables = await _repository.FindBy<ContractTemplateVariable>(x => (x.IsActive ?? false) && !(x.IsDeleted ?? false));
 
@@ -634,7 +634,7 @@ namespace GenericApp.API.Controllers
                 if (string.IsNullOrEmpty(variable.Code))
                     continue;
 
-                var replacement = GetVariableValue(variable, employee, company);
+                var replacement = GetVariableValue(variable, employee, contractSignDate, company);
 
                 // Pattern 1: Match the full <span> element with tiptap-variable class
                 var spanPattern = $@"<span[^>]*data-variable=""{{{{{Regex.Escape(variable.Code)}}}}}""[^>]*>.*?</span>";
@@ -648,7 +648,7 @@ namespace GenericApp.API.Controllers
             return result;
         }
 
-        private string GetVariableValue(ContractTemplateVariable variable, Employee employee, Company? company = null)
+        private string GetVariableValue(ContractTemplateVariable variable, Employee employee, DateTime contractSignDate, Company? company = null)
         {
             if (variable == null || employee == null)
                 return "";
@@ -703,6 +703,10 @@ namespace GenericApp.API.Controllers
                     return fechaActual.ToString("dd/MM/yyyy");
                 case nameof(ContractTemplateVariablesEnum.fechaActualFormatoLargo):
                     return fechaActual.ToString("d 'de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
+                case nameof(ContractTemplateVariablesEnum.Fecha_FirmaContrato_FormatoCorto):
+                    return contractSignDate.ToString("dd/MM/yyyy");
+                case nameof(ContractTemplateVariablesEnum.Fecha_FirmaContrato_FormatoLargo):
+                    return contractSignDate.ToString("d 'de' MMMM 'de' yyyy", new CultureInfo("es-ES"));
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1):
                     return beneficiaries.ElementAtOrDefault(0)?.Name ?? "";
                 case nameof(ContractTemplateVariablesEnum.Beneficiario1_Domicilio):
@@ -765,7 +769,7 @@ namespace GenericApp.API.Controllers
         /// <summary>
         /// Renders the signatures section. Leaves the employee signature space blank during preview.
         /// </summary>
-        private void RenderSignatures(ColumnDescriptor col, List<ContractSign> signs, int idCompany, string? signatureBase64 = null, string? nombreEmpleado = null, string? employeePosition = null)
+        private void RenderSignatures(ColumnDescriptor col, List<ContractSign> signs, int idCompany, string? signatureBase64 = null, string? nombreEmpleado = null)
         {
             const int maxSignsPerRow = 4;
             // Mantenemos la altura total de 80, pero organizaremos mejor el espacio interior.
@@ -790,8 +794,7 @@ namespace GenericApp.API.Controllers
                 Name = string.IsNullOrEmpty(nombreEmpleado) ? "Firma del empleado" : nombreEmpleado,
                 SignFileName = "firma-default.png",
                 IsEmployee = true,
-                SignBase64 = signatureBase64,
-                Position = employeePosition
+                SignBase64 = signatureBase64
             });
 
 

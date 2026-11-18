@@ -4,7 +4,6 @@ import { AppContext } from '@helpers/AppContext';
 import routes from '@views/routes.json';
 import AppLogoImage from '@images/logo.png';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { API_BASE_URL } from '@config';
 
 import {
     Drawer,
@@ -220,7 +219,7 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
     const hasCompany = companySelected && Object.keys(companySelected).length > 0;
 
     const displayLogo = hasCompany
-        ? `${API_BASE_URL}/img/logos/${companySelected.logoName}`
+        ? `${import.meta.env.VITE_API_BASE_URL}/img/logos/${companySelected.logoName}`
         : AppLogoImage;
 
     const displayName = hasCompany

@@ -28,7 +28,6 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { DataAPICompaniesService } from '@data/Companies/Data';
 import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
-import { API_BASE_URL } from '@config';
 
 const CompanyFormModal = ({ open, handleClose, data, isEditing, setData, inline = false }) => {
 const { t } = useTranslation();
@@ -79,7 +78,7 @@ const theme = useTheme();
                     logoName: data.logoName || '',
                     logo: null
                 });
-                setOriginalLogoUrl(data.logoName ? `${API_BASE_URL}/img/logos/${data.logoName}` : null);
+                setOriginalLogoUrl(data.logoName ? `${import.meta.env.VITE_API_BASE_URL}/img/logos/${data.logoName}` : null);
             } else {
                 setFormData(initialFormState);
                 setOriginalLogoUrl(null);

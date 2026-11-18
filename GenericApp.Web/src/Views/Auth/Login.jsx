@@ -5,7 +5,6 @@ import { AppContext } from '@helpers/AppContext';
 import { lightTheme, darkTheme } from '@helpers/ThemeHelper';
 import { AuthenticationAPIService } from '@data/Auth/Authentication';
 import { ShowMessage, HideMessage } from '@helpers/NotificationService';
-import { API_BASE_URL } from '@config';
 import '@styles/Login.css';
 import LoginIcon from '@mui/icons-material/Login';
 import LockResetIcon from '@mui/icons-material/LockReset';
@@ -202,7 +201,7 @@ function LoginPage() {
                     >
                         <Box
                             component="img"
-                            src={`${API_BASE_URL}/img/logo.png?t=${Date.now()}`}
+                            src={`${import.meta.env.VITE_API_BASE_URL}/img/logo.png?t=${Date.now()}`}
                             alt={t('app_name')}
                             sx={{
                                 width: '100%',
