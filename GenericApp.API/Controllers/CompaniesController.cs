@@ -130,10 +130,10 @@ namespace GenericApp.API.Controllers
         public async Task<ActionResult> AddCompany([FromForm] CompanyDTO model) // 2. Cambiar a [FromForm]
         {
             // Validaciones de existencia (Tu lógica original)
-            var companyExists = await _repository.FirstOrDefault<Company>(x => (x.Name.ToLower().Equals(model.Name.ToLower()) || x.Rfc.ToLower().Equals(model.Rfc.ToLower())) && !(x.IsDeleted ?? false));
+            var companyExists = await _repository.FirstOrDefault<Company>(x => x.Name.ToLower().Equals(model.Name.ToLower()) && !(x.IsDeleted ?? false));
 
             if (companyExists != null)
-                return Conflict(new ApiResponse { Conflict = $"{(companyExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}, {(companyExists.Rfc.ToLower().Equals(model.Rfc.ToLower()) ? model.Rfc : "")}" });
+                return Conflict(new ApiResponse { Conflict = $"{(companyExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}" });
 
             var companyDB = _mapper.Map<Company>(model);
 
@@ -156,12 +156,12 @@ namespace GenericApp.API.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = nameof(AppPolicies.User), Roles = nameof(AppRoles.Administrator))]
         public async Task<ActionResult> UpdateCompany([FromForm] CompanyDTO model)
         {
-            var companyExists = await _repository.FirstOrDefault<Company>(x => x.IdCompany != model.IdCompany && (x.Name.ToLower().Equals(model.Name.ToLower()) || x.Rfc.ToLower().Equals(model.Rfc.ToLower())) && (!x.IsDeleted ?? false));
+            var companyExists = await _repository.FirstOrDefault<Company>(x => x.IdCompany != model.IdCompany && x.Name.ToLower().Equals(model.Name.ToLower()) && (!x.IsDeleted ?? false));
             if (companyExists != null)
                 return Conflict(
                     new ApiResponse
                     {
-                        Conflict = $"{(companyExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}, {(companyExists.Rfc.ToLower().Equals(model.Rfc.ToLower()) ? model.Rfc : "")}"
+                        Conflict = $"{(companyExists.Name.ToLower().Equals(model.Name.ToLower()) ? model.Name : "")}"
                     }
                 );
 
