@@ -24,6 +24,7 @@ import {
 import BusinessIcon from '@mui/icons-material/Business';
 import CloseIcon from '@mui/icons-material/Close';
 import { DataAPICompaniesService } from '@data/Companies/Data';
+import { apiBaseUrl } from '@/runtimeConfig';
 
 const CompanySelectionModal = ({ open, onClose, onSelectCompany, selectedCompanyId, forceSelection }) => {
     const [companies, setCompanies] = useState([]);
@@ -132,7 +133,7 @@ const CompanySelectionModal = ({ open, onClose, onSelectCompany, selectedCompany
                                         >
                                             <ListItemAvatar sx={{ mr: 1.5 }}>
                                                 <Avatar
-                                                    src={import.meta.env.VITE_API_BASE_URL + "/img/logos/" + company?.logoName}
+                                                    src={apiBaseUrl + "/img/logos/" + company?.logoName}
                                                     alt={company.name}
                                                     sx={{ width: 68, height: 68, borderRadius: 2 }}
                                                 >

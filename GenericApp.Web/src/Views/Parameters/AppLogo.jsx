@@ -4,6 +4,7 @@ import { ArrowForward } from '@mui/icons-material';
 import { DataAPIParametersService } from '@data/Parameters/Data';
 import { ShowMessage } from '@helpers/NotificationService';
 import { useTranslation } from 'react-i18next';
+import { apiBaseUrl } from '@/runtimeConfig';
 
 const LogoEditor = () => {
     const { t } = useTranslation();
@@ -14,7 +15,7 @@ const LogoEditor = () => {
     const [reloadKey, setReloadKey] = useState(+ (new Date()).getMilliseconds());
 
     const LOGO_URL = useMemo(() =>
-        import.meta.env.VITE_API_BASE_URL + '/img/logo.png?key=' + reloadKey,
+        apiBaseUrl + '/img/logo.png?key=' + reloadKey,
         [reloadKey]
     );
 

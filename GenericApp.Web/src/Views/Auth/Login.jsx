@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '@helpers/AppContext';
+import { apiBaseUrl } from '@/runtimeConfig';
 import { lightTheme, darkTheme } from '@helpers/ThemeHelper';
 import { AuthenticationAPIService } from '@data/Auth/Authentication';
 import { ShowMessage, HideMessage } from '@helpers/NotificationService';
@@ -201,7 +202,7 @@ function LoginPage() {
                     >
                         <Box
                             component="img"
-                            src={`${import.meta.env.VITE_API_BASE_URL}/img/logo.png?t=${Date.now()}`}
+                            src={`${apiBaseUrl}/img/logo.png?t=${Date.now()}`}
                             alt={t('app_name')}
                             sx={{
                                 width: '100%',

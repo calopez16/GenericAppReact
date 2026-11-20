@@ -4,6 +4,7 @@ import { ArrowForward } from '@mui/icons-material';
 import { DataAPIParametersService } from '@data/Parameters/Data';
 import { ShowMessage } from '@helpers/NotificationService';
 import { useTranslation } from 'react-i18next';
+import { apiBaseUrl } from '@/runtimeConfig';
 
 const AppLoginBackgroundEditor = () => {
     const { t } = useTranslation();
@@ -14,7 +15,7 @@ const AppLoginBackgroundEditor = () => {
     const [reloadKey, setReloadKey] = useState("1");
 
     const LOGO_URL = useMemo(() =>
-        import.meta.env.VITE_API_BASE_URL + '/img/login_background.png?key=' + reloadKey,
+        apiBaseUrl + '/img/login_background.png?key=' + reloadKey,
         [reloadKey]
     );
 

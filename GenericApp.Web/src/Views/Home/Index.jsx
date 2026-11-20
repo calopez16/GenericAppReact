@@ -1,6 +1,7 @@
 ﻿import React, { useContext, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
+import { apiBaseUrl } from '@/runtimeConfig';
 import AppLogoImage from '@images/logo.png'
 import { DataAPIDashboardService } from '@data/Dashboard/Data';
 
@@ -140,7 +141,7 @@ const DashboardPage = () => {
         { title: t('dashboard.cards.avg_temp'), data: tempData, icon: <AcUnitIcon color="warning" /> },
     ];
 
-    const displayLogo = hasCompany ? `${import.meta.env.VITE_API_BASE_URL}/img/logos/${companySelected.logoName}` : AppLogoImage;
+    const displayLogo = hasCompany ? `${apiBaseUrl}/img/logos/${companySelected.logoName}` : AppLogoImage;
     const displayName = hasCompany ? companySelected.name : t('app_name');
 
     return (

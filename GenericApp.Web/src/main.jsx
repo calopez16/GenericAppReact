@@ -8,6 +8,7 @@ import App from '@views/Index';
 import { AppContextProvider, AppContext } from '@helpers/AppContext';
 import { NotificationContext } from '@helpers/NotificationContext';
 import { lightTheme, darkTheme } from '@helpers/ThemeHelper';
+import { loadRuntimeConfig } from '@/runtimeConfig';
 import '@locales/i18n';
 
 const PageLoader = () => (
@@ -29,12 +30,24 @@ const AppWithThemeWrapper = () => {
     );
 };
 
-createRoot(document.getElementById('root')).render(
-    <AppContextProvider>
-        <NotificationContext>
-            <HashRouter>
-                <AppWithThemeWrapper />
-            </HashRouter>
-        </NotificationContext>
-    </AppContextProvider>
-);
+const root = createRoot(document.getElementById('root'));
+root.render(<PageLoader />);
+
+loadRuntimeConfig().then(() => {
+    root.render(
+        <AppContextProvider>
+            <NotificationContext>
+                <HashRouter>
+                    <AppWithThemeWrapper />
+                </HashRouter>
+            </NotificationContext>
+        </AppContextProvider>
+    );
+}).catch((error) => {
+    console.error('Error al cargar la configuración de la aplicación:', error);
+    root.render(
+        <Box role="alert" sx={{ p: 4 }}>
+            No se pudo cargar la configuración de la aplicación. Revise config.json y la consola del navegador.
+        </Box>
+    );
+});

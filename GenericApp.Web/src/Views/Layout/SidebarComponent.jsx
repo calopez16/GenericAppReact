@@ -1,6 +1,7 @@
 ﻿import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppContext } from '@helpers/AppContext';
+import { apiBaseUrl } from '@/runtimeConfig';
 import routes from '@views/routes.json';
 import AppLogoImage from '@images/logo.png';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
@@ -219,7 +220,7 @@ const SidebarComponent = ({ showSidebar, toggleSidebar, isMobile }) => {
     const hasCompany = companySelected && Object.keys(companySelected).length > 0;
 
     const displayLogo = hasCompany
-        ? `${import.meta.env.VITE_API_BASE_URL}/img/logos/${companySelected.logoName}`
+        ? `${apiBaseUrl}/img/logos/${companySelected.logoName}`
         : AppLogoImage;
 
     const displayName = hasCompany

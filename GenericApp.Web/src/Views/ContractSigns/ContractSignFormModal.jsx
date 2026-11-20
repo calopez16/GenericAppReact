@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { ShowMessage } from '@helpers/NotificationService';
 import { DataAPIContractSignsService } from '@data/ContractSigns/Data';
 import { AppContext } from '@helpers/AppContext';
+import { apiBaseUrl } from '@/runtimeConfig';
 import SignaturePadModal from '@/Components/SignaturePadModal';
 import ImageCropModal from '@/Components/ImageCropModal';
 
@@ -43,7 +44,7 @@ function ContractSignFormModal({ open, handleClose, data, isEditing, setData }) 
             setFormData({
                 name: data.name || '',
                 signFile: null,
-                signPreview: data.signFileName ? `${import.meta.env.VITE_API_BASE_URL}/img/signs/${companySelected?.idCompany}/${data.signFileName}` : null
+                signPreview: data.signFileName ? `${apiBaseUrl}/img/signs/${companySelected?.idCompany}/${data.signFileName}` : null
             });
         } else {
             setFormData({

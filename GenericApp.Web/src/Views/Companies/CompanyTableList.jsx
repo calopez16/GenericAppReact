@@ -18,6 +18,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EmptyData from '@layout/EmptyData';
+import { apiBaseUrl } from '@/runtimeConfig';
 
 const ANIMATION_DURATION = 500;
 
@@ -97,7 +98,7 @@ const CompanyListTable = ({
                         <>
                             {companies?.map((company) => {
                                 const isDeleting = deletingId === company.idCompany;
-                                const logoSrc = company.logoName ? `${import.meta.env.VITE_API_BASE_URL}/img/logos/${company.logoName}` : null;
+                                const logoSrc = company.logoName ? `${apiBaseUrl}/img/logos/${company.logoName}` : null;
 
                                 return (
                                     <TableRow

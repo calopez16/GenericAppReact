@@ -18,6 +18,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ImageIcon from '@mui/icons-material/Image';
 import { AppContext } from '@helpers/AppContext';
+import { apiBaseUrl } from '@/runtimeConfig';
 import EmptyData from '@layout/EmptyData';
 
 function ContractSignCardList({
@@ -83,7 +84,7 @@ function ContractSignCardList({
                     {sign.signFileName ? (
                         <Avatar
                             variant="rounded"
-                            src={`${import.meta.env.VITE_API_BASE_URL}/img/signs/${companySelected?.idCompany}/${sign.signFileName}`}
+                            src={`${apiBaseUrl}/img/signs/${companySelected?.idCompany}/${sign.signFileName}`}
                             sx={{ width: '100%', height: '100%' }}
                         >
                             <ImageIcon />
